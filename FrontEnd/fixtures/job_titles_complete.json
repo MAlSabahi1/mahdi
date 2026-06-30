@@ -1,0 +1,1278 @@
+[
+  {
+    "model": "core.jobtitle",
+    "pk": 1,
+    "fields": {
+      "name": "إداري",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 2,
+    "fields": {
+      "name": "كاتب",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 3,
+    "fields": {
+      "name": "مؤرشف",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 4,
+    "fields": {
+      "name": "أمين صندوق",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 5,
+    "fields": {
+      "name": "خطاط",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 6,
+    "fields": {
+      "name": "مغلف",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 7,
+    "fields": {
+      "name": "مراسل",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 8,
+    "fields": {
+      "name": "تسجيل جنائي",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 9,
+    "fields": {
+      "name": "محاسب",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 10,
+    "fields": {
+      "name": "مراجع",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 11,
+    "fields": {
+      "name": "جامع بيانات شخصية",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 12,
+    "fields": {
+      "name": "قيم جامع",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 13,
+    "fields": {
+      "name": "موثق",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 14,
+    "fields": {
+      "name": "مستلم بلاغات",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 15,
+    "fields": {
+      "name": "معلم",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 16,
+    "fields": {
+      "name": "مرشد توعوي",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 17,
+    "fields": {
+      "name": "صحفي",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 18,
+    "fields": {
+      "name": "مذيع",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 19,
+    "fields": {
+      "name": "رئيس وحدة",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 20,
+    "fields": {
+      "name": "إحصاء بيانات",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 21,
+    "fields": {
+      "name": "مترجم",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 22,
+    "fields": {
+      "name": "مدير مكتب",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 23,
+    "fields": {
+      "name": "سكرتير",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 24,
+    "fields": {
+      "name": "علاقات",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 25,
+    "fields": {
+      "name": "جامع بيانات لاستخراج جواز",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 26,
+    "fields": {
+      "name": "مندوب متابعات",
+      "category": 1,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 27,
+    "fields": {
+      "name": "ميداني",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 28,
+    "fields": {
+      "name": "حراسة",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 29,
+    "fields": {
+      "name": "مفتش",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 30,
+    "fields": {
+      "name": "محقق",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 31,
+    "fields": {
+      "name": "مكافحة إرهاب",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 32,
+    "fields": {
+      "name": "تحريات",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 33,
+    "fields": {
+      "name": "مرافق",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 34,
+    "fields": {
+      "name": "خدمة أمنية",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 35,
+    "fields": {
+      "name": "ميداني مرور",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 36,
+    "fields": {
+      "name": "فض شغب",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 37,
+    "fields": {
+      "name": "رياضي",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 38,
+    "fields": {
+      "name": "خيال",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 39,
+    "fields": {
+      "name": "سجان",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 40,
+    "fields": {
+      "name": "نجدة وإنقاذ",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 41,
+    "fields": {
+      "name": "مدرب",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 42,
+    "fields": {
+      "name": "مكافحة تهريب",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 43,
+    "fields": {
+      "name": "حرس حدود",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 44,
+    "fields": {
+      "name": "ش/راجلة",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 45,
+    "fields": {
+      "name": "ش/محمولة",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 46,
+    "fields": {
+      "name": "ش/تخدير",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 47,
+    "fields": {
+      "name": "حارس ليل",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 48,
+    "fields": {
+      "name": "حماية بيئة",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 49,
+    "fields": {
+      "name": "ش/سياحة",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 50,
+    "fields": {
+      "name": "ش/قضائية",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 51,
+    "fields": {
+      "name": "ش/منطقة حرة",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 52,
+    "fields": {
+      "name": "مهام أمنية",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 53,
+    "fields": {
+      "name": "مشاة",
+      "category": 2,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 54,
+    "fields": {
+      "name": "فني",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 55,
+    "fields": {
+      "name": "فني كمبيوتر",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 56,
+    "fields": {
+      "name": "فني طباعة",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 57,
+    "fields": {
+      "name": "فني تصوير",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 58,
+    "fields": {
+      "name": "فني إطفاء",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 59,
+    "fields": {
+      "name": "فني اتصالات",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 60,
+    "fields": {
+      "name": "فني عمليات",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 61,
+    "fields": {
+      "name": "فني مرور",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 62,
+    "fields": {
+      "name": "فني مسرح جريمة",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 63,
+    "fields": {
+      "name": "فني مختبرات",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 64,
+    "fields": {
+      "name": "فني تمريض",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 65,
+    "fields": {
+      "name": "فني مخدرات",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 66,
+    "fields": {
+      "name": "فني أسلحة",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 67,
+    "fields": {
+      "name": "فني متفجرات",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 68,
+    "fields": {
+      "name": "فني كهرباء",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 69,
+    "fields": {
+      "name": "فني موسيقى",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 70,
+    "fields": {
+      "name": "فني أدلة",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 71,
+    "fields": {
+      "name": "أمين مستودع",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 72,
+    "fields": {
+      "name": "فني تخدير",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 73,
+    "fields": {
+      "name": "فني أشعة",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 74,
+    "fields": {
+      "name": "تحويلة",
+      "category": 3,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 75,
+    "fields": {
+      "name": "متخصص",
+      "category": 4,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 76,
+    "fields": {
+      "name": "طبيب",
+      "category": 4,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 77,
+    "fields": {
+      "name": "مهندس معماري",
+      "category": 4,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 78,
+    "fields": {
+      "name": "مختبرات طبية",
+      "category": 4,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 79,
+    "fields": {
+      "name": "أدلة ومختبرات جنائية",
+      "category": 4,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 80,
+    "fields": {
+      "name": "محامي قانوني",
+      "category": 4,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 81,
+    "fields": {
+      "name": "محاسب",
+      "category": 4,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 82,
+    "fields": {
+      "name": "أخصائي اجتماعي",
+      "category": 4,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 83,
+    "fields": {
+      "name": "مدرس",
+      "category": 4,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 84,
+    "fields": {
+      "name": "صيدلي",
+      "category": 4,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 85,
+    "fields": {
+      "name": "حرفي",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 86,
+    "fields": {
+      "name": "طباخ",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 87,
+    "fields": {
+      "name": "وراد ماء",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 88,
+    "fields": {
+      "name": "خباز",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 89,
+    "fields": {
+      "name": "عجان",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 90,
+    "fields": {
+      "name": "ميكانيكي سيارات",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 91,
+    "fields": {
+      "name": "جزار",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 92,
+    "fields": {
+      "name": "ملحم",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 93,
+    "fields": {
+      "name": "نجار",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 94,
+    "fields": {
+      "name": "سائق",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 95,
+    "fields": {
+      "name": "عامل وقود",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 96,
+    "fields": {
+      "name": "مباشر",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 97,
+    "fields": {
+      "name": "منظف",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 98,
+    "fields": {
+      "name": "مرنج",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 99,
+    "fields": {
+      "name": "سمكري",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 100,
+    "fields": {
+      "name": "خراز",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 101,
+    "fields": {
+      "name": "فراش",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 102,
+    "fields": {
+      "name": "غسال",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 103,
+    "fields": {
+      "name": "مكوجي",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 104,
+    "fields": {
+      "name": "منقي بقوليات",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 105,
+    "fields": {
+      "name": "مزارع",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 106,
+    "fields": {
+      "name": "سائس خيل",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 107,
+    "fields": {
+      "name": "كهربائي",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 108,
+    "fields": {
+      "name": "مشحم",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 109,
+    "fields": {
+      "name": "حداد",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 110,
+    "fields": {
+      "name": "طحان",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 111,
+    "fields": {
+      "name": "خراط",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 112,
+    "fields": {
+      "name": "بناء",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 113,
+    "fields": {
+      "name": "مسروس",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 114,
+    "fields": {
+      "name": "سباك",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 115,
+    "fields": {
+      "name": "حلاق",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.jobtitle",
+    "pk": 116,
+    "fields": {
+      "name": "خضري",
+      "category": 5,
+      "description": "",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]
