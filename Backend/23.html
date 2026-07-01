@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>وثيقة رسمية - نظام داخلي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Scheherazade+New:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --official-blue: #1e3a8a;
+            --official-green: #4d7c0f;
+            --official-red: #881337;
+        }
+
+        body {
+            font-family: 'Scheherazade New', serif;
+            background-color: #333;
+            /* خلفية النظام */
+            margin: 0;
+            padding: 40px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* حاوية الورقة A4 */
+        .a4-container {
+            width: 210mm;
+            min-height: 297mm;
+            background: white;
+            padding: 12mm;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            /* الإطار المزدوج الخارجي */
+            border: 2px solid #000;
+            outline: 6px double #000;
+            outline-offset: -12px;
+        }
+
+        /* العلامة المائية */
+        .watermark {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            opacity: 0.06;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .dotted-input {
+            border-bottom: 2px dotted #000;
+            display: inline-block;
+            min-width: 150px;
+            text-align: right;
+        }
+
+        /* شريط الفصل المزدوج الكحلي */
+        .blue-divider {
+            border-top: 4px solid var(--official-blue);
+            border-bottom: 1.5px solid var(--official-blue);
+            height: 8px;
+            margin: 15px 0;
+        }
+
+        /* زر النموذج الأخضر الاحترافي */
+        .badge-green {
+            background: linear-gradient(180deg, #65a30d 0%, #365314 100%);
+            border: 1px solid #1a2e05;
+            border-radius: 6px;
+            color: white;
+            padding: 4px 30px;
+            font-family: 'Amiri', serif;
+            font-weight: bold;
+            box-shadow: 0 4px 0 #1a2e05;
+            display: inline-block;
+        }
+
+        /* عنوان الجدول الرمادي المتدرج */
+        .title-bar {
+            background: linear-gradient(180deg, #f9fafb 0%, #d1d5db 100%);
+            border: 1.5px solid #9ca3af;
+            border-radius: 10px;
+            padding: 12px;
+            width: 95%;
+            margin: 20px auto;
+            text-align: center;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        /* تنسيق الجدول الرسمي */
+        .official-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .official-table th {
+            background-color: #2563eb;
+            color: white;
+            border: 2px solid var(--official-blue);
+            padding: 10px 4px;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .official-table td {
+            border: 2px solid var(--official-blue);
+            height: 45px;
+            padding: 5px;
+        }
+
+        /* زر التوضيح الدائري */
+        .explain-oval {
+            background: linear-gradient(135deg, #be123c 0%, #881337 100%);
+            color: white;
+            border-radius: 50px;
+            padding: 8px 35px;
+            font-family: 'Amiri', serif;
+            font-size: 1.3rem;
+            font-weight: bold;
+            box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+            display: inline-block;
+            border: 1px solid #4c0519;
+        }
+
+        .list-bullet {
+            width: 10px;
+            height: 10px;
+            background-color: black;
+            border-radius: 50%;
+            margin-left: 12px;
+            flex-shrink: 0;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .a4-container {
+                box-shadow: none;
+                outline-offset: -12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="a4-container">
+        <!-- Watermark -->
+        <img src="/home/mahdi/Downloads/الطير.jpg" class="watermark" alt="watermark">
+
+        <!-- Header Content -->
+        <div class="relative z-10 grid grid-cols-3 gap-4 items-start mb-6">
+            <!-- Right: Official Info -->
+            <div class="text-center font-bold text-xl leading-tight">
+                <p class="text-2xl mb-1">دولة النظام</p>
+                <p class="text-xl mb-1">وزارة الدفاع</p>
+                <p>هيئة الموارد البشرية</p>
+                <p>دائرة الموارد البشرية</p>
+                <p>مركز الإمدادات</p>
+            </div>
+
+            <!-- Center: Logo & Basmala -->
+            <div class="text-center">
+                <p class="text-2xl font-bold mb-3" style="font-family: 'Amiri';">بسم الله الرحمن الرحيم</p>
+                <img src="/home/mahdi/Downloads/الطير.jpg" class="h-32 mx-auto object-contain" alt="Logo">
+            </div>
+
+            <!-- Left: Metadata -->
+            <div class="pt-10 pr-6">
+                <div class="flex items-center mb-3">
+                    <span class="text-xl font-bold ml-2">الرقم:</span>
+                    <span class="dotted-input flex-grow text-right pl-2">)</span>
+                </div>
+                <div class="flex items-center mb-3">
+                    <span class="text-xl font-bold ml-2">التاريخ:</span>
+                    <span class="dotted-input flex-grow text-left font-bold">&nbsp;&nbsp;&nbsp; / &nbsp;&nbsp;&nbsp; /
+                        2024 م</span>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-xl font-bold ml-2">المرفقات:</span>
+                    <span class="dotted-input flex-grow">...........................</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decorative Line -->
+        <div class="blue-divider relative z-10"></div>
+
+        <!-- Badge Row -->
+        <div class="text-center my-6 relative z-10">
+            <div class="badge-green">
+                <span class="text-xl">نموذج رقم (33)</span>
+            </div>
+        </div>
+
+        <!-- Main Subject Bar -->
+        <div class="title-bar relative z-10">
+            <h2 class="text-2xl font-bold text-gray-900">
+                كشف بأسماء المطلوب تصحيح أسماؤهم لشهر ................. 2024 م
+            </h2>
+        </div>
+
+        <!-- Table Section -->
+        <div class="relative z-10 px-2">
+            <table class="official-table">
+                <thead>
+                    <tr>
+                        <th style="width: 7%;">الرتبة</th>
+                        <th style="width: 15%;">الرقم العسكري</th>
+                        <th style="width: 25%;">الاسم الصحيح</th>
+                        <th style="width: 20%;">الاسم الخطأ</th>
+                        <th style="width: 20%;">المطلوب تصحيحه</th>
+                        <th style="width: 13%;">ملاحظات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows for data -->
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Legend/Explanation Section -->
+        <div class="mt-16 pr-10 relative z-10 flex items-start gap-8">
+            <div class="explain-oval">توضيح</div>
+
+            <div class="space-y-4">
+                <div class="flex items-center text-xl font-bold text-gray-800">
+                    <span class="list-bullet"></span>
+                    <p>الاسم الصحيح: - بحسب البطاقة الشخصية.</p>
+                </div>
+                <div class="flex items-center text-xl font-bold text-gray-800">
+                    <span class="list-bullet"></span>
+                    <p>الاسم الخطأ: - بحسب كشف الراتب.</p>
+                </div>
+                <div class="flex items-start text-xl font-bold text-gray-800">
+                    <span class="list-bullet mt-3"></span>
+                    <p>المطلوب تصحيحه: - الاسم الأول — الاسم الثاني — الاسم — الاسم الثالث — الاسم الرابع — اللقب.</p>
+                </div>
+                <div class="flex items-center text-xl font-bold text-gray-800">
+                    <span class="list-bullet"></span>
+                    <p>ملاحظات: - أي بيانات أخرى.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+
+</html>
