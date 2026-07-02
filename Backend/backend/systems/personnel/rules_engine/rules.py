@@ -55,15 +55,41 @@ class StrictDataConsistencyRule(BusinessRule):
 class PermanentDeactivationRule(BusinessRule):
     """
     قاعدة الحالات النهائية (الشهداء، الوفيات، المتقاعدين).
-    المنطق الجديد (بناءً على طلب العميل العبقري):
-    - لا يتم تفريغ (مسح) الإدارة أو القسم أو نوع العمل أبداً!
-    - يجب أن يحتفظ الفرد بمكانه ومنصبه لكي نعرف تاريخه وأين كان يعمل.
-    - خروج الفرد من (القوة الفعلية) سيتم برمجياً في الـ Views/Dashboards 
-      عن طريق استبعاد أي فرد حالته النهائية (شهيد/متوفي/متقاعد) من الإحصائيات.
+    المنطق الجديد (حسب التوجيه الأخير):
+    عند تحول الفرد إلى حالة خروج نهائي (inactive_perm)، يتم تفريغ منصبه وموقعه التنظيمي
+    (الإدارة، الفرع، القسم، الوحدة) لإفساح المجال لغيره. 
+    سجله وتاريخه محفوظة بأمان في HistoricalRecords وجدول الأحداث PersonnelEvent.
     """
     def execute(self, context: ValidationContext) -> None:
-        # لم يعد هناك حاجة لمسح البيانات، نحتفظ بها للتاريخ
-        pass
+        instance = context.instance
+        if instance.current_status_id:
+            # Get classification safely
+            classification = None
+            if hasattr(instance, 'current_status') and instance.current_status:
+                classification = instance.current_status.classification
+            else:
+                from core.models.personnel_refs import ServiceStatus
+                try:
+                    status = ServiceStatus.objects.get(pk=instance.current_status_id)
+                    classification = status.classification
+                except Exception:
+                    pass
+                    
+            if classification == 'inactive_perm':
+                # إخلاء طرف الفرد بالكامل من الهيكل الإداري
+                instance.position_id = None
+                instance.position = None
+                instance.central_department_id = None
+                instance.central_department = None
+                instance.branch_id = None
+                instance.branch = None
+                instance.district_police_id = None
+                instance.district_police = None
+                instance.division_id = None
+                instance.division = None
+                instance.unit_id = None
+                instance.unit = None
+
 
 
 class RankCategoryCompatibilityRule(BusinessRule):
@@ -226,4 +252,78 @@ class PositionImmutabilityRule(BusinessRule):
                         )
             except Exception:
                 pass  # للفرد الجديد
+
+
+class UniqueLeadershipPositionRule(BusinessRule):
+    """
+    قاعدة منع تكرار المناصب القيادية الفردية (المدير، النائب).
+    يمنع أن يكون هناك أكثر من شخص نشط يمتلك منصباً متفرداً في نفس الجهة.
+    يتم استثناء الحالات النهائية (inactive_perm) من هذا الفحص تلقائياً بفضل قاعدة PermanentDeactivationRule
+    التي تفرغ منصبهم، ولكننا نؤكد الفحص هنا.
+    """
+    def execute(self, context: ValidationContext) -> None:
+        instance = context.instance
+        if not instance.position_id:
+            return
+            
+        # Get position safely
+        pos_name = ""
+        if hasattr(instance, 'position') and instance.position:
+            pos_name = instance.position.name
+        else:
+            from core.models.personnel_refs import Position
+            try:
+                pos = Position.objects.get(pk=instance.position_id)
+                pos_name = pos.name
+            except Exception:
+                pass
+                
+        # الكلمات المفتاحية التي تدل على منصب لا يقبل التكرار
+        # إذا كان المنصب يحتوي على الكلمات التي تدل على التفرد
+        keywords = ['نائب', 'مدير', 'قائد', 'رئيس']
+        is_unique_position = any(kw in pos_name for kw in keywords)
+        
+        # استثناء المناصب التي يُعرف أنها تقبل التكرار (مثل النائب الأول، والثاني)
+        if "أول" in pos_name or "ثاني" in pos_name:
+            is_unique_position = False
+            
+        if is_unique_position:
+            from systems.personnel.models import PersonnelMaster
+            
+            # نبحث عن أي شخص يمتلك نفس هذا المنصب بالضبط 
+            # ولا زال على قوة العمل (ليس في خروج نهائي)
+            qs = PersonnelMaster.objects.filter(
+                position_id=instance.position_id,
+                current_status__classification__in=['active_full', 'active_part', 'inactive_temp']
+            )
+            
+            # التصفية بحسب الموقع التنظيمي المطابق تماماً
+            if instance.division_id:
+                qs = qs.filter(division_id=instance.division_id)
+            elif instance.district_police_id:
+                qs = qs.filter(district_police_id=instance.district_police_id, division__isnull=True)
+            elif instance.branch_id:
+                qs = qs.filter(branch_id=instance.branch_id, division__isnull=True)
+            elif instance.central_department_id:
+                qs = qs.filter(central_department_id=instance.central_department_id, division__isnull=True)
+            else:
+                qs = qs.filter(
+                    security_admin_id=instance.security_admin_id, 
+                    central_department__isnull=True,
+                    branch__isnull=True,
+                    district_police__isnull=True,
+                    division__isnull=True
+                )
+                
+            # استثناء الفرد الحالي لو كان تعديلاً
+            if instance.pk:
+                qs = qs.exclude(pk=instance.pk)
+                
+            if qs.exists():
+                existing = qs.first()
+                context.add_error(
+                    'position',
+                    _(f'لا يمكن تعيين منصب ({pos_name}). هذا المنصب مشغول حالياً بواسطة الفرد: {existing.full_name} ({existing.military_number}). يرجى تفريغ منصبه أولاً أو إحالته للتقاعد لإفساح المجال.')
+                )
+
 

@@ -84,7 +84,8 @@ class RulesEngine:
             MilitaryNumberPrefixRule,
             NoStateOverlapRule,
             AdministrativePositionRule,
-            PositionImmutabilityRule
+            PositionImmutabilityRule,
+            UniqueLeadershipPositionRule
         )
         
         engine = cls()
@@ -97,5 +98,6 @@ class RulesEngine:
         engine.register_rule(MilitaryNumberPrefixRule())
         engine.register_rule(AdministrativePositionRule())
         engine.register_rule(PositionImmutabilityRule())
+        engine.register_rule(UniqueLeadershipPositionRule())
         engine.register_rule(NoStateOverlapRule())
         return engine

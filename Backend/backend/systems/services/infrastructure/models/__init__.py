@@ -16,6 +16,8 @@ from .logs         import ExportLog, RejectionLog
 from .webhooks     import WebhookConfig
 from .templates    import ReportTemplate, CustomFormTemplate, CustomReportTemplate
 from .status_change import StatusChangeForm
+from .disciplinary import DisciplinaryAction, AbsenceRecord, DisciplinaryCouncilVerdict
+
 
 __all__ = [
     # Event
@@ -38,4 +40,9 @@ __all__ = [
     'CustomReportTemplate',
     # Forms
     'StatusChangeForm',
+    # Disciplinary
+    'DisciplinaryAction',
+    'AbsenceRecord',
+    'DisciplinaryCouncilVerdict',
 ]
+

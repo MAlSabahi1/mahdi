@@ -12,6 +12,11 @@ from systems.services.api.views.raw_data_views import RawDataStandardizedViewSet
 from systems.services.api.views.status_change_views import StatusChangeFormViewSet
 from systems.services.api.views.admin_views import CustomFormTemplateViewSet, CustomReportTemplateViewSet
 from systems.services.api.views.initial_seed_views import InitialSeedViewSet
+from systems.services.api.views.disciplinary_views import (
+    DisciplinaryActionViewSet,
+    AbsenceRecordViewSet,
+    DisciplinaryCouncilVerdictViewSet,
+)
 
 router = DefaultRouter()
 router.register(r'staging', views.StagingViewSet, basename='staging')
@@ -22,6 +27,9 @@ router.register(r'webhooks', views.WebhookConfigViewSet, basename='webhooks')
 router.register(r'raw-data-standardized', RawDataStandardizedViewSet, basename='raw-data-standardized')
 router.register(r'forms', StatusChangeFormViewSet, basename='status-change-forms')
 router.register(r'initial-seed', InitialSeedViewSet, basename='initial-seed')
+router.register(r'disciplinary/actions',  DisciplinaryActionViewSet,        basename='disciplinary-actions')
+router.register(r'disciplinary/absences', AbsenceRecordViewSet,              basename='disciplinary-absences')
+router.register(r'disciplinary/verdicts', DisciplinaryCouncilVerdictViewSet, basename='disciplinary-verdicts')
 
 # Import API Router
 import_router = DefaultRouter()
