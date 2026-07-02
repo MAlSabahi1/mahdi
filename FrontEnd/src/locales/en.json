@@ -85,7 +85,6 @@
     "no_data": "No data matches your search.",
     "export": "Export",
     "print": "Print",
-    "all": "All",
     "retry": "Retry",
     "close": "Close"
   },
@@ -402,6 +401,21 @@
     "secretariat": "Secretariat System",
     "services_personnel": "Services & Personnel System",
     "users_permissions": "Users & Permissions"
+  },
+  "admin": {
+    "dashboard_group": "Monitoring & Control",
+    "stats_dashboard": "System Statistical Indicators",
+    "analytics_dashboard": "Unified Analytics Dashboard",
+    "alerts_center": "Alerts & Pending Requests",
+    "compliance_tracker": "Governorate Compliance Tracker",
+    "structure_group": "Structure Administration",
+    "regions_config": "Administrative Regions Configurator",
+    "geo_tree": "Geo Hierarchy Tree",
+    "org_tree": "Org Hierarchy Tree",
+    "general_configs": "General Configurations",
+    "system_group": "System Health & Seeding",
+    "initial_seeding": "Initial Seeding Wizard",
+    "system_telemetry": "System Telemetry & Tasks"
   },
   "blank_page": {
     "title": "Page Under Development",

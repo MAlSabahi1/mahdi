@@ -78,6 +78,106 @@ const router = createRouter({
       },
     },
     {
+      path: '/admin/dashboard/stats',
+      name: 'StatsDashboard',
+      component: () => import('@/views/SystemAdmin/Dashboard/StatsDashboard.vue'),
+      meta: {
+        title: 'المؤشرات الإحصائية العامة',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/admin/dashboard/analytics',
+      name: 'AnalyticsDashboard',
+      component: () => import('@/views/SystemAdmin/Dashboard/AnalyticsDashboard.vue'),
+      meta: {
+        title: 'الداشبورد التحليلي الموحد',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/admin/dashboard/alerts',
+      name: 'AlertsCenter',
+      component: () => import('@/views/SystemAdmin/Dashboard/AlertsCenter.vue'),
+      meta: {
+        title: 'مركز التنبيهات والطلبات',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/admin/dashboard/compliance',
+      name: 'ComplianceTracker',
+      component: () => import('@/views/SystemAdmin/Dashboard/ComplianceTracker.vue'),
+      meta: {
+        title: 'متابعة التزام المحافظات',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/admin/structure/regions',
+      name: 'RegionsConfig',
+      component: () => import('@/views/SystemAdmin/Structure/RegionsConfig.vue'),
+      meta: {
+        title: 'تهيئة المحافظات والمديريات',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/admin/structure/geo-tree',
+      name: 'GeoHierarchyTree',
+      component: () => import('@/views/SystemAdmin/Structure/GeoHierarchyTree.vue'),
+      meta: {
+        title: 'شجرة الهيكل الجغرافي',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/admin/structure/org-tree',
+      name: 'OrgHierarchyTree',
+      component: () => import('@/views/SystemAdmin/Structure/OrgHierarchyTree.vue'),
+      meta: {
+        title: 'شجرة الهيكل التنظيمي',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/admin/structure/general-configs',
+      name: 'GeneralConfigs',
+      component: () => import('@/views/SystemAdmin/Structure/GeneralConfigs.vue'),
+      meta: {
+        title: 'التهيئة العامة للهيكل',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/admin/system/seeding',
+      name: 'InitialSeeding',
+      component: () => import('@/views/SystemAdmin/System/InitialSeeding.vue'),
+      meta: {
+        title: 'معالج التأسيس الأولي',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/admin/system/telemetry',
+      name: 'SystemTelemetry',
+      component: () => import('@/views/SystemAdmin/System/SystemTelemetry.vue'),
+      meta: {
+        title: 'تليمتري النظام والمهام',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
       path: '/personnel',
       name: 'PersonnelList',
       component: () => import('@/views/Personnel/PersonnelList.vue'),
@@ -269,7 +369,7 @@ function getSystemFromPath(path: string, currentSystem: string): string {
   if (path.startsWith('/users') || path.startsWith('/roles')) {
     return 'users_permissions'
   }
-  if (path.startsWith('/audit')) {
+  if (path.startsWith('/admin') || path.startsWith('/audit')) {
     return 'administration'
   }
   return currentSystem

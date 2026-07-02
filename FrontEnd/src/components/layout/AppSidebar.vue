@@ -188,20 +188,59 @@ const menuGroups = computed(() => {
         items: [
           {
             icon: GridIcon,
-            name: "nav.dashboard",
-            path: "/",
+            name: "admin.dashboard_group",
+            subItems: [
+              {
+                name: "admin.stats_dashboard",
+                path: "/admin/dashboard/stats",
+              },
+              {
+                name: "admin.analytics_dashboard",
+                path: "/admin/dashboard/analytics",
+              },
+              {
+                name: "admin.alerts_center",
+                path: "/admin/dashboard/alerts",
+              },
+              {
+                name: "admin.compliance_tracker",
+                path: "/admin/dashboard/compliance",
+              }
+            ]
           },
           {
             icon: UserGroupIcon,
-            name: "الهيكل الجغرافي والتنظيمي",
+            name: "admin.structure_group",
             subItems: [
               {
-                name: "تهيئة المحافظات والمديريات",
-                path: "/blank",
+                name: "admin.regions_config",
+                path: "/admin/structure/regions",
               },
               {
-                name: "تهيئة الهيكل التنظيمي",
-                path: "/blank",
+                name: "admin.geo_tree",
+                path: "/admin/structure/geo-tree",
+              },
+              {
+                name: "admin.org_tree",
+                path: "/admin/structure/org-tree",
+              },
+              {
+                name: "admin.general_configs",
+                path: "/admin/structure/general-configs",
+              }
+            ]
+          },
+          {
+            icon: SettingsIcon,
+            name: "admin.system_group",
+            subItems: [
+              {
+                name: "admin.initial_seeding",
+                path: "/admin/system/seeding",
+              },
+              {
+                name: "admin.system_telemetry",
+                path: "/admin/system/telemetry",
               }
             ]
           },

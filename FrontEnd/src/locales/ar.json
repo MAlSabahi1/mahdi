@@ -414,6 +414,21 @@
     "services_personnel": "نظام الخدمات والأفراد",
     "users_permissions": "إدارة المستخدمين والصلاحيات"
   },
+  "admin": {
+    "dashboard_group": "لوحات التحكم والمراقبة",
+    "stats_dashboard": "المؤشرات الإحصائية العامة للنظام",
+    "analytics_dashboard": "الداشبورد التحليلي الموحد",
+    "alerts_center": "مركز التنبيهات والطلبات المعلقة",
+    "compliance_tracker": "متابعة التزام المحافظات",
+    "structure_group": "وحدة إدارة الهيكل التنظيمي",
+    "regions_config": "تهيئة المحافظات والمديريات والفروع",
+    "geo_tree": "شجرة الهيكل الجغرافي",
+    "org_tree": "شجرة الهيكل التنظيمي",
+    "general_configs": "التهيئة العامة للهيكل",
+    "system_group": "وحدة سلامة وتأسيس النظام",
+    "initial_seeding": "معالج التأسيس الأولي",
+    "system_telemetry": "تليمتري النظام والمهام"
+  },
   "blank_page": {
     "title": "صفحة قيد التطوير",
     "card_title": "هذه الشاشة قيد الإنشاء والتهيئة",

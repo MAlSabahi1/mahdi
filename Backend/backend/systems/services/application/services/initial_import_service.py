@@ -284,7 +284,11 @@ class StrictInitialImportService:
     def _clean(self, val) -> str:
         if val is None:
             return ""
-        return str(val).strip()
+        val_str = str(val).strip()
+        # تحويل الأرقام المشرقية (العربية) إلى أرقام إنجليزية لضمان صحة البيانات في كل الأعمدة (هواتف، أرقام عسكرية...)
+        arabic_digits = "٠١٢٣٤٥٦٧٨٩"
+        english_digits = "0123456789"
+        return val_str.translate(str.maketrans(arabic_digits, english_digits))
 
     def _parse_date(self, val):
         if not val:
@@ -292,6 +296,11 @@ class StrictInitialImportService:
         if isinstance(val, datetime):
             return val.date()
         val = str(val).strip()
+        
+        # تجاهل الوقت إذا كان موجوداً (مثال: 1977-07-07 00:00:00)
+        if len(val) > 10 and val[10] in (' ', 'T'):
+            val = val[:10]
+            
         for fmt in ('%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%Y/%m/%d', '%m/%d/%Y'):
             try:
                 return datetime.strptime(val, fmt).date()
@@ -496,30 +505,71 @@ class StrictInitialImportService:
         col_div = 'القسم_فرع السرية' if 'القسم_فرع السرية' in headers else ''
 
         # فحص أرقام عسكرية مكررة في الملف نفسه
-        file_military_numbers = set()
+        file_military_numbers = {}
 
         for idx, row_dict in enumerate(rows_data, start=2):
             row_errors = []
 
-            # 1. الرقم العسكري
+            # 1. الرقم العسكري بأنواعه
             mil_correct = self._clean(row_dict.get('الرقم العسكري الصحيح', ''))
             mil_normal = self._clean(row_dict.get('الرقم العسكري', ''))
             mil_old = self._clean(row_dict.get('الرقم العسكري القديم', ''))
-            mil_num = mil_correct or mil_normal or mil_old
+            
+            # إذا كان هناك رقم صحيح ومختلف عن الرقم العادي، نعتبره خطأ يحتاج مراجعة
+            if mil_correct and mil_normal and mil_correct != mil_normal:
+                row_errors.append({
+                    "field": "الرقم العسكري الصحيح", 
+                    "message": f"يوجد اختلاف بين الرقم العسكري ({mil_normal}) والرقم الصحيح ({mil_correct}). يرجى المراجعة والدمج."
+                })
+            
+            # نحتفظ بالرقم الأساسي للتحقق من وجود رقم على الأقل (نستخدم العادي، ثم الصحيح، ثم القديم)
+            mil_num = mil_normal or mil_correct or mil_old
             
             if not mil_num:
-                row_errors.append({"field": "الرقم العسكري", "message": "الرقم العسكري مطلوب"})
-            else:
-                if not re.match(r'^\d{7}$', mil_num):
-                    row_errors.append({"field": "الرقم العسكري", "message": f"الرقم العسكري يجب أن يكون 7 أرقام بالضبط (المُدخَل: {mil_num})"})
-                elif mil_num in file_military_numbers:
-                    row_errors.append({"field": "الرقم العسكري", "message": f"الرقم العسكري ({mil_num}) مكرر في الملف المرفوع"})
-                file_military_numbers.add(mil_num)
+                row_errors.append({"field": "الرقم العسكري", "message": "الرقم العسكري (أو القديم/الصحيح) مطلوب"})
 
-            # 2. الاسم
+            # فحص كل حقل موجود على حدة لضمان صحة الطول ومنع التكرار الشامل في الملف
+            for col_key, col_val in [('الرقم العسكري الصحيح', mil_correct), ('الرقم العسكري', mil_normal), ('الرقم العسكري القديم', mil_old)]:
+                if col_val:
+                    if not re.match(r'^\d{7}$', col_val):
+                        row_errors.append({"field": col_key, "message": f"{col_key} يجب أن يكون 7 أرقام بالضبط (المُدخَل: {col_val})"})
+                    elif col_val in file_military_numbers:
+                        dup_idx, dup_col = file_military_numbers[col_val]
+                        # لا نعتبره تكراراً إذا كان في نفس الصف (مثلاً الرقم العسكري يساوي الرقم الصحيح)
+                        if dup_idx != idx:
+                            row_errors.append({"field": col_key, "message": f"{col_key} ({col_val}) مكرر مع '{dup_col}' في الصف رقم ({dup_idx}) في هذا الملف"})
+                    else:
+                        file_military_numbers[col_val] = (idx, col_key)
+
+            # 2. الاسم وتصحيح الاسم
             full_name = self._clean(row_dict.get(col_name, ''))
+            if full_name:
+                # تصحيح صامت للأسماء الموصولة (عز_الدين -> عز الدين)
+                full_name = full_name.replace('_', ' ').replace('-', ' ')
+                full_name = re.sub(r'\s+', ' ', full_name).strip()
+                row_dict[col_name] = full_name
+                
+                # التحقق الصارم للاسم الأساسي
+                if not re.match(r'^[\u0621-\u064A\s]+$', full_name):
+                    row_errors.append({"field": col_name, "message": "الاسم يجب أن يحتوي على حروف عربية فقط (يمنع استخدام الأرقام أو الرموز)"})
+                elif len(full_name.split()) < 2:
+                    row_errors.append({"field": col_name, "message": "الاسم يجب أن يكون ثنائياً على الأقل"})
+
             if not full_name:
                 row_errors.append({"field": col_name, "message": "الاسم مطلوب"})
+
+            corrected_name = self._clean(row_dict.get('تصحيح الاسم من واقع البطاقة', ''))
+            if corrected_name:
+                # تصحيح صامت
+                corrected_name = corrected_name.replace('_', ' ').replace('-', ' ')
+                corrected_name = re.sub(r'\s+', ' ', corrected_name).strip()
+                row_dict['تصحيح الاسم من واقع البطاقة'] = corrected_name
+                
+                # التحقق من أن الاسم يحتوي على حروف عربية ومسافات فقط (لا أرقام ولا رموز كـ + وغيرها)
+                if not re.match(r'^[\u0621-\u064A\s]+$', corrected_name):
+                    row_errors.append({"field": "تصحيح الاسم من واقع البطاقة", "message": "الاسم المصحح يجب أن يحتوي على حروف عربية فقط (يمنع استخدام الأرقام أو الرموز)"})
+                elif len(corrected_name.split()) < 2:
+                    row_errors.append({"field": "تصحيح الاسم من واقع البطاقة", "message": "الاسم المصحح يجب أن يكون اسماً ثنائياً على الأقل"})
 
             # 3. الرقم الوطني، الهاتف، وتواريخ الميلاد والالتحاق
             nat_id = self._clean(row_dict.get(col_national, ''))
@@ -765,6 +815,14 @@ class StrictInitialImportService:
                         "message": f"القسم ({div_str}) لا يتبع لجهة العمل ({dept_str})."
                     })
 
+            # فحص حالة النفقات
+            expense_status = self._clean(row_dict.get('حالة النفقات', ''))
+            if expense_status and expense_status not in ['لديه نفقات', 'بدون نفقات']:
+                row_errors.append({
+                    "field": "حالة النفقات", 
+                    "message": f"حالة النفقات غير معروفة: ({expense_status}). المسموح: 'لديه نفقات' أو 'بدون نفقات'."
+                })
+
             if row_errors:
                 errors.append({
                     "row": idx,
@@ -850,7 +908,7 @@ class StrictInitialImportService:
             mil_correct = self._clean(row_dict.get('الرقم العسكري الصحيح', ''))
             mil_normal = self._clean(row_dict.get('الرقم العسكري', ''))
             mil_old = self._clean(row_dict.get('الرقم العسكري القديم', ''))
-            mil_num = mil_correct or mil_normal or mil_old
+            mil_num = mil_normal or mil_correct or mil_old
             
             full_name = self._clean(row_dict.get(col_name, ''))
             nat_id = self._clean(row_dict.get('الرقم الوطني', '')) or None
