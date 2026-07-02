@@ -48,6 +48,80 @@
           </svg>
         </button>
         <HeaderLogo />
+
+        <!-- Vertical Divider (hidden on mobile, shown on lg) -->
+        <div class="hidden lg:block h-6 w-[1px] bg-gray-200 dark:bg-gray-800 mx-3"></div>
+
+        <!-- System Switcher Dropdown -->
+        <div class="relative hidden lg:block" ref="systemDropdownRef">
+          <button
+            @click="isSystemOpen = !isSystemOpen"
+            class="flex items-center gap-2 py-1.5 text-gray-800 dark:text-white/90 hover:text-brand-600 dark:hover:text-brand-400 transition-colors duration-200 cursor-pointer"
+          >
+            <!-- Grid Icon 㗊 -->
+            <svg class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7" rx="1.5" />
+              <rect x="14" y="3" width="7" height="7" rx="1.5" />
+              <rect x="3" y="14" width="7" height="7" rx="1.5" />
+              <rect x="14" y="14" width="7" height="7" rx="1.5" />
+            </svg>
+
+            <!-- Active System Name -->
+            <span class="text-sm font-semibold">{{ $t(activeSystem.nameKey) }}</span>
+
+            <!-- Caret Down Icon ▼ -->
+            <svg
+              class="h-2.5 w-2.5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ms-1"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              :class="isSystemOpen ? 'rotate-180 text-brand-500' : ''"
+            >
+              <path d="M12 16L6 10H18L12 16Z" />
+            </svg>
+          </button>
+          
+          <transition
+            enter-active-class="transition ease-out duration-100"
+            enter-from-class="transform opacity-0 scale-95"
+            enter-to-class="transform opacity-100 scale-100"
+            leave-active-class="transition ease-in duration-75"
+            leave-from-class="transform opacity-100 scale-100"
+            leave-to-class="transform opacity-0 scale-95"
+          >
+            <div
+              v-if="isSystemOpen"
+              class="absolute start-0 mt-2 w-72 rounded-2xl border border-gray-200 bg-white p-2 shadow-xl dark:border-gray-800 dark:bg-gray-950 z-9999"
+            >
+              <div class="space-y-1">
+                <button
+                  v-for="sys in systemStore.systems"
+                  :key="sys.id"
+                  @click="selectSystem(sys.id)"
+                  :class="[
+                    'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm font-medium transition-all duration-200 cursor-pointer',
+                    systemStore.currentSystem === sys.id
+                      ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-400'
+                      : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-900'
+                  ]"
+                >
+                  <div
+                    :class="[
+                      'flex h-9 w-9 items-center justify-center rounded-lg transition-colors duration-200',
+                      systemStore.currentSystem === sys.id
+                        ? 'bg-brand-100 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+                    ]"
+                  >
+                    <component :is="getActiveIcon(sys.icon)" class="h-5 w-5" />
+                  </div>
+                  <span class="text-sm font-semibold">{{ $t(sys.nameKey) }}</span>
+                  <span v-if="systemStore.currentSystem === sys.id" class="ms-auto h-2 w-2 rounded-full bg-brand-500"></span>
+                </button>
+              </div>
+            </div>
+          </transition>
+        </div>
+
         <button
           @click="toggleApplicationMenu"
           class="flex items-center justify-center w-10 h-10 text-gray-700 rounded-lg z-99999 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 lg:hidden"
@@ -86,16 +160,74 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useSidebar } from '@/composables/useSidebar'
+import { useSystemStore } from '@/stores/system'
 import ThemeToggler from '../common/ThemeToggler.vue'
 import LanguageSwitcher from './header/LanguageSwitcher.vue'
 import SearchBar from './header/SearchBar.vue'
 import HeaderLogo from './header/HeaderLogo.vue'
 import NotificationMenu from './header/NotificationMenu.vue'
 import UserMenu from './header/UserMenu.vue'
+import {
+  LayoutDashboardIcon,
+  DocsIcon,
+  UserGroupIcon,
+  SettingsIcon,
+  ChevronDownIcon
+} from '@/icons'
 
 const { toggleSidebar, toggleMobileSidebar, isMobileOpen } = useSidebar()
+
+const systemStore = useSystemStore()
+const isSystemOpen = ref(false)
+const systemDropdownRef = ref<HTMLElement | null>(null)
+
+const activeSystem = computed(() => {
+  return systemStore.systems.find(sys => sys.id === systemStore.currentSystem) || systemStore.systems[0]
+})
+
+const iconMap: Record<string, any> = {
+  LayoutDashboardIcon,
+  DocsIcon,
+  UserGroupIcon,
+  SettingsIcon
+}
+
+function getActiveIcon(iconName: string) {
+  return iconMap[iconName] || LayoutDashboardIcon
+}
+
+const router = useRouter()
+
+function selectSystem(systemId: string) {
+  systemStore.switchSystem(systemId)
+  isSystemOpen.value = false
+  
+  // استعادة آخر مسار توقف فيه العمل في الجلسة الحالية
+  const lastPath = sessionStorage.getItem(`pol_last_path_${systemId}`)
+  if (lastPath) {
+    router.push(lastPath)
+  } else {
+    // الانتقال للرئيسية الموحدة للنظام (لوحة التحكم) في حال كانت الجلسة جديدة
+    router.push('/')
+  }
+}
+
+function handleClickOutside(event: MouseEvent) {
+  if (systemDropdownRef.value && !systemDropdownRef.value.contains(event.target as Node)) {
+    isSystemOpen.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 const handleToggle = () => {
   if (window.innerWidth >= 1024) {

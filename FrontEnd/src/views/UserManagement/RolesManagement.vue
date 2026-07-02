@@ -1,19 +1,12 @@
 <template>
   <admin-layout>
+    <PageBreadcrumb :pageTitle="$t('roles.title')" />
     <div class="space-y-6">
       <!-- Header -->
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 class="text-xl font-bold text-gray-800 dark:text-white/90">
-            {{ $t('roles.title') }}
-          </h1>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {{ $t('roles.subtitle') }}
-          </p>
-        </div>
+      <div class="flex justify-end">
         <button
           @click="$router.push({ name: 'role-create' })"
-          class="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 transition-colors"
+          class="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 transition-colors cursor-pointer"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
@@ -106,6 +99,7 @@
 <script setup>
 import { onMounted } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
+import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import { useRolesStore } from '@/stores/roles'
 import Swal from 'sweetalert2'
 

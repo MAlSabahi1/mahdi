@@ -1,19 +1,12 @@
 <template>
   <admin-layout>
+    <PageBreadcrumb :pageTitle="$t('services.resolve_conflicts') || 'حل تعارضات المطابقة'" />
     <div class="space-y-6">
       
       <!-- Header Section -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div class="flex items-center gap-2">
-            <router-link to="/services/reconciliation" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-              <svg class="h-5 w-5 rtl:rotate-180" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-            </router-link>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $t('services.resolve_conflicts') || 'حل تعارضات المطابقة' }}</h2>
-          </div>
-          <p v-if="task" class="mt-1 text-sm text-gray-500 dark:text-gray-400 mr-7">
+          <p v-if="task" class="text-sm text-gray-500 dark:text-gray-400">
             {{ $t('services.task') || 'المهمة' }}: <span class="font-bold text-gray-900 dark:text-white">{{ task.name }}</span> | {{ $t('services.type') || 'النوع' }}: {{ task.task_type }}
           </p>
         </div>
@@ -21,7 +14,7 @@
           <button 
             @click="submitResolutions"
             :disabled="resolutions.length === 0 || isSubmitting"
-            class="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
+            class="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-colors disabled:opacity-50 cursor-pointer"
           >
             <svg v-if="isSubmitting" class="h-4.5 w-4.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
             <svg v-else class="h-4.5 w-4.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
@@ -113,6 +106,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
+import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import { useServicesStore } from '@/stores/services'
 import Swal from 'sweetalert2'
 
@@ -160,16 +154,18 @@ function updateResolutions() {
   })
 }
 
-function isFieldDifferent(field: string, item: any): boolean {
+function isFieldDifferent(field: string | number, item: any): boolean {
+  const fieldStr = String(field)
   // If the backend returns a fields_changed array, use it
   if (item.fields_changed && Array.isArray(item.fields_changed)) {
-    return item.fields_changed.includes(field)
+    return item.fields_changed.includes(fieldStr)
   }
   // Fallback string comparison
-  return String(item.system_record[field]) !== String(item.file_record[field])
+  return String(item.system_record[fieldStr]) !== String(item.file_record[fieldStr])
 }
 
-function formatFieldName(field: string): string {
+function formatFieldName(field: string | number): string {
+  const fieldStr = String(field)
   const map: Record<string, string> = {
     military_number: 'الرقم العسكري',
     full_name: 'الاسم',
@@ -178,7 +174,7 @@ function formatFieldName(field: string): string {
     status: 'الحالة',
     national_id: 'الرقم الوطني'
   }
-  return map[field] || field
+  return map[fieldStr] || fieldStr
 }
 
 async function submitResolutions() {

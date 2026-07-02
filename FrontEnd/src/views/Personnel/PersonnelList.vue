@@ -1,15 +1,9 @@
 <template>
   <admin-layout>
+    <PageBreadcrumb :pageTitle="$t('personnel.title')" />
     <div class="space-y-6">
       <!-- Header Section -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $t('personnel.title') }}</h2>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {{ $t('personnel.subtitle') }}
-          </p>
-        </div>
-        <div class="flex items-center gap-3">
+      <div class="flex justify-end gap-3">
           <button
             @click="exportData"
             class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
@@ -30,14 +24,13 @@
           </button>
           <RouterLink
             to="/personnel/create"
-            class="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 transition-colors"
+            class="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 transition-colors cursor-pointer"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
             </svg>
             {{ $t('personnel.add_personnel') }}
           </RouterLink>
-        </div>
       </div>
 
       <!-- Filters & Search Section -->
@@ -291,6 +284,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
+import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import { usePersonnelStore } from '@/stores/personnel'
 import { useCoreStore } from '@/stores/core'
 import Swal from 'sweetalert2'

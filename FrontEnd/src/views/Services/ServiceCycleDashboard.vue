@@ -1,16 +1,7 @@
 <template>
   <admin-layout>
+    <PageBreadcrumb :pageTitle="$t('services.dashboard_title') || 'إدارة الكشوفات والخدمات'" />
     <div class="space-y-6">
-      
-      <!-- Header Section -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $t('services.dashboard_title') || 'إدارة الكشوفات والخدمات' }}</h2>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {{ $t('services.dashboard_subtitle') || 'تصدير كشوفات المديريات الشهرية واستيرادها بعد التعديل لمعالجتها في النظام.' }}
-          </p>
-        </div>
-      </div>
 
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
         
@@ -172,6 +163,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
+import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import { useServicesStore } from '@/stores/services'
 import { useCoreStore } from '@/stores/core'
 import Swal from 'sweetalert2'
@@ -189,6 +181,7 @@ const exportData = ref({
 
 // --- Import State ---
 const isImporting = ref(false)
+const isDragging = ref(false)
 const selectedFile = ref<File | null>(null)
 
 const importTask = ref({
@@ -225,6 +218,13 @@ function handleFileSelect(event: Event) {
   const target = event.target as HTMLInputElement
   if (target.files && target.files.length > 0) {
     validateAndSetFile(target.files[0])
+  }
+}
+
+function handleDrop(event: DragEvent) {
+  isDragging.value = false
+  if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+    validateAndSetFile(event.dataTransfer.files[0])
   }
 }
 

@@ -90,6 +90,7 @@
     "close": "Close"
   },
   "nav": {
+    "home": "Home",
     "dashboard": "Dashboard",
     "users": "User Management",
     "roles": "Roles & Permissions",
@@ -137,7 +138,7 @@
     }
   },
   "users": {
-    "title": "User Management",
+    "title": "Users",
     "subtitle": "Manage system user accounts and access privileges.",
     "add_user": "Add New User",
     "edit_user": "Edit User Details",
@@ -394,5 +395,17 @@
     },
     "empty_state": "No rank settlement requests at the moment",
     "new_mil_hint": "To promote personnel to officer, a new military number starting with 60 is required"
+  },
+  "systems": {
+    "title": "Systems & Modules",
+    "administration": "Administration System",
+    "secretariat": "Secretariat System",
+    "services_personnel": "Services & Personnel System",
+    "users_permissions": "Users & Permissions"
+  },
+  "blank_page": {
+    "title": "Page Under Development",
+    "card_title": "This page is under construction",
+    "description": "We are currently working on building this screen. Please explore other active parts of the system such as Personnel Management or Secretariat."
   }
 }

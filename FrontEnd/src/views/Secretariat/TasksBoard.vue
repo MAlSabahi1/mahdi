@@ -1,12 +1,9 @@
 <template>
   <admin-layout>
+    <PageBreadcrumb :pageTitle="$t('secretariat.tasks.title')" />
     <div class="space-y-6">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $t('secretariat.tasks.title') }}</h1>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ $t('secretariat.tasks.subtitle') }}</p>
-        </div>
-        <button class="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 shadow-theme-xs">
+      <div class="flex justify-end">
+        <button class="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 shadow-theme-xs cursor-pointer">
           {{ $t('secretariat.tasks.add') }}
         </button>
       </div>
@@ -42,6 +39,7 @@
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
+import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import { useSecretariatStore } from '@/stores/secretariat'
 
 const { t } = useI18n()

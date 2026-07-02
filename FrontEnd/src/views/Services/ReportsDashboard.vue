@@ -1,29 +1,20 @@
 <template>
   <admin-layout>
+    <PageBreadcrumb :pageTitle="$t('services.reports_title') || 'التقارير والإقفال الشهري'" />
     <div class="space-y-6">
       
-      <!-- Header Section -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $t('services.reports_title') || 'التقارير والإقفال الشهري' }}</h2>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {{ $t('services.reports_subtitle') || 'متابعة إنجاز المديريات، استخراج التقارير الختامية، وإقفال الشهر.' }}
-          </p>
-        </div>
-        
-        <!-- Danger Zone: Close Month -->
-        <div class="flex items-center gap-3">
-          <button 
-            @click="handleCloseMonth"
-            :disabled="servicesStore.loading"
-            class="flex items-center gap-2 rounded-lg bg-error-600 px-5 py-2 text-sm font-bold text-white shadow-theme-xs hover:bg-error-500 focus:outline-none focus:ring-2 focus:ring-error-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
-          >
-            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            {{ $t('services.close_month') || 'إقفال الشهر الحالي' }}
-          </button>
-        </div>
+      <!-- Danger Zone: Close Month -->
+      <div class="flex justify-end">
+        <button 
+          @click="handleCloseMonth"
+          :disabled="servicesStore.loading"
+          class="flex items-center gap-2 rounded-lg bg-error-600 px-5 py-2 text-sm font-bold text-white shadow-theme-xs hover:bg-error-500 focus:outline-none focus:ring-2 focus:ring-error-500 focus:ring-offset-2 transition-colors disabled:opacity-50 cursor-pointer"
+        >
+          <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          {{ $t('services.close_month') || 'إقفال الشهر الحالي' }}
+        </button>
       </div>
 
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -165,6 +156,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
+import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import { useServicesStore } from '@/stores/services'
 import Swal from 'sweetalert2'
 

@@ -1,5 +1,6 @@
 <template>
   <admin-layout>
+    <PageBreadcrumb :pageTitle="$t('personnel.profile_details') || 'تفاصيل ملف الفرد'" />
     <div class="space-y-6">
       <!-- Loading State -->
       <div v-if="loading" class="flex justify-center p-12">
@@ -352,6 +353,7 @@ import { usePersonnelStore } from '@/stores/personnel'
 import { useRankSettlementStore } from '@/stores/rankSettlement'
 import { useCoreStore } from '@/stores/core'
 import { validateFormFields } from '@/stores/validation'
+import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import Swal from 'sweetalert2'
 
 const route = useRoute()

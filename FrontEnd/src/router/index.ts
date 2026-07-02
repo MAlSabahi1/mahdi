@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useSystemStore } from '@/stores/system'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -255,10 +256,36 @@ const router = createRouter({
 
 export default router
 
+function getSystemFromPath(path: string, currentSystem: string): string {
+  if (path === '/') {
+    return currentSystem
+  }
+  if (path.startsWith('/secretariat')) {
+    return 'secretariat'
+  }
+  if (path.startsWith('/personnel') || path.startsWith('/services')) {
+    return 'services_personnel'
+  }
+  if (path.startsWith('/users') || path.startsWith('/roles')) {
+    return 'users_permissions'
+  }
+  if (path.startsWith('/audit')) {
+    return 'administration'
+  }
+  return currentSystem
+}
+
 router.beforeEach((to, from, next) => {
   document.title = `${to.meta.title ? to.meta.title + ' | ' : ''}Admin Dashboard`
 
   const authStore = useAuthStore()
+  const systemStore = useSystemStore()
+
+  // مزامنة حالة النظام النشط مع المسار الحالي
+  const targetSystemId = getSystemFromPath(to.path, systemStore.currentSystem)
+  if (systemStore.currentSystem !== targetSystemId) {
+    systemStore.switchSystem(targetSystemId)
+  }
 
   // إذا كانت الصفحة تتطلب مصادقة والمستخدم غير مسجل
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
@@ -276,4 +303,20 @@ router.beforeEach((to, from, next) => {
   }
 
   next()
+})
+
+router.afterEach((to) => {
+  const path = to.fullPath
+  // تجنب حفظ المسارات غير الصالحة أو الخاصة بالمصادقة أو الأخطاء
+  if (
+    path.startsWith('/signin') ||
+    path.startsWith('/error') ||
+    path.startsWith('/blank') ||
+    path.startsWith('/profile')
+  ) {
+    return
+  }
+  const systemStore = useSystemStore()
+  const systemId = getSystemFromPath(to.path, systemStore.currentSystem)
+  sessionStorage.setItem(`pol_last_path_${systemId}`, path)
 })

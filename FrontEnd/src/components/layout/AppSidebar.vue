@@ -166,110 +166,154 @@ import {
   PageIcon,
   PlugInIcon,
   UserCircleIcon,
+  UserGroupIcon,
+  SettingsIcon,
 } from "../../icons";
 import { useSidebar } from "@/composables/useSidebar";
 import { useAuthStore } from "@/stores/auth";
+import { useSystemStore } from "@/stores/system";
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+const systemStore = useSystemStore();
 
 const { isExpanded, isMobileOpen, isHovered, openSubmenu } = useSidebar();
 
-const menuGroups = [
-  {
-    title: "nav.dashboard", // Use i18n key or just pass hardcoded if we want, but better to create a key like "nav.menu"
-    items: [
+const menuGroups = computed(() => {
+  if (systemStore.currentSystem === "administration") {
+    return [
       {
-        icon: GridIcon,
-        name: "nav.dashboard",
-        path: "/",
-      },
-      {
-        icon: UserCircleIcon,
-        name: "nav.users",
-        path: "/users",
-      },
-      {
-        icon: PlugInIcon,
-        name: "nav.roles",
-        path: "/roles",
-      },
-      {
-        icon: UserCircleIcon,
-        name: "nav.personnel_management",
-        subItems: [
+        title: "systems.administration",
+        items: [
           {
-            name: "nav.personnel",
-            path: "/personnel",
+            icon: GridIcon,
+            name: "nav.dashboard",
+            path: "/",
           },
           {
-            name: "nav.corrections",
-            path: "/personnel/corrections",
+            icon: UserGroupIcon,
+            name: "الهيكل الجغرافي والتنظيمي",
+            subItems: [
+              {
+                name: "تهيئة المحافظات والمديريات",
+                path: "/blank",
+              },
+              {
+                name: "تهيئة الهيكل التنظيمي",
+                path: "/blank",
+              }
+            ]
           },
           {
-            name: "nav.rank_settlements",
-            path: "/personnel/settlements",
+            icon: PageIcon,
+            name: "nav.audit_logs",
+            path: "/audit",
           }
         ]
-      },
+      }
+    ];
+  } else if (systemStore.currentSystem === "secretariat") {
+    return [
       {
-        icon: PageIcon,
-        name: "nav.service_cycle",
-        subItems: [
+        title: "systems.secretariat",
+        items: [
           {
-            name: "services.service_dashboard",
-            path: "/services/dashboard",
-          },
-          {
-            name: "services.staging",
-            path: "/services/staging",
-          },
-          {
-            name: "services.rejections",
-            path: "/services/rejections",
-          },
-          {
-            name: "services.reconciliation",
-            path: "/services/reconciliation",
-          },
-          {
-            name: "services.reports_and_close",
-            path: "/services/reports",
-          }
-        ]
-      },
-      {
-        icon: PageIcon,
-        name: "nav.secretariat",
-        subItems: [
-          {
+            icon: GridIcon,
             name: "nav.secretariat_dashboard",
             path: "/secretariat/dashboard",
           },
           {
+            icon: PageIcon,
             name: "nav.correspondences",
             path: "/secretariat/correspondences",
           },
           {
+            icon: PageIcon,
             name: "nav.tasks",
             path: "/secretariat/tasks",
           }
         ]
-      },
-    ],
-  },
-  {
-    title: "nav.settings", // fallback key
-    items: [
+      }
+    ];
+  } else if (systemStore.currentSystem === "services_personnel") {
+    return [
       {
-        icon: PageIcon,
-        name: "nav.audit_logs",
-        path: "/audit",
-      },
-    ],
-  },
-];
+        title: "systems.services_personnel",
+        items: [
+          {
+            icon: UserGroupIcon,
+            name: "nav.personnel_management",
+            subItems: [
+              {
+                name: "nav.personnel",
+                path: "/personnel",
+              },
+              {
+                name: "nav.corrections",
+                path: "/personnel/corrections",
+              },
+              {
+                name: "nav.rank_settlements",
+                path: "/personnel/settlements",
+              }
+            ]
+          },
+          {
+            icon: PageIcon,
+            name: "nav.service_cycle",
+            subItems: [
+              {
+                name: "services.service_dashboard",
+                path: "/services/dashboard",
+              },
+              {
+                name: "services.staging",
+                path: "/services/staging",
+              },
+              {
+                name: "services.rejections",
+                path: "/services/rejections",
+              },
+              {
+                name: "services.reconciliation",
+                path: "/services/reconciliation",
+              },
+              {
+                name: "services.reports_and_close",
+                path: "/services/reports",
+              }
+            ]
+          }
+        ]
+      }
+    ];
+  } else if (systemStore.currentSystem === "users_permissions") {
+    return [
+      {
+        title: "systems.users_permissions",
+        items: [
+          {
+            icon: UserCircleIcon,
+            name: "nav.users",
+            path: "/users",
+          },
+          {
+            icon: PlugInIcon,
+            name: "nav.roles",
+            path: "/roles",
+          },
+          {
+            icon: SettingsIcon,
+            name: "nav.settings",
+            path: "/blank",
+          }
+        ]
+      }
+    ];
+  }
+  return [];
+});
 
 const handleLogout = async () => {
   await authStore.logout();
@@ -284,7 +328,7 @@ const toggleSubmenu = (groupIndex, itemIndex) => {
 };
 
 const isAnySubmenuRouteActive = computed(() => {
-  return menuGroups.some((group) =>
+  return menuGroups.value.some((group) =>
     group.items.some(
       (item) =>
         item.subItems && item.subItems.some((subItem) => isActive(subItem.path))
@@ -294,7 +338,7 @@ const isAnySubmenuRouteActive = computed(() => {
 
 const checkAndOpenSubmenu = () => {
   let foundSubmenu = false;
-  menuGroups.forEach((group, groupIndex) => {
+  menuGroups.value.forEach((group, groupIndex) => {
     group.items.forEach((item, itemIndex) => {
       if (item.subItems && item.subItems.some((subItem) => isActive(subItem.path))) {
         openSubmenu.value = `${groupIndex}-${itemIndex}`;
@@ -312,8 +356,10 @@ onMounted(() => {
 });
 
 watch(() => route.path, () => {
-  // Only auto-open if it's not already open (so we don't annoy the user if they closed it)
-  // Or just always open if navigating to a subitem. Let's always check and open if navigated to a sub-item.
+  checkAndOpenSubmenu();
+});
+
+watch(() => systemStore.currentSystem, () => {
   checkAndOpenSubmenu();
 });
 

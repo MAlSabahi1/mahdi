@@ -1,39 +1,24 @@
 <template>
   <admin-layout>
+    <PageBreadcrumb :pageTitle="$t('personnel.edit_profile') || 'تعديل بيانات الفرد'" />
     <div class="space-y-6">
       <!-- Header Section -->
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex items-center gap-3">
-          <button @click="router.push(`/personnel/${route.params.id}`)"
-            class="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors">
-            <svg class="h-5 w-5 rtl:rotate-180" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-          </button>
-          <div>
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ $t('personnel.edit_profile') || 'تعديل بيانات الفرد' }}</h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              تحديث المعلومات والبيانات الوظيفية
-            </p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3">
-          <button @click="router.push(`/personnel/${route.params.id}`)"
-            class="rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 transition-colors dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
-            {{ $t('common.cancel') }}
-          </button>
-          <button @click="handleSubmit" :disabled="loading || isNationalIdDuplicate"
-            class="flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 transition-colors disabled:opacity-50">
-            <svg v-if="loading" class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
-            <svg v-else class="h-4.5 w-4.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            {{ $t('common.save') }}
-          </button>
-        </div>
+      <div class="flex justify-end gap-3">
+        <button @click="router.push(`/personnel/${route.params.id}`)"
+          class="rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 transition-colors dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 cursor-pointer">
+          {{ $t('common.cancel') }}
+        </button>
+        <button @click="handleSubmit" :disabled="loading || isNationalIdDuplicate"
+          class="flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 transition-colors disabled:opacity-50 cursor-pointer">
+          <svg v-if="loading" class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          <svg v-else class="h-4.5 w-4.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          {{ $t('common.save') }}
+        </button>
       </div>
 
       <div v-if="coreStore.loading || fetching" class="flex justify-center p-12">
@@ -301,7 +286,7 @@
               <div class="relative z-20 bg-transparent">
                 <select v-model="form.force_classification" v-field-error="'force_classification'" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
                   <option :value="null">...</option>
-                  <option v-for="f in coreStore.forceClassifications" :key="f.id" :value="f.id" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">{{ f.name }}</option>
+                  <option v-for="f in coreStore.forceTypes" :key="f.id" :value="f.id" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">{{ f.name }}</option>
                 </select>
                 <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
                   <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -336,6 +321,7 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
+import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import { useCoreStore } from '@/stores/core'
 import { usePersonnelStore } from '@/stores/personnel'
 import { validateFormFields } from '@/stores/validation'

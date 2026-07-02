@@ -1,26 +1,19 @@
 <template>
   <admin-layout>
+    <PageBreadcrumb :pageTitle="$t('services.reconciliation_title') || 'مهام المطابقة (Reconciliation)'" />
     <div class="space-y-6">
       
       <!-- Header Section -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $t('services.reconciliation_title') || 'مهام المطابقة (Reconciliation)' }}</h2>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {{ $t('services.reconciliation_subtitle') || 'تتبع ومعالجة الاختلافات والتعارضات في البيانات المرفوعة.' }}
-          </p>
-        </div>
-        <div class="flex items-center gap-3">
-          <button 
-            @click="isModalOpen = true"
-            class="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-colors"
-          >
-            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            {{ $t('services.create_reconciliation') || 'إنشاء مهمة مطابقة جديدة' }}
-          </button>
-        </div>
+      <div class="flex justify-end">
+        <button 
+          @click="isModalOpen = true"
+          class="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-colors cursor-pointer"
+        >
+          <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          {{ $t('services.create_reconciliation') || 'إنشاء مهمة مطابقة جديدة' }}
+        </button>
       </div>
 
       <!-- Data Table -->
@@ -199,6 +192,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
+import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import { useServicesStore } from '@/stores/services'
 import Swal from 'sweetalert2'
 
