@@ -19,6 +19,15 @@
             </svg>
             {{ $t('common.export') || 'تصدير' }}
           </button>
+          <button
+            @click="showLegacyImportModal = true"
+            class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+          >
+            <svg class="h-4.5 w-4.5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            استيراد بيانات
+          </button>
           <RouterLink
             to="/personnel/create"
             class="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 transition-colors"
@@ -34,19 +43,31 @@
       <!-- Filters & Search Section -->
       <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-theme-sm dark:border-gray-800 dark:bg-gray-900">
         <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div class="relative w-full md:max-w-md">
-            <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
-              <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-              </svg>
+          <div class="relative w-full md:max-w-md flex items-center gap-2">
+            <div class="relative flex-1">
+              <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <input
+                v-model="searchQuery"
+                @input="debouncedSearch"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 ps-10 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 dark:focus:border-brand-500 dark:focus:ring-brand-500"
+                :placeholder="$t('personnel.search_placeholder') || 'البحث بالرقم العسكري، الاسم، أو الرقم الوطني...'"
+              >
             </div>
-            <input
-              v-model="searchQuery"
-              @input="debouncedSearch"
-              type="text"
-              class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 ps-10 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 dark:focus:border-brand-500 dark:focus:ring-brand-500"
-              :placeholder="$t('personnel.search_placeholder') || 'البحث بالرقم العسكري، الاسم، أو الرقم الوطني...'"
+            <button
+              @click="showFilters = !showFilters"
+              class="flex items-center justify-center gap-2 rounded-lg border p-2.5 transition-colors"
+              :class="showFilters || hasActiveFilters ? 'border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-400' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'"
+              title="تصفية متقدمة"
             >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+            </button>
           </div>
           <div class="flex items-center gap-3 w-full md:w-auto">
             <button
@@ -55,6 +76,52 @@
             >
               {{ $t('common.refresh') || 'تحديث' }}
             </button>
+          </div>
+        </div>
+
+        <!-- Advanced Filters Collapsible -->
+        <div v-show="showFilters" class="mt-4 border-t border-gray-200 dark:border-gray-800 pt-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">{{ $t('personnel.current_rank') }}</label>
+              <div class="relative">
+                <select v-model="filters.current_rank" class="block w-full appearance-none rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:border-brand-500">
+                  <option :value="null">الكل</option>
+                  <option v-for="r in coreStore.ranks" :key="r.id" :value="r.id">{{ r.name }}</option>
+                </select>
+                <span class="pointer-events-none absolute inset-y-0 ltr:right-0 rtl:left-0 flex items-center px-4 text-gray-500">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                </span>
+              </div>
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">{{ $t('personnel.current_status') }}</label>
+              <div class="relative">
+                <select v-model="filters.current_status" class="block w-full appearance-none rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:border-brand-500">
+                  <option :value="null">الكل</option>
+                  <option v-for="s in coreStore.statuses" :key="s.id" :value="s.id">{{ s.name }}</option>
+                </select>
+                <span class="pointer-events-none absolute inset-y-0 ltr:right-0 rtl:left-0 flex items-center px-4 text-gray-500">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                </span>
+              </div>
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">{{ $t('personnel.governorate') }}</label>
+              <div class="relative">
+                <select v-model="filters.governorate" class="block w-full appearance-none rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:border-brand-500">
+                  <option :value="null">الكل</option>
+                  <option v-for="g in coreStore.governorates" :key="g.id" :value="g.id">{{ g.name }}</option>
+                </select>
+                <span class="pointer-events-none absolute inset-y-0 ltr:right-0 rtl:left-0 flex items-center px-4 text-gray-500">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 flex justify-end gap-3">
+            <button @click="clearFilters" class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">إلغاء الفرز</button>
+            <button @click="loadPersonnel(1)" class="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 transition-colors">تطبيق الفرز</button>
           </div>
         </div>
       </div>
@@ -211,20 +278,64 @@
         </div>
       </div>
     </div>
+    
+    <!-- Legacy Import Modal -->
+    <LegacyImportModal 
+      v-if="showLegacyImportModal" 
+      @close="showLegacyImportModal = false"
+      @success="handleLegacyImportSuccess"
+    />
   </admin-layout>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import { usePersonnelStore } from '@/stores/personnel'
+import { useCoreStore } from '@/stores/core'
 import Swal from 'sweetalert2'
+import LegacyImportModal from './components/LegacyImportModal.vue'
 import api from '@/lib/api'
 
 const personnelStore = usePersonnelStore()
+const coreStore = useCoreStore()
+
+const showLegacyImportModal = ref(false)
+
+function handleLegacyImportSuccess(payload: any) {
+  showLegacyImportModal.value = false
+  const title = payload.dryRun ? 'بدأت عملية فحص الملف بنجاح' : 'تم استلام الملف وجاري الاستيراد'
+  Swal.fire({
+    toast: true,
+    position: 'top-end',
+    icon: 'success',
+    title: title,
+    text: 'تتم المعالجة في الخلفية. يمكنك متابعة العمل.',
+    showConfirmButton: false,
+    timer: 5000
+  })
+}
 
 const searchQuery = ref('')
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
+
+const showFilters = ref(false)
+const filters = ref({
+  current_rank: null as number | string | null,
+  current_status: null as number | string | null,
+  governorate: null as number | string | null
+})
+
+const hasActiveFilters = computed(() => {
+  return filters.value.current_rank !== null || 
+         filters.value.current_status !== null || 
+         filters.value.governorate !== null
+})
+
+function clearFilters() {
+  filters.value = { current_rank: null, current_status: null, governorate: null }
+  loadPersonnel(1)
+}
 
 function debouncedSearch() {
   if (searchTimeout) clearTimeout(searchTimeout)
@@ -236,6 +347,9 @@ function debouncedSearch() {
 function loadPersonnel(page = 1) {
   personnelStore.fetchPersonnel({
     search: searchQuery.value || undefined,
+    current_rank: filters.value.current_rank || undefined,
+    current_status: filters.value.current_status || undefined,
+    governorate: filters.value.governorate || undefined,
     page
   })
 }
@@ -250,6 +364,9 @@ async function exportData() {
   try {
     const params: any = {}
     if (searchQuery.value) params.search = searchQuery.value
+    if (filters.value.current_rank) params.current_rank = filters.value.current_rank
+    if (filters.value.current_status) params.current_status = filters.value.current_status
+    if (filters.value.governorate) params.governorate = filters.value.governorate
     
     const response = await api.get('/personnel/export_csv/', {
       params,
@@ -306,6 +423,9 @@ function getQualityScoreTextColor(score: number) {
 }
 
 onMounted(() => {
+  if (coreStore.ranks.length === 0) {
+    coreStore.fetchAllReferences()
+  }
   loadPersonnel()
 })
 </script>

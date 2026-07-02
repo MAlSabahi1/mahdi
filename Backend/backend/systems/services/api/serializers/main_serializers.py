@@ -169,32 +169,41 @@ class NotifyMissingSerializer(serializers.Serializer):
 
 
 class StagingRecordSerializer(serializers.ModelSerializer):
-    """Serializer لسجل Staging"""
-    personnel_name = serializers.CharField(source='personnel.full_name', read_only=True)
-    personnel_military_number = serializers.CharField(source='personnel.military_number', read_only=True)
+    """Serializer لسجل Staging لتطابق الفرونت إند"""
+    personnel = serializers.SerializerMethodField()
+    field_name = serializers.SerializerMethodField()
+    old_value = serializers.SerializerMethodField()
+    new_value = serializers.SerializerMethodField()
     
     class Meta:
         model = StagingRecord
         fields = [
             'id',
             'personnel',
-            'personnel_name',
-            'personnel_military_number',
-            'upload_batch_id',
-            'proposed_change',
-            'notes',
+            'field_name',
+            'old_value',
+            'new_value',
             'status',
             'severity',
-            'requires_document',
             'created_at',
-            'updated_at',
-        ]
-        read_only_fields = [
-            'id',
             'upload_batch_id',
-            'created_at',
-            'updated_at',
         ]
+        read_only_fields = ['id', 'created_at', 'upload_batch_id']
+
+    def get_personnel(self, obj):
+        return {
+            'military_number': obj.personnel.military_number if obj.personnel else '',
+            'full_name': obj.personnel.full_name if obj.personnel else ''
+        }
+        
+    def get_field_name(self, obj):
+        return obj.proposed_change.get('field_name', '') if obj.proposed_change else ''
+        
+    def get_old_value(self, obj):
+        return obj.proposed_change.get('old_value', '') if obj.proposed_change else ''
+        
+    def get_new_value(self, obj):
+        return obj.proposed_change.get('new_value', '') if obj.proposed_change else ''
 
 
 class ExportLogSerializer(serializers.ModelSerializer):
@@ -315,6 +324,7 @@ class ReconciliationTaskSerializer(serializers.Serializer):
     task_type = serializers.CharField()
     status = serializers.CharField()
     created_at = serializers.DateTimeField(read_only=True)
+    results = serializers.JSONField(read_only=True, required=False)
 
 
 class ReconciliationCreateSerializer(serializers.Serializer):
@@ -331,12 +341,33 @@ class ReconciliationResolveSerializer(serializers.Serializer):
     )
 
 
-class RejectionLogSerializer(serializers.Serializer):
-    """Serializer لسجل الرفض"""
-    id = serializers.IntegerField(read_only=True)
-    personnel_name = serializers.CharField()
-    rejection_reason = serializers.CharField()
-    rejected_at = serializers.DateTimeField()
+class RejectionLogSerializer(serializers.ModelSerializer):
+    """Serializer لسجل الرفض ليتطابق مع الفرونت إند"""
+    personnel = serializers.SerializerMethodField()
+    rejected_by = serializers.SerializerMethodField()
+    
+    class Meta:
+        from systems.services.models import RejectionLog
+        model = RejectionLog
+        fields = [
+            'id',
+            'personnel',
+            'service_month',
+            'rejection_reason',
+            'rejected_by',
+            'rejected_at',
+        ]
+        
+    def get_personnel(self, obj):
+        return {
+            'military_number': obj.personnel.military_number if obj.personnel else '',
+            'full_name': obj.personnel.full_name if obj.personnel else ''
+        }
+        
+    def get_rejected_by(self, obj):
+        return {
+            'username': obj.rejected_by.username if obj.rejected_by else 'النظام'
+        }
 
 
 class WebhookConfigSerializer(serializers.ModelSerializer):

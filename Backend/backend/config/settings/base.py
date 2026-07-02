@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     # Systems — الأنظمة التشغيلية
     'systems.personnel.apps.PersonnelConfig',
     'systems.services.apps.ServicesConfig',
+    'systems.secretariat.apps.SecretariatConfig',
 
     # Extensions
     'extensions.webhooks.apps.WebhooksConfig',

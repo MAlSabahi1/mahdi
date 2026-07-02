@@ -131,6 +131,87 @@ const router = createRouter({
       },
     },
     {
+      path: '/services/dashboard',
+      name: 'ServiceCycleDashboard',
+      component: () => import('@/views/Services/ServiceCycleDashboard.vue'),
+      meta: {
+        title: 'لوحة التحكم الكشوفات',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/secretariat/dashboard',
+      name: 'SecretariatDashboard',
+      component: () => import('@/views/Secretariat/Dashboard.vue'),
+      meta: {
+        title: 'لوحة تحكم السكرتارية',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/secretariat/correspondences',
+      name: 'SecretariatCorrespondences',
+      component: () => import('@/views/Secretariat/CorrespondenceList.vue'),
+      meta: {
+        title: 'صادر ووارد',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/secretariat/tasks',
+      name: 'SecretariatTasks',
+      component: () => import('@/views/Secretariat/TasksBoard.vue'),
+      meta: {
+        title: 'إدارة المهام',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/staging',
+      name: 'StagingList',
+      component: () => import('@/views/Services/StagingList.vue'),
+      meta: {
+        title: 'مراجعة الاعتمادات',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/rejections',
+      name: 'RejectionList',
+      component: () => import('@/views/Services/RejectionList.vue'),
+      meta: {
+        title: 'سجل المرفوضات',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/reconciliation',
+      name: 'ReconciliationList',
+      component: () => import('@/views/Services/ReconciliationList.vue'),
+      meta: {
+        title: 'المطابقات',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/reconciliation/:id',
+      name: 'ReconciliationDetail',
+      component: () => import('@/views/Services/ReconciliationDetail.vue'),
+      meta: {
+        title: 'تفاصيل المطابقة',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/reports',
+      name: 'ReportsDashboard',
+      component: () => import('@/views/Services/ReportsDashboard.vue'),
+      meta: {
+        title: 'التقارير والإقفال',
+        requiresAuth: true,
+      },
+    },
+    {
       path: '/blank',
       name: 'Blank',
       component: () => import('../views/Pages/BlankPage.vue'),

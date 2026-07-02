@@ -213,6 +213,50 @@ const menuGroups = [
           }
         ]
       },
+      {
+        icon: PageIcon,
+        name: "nav.service_cycle",
+        subItems: [
+          {
+            name: "services.service_dashboard",
+            path: "/services/dashboard",
+          },
+          {
+            name: "services.staging",
+            path: "/services/staging",
+          },
+          {
+            name: "services.rejections",
+            path: "/services/rejections",
+          },
+          {
+            name: "services.reconciliation",
+            path: "/services/reconciliation",
+          },
+          {
+            name: "services.reports_and_close",
+            path: "/services/reports",
+          }
+        ]
+      },
+      {
+        icon: PageIcon,
+        name: "nav.secretariat",
+        subItems: [
+          {
+            name: "nav.secretariat_dashboard",
+            path: "/secretariat/dashboard",
+          },
+          {
+            name: "nav.correspondences",
+            path: "/secretariat/correspondences",
+          },
+          {
+            name: "nav.tasks",
+            path: "/secretariat/tasks",
+          }
+        ]
+      },
     ],
   },
   {

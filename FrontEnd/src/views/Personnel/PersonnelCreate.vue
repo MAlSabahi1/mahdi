@@ -257,8 +257,8 @@
             <!-- Job Info -->
             <div>
               <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">{{ $t('personnel.job_title') }}</label>
-              <div class="relative z-20 bg-transparent">
-                <select v-model="form.job_title" v-field-error="'job_title'" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
+              <div class="relative z-20 bg-transparent" :class="{'opacity-50 cursor-not-allowed': form.position}">
+                <select v-model="form.job_title" :disabled="!!form.position" v-field-error="'job_title'" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 disabled:bg-gray-100 dark:disabled:bg-gray-800">
                   <option :value="null">...</option>
                   <option v-for="job in coreStore.jobTitles" :key="job.id" :value="job.id" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">{{ job.name }}</option>
                 </select>
@@ -274,7 +274,7 @@
               <div class="relative z-20 bg-transparent">
                 <select v-model="form.position" v-field-error="'position'" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
                   <option :value="null">...</option>
-                  <option v-for="pos in coreStore.positions" :key="pos.id" :value="pos.id" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">{{ pos.name }}</option>
+                  <option v-for="pos in filteredPositions" :key="pos.id" :value="pos.id" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">{{ pos.name }}</option>
                 </select>
                 <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
                   <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -282,6 +282,10 @@
                   </svg>
                 </span>
               </div>
+            </div>
+            <div>
+              <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الفئة الوظيفية</label>
+              <input :value="computedCategoryName" type="text" readonly disabled class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-500 shadow-theme-xs dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 cursor-not-allowed" placeholder="تتحدد تلقائياً">
             </div>
             <div>
               <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">{{ $t('personnel.force_classification') }}</label>
@@ -372,6 +376,35 @@ const filteredDivisions = computed(() => {
 const filteredUnits = computed(() => {
   if (!form.division) return coreStore.units
   return coreStore.units.filter((u: any) => u.division === form.division)
+})
+
+const computedCategoryName = computed(() => {
+  if (form.job_title) {
+    const job = coreStore.jobTitles.find((j: any) => j.id === form.job_title)
+    if (job && job.category) {
+      const cat = coreStore.jobCategories.find((c: any) => c.id === job.category)
+      return cat ? cat.name : 'غير محدد'
+    }
+  }
+  return ''
+})
+
+const filteredPositions = computed(() => {
+  if (!form.job_title) return coreStore.positions
+  
+  const job = coreStore.jobTitles.find((j: any) => j.id === form.job_title)
+  if (!job || !job.category) return coreStore.positions
+  
+  return coreStore.positions.filter((p: any) => {
+    // Assuming positions have allowed_categories array or category property
+    if (p.allowed_categories && Array.isArray(p.allowed_categories)) {
+      return p.allowed_categories.includes(job.category)
+    }
+    if (p.category) {
+      return p.category === job.category
+    }
+    return true
+  })
 })
 
 function handleNationalIdInput() {
