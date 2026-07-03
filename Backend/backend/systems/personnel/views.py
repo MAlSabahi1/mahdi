@@ -230,9 +230,40 @@ class PersonnelViewSet(BaseModelViewSet):
         columns_param = request.query_params.get('columns', '')
         locked_param = request.query_params.get('locked_columns', '')
         
+        security_admins_param = request.query_params.get('security_admins', '')
+        central_deps_param = request.query_params.get('central_departments', '')
+        branches_param = request.query_params.get('branches', '')
+        district_polices_param = request.query_params.get('district_polices', '')
+        statuses_param = request.query_params.get('statuses', '')
+        
+        split_by = request.query_params.get('split_by', '')
+        
         locked_fields = [f.strip() for f in locked_param.split(',') if f.strip()]
         
-        qs = self.filter_queryset(self.get_queryset())
+        qs = self.get_queryset()
+        
+        if security_admins_param:
+            ids = [int(x) for x in security_admins_param.split(',') if x.strip().isdigit()]
+            if ids:
+                qs = qs.filter(security_admin_id__in=ids)
+        if central_deps_param:
+            ids = [int(x) for x in central_deps_param.split(',') if x.strip().isdigit()]
+            if ids:
+                qs = qs.filter(central_department_id__in=ids)
+        if branches_param:
+            ids = [int(x) for x in branches_param.split(',') if x.strip().isdigit()]
+            if ids:
+                qs = qs.filter(branch_id__in=ids)
+        if district_polices_param:
+            ids = [int(x) for x in district_polices_param.split(',') if x.strip().isdigit()]
+            if ids:
+                qs = qs.filter(district_police_id__in=ids)
+        if statuses_param:
+            ids = [int(x) for x in statuses_param.split(',') if x.strip().isdigit()]
+            if ids:
+                qs = qs.filter(current_status_id__in=ids)
+                
+        qs = self.filter_queryset(qs)
         
         PersonnelMaster = apps.get_model('personnel', 'PersonnelMaster')
         
@@ -272,13 +303,23 @@ class PersonnelViewSet(BaseModelViewSet):
             idx = export_fields.index('military_number') + 1
             export_fields.insert(idx, 'full_name')
 
+        grouped_data = {}
+        if split_by in ['security_admin', 'central_department', 'branch']:
+            for person in qs:
+                group_obj = getattr(person, split_by, None)
+                group_name = group_obj.name if group_obj else 'غير محدد'
+                sheet_name = group_name[:30].replace(':', '').replace('?', '').replace('*', '').replace('[', '').replace(']', '').replace('/', '').replace('\\', '')
+                if not sheet_name:
+                    sheet_name = 'غير محدد'
+                if sheet_name not in grouped_data:
+                    grouped_data[sheet_name] = []
+                grouped_data[sheet_name].append(person)
+        else:
+            grouped_data['الأفراد'] = list(qs)
+
         wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = "الأفراد"
-        
-        ws.views.sheetView[0].showGridLines = True
-        ws.sheet_properties.pageSetUpPr.fitToPage = True
-        ws.views.sheetView[0].rightToLeft = True
+        default_sheet = wb.active
+        wb.remove(default_sheet)
 
         font_header = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
         fill_header_locked = PatternFill(start_color='B22222', end_color='B22222', fill_type='solid')
@@ -293,17 +334,7 @@ class PersonnelViewSet(BaseModelViewSet):
             top=Side(style='thin', color='CCCCCC'),
             bottom=Side(style='thin', color='CCCCCC')
         )
-        
-        for col_idx, field in enumerate(export_fields, start=1):
-            cell = ws.cell(row=1, column=col_idx)
-            cell.value = get_field_label(field)
-            cell.font = font_header
-            cell.alignment = Alignment(horizontal='center', vertical='center')
-            cell.border = border_thin
-            
-            is_locked = field in locked_fields
-            cell.fill = fill_header_locked if is_locked else fill_header_editable
-            
+
         def get_val(person, field_name):
             val = getattr(person, field_name, None)
             if val is None:
@@ -315,28 +346,48 @@ class PersonnelViewSet(BaseModelViewSet):
                 return val.strftime('%Y-%m-%d')
             return str(val)
 
-        for row_idx, person in enumerate(qs, start=2):
+        for sheet_name, people in grouped_data.items():
+            ws = wb.create_sheet(title=sheet_name)
+            ws.views.sheetView[0].showGridLines = True
+            ws.sheet_properties.pageSetUpPr.fitToPage = True
+            ws.views.sheetView[0].rightToLeft = True
+
             for col_idx, field in enumerate(export_fields, start=1):
-                cell = ws.cell(row=row_idx, column=col_idx)
-                cell.value = get_val(person, field)
-                cell.font = font_cell
-                cell.alignment = Alignment(horizontal='right', vertical='center')
+                cell = ws.cell(row=1, column=col_idx)
+                cell.value = get_field_label(field)
+                cell.font = font_header
+                cell.alignment = Alignment(horizontal='center', vertical='center')
                 cell.border = border_thin
                 
                 is_locked = field in locked_fields
-                if is_locked:
-                    cell.protection = Protection(locked=True)
-                    cell.fill = fill_cell_locked
-                else:
-                    cell.protection = Protection(locked=False)
+                cell.fill = fill_header_locked if is_locked else fill_header_editable
 
-        ws.protection.sheet = True
-        ws.protection.enable()
+            for row_idx, person in enumerate(people, start=2):
+                for col_idx, field in enumerate(export_fields, start=1):
+                    cell = ws.cell(row=row_idx, column=col_idx)
+                    cell.value = get_val(person, field)
+                    cell.font = font_cell
+                    cell.alignment = Alignment(horizontal='right', vertical='center')
+                    cell.border = border_thin
+                    
+                    is_locked = field in locked_fields
+                    if is_locked:
+                        cell.protection = Protection(locked=True)
+                        cell.fill = fill_cell_locked
+                    else:
+                        cell.protection = Protection(locked=False)
 
-        for col in ws.columns:
-            max_len = max(len(str(cell.value or '')) for cell in col)
-            col_letter = openpyxl.utils.get_column_letter(col[0].column)
-            ws.column_dimensions[col_letter].width = max(max_len + 3, 12)
+            ws.protection.sheet = True
+            ws.protection.enable()
+
+            for col in ws.columns:
+                max_len = max(len(str(cell.value or '')) for cell in col)
+                col_letter = openpyxl.utils.get_column_letter(col[0].column)
+                ws.column_dimensions[col_letter].width = max(max_len + 3, 12)
+
+        if not wb.sheetnames:
+            ws = wb.create_sheet(title="لا توجد بيانات")
+            ws.views.sheetView[0].rightToLeft = True
 
         output = io.BytesIO()
         wb.save(output)
