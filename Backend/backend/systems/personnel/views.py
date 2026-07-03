@@ -221,11 +221,16 @@ class PersonnelViewSet(BaseModelViewSet):
     @extend_schema(summary='تصدير قائمة الأفراد', tags=['personnel'])
     @action(detail=False, methods=['get'])
     def export_csv(self, request, *args, **kwargs):
-        import csv
+        import openpyxl
+        from openpyxl.styles import Protection, Font, PatternFill, Alignment, Border, Side
         from django.http import HttpResponse
         from django.apps import apps
+        import io
 
         columns_param = request.query_params.get('columns', '')
+        locked_param = request.query_params.get('locked_columns', '')
+        
+        locked_fields = [f.strip() for f in locked_param.split(',') if f.strip()]
         
         qs = self.filter_queryset(self.get_queryset())
         
@@ -267,14 +272,38 @@ class PersonnelViewSet(BaseModelViewSet):
             idx = export_fields.index('military_number') + 1
             export_fields.insert(idx, 'full_name')
 
-        response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-        response['Content-Disposition'] = 'attachment; filename="personnel.csv"'
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "الأفراد"
         
-        writer = csv.writer(response)
+        ws.views.sheetView[0].showGridLines = True
+        ws.sheet_properties.pageSetUpPr.fitToPage = True
+        ws.views.sheetView[0].rightToLeft = True
+
+        font_header = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
+        fill_header_locked = PatternFill(start_color='B22222', end_color='B22222', fill_type='solid')
+        fill_header_editable = PatternFill(start_color='2E8B57', end_color='2E8B57', fill_type='solid')
         
-        headers = [get_field_label(f) for f in export_fields]
-        writer.writerow(headers)
+        font_cell = Font(name='Calibri', size=11)
+        fill_cell_locked = PatternFill(start_color='F5F5F5', end_color='F5F5F5', fill_type='solid')
         
+        border_thin = Border(
+            left=Side(style='thin', color='CCCCCC'),
+            right=Side(style='thin', color='CCCCCC'),
+            top=Side(style='thin', color='CCCCCC'),
+            bottom=Side(style='thin', color='CCCCCC')
+        )
+        
+        for col_idx, field in enumerate(export_fields, start=1):
+            cell = ws.cell(row=1, column=col_idx)
+            cell.value = get_field_label(field)
+            cell.font = font_header
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+            cell.border = border_thin
+            
+            is_locked = field in locked_fields
+            cell.fill = fill_header_locked if is_locked else fill_header_editable
+            
         def get_val(person, field_name):
             val = getattr(person, field_name, None)
             if val is None:
@@ -285,11 +314,39 @@ class PersonnelViewSet(BaseModelViewSet):
             if isinstance(val, date):
                 return val.strftime('%Y-%m-%d')
             return str(val)
-            
-        for person in qs:
-            row_data = [get_val(person, f) for f in export_fields]
-            writer.writerow(row_data)
-            
+
+        for row_idx, person in enumerate(qs, start=2):
+            for col_idx, field in enumerate(export_fields, start=1):
+                cell = ws.cell(row=row_idx, column=col_idx)
+                cell.value = get_val(person, field)
+                cell.font = font_cell
+                cell.alignment = Alignment(horizontal='right', vertical='center')
+                cell.border = border_thin
+                
+                is_locked = field in locked_fields
+                if is_locked:
+                    cell.protection = Protection(locked=True)
+                    cell.fill = fill_cell_locked
+                else:
+                    cell.protection = Protection(locked=False)
+
+        ws.protection.sheet = True
+        ws.protection.enable()
+
+        for col in ws.columns:
+            max_len = max(len(str(cell.value or '')) for cell in col)
+            col_letter = openpyxl.utils.get_column_letter(col[0].column)
+            ws.column_dimensions[col_letter].width = max(max_len + 3, 12)
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        response = HttpResponse(
+            output.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename="personnel.xlsx"'
         return response
     
     @extend_schema(
