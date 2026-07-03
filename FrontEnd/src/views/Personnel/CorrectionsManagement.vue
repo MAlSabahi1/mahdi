@@ -1,33 +1,26 @@
 <template>
   <admin-layout>
+    <PageBreadcrumb :pageTitle="$t('personnel.manage_corrections') || 'إدارة طلبات التصحيح'" />
     <div class="space-y-6">
       <!-- Header Section -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $t('personnel.manage_corrections') || 'إدارة طلبات التصحيح' }}</h2>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            مراجعة واعتماد طلبات تعديل بيانات الأفراد
-          </p>
+      <div class="flex justify-end gap-3">
+        <!-- Batch Actions Toolbar -->
+        <div v-if="selectedIds.length > 0" class="flex items-center gap-3 bg-gray-50 px-4 py-1.5 rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700 shadow-theme-xs">
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ selectedIds.length }} محدد</span>
+          <div class="h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
+          <button @click="showBatchApproveModal = true" class="text-sm bg-success-50 text-success-700 px-3 py-1 rounded-md hover:bg-success-100 dark:bg-success-500/10 dark:text-success-400 dark:hover:bg-success-500/20 transition-colors font-medium cursor-pointer">موافقة جماعية</button>
+          <button @click="openBatchRejectModal" class="text-sm bg-error-50 text-error-700 px-3 py-1 rounded-md hover:bg-error-100 dark:bg-error-500/10 dark:text-error-400 dark:hover:bg-error-500/20 transition-colors font-medium cursor-pointer">رفض جماعي</button>
         </div>
-        <div class="flex items-center gap-3">
-          <!-- Batch Actions Toolbar -->
-          <div v-if="selectedIds.length > 0" class="flex items-center gap-3 bg-gray-50 px-4 py-1.5 rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700 shadow-theme-xs">
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ selectedIds.length }} محدد</span>
-            <div class="h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
-            <button @click="showBatchApproveModal = true" class="text-sm bg-success-50 text-success-700 px-3 py-1 rounded-md hover:bg-success-100 dark:bg-success-500/10 dark:text-success-400 dark:hover:bg-success-500/20 transition-colors font-medium">موافقة جماعية</button>
-            <button @click="openBatchRejectModal" class="text-sm bg-error-50 text-error-700 px-3 py-1 rounded-md hover:bg-error-100 dark:bg-error-500/10 dark:text-error-400 dark:hover:bg-error-500/20 transition-colors font-medium">رفض جماعي</button>
-          </div>
 
-          <button
-            @click="loadCorrections"
-            class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
-          >
-            <svg class="h-4.5 w-4.5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            {{ $t('common.refresh') || 'تحديث' }}
-          </button>
-        </div>
+        <button
+          @click="loadCorrections"
+          class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+        >
+          <svg class="h-4.5 w-4.5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          {{ $t('common.refresh') || 'تحديث' }}
+        </button>
       </div>
 
 
@@ -372,6 +365,7 @@ import { ref, computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useCorrectionStore } from '@/stores/correction'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
+import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import Swal from 'sweetalert2'
 
 const store = useCorrectionStore()

@@ -166,66 +166,271 @@ import {
   PageIcon,
   PlugInIcon,
   UserCircleIcon,
+  UserGroupIcon,
+  SettingsIcon,
 } from "../../icons";
 import { useSidebar } from "@/composables/useSidebar";
 import { useAuthStore } from "@/stores/auth";
+import { useSystemStore } from "@/stores/system";
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+const systemStore = useSystemStore();
 
 const { isExpanded, isMobileOpen, isHovered, openSubmenu } = useSidebar();
 
-const menuGroups = [
-  {
-    title: "nav.dashboard", // Use i18n key or just pass hardcoded if we want, but better to create a key like "nav.menu"
-    items: [
+const menuGroups = computed(() => {
+  if (systemStore.currentSystem === "administration") {
+    return [
       {
-        icon: GridIcon,
-        name: "nav.dashboard",
-        path: "/",
-      },
-      {
-        icon: UserCircleIcon,
-        name: "nav.users",
-        path: "/users",
-      },
-      {
-        icon: PlugInIcon,
-        name: "nav.roles",
-        path: "/roles",
-      },
-      {
-        icon: UserCircleIcon,
-        name: "nav.personnel_management",
-        subItems: [
+        title: "systems.administration",
+        items: [
           {
-            name: "nav.personnel",
-            path: "/personnel",
+            icon: GridIcon,
+            name: "admin.dashboard_group",
+            subItems: [
+              {
+                name: "admin.stats_dashboard",
+                path: "/admin/dashboard/stats",
+              },
+              {
+                name: "admin.analytics_dashboard",
+                path: "/admin/dashboard/analytics",
+              },
+              {
+                name: "admin.alerts_center",
+                path: "/admin/dashboard/alerts",
+              },
+              {
+                name: "admin.compliance_tracker",
+                path: "/admin/dashboard/compliance",
+              }
+            ]
           },
           {
-            name: "nav.corrections",
-            path: "/personnel/corrections",
+            icon: UserGroupIcon,
+            name: "admin.structure_group",
+            subItems: [
+              {
+                name: "admin.regions_config",
+                path: "/admin/structure/regions",
+              },
+              {
+                name: "admin.geo_tree",
+                path: "/admin/structure/geo-tree",
+              },
+              {
+                name: "admin.org_tree",
+                path: "/admin/structure/org-tree",
+              },
+              {
+                name: "admin.general_configs",
+                path: "/admin/structure/general-configs",
+              }
+            ]
           },
           {
-            name: "nav.rank_settlements",
-            path: "/personnel/settlements",
+            icon: SettingsIcon,
+            name: "admin.system_group",
+            subItems: [
+              {
+                name: "admin.initial_seeding",
+                path: "/admin/system/seeding",
+              },
+              {
+                name: "admin.system_telemetry",
+                path: "/admin/system/telemetry",
+              }
+            ]
+          },
+          {
+            icon: PageIcon,
+            name: "nav.audit_logs",
+            path: "/audit",
           }
         ]
-      },
-    ],
-  },
-  {
-    title: "nav.settings", // fallback key
-    items: [
+      }
+    ];
+  } else if (systemStore.currentSystem === "secretariat") {
+    return [
       {
-        icon: PageIcon,
-        name: "nav.audit_logs",
-        path: "/audit",
-      },
-    ],
-  },
-];
+        title: "systems.secretariat",
+        items: [
+          {
+            icon: GridIcon,
+            name: "nav.secretariat_dashboard",
+            path: "/secretariat/dashboard",
+          },
+          {
+            icon: PageIcon,
+            name: "nav.correspondences",
+            path: "/secretariat/correspondences",
+          },
+          {
+            icon: PageIcon,
+            name: "nav.tasks",
+            path: "/secretariat/tasks",
+          }
+        ]
+      }
+    ];
+  } else if (systemStore.currentSystem === "services_personnel") {
+    return [
+      {
+        title: "systems.services_personnel",
+        items: [
+          {
+            icon: UserGroupIcon,
+            name: "nav.personnel_management",
+            subItems: [
+              {
+                name: "nav.personnel",
+                path: "/personnel",
+              },
+              {
+                name: "nav.corrections",
+                path: "/personnel/corrections",
+              },
+              {
+                name: "nav.rank_settlements",
+                path: "/personnel/settlements",
+              },
+              {
+                name: "nav.profile_search",
+                path: "/personnel/profile-search",
+              },
+              {
+                name: "nav.editor_react",
+                path: "/services/editor-react",
+              }
+            ]
+          },
+          {
+            icon: PageIcon,
+            name: "nav.service_cycle",
+            subItems: [
+              {
+                name: "nav.excel_export_config",
+                path: "/services/export-config",
+              },
+              {
+                name: "nav.excel_import_wizard",
+                path: "/services/import-wizard",
+              },
+              {
+                name: "services.staging",
+                path: "/services/staging",
+              },
+              {
+                name: "services.rejections",
+                path: "/services/rejections",
+              }
+            ]
+          },
+          {
+            icon: GridIcon,
+            name: "nav.services_reports_module",
+            subItems: [
+              {
+                name: "nav.monthly_exports",
+                path: "/services/monthly-exports",
+              },
+              {
+                name: "nav.official_reports",
+                path: "/services/official-reports",
+              }
+            ]
+          },
+          {
+            icon: PlugInIcon,
+            name: "nav.transactions_management_module",
+            subItems: [
+              {
+                name: "nav.cards_directory",
+                path: "/services/directory",
+              },
+              {
+                name: "nav.unified_request",
+                path: "/services/request",
+              },
+              {
+                name: "nav.inbox_transactions",
+                path: "/services/inbox",
+              },
+              {
+                name: "nav.workflow_tracking",
+                path: "/services/workflows",
+              }
+            ]
+          }
+        ]
+      }
+    ];
+  } else if (systemStore.currentSystem === "users_permissions") {
+    return [
+      {
+        title: "systems.users_permissions",
+        items: [
+          {
+            icon: UserGroupIcon,
+            name: "nav.account_governance_module",
+            subItems: [
+              {
+                name: "nav.users_manage",
+                path: "/users",
+              },
+              {
+                name: "nav.governance",
+                path: "/users/governance",
+              },
+              {
+                name: "nav.active_sessions",
+                path: "/users/sessions",
+              }
+            ]
+          },
+          {
+            icon: PlugInIcon,
+            name: "nav.advanced_policy_module",
+            subItems: [
+              {
+                name: "nav.roles",
+                path: "/roles",
+              },
+              {
+                name: "nav.policy_matrix",
+                path: "/users/policy-matrix",
+              },
+              {
+                name: "nav.emergency_access",
+                path: "/users/emergency-access",
+              },
+              {
+                name: "nav.dual_auth",
+                path: "/users/dual-auth",
+              },
+              {
+                name: "nav.audit_trail",
+                path: "/users/audit-trail",
+              },
+              {
+                name: "nav.policy_simulator",
+                path: "/users/policy-simulator",
+              }
+            ]
+          },
+          {
+            icon: SettingsIcon,
+            name: "nav.settings",
+            path: "/users/settings",
+          }
+        ]
+      }
+    ];
+  }
+  return [];
+});
 
 const handleLogout = async () => {
   await authStore.logout();
@@ -240,7 +445,7 @@ const toggleSubmenu = (groupIndex, itemIndex) => {
 };
 
 const isAnySubmenuRouteActive = computed(() => {
-  return menuGroups.some((group) =>
+  return menuGroups.value.some((group) =>
     group.items.some(
       (item) =>
         item.subItems && item.subItems.some((subItem) => isActive(subItem.path))
@@ -250,7 +455,7 @@ const isAnySubmenuRouteActive = computed(() => {
 
 const checkAndOpenSubmenu = () => {
   let foundSubmenu = false;
-  menuGroups.forEach((group, groupIndex) => {
+  menuGroups.value.forEach((group, groupIndex) => {
     group.items.forEach((item, itemIndex) => {
       if (item.subItems && item.subItems.some((subItem) => isActive(subItem.path))) {
         openSubmenu.value = `${groupIndex}-${itemIndex}`;
@@ -268,8 +473,10 @@ onMounted(() => {
 });
 
 watch(() => route.path, () => {
-  // Only auto-open if it's not already open (so we don't annoy the user if they closed it)
-  // Or just always open if navigating to a subitem. Let's always check and open if navigated to a sub-item.
+  checkAndOpenSubmenu();
+});
+
+watch(() => systemStore.currentSystem, () => {
   checkAndOpenSubmenu();
 });
 

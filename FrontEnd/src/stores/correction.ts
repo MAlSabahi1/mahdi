@@ -136,7 +136,7 @@ export const useCorrectionStore = defineStore('correction', () => {
 
   async function rejectCorrection(id: string, reason: string) {
     try {
-      await api.post(`/personnel/corrections/${id}/reject/`, { reason })
+      await api.post(`/personnel/corrections/${id}/reject/`, { rejection_reason: reason })
       const req = corrections.value.find(c => String(c.id) === String(id))
       if (req) {
         req.status = 'rejected'

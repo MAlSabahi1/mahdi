@@ -70,7 +70,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
 import { useCorrectionStore } from '@/stores/correction'
-import { PersonnelRecord } from '@/stores/personnel'
+import type { PersonnelRecord } from '@/stores/personnel'
 
 const props = defineProps<{
   person: PersonnelRecord

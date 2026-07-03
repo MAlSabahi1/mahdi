@@ -44,17 +44,17 @@
           <div class="flex flex-col gap-4">
             <div class="flex items-center gap-3">
               <label class="relative inline-flex cursor-pointer items-center">
-                <input v-model="form.is_staff" v-field-error="'is_staff'" type="checkbox" class="peer sr-only" />
-                <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-brand-500 peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-700 dark:bg-gray-700 rtl:peer-checked:after:-translate-x-full"></div>
+                <input v-model="form.is_staff" :disabled="user.id === authStore.user?.id" v-field-error="'is_staff'" type="checkbox" class="peer sr-only" />
+                <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-brand-500 peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-700 dark:bg-gray-700 rtl:peer-checked:after:-translate-x-full peer-disabled:opacity-50"></div>
               </label>
-              <span class="text-sm font-medium text-gray-700 dark:text-gray-400">صلاحية مدير</span>
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-400" :class="{'opacity-50': user.id === authStore.user?.id}">صلاحية مدير</span>
             </div>
             <div class="flex items-center gap-3">
               <label class="relative inline-flex cursor-pointer items-center">
-                <input v-model="form.is_active" v-field-error="'is_active'" type="checkbox" class="peer sr-only" />
-                <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-success-500 peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-700 dark:bg-gray-700 rtl:peer-checked:after:-translate-x-full"></div>
+                <input v-model="form.is_active" :disabled="user.id === authStore.user?.id" v-field-error="'is_active'" type="checkbox" class="peer sr-only" />
+                <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-success-500 peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-700 dark:bg-gray-700 rtl:peer-checked:after:-translate-x-full peer-disabled:opacity-50"></div>
               </label>
-              <span class="text-sm font-medium text-gray-700 dark:text-gray-400">حساب نشط</span>
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-400" :class="{'opacity-50': user.id === authStore.user?.id}">حساب نشط</span>
             </div>
           </div>
 
@@ -100,12 +100,14 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { useUsersStore } from '@/stores/users'
+import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps({
   user: { type: Object, required: true },
 })
 const emit = defineEmits(['close', 'updated'])
 const usersStore = useUsersStore()
+const authStore = useAuthStore()
 
 const loading = ref(false)
 const error = ref('')

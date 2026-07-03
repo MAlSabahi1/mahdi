@@ -1,5 +1,6 @@
 <template>
   <admin-layout>
+    <PageBreadcrumb :pageTitle="$t('personnel.profile_details') || 'تفاصيل ملف الفرد'" />
     <div class="space-y-6">
       <!-- Loading State -->
       <div v-if="loading" class="flex justify-center p-12">
@@ -62,7 +63,12 @@
                     </div>
                     <div>
                       <p class="text-xs text-gray-500">{{ $t('personnel.military_number') }}</p>
-                      <p class="font-semibold text-gray-900 dark:text-white">{{ person.military_number }}</p>
+                      <div class="flex items-center gap-2">
+                        <p class="font-semibold text-gray-900 dark:text-white">{{ person.military_number }}</p>
+                        <span v-if="person.military_number_type" class="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded dark:bg-gray-800 dark:text-gray-400">
+                          {{ person.military_number_type.name_ar || person.military_number_type.name }}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div class="flex items-center gap-2.5">
@@ -154,7 +160,12 @@
             <dl class="divide-y divide-gray-100 dark:divide-gray-800 text-sm">
               <div class="flex justify-between py-3">
                 <dt class="text-gray-500 dark:text-gray-400">{{ $t('personnel.national_id') }}</dt>
-                <dd class="font-medium text-gray-900 dark:text-white">{{ person.national_id || ($t('common.unspecified') || 'غير متوفر') }}</dd>
+                <dd class="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                  <span>{{ person.national_id || ($t('common.unspecified') || 'غير متوفر') }}</span>
+                  <span v-if="person.national_id_status_display" class="text-xs px-2 py-0.5 rounded-full" :class="person.national_id_status === 'verified' ? 'bg-success-50 text-success-600 dark:bg-success-500/10' : 'bg-warning-50 text-warning-600 dark:bg-warning-500/10'">
+                    {{ person.national_id_status_display }}
+                  </span>
+                </dd>
               </div>
               <div class="flex justify-between py-3">
                 <dt class="text-gray-500 dark:text-gray-400">{{ $t('personnel.details.age') }}</dt>
@@ -342,6 +353,7 @@ import { usePersonnelStore } from '@/stores/personnel'
 import { useRankSettlementStore } from '@/stores/rankSettlement'
 import { useCoreStore } from '@/stores/core'
 import { validateFormFields } from '@/stores/validation'
+import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import Swal from 'sweetalert2'
 
 const route = useRoute()

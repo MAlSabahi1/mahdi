@@ -1,0 +1,66 @@
+# Django Core
+Django==5.0.2
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+django-environ==0.11.2
+
+# Database
+psycopg2-binary==2.9.9
+
+# Redis & Caching
+redis==5.0.1
+django-redis==5.4.0
+
+
+celery==5.3.6
+django-celery-results==2.5.1
+
+# JWT Authentication
+djangorestframework-simplejwt==5.3.1
+
+# API Documentation
+drf-spectacular==0.27.1
+
+# Filtering
+django-filter==23.5
+
+# Excel Processing
+openpyxl==3.1.2
+XlsxWriter==3.1.9
+
+# Permissions
+django-guardian==2.4.0
+
+# State Machine
+django-fsm==2.8.1
+
+# Cryptography
+cryptography==42.0.2
+
+# File Type Detection (for security)
+# Note: Requires system dependencies:
+#   - Linux/Mac: libmagic (apt-get install libmagic1 or brew install libmagic)
+#   - Windows: python-magic-bin (pip install python-magic-bin)
+python-magic==0.4.27
+
+# HTTP Requests (webhooks)
+requests==2.31.0
+
+# Image Processing
+Pillow==10.2.0
+
+# Testing
+pytest==8.0.0
+pytest-django==4.7.0
+factory-boy==3.3.0
+
+# Code Quality
+black==24.1.1
+isort==5.13.2
+flake8==7.0.0
+
+# Production Server
+gunicorn==21.2.0
+whitenoise==6.6.0
+django-simple-history==3.11.0
+argon2-cffi==23.1.0

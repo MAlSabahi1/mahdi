@@ -1,39 +1,24 @@
 <template>
   <admin-layout>
+    <PageBreadcrumb :pageTitle="$t('personnel.edit_profile') || 'تعديل بيانات الفرد'" />
     <div class="space-y-6">
       <!-- Header Section -->
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex items-center gap-3">
-          <button @click="router.push(`/personnel/${route.params.id}`)"
-            class="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors">
-            <svg class="h-5 w-5 rtl:rotate-180" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-          </button>
-          <div>
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ $t('personnel.edit_profile') || 'تعديل بيانات الفرد' }}</h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              تحديث المعلومات والبيانات الوظيفية
-            </p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3">
-          <button @click="router.push(`/personnel/${route.params.id}`)"
-            class="rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 transition-colors dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
-            {{ $t('common.cancel') }}
-          </button>
-          <button @click="handleSubmit" :disabled="loading || isNationalIdDuplicate"
-            class="flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 transition-colors disabled:opacity-50">
-            <svg v-if="loading" class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
-            <svg v-else class="h-4.5 w-4.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            {{ $t('common.save') }}
-          </button>
-        </div>
+      <div class="flex justify-end gap-3">
+        <button @click="router.push(`/personnel/${route.params.id}`)"
+          class="rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 transition-colors dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 cursor-pointer">
+          {{ $t('common.cancel') }}
+        </button>
+        <button @click="handleSubmit" :disabled="loading || isNationalIdDuplicate"
+          class="flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 transition-colors disabled:opacity-50 cursor-pointer">
+          <svg v-if="loading" class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          <svg v-else class="h-4.5 w-4.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          {{ $t('common.save') }}
+        </button>
       </div>
 
       <div v-if="coreStore.loading || fetching" class="flex justify-center p-12">
@@ -71,18 +56,27 @@
             </div>
             
             <div class="relative">
-              <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">{{ $t('personnel.national_id') }}</label>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-400">{{ $t('personnel.national_id') }}</label>
+                <button 
+                  v-if="form.military_number"
+                  @click="showUpdateNidModal = true" 
+                  type="button" 
+                  class="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 flex items-center gap-1"
+                >
+                  <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  تحديث آمن
+                </button>
+              </div>
               <input 
                 v-model="form.national_id" v-field-error="'national_id'" 
-                @input="handleNationalIdInput" 
                 type="text" 
-                maxlength="11" 
-                class="block w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-900 shadow-theme-xs placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500" 
-                :class="{'border-error-500 focus:border-error-500 focus:ring-error-500/20': isNationalIdDuplicate}"
-                placeholder="..."
+                disabled
+                class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-500 shadow-theme-xs focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 cursor-not-allowed" 
+                placeholder="سيتم التحديث عبر النافذة الآمنة..."
               >
-              <p v-if="isNationalIdDuplicate" class="mt-1 text-xs text-error-500 font-medium">{{ $t('personnel.duplicate_national_id') }}</p>
-              <p v-else-if="isValidatingNid" class="mt-1 text-xs text-gray-500">{{ $t('personnel.validating_national_id') }}</p>
             </div>
             <div>
               <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">{{ $t('personnel.phone') }}</label>
@@ -257,8 +251,8 @@
             <!-- Job Info -->
             <div>
               <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">{{ $t('personnel.job_title') }}</label>
-              <div class="relative z-20 bg-transparent">
-                <select v-model="form.job_title" v-field-error="'job_title'" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
+              <div class="relative z-20 bg-transparent" :class="{'opacity-50 cursor-not-allowed': form.position}">
+                <select v-model="form.job_title" :disabled="!!form.position" v-field-error="'job_title'" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 disabled:bg-gray-100 dark:disabled:bg-gray-800">
                   <option :value="null">...</option>
                   <option v-for="job in coreStore.jobTitles" :key="job.id" :value="job.id" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">{{ job.name }}</option>
                 </select>
@@ -274,7 +268,7 @@
               <div class="relative z-20 bg-transparent">
                 <select v-model="form.position" v-field-error="'position'" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
                   <option :value="null">...</option>
-                  <option v-for="pos in coreStore.positions" :key="pos.id" :value="pos.id" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">{{ pos.name }}</option>
+                  <option v-for="pos in filteredPositions" :key="pos.id" :value="pos.id" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">{{ pos.name }}</option>
                 </select>
                 <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
                   <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -284,11 +278,15 @@
               </div>
             </div>
             <div>
+              <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الفئة الوظيفية</label>
+              <input :value="computedCategoryName" type="text" readonly disabled class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-500 shadow-theme-xs dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 cursor-not-allowed" placeholder="تتحدد تلقائياً">
+            </div>
+            <div>
               <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">{{ $t('personnel.force_classification') }}</label>
               <div class="relative z-20 bg-transparent">
                 <select v-model="form.force_classification" v-field-error="'force_classification'" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
                   <option :value="null">...</option>
-                  <option v-for="f in coreStore.forceClassifications" :key="f.id" :value="f.id" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">{{ f.name }}</option>
+                  <option v-for="f in coreStore.forceTypes" :key="f.id" :value="f.id" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">{{ f.name }}</option>
                 </select>
                 <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
                   <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -307,6 +305,14 @@
 
       </div>
     </div>
+
+    <!-- Modals -->
+    <UpdateNationalIdModal 
+      v-if="showUpdateNidModal"
+      :military-number="form.military_number"
+      @close="showUpdateNidModal = false"
+      @success="handleNationalIdSuccess"
+    />
   </admin-layout>
 </template>
 
@@ -315,9 +321,12 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
+import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import { useCoreStore } from '@/stores/core'
 import { usePersonnelStore } from '@/stores/personnel'
 import { validateFormFields } from '@/stores/validation'
+import Swal from 'sweetalert2'
+import UpdateNationalIdModal from './components/UpdateNationalIdModal.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -378,24 +387,40 @@ const filteredUnits = computed(() => {
   return coreStore.units.filter((u: any) => u.division === form.division)
 })
 
-function handleNationalIdInput() {
-  if (nidTimeout) clearTimeout(nidTimeout)
-  isNationalIdDuplicate.value = false
-  errorMsg.value = ''
-  
-  if (!form.national_id || form.national_id.length < 8) return
-  if (form.national_id === initialNationalId.value) return // No need to validate if hasn't changed
-  
-  isValidatingNid.value = true
-  nidTimeout = setTimeout(async () => {
-    if (form.national_id && form.national_id !== initialNationalId.value) {
-      const result = await personnelStore.checkNationalId(form.national_id)
-      if (result.exists) {
-        isNationalIdDuplicate.value = true
-      }
+const computedCategoryName = computed(() => {
+  if (form.job_title) {
+    const job = coreStore.jobTitles.find((j: any) => j.id === form.job_title)
+    if (job && job.category) {
+      const cat = coreStore.jobCategories.find((c: any) => c.id === job.category)
+      return cat ? cat.name : 'غير محدد'
     }
-    isValidatingNid.value = false
-  }, 500)
+  }
+  return ''
+})
+
+const filteredPositions = computed(() => {
+  if (!form.job_title) return coreStore.positions
+  
+  const job = coreStore.jobTitles.find((j: any) => j.id === form.job_title)
+  if (!job || !job.category) return coreStore.positions
+  
+  return coreStore.positions.filter((p: any) => {
+    if (p.allowed_categories && Array.isArray(p.allowed_categories)) {
+      return p.allowed_categories.includes(job.category)
+    }
+    if (p.category) {
+      return p.category === job.category
+    }
+    return true
+  })
+})
+
+const showUpdateNidModal = ref(false)
+
+function handleNationalIdSuccess() {
+  showUpdateNidModal.value = false
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم تقديم طلب تحديث الرقم الوطني بنجاح', showConfirmButton: false, timer: 3000 })
+  fetchPersonData() // Reload to get updated data or correction status
 }
 
 async function fetchPersonData() {

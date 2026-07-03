@@ -1,0 +1,69 @@
+# ============================
+# Python / Django (Backend)
+# ============================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Database files
+db.sqlite3
+db.sqlite3-journal
+
+# Media / Static
+Backend/media/
+Backend/staticfiles/
+
+# Environment configurations
+.env
+.env.*
+
+# ============================
+# Node / Vue (Frontend)
+# ============================
+node_modules/
+FrontEnd/dist/
+FrontEnd/dist-ssr/
+FrontEnd/coverage/
+
+# Vue logs / tmp files
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ============================
+# General / OS / IDE
+# ============================
+.DS_Store
+.DS_Store?
+._*
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+
+# temporary and debug logs we created
+*.log
+migrate_error*.txt
+columns.json
+junk_files.txt
+unused*.txt

@@ -1,6 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '@/lib/api'
+import { DEFAULT_COLUMNS } from '@/views/UserManagement/constants'
+
+export interface ColumnOption {
+  key: string
+  name: string
+  visible: boolean
+}
 
 export interface UserRecord {
   id: number
@@ -46,32 +53,60 @@ export const useUsersStore = defineStore('users', () => {
   const availableRoles = ref<{ id: number; name: string; code: string }[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+
+  // State Management properties moved to Store
+  const searchQuery = ref('')
+  const filterActive = ref<boolean | null>(null)
+  const currentPage = ref(1)
+  const pageSize = ref(10)
   const totalCount = ref(0)
   const totalPages = ref(1)
-  const currentPage = ref(1)
 
-  async function fetchUsers(search?: string, isActive?: boolean | null, page: number = 1) {
+  const selectedUserIds = ref<number[]>([])
+  const selectAll = ref(false)
+
+  const columns = ref<ColumnOption[]>(JSON.parse(JSON.stringify(DEFAULT_COLUMNS)))
+
+  function isColumnVisible(key: string) {
+    const col = columns.value.find((c: ColumnOption) => c.key === key)
+    return col ? col.visible : true
+  }
+
+  function toggleSelectAll() {
+    if (selectAll.value) {
+      selectedUserIds.value = users.value.map(u => u.id)
+    } else {
+      selectedUserIds.value = []
+    }
+  }
+
+  async function fetchUsers(page?: number) {
+    if (page !== undefined) {
+      currentPage.value = page
+    }
     loading.value = true
     error.value = null
 
     try {
-      const params: Record<string, string> = {}
-      if (search) params.search = search
-      if (isActive !== null && isActive !== undefined) {
-        params.is_active = String(isActive)
+      const params: Record<string, string> = {
+        page: String(currentPage.value),
+        page_size: String(pageSize.value)
       }
-      if (page) {
-        params.page = String(page)
+      if (searchQuery.value) {
+        params.search = searchQuery.value
+      }
+      if (filterActive.value !== null && filterActive.value !== undefined) {
+        params.is_active = String(filterActive.value)
       }
 
       const response = await api.get('/users/', { params })
       users.value = response.data.results
       totalCount.value = response.data.count
-      
-      // DRF PageNumberPagination might return links (next/previous) 
-      // We'll calculate totalPages from count and PAGE_SIZE (10)
-      totalPages.value = Math.ceil(response.data.count / 10) || 1
-      currentPage.value = page || 1
+      totalPages.value = Math.ceil(response.data.count / pageSize.value) || 1
+
+      // Reset selections when page changes or data reloads
+      selectedUserIds.value = []
+      selectAll.value = false
     } catch (err: any) {
       error.value = err.response?.data?.error || 'فشل تحميل المستخدمين'
       throw err
@@ -131,9 +166,17 @@ export const useUsersStore = defineStore('users', () => {
     availableRoles,
     loading,
     error,
+    searchQuery,
+    filterActive,
+    currentPage,
+    pageSize,
     totalCount,
     totalPages,
-    currentPage,
+    selectedUserIds,
+    selectAll,
+    columns,
+    isColumnVisible,
+    toggleSelectAll,
     fetchUsers,
     fetchRoles,
     createUser,

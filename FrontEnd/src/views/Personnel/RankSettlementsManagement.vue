@@ -1,20 +1,15 @@
 <template>
   <admin-layout>
+    <PageBreadcrumb :pageTitle="$t('settlements.title') || 'تسويات رتب الأفراد'" />
     <div class="space-y-6">
       
       <!-- Page Header -->
-      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $t('settlements.title') }}</h2>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ $t('settlements.description') }}</p>
-        </div>
-        <div class="flex items-center gap-3">
-          <button @click="fetchData" class="rounded-lg border border-gray-200 bg-white p-2.5 text-gray-500 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors">
-            <svg class="h-5 w-5" :class="{'animate-spin': store.loading}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </button>
-        </div>
+      <div class="flex justify-end gap-3">
+        <button @click="fetchData" class="rounded-lg border border-gray-200 bg-white p-2.5 text-gray-500 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors cursor-pointer">
+          <svg class="h-5 w-5" :class="{'animate-spin': store.loading}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
       </div>
 
       <!-- Main Content -->
@@ -179,6 +174,7 @@
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
+import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import { useRankSettlementStore, type RankSettlement } from '@/stores/rankSettlement'
 import Swal from 'sweetalert2'
 import { validateFormFields } from '@/stores/validation'

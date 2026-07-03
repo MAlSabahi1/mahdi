@@ -74,7 +74,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useCorrectionStore } from '@/stores/correction'
-import { PersonnelRecord } from '@/stores/personnel'
+import type { PersonnelRecord } from '@/stores/personnel'
 import CorrectionRequestModal from './CorrectionRequestModal.vue'
 
 const props = defineProps<{

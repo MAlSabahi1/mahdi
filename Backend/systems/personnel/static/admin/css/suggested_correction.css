@@ -1,0 +1,94 @@
+/*
+ * suggested_correction.css
+ * ════════════════════════════════════════════════════════════
+ * Django Admin — SuggestedCorrectionAdmin list view styling
+ * تحميل تلقائي عبر class Media في admin.py
+ * ════════════════════════════════════════════════════════════
+ */
+
+/* ── ألوان حالة الطلب (status_badge) ── */
+.field-status_badge span[style*="#f59e0b"] {   /* pending  */
+    background: #f59e0b !important;
+    box-shadow: 0 1px 3px rgba(245,158,11,.35);
+}
+.field-status_badge span[style*="#10b981"] {   /* approved */
+    background: #10b981 !important;
+    box-shadow: 0 1px 3px rgba(16,185,129,.35);
+}
+.field-status_badge span[style*="#ef4444"] {   /* rejected */
+    background: #ef4444 !important;
+    box-shadow: 0 1px 3px rgba(239,68,68,.35);
+}
+
+/* ── تلوين صفوف القائمة حسب الحالة ── */
+/* pending  → خلفية صفراء خفيفة */
+tr.row1:has(.field-status_badge span[style*="#f59e0b"]),
+tr.row2:has(.field-status_badge span[style*="#f59e0b"]) {
+    background-color: #fffbeb !important;
+}
+
+/* approved → خلفية خضراء خفيفة */
+tr.row1:has(.field-status_badge span[style*="#10b981"]),
+tr.row2:has(.field-status_badge span[style*="#10b981"]) {
+    background-color: #f0fdf4 !important;
+}
+
+/* rejected → خلفية حمراء خفيفة */
+tr.row1:has(.field-status_badge span[style*="#ef4444"]),
+tr.row2:has(.field-status_badge span[style*="#ef4444"]) {
+    background-color: #fef2f2 !important;
+}
+
+/* ── تمييز بصري لأنواع التصحيح ── */
+/* نوع التصحيح — عمود correction_type */
+.field-correction_type {
+    font-weight: 600;
+}
+
+/* ── تنسيق القيم المقتطعة ── */
+.field-old_value_short,
+.field-new_value_short {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    direction: rtl;
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+}
+
+/* ── تحسين رابط الفرد ── */
+.field-personnel_link a {
+    font-weight: 600;
+    color: #2563eb;
+    text-decoration: none;
+}
+.field-personnel_link a:hover {
+    text-decoration: underline;
+    color: #1d4ed8;
+}
+
+/* ── تحسين أعمدة True/False (مرفق؟ / إلزامي؟) ── */
+.field-has_document_icon img,
+.field-requires_doc_icon img {
+    width: 18px;
+    height: 18px;
+}
+
+/* ── تعليق تحذيري في أعلى القائمة ── */
+#changelist-filter {
+    border-radius: 6px;
+}
+
+/* ── محاذاة RTL عامة للجدول ── */
+#result_list th,
+#result_list td {
+    text-align: right;
+}
+
+/* ── تمييز صف rank_correction اللوني (بيانات قديمة) ── */
+/* عندما يكون field_name = current_rank (بيانات legacy ستُحذف) */
+tr:has(td.field-field_name:contains("current_rank")) {
+    opacity: 0.55;
+    text-decoration: line-through;
+    background: #f5f5f5 !important;
+}

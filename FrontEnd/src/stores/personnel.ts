@@ -72,8 +72,9 @@ export const usePersonnelStore = defineStore('personnel', () => {
   async function fetchPersonnel(params: {
     search?: string
     page?: number
-    current_status?: string
-    current_rank?: string
+    current_status?: string | number
+    current_rank?: string | number
+    governorate?: string | number
   } = {}) {
     loading.value = true
     error.value = null
@@ -157,6 +158,50 @@ export const usePersonnelStore = defineStore('personnel', () => {
     }
   }
 
+  async function updateNationalId(militaryNumber: string, nationalId: string, documentIds: number[]) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await api.post(`/personnel/${militaryNumber}/update-national-id/`, {
+        national_id: nationalId,
+        document_ids: documentIds
+      })
+      return response.data
+    } catch (err: any) {
+      if (err.response?.data?.error?.detail) {
+        const details = err.response.data.error.detail
+        error.value = Object.entries(details).map(([k, v]) => `${k}: ${(v as any).join(', ')}`).join(' | ')
+      } else {
+        error.value = err.response?.data?.error?.message || err.response?.data?.detail || 'فشل تحديث الرقم الوطني'
+      }
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function importLegacyData(file: File, dryRun: boolean = true) {
+    loading.value = true
+    error.value = null
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('dry_run', dryRun.toString())
+
+      const response = await api.post('/personnel/legacy-import/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      return response.data
+    } catch (err: any) {
+      error.value = err.response?.data?.error || err.message || 'فشل رفع ملف البيانات'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     records,
     loading,
@@ -168,6 +213,8 @@ export const usePersonnelStore = defineStore('personnel', () => {
     checkNationalId,
     createPersonnel,
     updatePersonnel,
+    updateNationalId,
     getPersonnelById,
+    importLegacyData
   }
 })

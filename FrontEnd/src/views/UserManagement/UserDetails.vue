@@ -1,34 +1,18 @@
 <template>
   <admin-layout>
+    <PageBreadcrumb :pageTitle="$t('users.user_details')" />
     <div class="space-y-6">
       <!-- Header -->
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex items-center gap-3">
-          <RouterLink to="/users" class="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-            </svg>
-          </RouterLink>
-          <div>
-            <h1 class="text-xl font-bold text-gray-800 dark:text-white/90">
-              {{ $t('users.user_details') }}
-            </h1>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {{ user?.full_name || user?.username || $t('common.loading') }}
-            </p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3" v-if="user">
-          <button
-            @click="terminateSessions"
-            class="inline-flex items-center gap-2 rounded-lg bg-error-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-error-600 transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
-            </svg>
-            {{ $t('users.terminate_sessions') || 'إنهاء جميع الجلسات' }}
-          </button>
-        </div>
+      <div class="flex justify-end gap-3" v-if="user">
+        <button
+          @click="terminateSessions"
+          class="inline-flex items-center gap-2 rounded-lg bg-error-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-error-600 transition-colors cursor-pointer"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+          </svg>
+          {{ $t('users.terminate_sessions') || 'إنهاء جميع الجلسات' }}
+        </button>
       </div>
 
       <div v-if="loading" class="flex justify-center p-12">
@@ -164,6 +148,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
+import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import api from '@/lib/api'
 import Swal from 'sweetalert2'
 
