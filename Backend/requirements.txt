@@ -11,7 +11,7 @@ psycopg2-binary==2.9.9
 redis==5.0.1
 django-redis==5.4.0
 
-# Celery (للمهام الخلفية)
+
 celery==5.3.6
 django-celery-results==2.5.1
 
@@ -37,8 +37,14 @@ django-fsm==2.8.1
 # Cryptography
 cryptography==42.0.2
 
-# API Documentation (legacy)
-drf-yasg==1.21.7
+# File Type Detection (for security)
+# Note: Requires system dependencies:
+#   - Linux/Mac: libmagic (apt-get install libmagic1 or brew install libmagic)
+#   - Windows: python-magic-bin (pip install python-magic-bin)
+python-magic==0.4.27
+
+# HTTP Requests (webhooks)
+requests==2.31.0
 
 # Image Processing
 Pillow==10.2.0
@@ -56,3 +62,5 @@ flake8==7.0.0
 # Production Server
 gunicorn==21.2.0
 whitenoise==6.6.0
+django-simple-history==3.11.0
+argon2-cffi==23.1.0
