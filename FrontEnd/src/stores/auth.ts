@@ -23,6 +23,17 @@ export interface User {
   x_link?: string
   linkedin_link?: string
   instagram_link?: string
+  authz_profile?: {
+    role_id: number
+    role_name: string
+    role_code: string
+    security_admin_id: number | null
+    central_department_id: number | null
+    branch_id: number | null
+    district_police_id: number | null
+    supervises_all: boolean
+    supervised_security_admins: number[]
+  } | null
 }
 
 export const useAuthStore = defineStore('auth', () => {

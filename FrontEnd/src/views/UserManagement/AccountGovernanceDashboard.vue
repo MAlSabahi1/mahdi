@@ -5,37 +5,47 @@
 
     <div class="space-y-6 text-start" dir="rtl">
       
-      <!-- Header Section (Flat & Premium) -->
-      <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 border-b border-gray-200 dark:border-gray-800 pb-5">
-        <div>
-          <h1 class="text-2xl font-black text-gray-900 dark:text-white">
-            مركز حوكمة الهوية وأمن النظام
-          </h1>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            البوابة الأمنية والرقابية للتحكم الفوري في قفل الحسابات ومتابعة سجل الاختراق وضبط ضوابط الحماية.
-          </p>
-        </div>
+      <!-- Top Premium Glassmorphic Banner -->
+      <div class="relative overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-white to-gray-50/50 dark:from-white/[0.03] dark:to-transparent p-6 shadow-theme-sm">
+        <div class="absolute -right-16 -top-16 w-48 h-48 bg-brand-500/5 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -left-16 -bottom-16 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+        
+        <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div class="flex items-center gap-4">
+            <div class="p-3 bg-brand-500/10 text-brand-600 dark:text-brand-400 rounded-2xl shadow-theme-xs">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z" />
+              </svg>
+            </div>
+            <div>
+              <h1 class="text-xl font-black text-gray-900 dark:text-white">
+                مركز حوكمة الهوية وأمن النظام
+              </h1>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                البوابة الأمنية والرقابية الموحدة لإدارة الجلسات الحية، وقفل وفك حظر الحسابات، وتدقيق العمليات الحساسة.
+              </p>
+            </div>
+          </div>
 
-        <!-- Global Actions -->
-        <div class="flex items-center gap-3">
           <button 
             @click="refreshAll" 
             :disabled="loading || loadingLogs"
-            class="flex items-center gap-1.5 border border-brand-200 bg-brand-50 hover:bg-brand-100 dark:border-brand-900/30 dark:bg-brand-950/20 text-brand-700 dark:text-brand-450 rounded-xl px-4 py-2.5 text-xs font-black transition-all cursor-pointer shadow-sm disabled:opacity-50"
+            class="flex items-center gap-2 border border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl px-4 py-2.5 text-xs font-black transition-all cursor-pointer shadow-theme-xs disabled:opacity-50"
           >
             <svg class="h-4 w-4" :class="{'animate-spin': loading || loadingLogs}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H17" />
             </svg>
-            تحديث البيانات
+            تحديث البيانات والتقارير
           </button>
         </div>
       </div>
 
-      <!-- Metrics Grid (Clean outline style cards with professional corporate accent colors) -->
+      <!-- Metrics Grid (Gradients and Border Highlights) -->
       <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         
         <!-- Total Users Card -->
-        <div class="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm shadow-theme-xs">
+        <div class="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-sm shadow-theme-xs group">
+          <div class="absolute top-0 right-0 w-1 bg-blue-500 h-full"></div>
           <div class="flex justify-between items-center mb-4">
             <span class="text-[10px] font-black px-2.5 py-1 rounded-full tracking-wide bg-blue-50 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400">
               قاعدة البيانات
@@ -51,14 +61,15 @@
             {{ totalUsers }}
             <span class="text-xs font-semibold text-gray-400 dark:text-gray-500">حساب</span>
           </h3>
-          <p class="text-xs text-gray-400 dark:text-gray-500 mt-3 flex items-center gap-1.5 font-medium">
+          <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-3 flex items-center gap-1.5 font-medium">
             <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
             مسجلين في المنظومة
           </p>
         </div>
 
         <!-- Locked Users Card -->
-        <div class="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm shadow-theme-xs">
+        <div class="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-sm shadow-theme-xs group">
+          <div class="absolute top-0 right-0 w-1 bg-red-500 h-full"></div>
           <div class="flex justify-between items-center mb-4">
             <span class="text-[10px] font-black px-2.5 py-1 rounded-full tracking-wide bg-error-50 text-error-700 dark:bg-error-950/20 dark:text-error-400">
               الحظر النشط
@@ -74,14 +85,15 @@
             {{ lockedUsersCount }}
             <span class="text-xs font-semibold text-gray-400 dark:text-gray-500">حساب</span>
           </h3>
-          <p class="text-xs text-gray-400 dark:text-gray-500 mt-3 flex items-center gap-1.5 font-medium">
-            <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
+          <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-3 flex items-center gap-1.5 font-medium">
+            <span class="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse"></span>
             بسبب محاولات خاطئة
           </p>
         </div>
 
         <!-- Failed Attempts Card -->
-        <div class="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm shadow-theme-xs">
+        <div class="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-sm shadow-theme-xs group">
+          <div class="absolute top-0 right-0 w-1 bg-amber-500 h-full"></div>
           <div class="flex justify-between items-center mb-4">
             <span class="text-[10px] font-black px-2.5 py-1 rounded-full tracking-wide bg-warning-50 text-warning-700 dark:bg-warning-950/20 dark:text-warning-400">
               محاولات فاشلة
@@ -97,14 +109,15 @@
             {{ failedAttemptsCount }}
             <span class="text-xs font-semibold text-gray-400 dark:text-gray-500">محاولة</span>
           </h3>
-          <p class="text-xs text-gray-400 dark:text-gray-500 mt-3 flex items-center gap-1.5 font-medium">
+          <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-3 flex items-center gap-1.5 font-medium">
             <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
             خلال آخر 24 ساعة
           </p>
         </div>
 
         <!-- Active Sessions Card -->
-        <div class="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm shadow-theme-xs">
+        <div class="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-sm shadow-theme-xs group">
+          <div class="absolute top-0 right-0 w-1 bg-emerald-500 h-full"></div>
           <div class="flex justify-between items-center mb-4">
             <span class="text-[10px] font-black px-2.5 py-1 rounded-full tracking-wide bg-success-50 text-success-700 dark:bg-success-950/20 dark:text-success-400">
               الاتصال اللحظي
@@ -120,8 +133,8 @@
             {{ activeSessionsCount }}
             <span class="text-xs font-semibold text-gray-400 dark:text-gray-500">جلسة نشطة</span>
           </h3>
-          <p class="text-xs text-gray-400 dark:text-gray-500 mt-3 flex items-center gap-1.5 font-medium">
-            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+          <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-3 flex items-center gap-1.5 font-medium">
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
             متصلة بالمنظومة
           </p>
         </div>
@@ -137,21 +150,21 @@
           <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-xs overflow-hidden">
             
             <!-- Table Header Toolbar -->
-            <div class="p-5 border-b border-gray-250 dark:border-gray-800 space-y-4">
+            <div class="p-5 border-b border-gray-100 dark:border-gray-800 space-y-4">
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h3 class="text-sm font-black text-gray-900 dark:text-white">إدارة الحسابات والتحكم الأمني</h3>
-                  <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">صلاحيات التحكم المباشر بإلغاء الحظر وتجميد وتفعيل حسابات المستخدمين.</p>
+                  <h3 class="text-base font-semibold text-gray-900 dark:text-white">إدارة الحسابات والتحكم الأمني</h3>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">التحكم المباشر في قفل وتفعيل حسابات المستخدمين وفرض إعادة تعيين كلمات المرور.</p>
                 </div>
 
                 <!-- Tabs segment -->
-                <div class="inline-flex p-1 bg-gray-100 dark:bg-gray-900 rounded-xl">
+                <div class="inline-flex p-1 bg-gray-100 dark:bg-gray-800/80 rounded-xl border border-gray-200/40 dark:border-gray-700/30">
                   <button 
                     v-for="status in ['all', 'active', 'locked', 'inactive']" 
                     :key="status"
                     @click="activeFilter = status"
-                    class="px-3 py-1.5 text-[10px] font-black rounded-lg transition-all cursor-pointer"
-                    :class="[activeFilter === status ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-theme-xs' : 'text-gray-500 hover:text-gray-700']"
+                    class="px-3.5 py-1.5 text-[10px] font-black rounded-lg transition-all cursor-pointer"
+                    :class="[activeFilter === status ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-theme-xs' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200']"
                   >
                     {{ getStatusFilterName(status) }}
                   </button>
@@ -160,7 +173,7 @@
 
               <!-- Search Bar -->
               <div class="relative">
-                <span class="absolute inset-y-0 start-0 flex items-center ps-3 text-gray-400">
+                <span class="absolute inset-y-0 start-0 flex items-center ps-3.5 text-gray-400 pointer-events-none">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
@@ -168,42 +181,42 @@
                 <input 
                   type="text" 
                   v-model="searchQuery"
-                  placeholder="ابحث عن حساب مستخدم بالاسم، اسم المستخدم، أو البريد الإلكتروني..." 
-                  class="w-full ps-9 pe-4 py-2 text-xs border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-950 focus:outline-none focus:ring-2 focus:ring-brand-500 text-gray-900 dark:text-white"
+                  placeholder="ابحث عن حساب بالاسم، اسم المستخدم، أو البريد الإلكتروني..." 
+                  class="w-full ps-10 pe-4 py-2.5 text-xs border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50/50 dark:bg-gray-950 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-gray-900 dark:text-white transition-all"
                 />
               </div>
             </div>
 
             <!-- Table content -->
-            <div v-if="loading" class="flex justify-center py-12">
-              <svg class="h-6 w-6 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <div v-if="loading" class="flex justify-center py-16">
+              <svg class="h-7 w-7 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
               </svg>
             </div>
 
-            <div v-else-if="filteredUsers.length === 0" class="text-center py-12">
-              <span class="text-xs text-gray-400 dark:text-gray-500">لا توجد حسابات مستخدمين مطابقة للخيارات.</span>
+            <div v-else-if="filteredUsers.length === 0" class="text-center py-16">
+              <span class="text-xs text-gray-400 dark:text-gray-500">لا توجد حسابات مستخدمين مطابقة لخيارات الفلترة الحالية.</span>
             </div>
 
             <div v-else class="overflow-x-auto">
               <table class="w-full text-right border-collapse text-xs">
                 <thead>
                   <tr class="border-b border-gray-200 dark:border-gray-800 text-[10px] font-bold text-gray-400 bg-gray-50/50 dark:bg-gray-950/20">
-                    <th class="px-5 py-3 text-start">الحساب / الموظف</th>
-                    <th class="px-5 py-3">الحالة الأمنية</th>
-                    <th class="px-5 py-3 text-center">محاولات خاطئة</th>
-                    <th class="px-5 py-3">البريد الإلكتروني</th>
-                    <th class="px-5 py-3 text-center">إجراءات الحوكمة</th>
+                    <th class="px-5 py-3.5 text-start">الحساب / اسم المستخدم</th>
+                    <th class="px-5 py-3.5">الحالة الأمنية</th>
+                    <th class="px-5 py-3.5 text-center">محاولات الدخول الخاطئة</th>
+                    <th class="px-5 py-3.5">البريد الإلكتروني</th>
+                    <th class="px-5 py-3.5 text-center">إجراءات الحوكمة</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-150 dark:divide-gray-850">
-                  <tr v-for="user in filteredUsers" :key="user.id" class="hover:bg-gray-50/40 dark:hover:bg-gray-800/10">
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-transparent">
+                  <tr v-for="user in filteredUsers" :key="user.id" class="hover:bg-gray-50/40 dark:hover:bg-gray-800/10 transition-colors">
                     
-                    <!-- User Account / Avatar (Restored dynamic pastel initial colors) -->
+                    <!-- User Account / Avatar -->
                     <td class="px-5 py-3.5">
                       <div class="flex items-center gap-3">
-                        <div class="w-8.5 h-8.5 rounded-xl flex items-center justify-center font-black text-xs shadow-theme-xs shrink-0 border" :class="getAvatarBgColor(user.username)">
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shadow-theme-xs shrink-0 border" :class="getAvatarBgColor(user.username)">
                           {{ getUserInitials(user.username) }}
                         </div>
                         <div>
@@ -211,9 +224,9 @@
                             <span>{{ user.username }}</span>
                             <span 
                               v-if="user.security_status?.must_change_password"
-                              class="px-1.5 py-0.5 rounded text-[8px] bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 font-bold border border-amber-200/50"
+                              class="px-2 py-0.5 rounded text-[8px] bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 font-bold border border-amber-200/50"
                             >
-                              إلزام التغيير
+                              إلزام تغيير السر
                             </span>
                           </div>
                           <div class="text-[10px] text-gray-400 mt-0.5">{{ user.full_name || 'بدون اسم كامل' }}</div>
@@ -221,7 +234,7 @@
                       </div>
                     </td>
 
-                    <!-- Status Badge (Restored clean colored badges) -->
+                    <!-- Status Badge -->
                     <td class="px-5 py-3.5">
                       <span 
                         class="px-2.5 py-0.5 rounded-full font-bold text-[9px] inline-flex items-center gap-1.5 border"
@@ -234,7 +247,7 @@
 
                     <!-- Failed Attempts -->
                     <td class="px-5 py-3.5 text-center font-extrabold text-gray-950 dark:text-white font-mono">
-                      <span :class="[user.security_status?.failed_attempts && user.security_status.failed_attempts >= 3 ? 'text-error-600 bg-error-50 px-2 py-0.5 rounded-lg' : 'text-gray-500']">
+                      <span :class="[user.security_status?.failed_attempts && user.security_status.failed_attempts >= 3 ? 'text-error-600 bg-error-50 dark:bg-error-950/20 px-2 py-0.5 rounded-lg' : 'text-gray-500']">
                         {{ user.security_status?.failed_attempts || 0 }} / 5
                       </span>
                     </td>
@@ -242,7 +255,7 @@
                     <!-- Email -->
                     <td class="px-5 py-3.5 text-gray-650 dark:text-gray-400 font-mono text-[10px]">{{ user.email || '—' }}</td>
 
-                    <!-- Action buttons (Clean outline style with soft icon colors) -->
+                    <!-- Action buttons -->
                     <td class="px-5 py-3.5 text-center">
                       <div class="flex items-center justify-center gap-2">
                         
@@ -250,9 +263,9 @@
                         <button
                           v-if="user.security_status?.is_locked"
                           @click="handleUnlockUser(user)"
-                          class="px-2.5 py-1.5 text-[10px] font-black text-gray-700 dark:text-gray-300 bg-white hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-750 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1 shadow-sm"
+                          class="px-2.5 py-1.5 text-[10px] font-black text-gray-700 dark:text-gray-300 bg-white hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1 shadow-theme-xs"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                           </svg>
                           <span>فك القفل</span>
@@ -261,9 +274,9 @@
                         <!-- Reset password -->
                         <button
                           @click="handleResetPassword(user)"
-                          class="px-2.5 py-1.5 text-[10px] font-black text-gray-700 dark:text-gray-300 bg-white hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-750 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1 shadow-sm"
+                          class="px-2.5 py-1.5 text-[10px] font-black text-gray-700 dark:text-gray-300 bg-white hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1 shadow-theme-xs"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H3.75v-2.25A2.25 2.25 0 014.22 17.5l4.83-4.83a1.875 1.875 0 00.43-1.563 6 6 0 1110.27-5.857z" />
                           </svg>
                           <span>إعادة تعيين</span>
@@ -273,9 +286,9 @@
                         <button
                           v-if="user.is_active"
                           @click="handleDeactivateUser(user)"
-                          class="px-2.5 py-1.5 text-[10px] font-black text-gray-700 dark:text-gray-300 bg-white hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-750 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1 shadow-sm"
+                          class="px-2.5 py-1.5 text-[10px] font-black text-gray-700 dark:text-gray-300 bg-white hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1 shadow-theme-xs"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-red-650" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                           </svg>
                           <span>تعطيل الحساب</span>
@@ -283,30 +296,28 @@
                         <button
                           @click="handleActivateUser(user)"
                           v-else
-                          class="px-2.5 py-1.5 text-[10px] font-black text-gray-700 dark:text-gray-300 bg-white hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-750 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1 shadow-sm"
+                          class="px-2.5 py-1.5 text-[10px] font-black text-gray-700 dark:text-gray-300 bg-white hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1 shadow-theme-xs"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
-                          <span>تفعيل</span>
+                          <span>تفعيل الحساب</span>
                         </button>
-
                       </div>
                     </td>
-
                   </tr>
                 </tbody>
               </table>
             </div>
           </div>
 
-          <!-- Real-Time Activity Feed Logs (Clean Light Theme Timeline with Warning Orange Indicators) -->
+          <!-- Real-Time Activity Feed Logs -->
           <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-6 shadow-theme-xs space-y-4">
             
-            <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-              <h3 class="text-sm font-black text-gray-900 dark:text-white flex items-center gap-2">
-                <span class="p-1 rounded-lg bg-orange-500/10 text-orange-600">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-4">
+              <h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <span class="p-1.5 rounded-lg bg-orange-500/10 text-orange-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                 </span>
@@ -315,25 +326,25 @@
               
               <button 
                 @click="loadLogs"
-                class="text-[11px] font-black text-gray-700 dark:text-gray-300 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-750 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-700 transition-all cursor-pointer"
+                class="text-[11px] font-black text-gray-700 dark:text-gray-300 bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-700 transition-all cursor-pointer"
               >
                 تحديث السجل
               </button>
             </div>
 
             <!-- Logs list -->
-            <div v-if="loadingLogs" class="flex justify-center py-6">
+            <div v-if="loadingLogs" class="flex justify-center py-8">
               <svg class="h-6 w-6 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
               </svg>
             </div>
 
-            <div v-else-if="failedLoginLogs.length === 0" class="text-center py-6 text-xs text-gray-400">
-              لا توجد محاولات دخول فاشلة مسجلة.
+            <div v-else-if="failedLoginLogs.length === 0" class="text-center py-8 text-xs text-gray-400">
+              لا توجد محاولات دخول فاشلة مسجلة في النظام.
             </div>
 
-            <!-- Beautiful Muted Timeline Logs (Warning Red/Orange Indicator Dots) -->
+            <!-- Timeline Logs -->
             <div v-else class="space-y-4 relative before:absolute before:inset-y-0 before:end-3.5 before:w-0.5 before:bg-gray-100 dark:before:bg-gray-800">
               <div 
                 v-for="log in failedLoginLogs" 
@@ -353,15 +364,15 @@
                   </div>
                   
                   <div class="text-[10px] text-gray-400 dark:text-gray-500 font-mono flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span>IP: <span class="text-gray-600 dark:text-gray-400">{{ log.ip_address }}</span></span>
+                    <span>IP: <span class="text-gray-650 dark:text-gray-300">{{ log.ip_address }}</span></span>
                     <span>|</span>
-                    <span>الموقع: <span class="text-gray-600 dark:text-gray-400">{{ log.geo_location || 'غير محدد' }}</span></span>
+                    <span>الموقع: <span class="text-gray-650 dark:text-gray-300">{{ log.geo_location || 'غير محدد' }}</span></span>
                     <span>|</span>
                     <span class="max-w-xs truncate" :title="log.user_agent">المتصفح: {{ log.user_agent }}</span>
                   </div>
                 </div>
 
-                <div class="text-gray-400 dark:text-gray-500 text-[10px] font-mono shrink-0 md:text-left self-start mt-0.5">
+                <div class="text-gray-450 dark:text-gray-500 text-[10px] font-mono shrink-0 md:text-left self-start mt-0.5">
                   {{ formatDate(log.timestamp) }}
                 </div>
               </div>
@@ -376,14 +387,14 @@
           <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-6 shadow-theme-xs space-y-6">
             
             <div class="flex items-center gap-3 pb-4 border-b border-gray-150 dark:border-gray-800">
-              <span class="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400">
+              <span class="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </span>
               <div>
-                <h3 class="text-sm font-black text-gray-900 dark:text-white">مؤشر أمان السياسات</h3>
-                <p class="text-[10px] text-gray-400 mt-0.5">تقييم الالتزام بضوابط ومعايير حماية الحسابات.</p>
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white">مؤشر أمان السياسات</h3>
+                <p class="text-[10px] text-gray-400 mt-0.5">تقييم الالتزام بمعايير الحماية وحوكمة الحسابات.</p>
               </div>
             </div>
 
@@ -393,7 +404,7 @@
                 <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                   <path
                     class="text-gray-100 dark:text-gray-800"
-                    stroke-width="3"
+                    stroke-width="3.2"
                     stroke="currentColor"
                     fill="none"
                     d="M18 2.0845
@@ -402,7 +413,7 @@
                   />
                   <path
                     class="text-brand-500"
-                    stroke-width="3"
+                    stroke-width="3.2"
                     stroke-dasharray="95, 100"
                     stroke-linecap="round"
                     stroke="currentColor"
@@ -437,7 +448,7 @@
                   <span class="px-2 py-0.5 rounded text-[8px] bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 font-bold border border-emerald-250/30">نشط</span>
                 </div>
                 <p class="text-[10px] text-gray-500 leading-relaxed">
-                  قفل حساب المستخدم مؤقتاً لمدة 30 دقيقة بعد 5 محاولات خاطئة لمنع هجمات التخمين.
+                  قفل حساب المستخدم مؤقتاً بعد 5 محاولات خاطئة لمنع هجمات التخمين.
                 </p>
               </div>
 
@@ -474,7 +485,7 @@
                 <span class="text-xs font-bold text-gray-900 dark:text-white block mb-2">امتثال الضوابط الأمنية</span>
                 <div class="space-y-2">
                   <div class="flex items-center gap-2.5 text-[10px] text-gray-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-500 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2500/svg" class="h-4 w-4 text-emerald-500 shrink-0" viewBox="0 0 20 20" fill="currentColor">
                       <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                     </svg>
                     <span>تأمين هجمات تخمين كلمات السر (Brute-Force)</span>
@@ -619,11 +630,11 @@ function getUserInitials(name: string): string {
 function getAvatarBgColor(username: string): string {
   const hash = username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
   const colors = [
-    'bg-blue-50 text-blue-700 border-blue-200/40 dark:bg-blue-900/30 dark:text-blue-400',
-    'bg-indigo-50 text-indigo-700 border-indigo-200/40 dark:bg-indigo-900/30 dark:text-indigo-400',
-    'bg-purple-50 text-purple-700 border-purple-200/40 dark:bg-purple-900/30 dark:text-purple-400',
-    'bg-pink-50 text-pink-700 border-pink-200/40 dark:bg-pink-900/30 dark:text-pink-400',
-    'bg-emerald-50 text-emerald-700 border-emerald-200/40 dark:bg-emerald-900/30 dark:text-emerald-400'
+    'bg-blue-50 text-blue-700 border-blue-200/40 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/30',
+    'bg-indigo-50 text-indigo-700 border-indigo-200/40 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800/30',
+    'bg-purple-50 text-purple-700 border-purple-200/40 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800/30',
+    'bg-pink-50 text-pink-700 border-pink-200/40 dark:bg-pink-900/30 dark:text-pink-400 dark:border-pink-800/30',
+    'bg-emerald-50 text-emerald-700 border-emerald-200/40 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/30'
   ]
   return colors[hash % colors.length]
 }
@@ -768,7 +779,6 @@ function getUserStatusLabel(user: UserRecord): string {
   return user.is_active ? 'نشط' : 'معطل إدارياً'
 }
 
-// Restored standard high-fidelity color theme classes
 function getUserStatusClasses(user: UserRecord): string {
   if (user.security_status?.is_locked) {
     return 'bg-error-50 text-error-700 border-error-200 dark:bg-error-950/20 dark:text-error-400 dark:border-error-500/20'

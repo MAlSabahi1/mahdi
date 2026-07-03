@@ -424,7 +424,7 @@ const router = createRouter({
       name: 'MonthlyExports',
       component: () => import('@/views/Services/MonthlyExports.vue'),
       meta: {
-        title: 'تصدير الخدمات الشهرية',
+        title: 'تصدير التقارير الشهرية الموحدة',
         requiresAuth: true,
       },
     },

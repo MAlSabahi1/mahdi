@@ -1,169 +1,229 @@
 <template>
   <admin-layout>
+    <!-- Breadcrumb -->
     <PageBreadcrumb pageTitle="إدارة الجلسات والأجهزة النشطة" />
 
-    <div class="space-y-6" dir="rtl">
-      <!-- Info Header -->
-      <div class="p-4 rounded-2xl bg-blue-500/10 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200 text-xs leading-relaxed">
-        <strong>💡 حوكمة أمن الجلسات والأجهزة:</strong>
-        تتيح لك هذه الصفحة التحكم الكامل في الأجهزة المتصلة بحسابك حالياً. يمكنك إنهاء أي جلسة غير معروفة فوراً لضمان عدم اختراق الحساب. كما يتيح لك القسم السفلي البحث عن أي مستخدم آخر وإنهاء كافة جلساته النشطة دفعة واحدة في حال وجود اشتباه أمني.
-      </div>
-
-      <!-- Current User Sessions -->
-      <div class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
-        <h3 class="text-sm font-black text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
-          أجهزتك وجلساتك النشطة حالياً
-        </h3>
-
-        <div v-if="loadingMySessions" class="flex justify-center py-8">
-          <svg class="h-6 w-6 animate-spin text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-          </svg>
-        </div>
-
-        <div v-else-if="mySessions.length === 0" class="text-center py-8 text-gray-400">
-          لا توجد جلسات نشطة مسجلة لحسابك.
-        </div>
-
-        <div v-else class="overflow-x-auto">
-          <table class="w-full text-right border-collapse">
-            <thead>
-              <tr class="border-b border-gray-100 dark:border-gray-800 text-xs font-bold text-gray-400">
-                <th class="pb-3 text-start">الجهاز / المتصفح</th>
-                <th class="pb-3">عنوان IP</th>
-                <th class="pb-3">الموقع الجغرافي</th>
-                <th class="pb-3">بدء الاتصال</th>
-                <th class="pb-3 text-left">التحكم</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100 dark:divide-gray-850">
-              <tr 
-                v-for="session in mySessions" 
-                :key="session.session_id" 
-                class="text-xs hover:bg-gray-50/50 dark:hover:bg-gray-850/30 transition-colors"
-              >
-                <td class="py-4">
-                  <div class="flex items-center gap-2.5">
-                    <!-- Icon based on User Agent -->
-                    <span class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500">
-                      <svg v-if="isMobile(session.user_agent)" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                      </svg>
-                      <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </span>
-                    <div>
-                      <div class="font-extrabold text-gray-900 dark:text-white flex items-center gap-1.5">
-                        <span>{{ parseUserAgent(session.user_agent) }}</span>
-                        <span v-if="session.is_current" class="px-2 py-0.5 rounded-full text-[9px] bg-green-500/10 text-green-600 font-black">الجلسة الحالية</span>
-                      </div>
-                      <div class="text-[10px] text-gray-400 font-mono mt-0.5 truncate max-w-[320px]">{{ session.user_agent }}</div>
-                    </div>
-                  </div>
-                </td>
-                <td class="py-4 font-mono text-gray-600 dark:text-gray-400">{{ session.ip_address || '—' }}</td>
-                <td class="py-4 text-gray-600 dark:text-gray-400">{{ session.geo_location || 'غير معروف' }}</td>
-                <td class="py-4 text-gray-500">{{ formatDate(session.created_at || session.timestamp) }}</td>
-                <td class="py-4 text-left">
-                  <button
-                    v-if="!session.is_current"
-                    @click="handleRevokeSession(session.session_id)"
-                    class="text-[11px] font-bold text-red-600 dark:text-red-400 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
-                  >
-                    إنهاء الاتصال
-                  </button>
-                  <span v-else class="text-[11px] text-gray-400 font-bold px-3 py-1.5 block">—</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Administrative Actions: Manage Other Users' Sessions -->
-      <div class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
-        <h3 class="text-sm font-black text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-          <span class="p-1.5 rounded-lg bg-blue-500/10 text-blue-600">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          </span>
-          حوكمة وإنهاء جلسات مستخدمي النظام (إدارة إشرافية)
-        </h3>
-        <p class="text-[11px] text-gray-500 mb-4">
-          البحث عن حساب مستخدم وإنهاء جميع جلساته وأجهزته النشطة فوراً لإرغامه على إعادة تسجيل الدخول.
-        </p>
-
-        <!-- Search Bar -->
-        <div class="flex flex-col sm:flex-row gap-3 max-w-xl mb-6">
-          <input
-            type="text"
-            v-model="searchQuery"
-            placeholder="ادخل اسم المستخدم أو جزء من اسمه للبحث..."
-            class="flex-1 text-xs px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-right"
-            @keyup.enter="handleSearch"
-          />
-          <button
-            @click="handleSearch"
-            class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md shadow-blue-500/10 transition-all cursor-pointer"
+    <div class="space-y-6 text-start" dir="rtl">
+      
+      <!-- Top Premium Glassmorphic Header -->
+      <div class="relative overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-white to-gray-50/50 dark:from-white/[0.03] dark:to-transparent p-6 shadow-theme-sm">
+        <div class="absolute -right-16 -top-16 w-48 h-48 bg-brand-500/5 rounded-full blur-3xl pointer-events-none"></div>
+        
+        <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div class="flex items-center gap-4">
+            <div class="p-3 bg-brand-500/10 text-brand-600 dark:text-brand-400 rounded-2xl shadow-theme-xs">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" />
+              </svg>
+            </div>
+            <div>
+              <h1 class="text-xl font-black text-gray-900 dark:text-white">
+                إدارة الجلسات والأجهزة النشطة
+              </h1>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                متابعة الأجهزة المتصلة بالنظام حالياً، وحظر الوصول غير المصرح به، وإنهاء الجلسات حمايةً للبيانات.
+              </p>
+            </div>
+          </div>
+          
+          <button 
+            @click="loadMySessions"
+            :disabled="loadingMySessions"
+            class="flex items-center gap-2 border border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer shadow-theme-xs"
           >
-            بحث ومطابقة
+            <svg class="h-4 w-4" :class="{'animate-spin': loadingMySessions}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H17" />
+            </svg>
+            تحديث الأجهزة
           </button>
         </div>
+      </div>
 
-        <!-- Search Results -->
-        <div v-if="searching" class="flex justify-center py-6">
-          <svg class="h-6 w-6 animate-spin text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-          </svg>
+      <!-- Current User Sessions Card -->
+      <div class="rounded-xl border border-gray-200 bg-white shadow-theme-sm dark:border-gray-800 dark:bg-gray-900/50 overflow-hidden">
+        <div class="border-b border-gray-100 p-5 dark:border-gray-800 flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-semibold text-gray-900 dark:text-white">جلساتك النشطة حالياً</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">قائمة بالأجهزة والمتصفحات المرتبطة بحسابك الشخصي حالياً.</p>
+          </div>
         </div>
 
-        <div v-else-if="searched && searchResults.length === 0" class="text-center py-6 text-gray-400 text-xs">
-          لم يتم العثور على أي مستخدم يطابق معايير البحث.
+        <div class="p-6">
+          <div v-if="loadingMySessions" class="flex justify-center py-12">
+            <svg class="h-7 w-7 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+          </div>
+
+          <div v-else-if="mySessions.length === 0" class="text-center py-12 text-gray-400 dark:text-gray-500">
+            لا توجد جلسات نشطة مسجلة لحسابك.
+          </div>
+
+          <div v-else class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-250 dark:divide-gray-800 text-right">
+              <thead class="bg-gray-50/50 dark:bg-gray-800/30">
+                <tr>
+                  <th class="px-5 py-3.5 text-sm font-semibold text-gray-700 dark:text-gray-300">الجهاز / المتصفح</th>
+                  <th class="px-5 py-3.5 text-sm font-semibold text-gray-700 dark:text-gray-300">عنوان IP</th>
+                  <th class="px-5 py-3.5 text-sm font-semibold text-gray-700 dark:text-gray-300">الموقع الجغرافي</th>
+                  <th class="px-5 py-3.5 text-sm font-semibold text-gray-700 dark:text-gray-300">تاريخ بدء الاتصال</th>
+                  <th class="px-5 py-3.5 text-sm font-semibold text-gray-700 dark:text-gray-300 text-left">التحكم</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 dark:divide-gray-850">
+                <tr 
+                  v-for="session in mySessions" 
+                  :key="session.session_id" 
+                  class="hover:bg-gray-50/40 dark:hover:bg-gray-800/10 transition-colors"
+                >
+                  <td class="px-5 py-4">
+                    <div class="flex items-center gap-3">
+                      <div 
+                        class="w-9 h-9 rounded-xl flex items-center justify-center border shrink-0"
+                        :class="session.is_current ? 'bg-emerald-50 text-emerald-600 border-emerald-200/40 dark:bg-emerald-950/20 dark:text-emerald-400' : 'bg-gray-50 text-gray-500 border-gray-200/40 dark:bg-gray-800 dark:text-gray-400'"
+                      >
+                        <svg v-if="isMobile(session.user_agent)" xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      
+                      <div>
+                        <div class="font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+                          <span>{{ parseUserAgent(session.user_agent) }}</span>
+                          <span 
+                            v-if="session.is_current" 
+                            class="px-2 py-0.5 rounded-full text-[9px] bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 font-black border border-emerald-200/40 inline-flex items-center gap-1"
+                          >
+                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            الجلسة الحالية
+                          </span>
+                        </div>
+                        <div class="text-[10px] text-gray-400 font-mono mt-0.5 truncate max-w-[280px] sm:max-w-[420px]" :title="session.user_agent">
+                          {{ session.user_agent }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  
+                  <td class="px-5 py-4 font-mono text-gray-650 dark:text-gray-300 text-xs">{{ session.ip_address || '—' }}</td>
+                  <td class="px-5 py-4 text-gray-650 dark:text-gray-300 text-xs">{{ session.geo_location || 'غير محدد' }}</td>
+                  <td class="px-5 py-4 text-gray-500 text-xs font-mono">{{ formatDate(session.created_at || session.timestamp) }}</td>
+                  
+                  <td class="px-5 py-4 text-left">
+                    <button
+                      v-if="!session.is_current"
+                      @click="handleRevokeSession(session.session_id)"
+                      class="text-[10px] font-black text-red-600 dark:text-red-400 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/40 border border-red-200/30 px-3.5 py-1.5 rounded-lg transition-all cursor-pointer inline-flex items-center gap-1 shadow-theme-xs"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                      </svg>
+                      إنهاء الجلسة
+                    </button>
+                    <span v-else class="text-xs text-gray-400 font-medium px-4 py-1.5 block text-left">—</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Administrative Actions Card -->
+      <div class="rounded-xl border border-gray-200 bg-white shadow-theme-sm dark:border-gray-800 dark:bg-gray-900/50 overflow-hidden">
+        <div class="border-b border-gray-100 p-5 dark:border-gray-800">
+          <h3 class="text-base font-semibold text-gray-900 dark:text-white">حوكمة وإنهاء جلسات مستخدمي النظام (إشراف عسكري)</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">البحث عن حساب مستخدم وإلغاء كافة اتصالاته النشطة فوراً لإرغامه على تسجيل دخول جديد.</p>
         </div>
 
-        <div v-else-if="searchResults.length > 0" class="overflow-x-auto">
-          <table class="w-full text-right border-collapse">
-            <thead>
-              <tr class="border-b border-gray-100 dark:border-gray-800 text-xs font-bold text-gray-400">
-                <th class="pb-2 text-start">المستخدم</th>
-                <th class="pb-2">البريد الإلكتروني</th>
-                <th class="pb-2">حالة الحساب</th>
-                <th class="pb-2">آخر تسجيل دخول</th>
-                <th class="pb-2 text-left">التحكم</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100 dark:divide-gray-850">
-              <tr v-for="user in searchResults" :key="user.id" class="text-xs">
-                <td class="py-3">
-                  <div class="font-extrabold text-gray-900 dark:text-white">{{ user.username }}</div>
-                  <div class="text-[10px] text-gray-500">{{ user.full_name || '—' }}</div>
-                </td>
-                <td class="py-3 text-gray-600 dark:text-gray-400 font-mono">{{ user.email || '—' }}</td>
-                <td class="py-3">
-                  <span v-if="user.is_active" class="inline-flex items-center gap-1 rounded-full bg-success-50 px-2 py-0.5 text-[10px] font-medium text-success-700 dark:bg-success-500/10 dark:text-success-400">
-                    نشط
-                  </span>
-                  <span v-else class="inline-flex items-center gap-1 rounded-full bg-error-50 px-2 py-0.5 text-[10px] font-medium text-error-700 dark:bg-error-500/10 dark:text-error-400">
-                    معطل
-                  </span>
-                </td>
-                <td class="py-3 text-gray-500 font-mono">{{ formatDate(user.last_login) }}</td>
-                <td class="py-3 text-left">
-                  <button
-                    @click="handleTerminateAllSessions(user)"
-                    class="text-[11px] font-black text-red-600 dark:text-red-400 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
-                  >
-                    إنهاء كافة جلسات هذا الحساب
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="p-6 space-y-6">
+          <!-- Command bar search input -->
+          <div class="flex flex-col sm:flex-row gap-3 max-w-xl">
+            <div class="relative flex-1">
+              <span class="absolute inset-y-0 start-0 flex items-center ps-3.5 text-gray-400 pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </span>
+              <input
+                type="text"
+                v-model="searchQuery"
+                placeholder="أدخل اسم المستخدم للبحث..."
+                class="w-full ps-10 pe-4 py-2.5 text-xs border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50/50 dark:bg-gray-950 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-gray-900 dark:text-white transition-all text-right"
+                @keyup.enter="handleSearch"
+              />
+            </div>
+            <button
+              @click="handleSearch"
+              class="px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-extrabold text-xs shadow-theme-xs transition-colors cursor-pointer"
+            >
+              بحث ومطابقة الحساب
+            </button>
+          </div>
+
+          <!-- Search Results Table -->
+          <div v-if="searching" class="flex justify-center py-10">
+            <svg class="h-6 w-6 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+          </div>
+
+          <div v-else-if="searched && searchResults.length === 0" class="text-center py-10 text-gray-400 dark:text-gray-500 text-xs">
+            لم يتم العثور على أي حساب مستخدم يطابق معايير البحث المدخلة.
+          </div>
+
+          <div v-else-if="searchResults.length > 0" class="overflow-x-auto border border-gray-150 dark:border-gray-800 rounded-xl">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800 text-right text-xs">
+              <thead class="bg-gray-50/50 dark:bg-gray-800/30">
+                <tr>
+                  <th class="px-5 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300">المستخدم</th>
+                  <th class="px-5 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300">البريد الإلكتروني</th>
+                  <th class="px-5 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300">حالة الحساب</th>
+                  <th class="px-5 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300">آخر تسجيل دخول</th>
+                  <th class="px-5 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 text-left">الإجراء</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 dark:divide-gray-850">
+                <tr v-for="user in searchResults" :key="user.id" class="hover:bg-gray-50/40 dark:hover:bg-gray-800/10 transition-colors">
+                  <td class="px-5 py-3.5">
+                    <div class="font-extrabold text-gray-900 dark:text-white">{{ user.username }}</div>
+                    <div class="text-[10px] text-gray-400 mt-0.5">{{ user.full_name || 'بدون اسم كامل' }}</div>
+                  </td>
+                  
+                  <td class="px-5 py-3.5 text-gray-650 dark:text-gray-400 font-mono">{{ user.email || '—' }}</td>
+                  
+                  <td class="px-5 py-3.5">
+                    <span 
+                      class="px-2 py-0.5 rounded-full font-bold text-[9px] inline-flex items-center gap-1.5 border"
+                      :class="user.is_active ? 'bg-success-50 text-success-700 border-success-200 dark:bg-success-950/20 dark:text-success-400 dark:border-success-500/20' : 'bg-gray-100 text-gray-600 border-gray-250/20 dark:bg-gray-800 dark:text-gray-400'"
+                    >
+                      <span class="h-1.5 w-1.5 rounded-full" :class="user.is_active ? 'bg-success-500' : 'bg-gray-400'"></span>
+                      {{ user.is_active ? 'نشط' : 'معطل' }}
+                    </span>
+                  </td>
+                  
+                  <td class="px-5 py-3.5 text-gray-500 font-mono">{{ formatDate(user.last_login) }}</td>
+                  
+                  <td class="px-5 py-3.5 text-left">
+                    <button
+                      @click="handleTerminateAllSessions(user)"
+                      class="text-[10px] font-black text-red-650 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/40 border border-red-200/30 px-3.5 py-1.5 rounded-lg transition-all cursor-pointer inline-flex items-center gap-1 shadow-theme-xs"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      إنهاء كافة الجلسات النشطة
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -224,7 +284,8 @@ async function handleRevokeSession(sessionId: string) {
     showCancelButton: true,
     confirmButtonText: 'نعم، قم بإنهاء الجلسة',
     cancelButtonText: 'إلغاء',
-    confirmButtonColor: '#ef4444'
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#6b7280'
   })
 
   if (result.isConfirmed) {
@@ -267,7 +328,8 @@ async function handleTerminateAllSessions(user: UserRecord) {
     showCancelButton: true,
     confirmButtonText: 'نعم، تصفير الجلسات وإخراج المستخدم',
     cancelButtonText: 'إلغاء',
-    confirmButtonColor: '#ef4444'
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#6b7280'
   })
 
   if (result.isConfirmed) {

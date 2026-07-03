@@ -4,187 +4,224 @@
     <PageBreadcrumb pageTitle="مصفوفة صلاحيات الحقول والسياسات" />
 
     <div class="space-y-6 text-start" dir="rtl">
-      
-      <!-- Page Header -->
-      <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 border-b border-gray-200 dark:border-gray-800 pb-5">
-        <div>
-          <h1 class="text-2xl font-black text-gray-900 dark:text-white">
-            مصفوفة صلاحيات الحقول والسياسات (ABAC)
-          </h1>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            تهيئة وتصميم سياسات التحكم بالوصول المستند إلى السمات وصلاحيات القراءة/الكتابة على مستوى الحقول.
-          </p>
+      <!-- Header Controls -->
+      <div class="flex justify-between items-center bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 shadow-theme-xs">
+        <div class="text-right">
+          <h2 class="text-lg font-black text-gray-900 dark:text-white">إعدادات سياسات الحقول (ABAC)</h2>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">تحديد صلاحيات القراءة والكتابة لكل حقل من حقول الأفراد بناءً على الدور الوظيفي.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button 
+            @click="$router.push({ name: 'roles-management' })"
+            class="rounded-lg border border-gray-200 bg-white px-5 py-2 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 transition-colors dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 cursor-pointer"
+          >
+            إلغاء
+          </button>
+          <button 
+            @click="saveMatrix"
+            class="flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 transition-colors cursor-pointer"
+          >
+            <svg class="h-4.5 w-4.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            حفظ مصفوفة الصلاحيات
+          </button>
         </div>
       </div>
 
-      <!-- ABAC Context Info -->
-      <div class="grid gap-6 md:grid-cols-3">
-        <div class="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800 rounded-2xl p-5 shadow-theme-xs">
-          <div class="flex items-center gap-3 mb-3">
-            <span class="p-1.5 rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-450">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-              </svg>
-            </span>
-            <h3 class="text-xs font-black text-gray-900 dark:text-white">سمات المستخدم (Subject)</h3>
-          </div>
-          <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
-            التحقق من الرتبة العسكرية، الإدارة الفرعية، المحافظة الجغرافية، والمنصب الوظيفي الحالي للمستخدم عند فحص الصلاحية.
-          </p>
+      <!-- Basic Config Card -->
+      <div class="rounded-xl border border-gray-200 bg-white shadow-theme-sm dark:border-gray-800 dark:bg-gray-900/50 overflow-hidden">
+        <div class="border-b border-gray-100 p-5 dark:border-gray-800">
+          <h3 class="text-base font-semibold text-gray-900 dark:text-white">التهيئة العامة للمصفوفة</h3>
         </div>
+        <div class="p-6">
+          <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">الجدول المستهدف بالتطبيق</label>
+              <select v-model="selectedTable" class="block w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-950 dark:bg-gray-850 dark:border-gray-700 dark:text-white">
+                <option value="personnel">بيانات الأفراد والمنتسبين (PersonnelMaster)</option>
+                <option value="export_configs">إعدادات النماذج المالية (ExportConfig)</option>
+                <option value="reconciliations">سجلات المطابقات والتسويات (Reconciliation)</option>
+              </select>
+            </div>
 
-        <div class="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800 rounded-2xl p-5 shadow-theme-xs">
-          <div class="flex items-center gap-3 mb-3">
-            <span class="p-1.5 rounded-lg bg-purple-50 text-purple-650 dark:bg-purple-950/30 dark:text-purple-400">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 .621-.504 1.125-1.125 1.125H4.875A1.125 1.125 0 013.75 18.65v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.453.25-.718.25H4.875a1.125 1.125 0 01-.718-.25m16.5 0a1.5 1.5 0 01-1.5 1.5H4.875a1.5 1.5 0 01-1.5-1.5m16.5 0v-4.5m-16.5 4.5a2.18 2.18 0 01-.75-1.661V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m-7.5 8.006V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m0 0V6c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m0 0V8.706" />
-              </svg>
-            </span>
-            <h3 class="text-xs font-black text-gray-900 dark:text-white">سمات البيانات (Resource)</h3>
-          </div>
-          <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
-            تحديد حقول البيانات الحساسة مثل (الرقم المالي، معلومات الاتصال، الرتبة المقترحة) وتطبيق قيود الوصول الخاصة بها.
-          </p>
-        </div>
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">نمط فرض السياسة</label>
+              <select v-model="policyMode" class="block w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-950 dark:bg-gray-850 dark:border-gray-700 dark:text-white">
+                <option value="strict">فرض صارم (حظر البيانات وقفل الحقول فورياً)</option>
+                <option value="monitor">مراقبة وتسجيل (تسجيل محاولات الوصول غير المصرح بها)</option>
+              </select>
+            </div>
 
-        <div class="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800 rounded-2xl p-5 shadow-theme-xs">
-          <div class="flex items-center gap-3 mb-3">
-            <span class="p-1.5 rounded-lg bg-orange-50 text-orange-600 dark:bg-orange-950/30 dark:text-orange-400">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v10.5m0 0L7.5 9m4.5 4.5L16.5 9m-9 7.5h9" />
-              </svg>
-            </span>
-            <h3 class="text-xs font-black text-gray-900 dark:text-white">بيئة الطلب (Environment)</h3>
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">حالة السياسة</label>
+              <div class="flex items-center pt-3">
+                <label class="relative inline-flex cursor-pointer items-center">
+                  <input v-model="policyActive" type="checkbox" class="peer sr-only" />
+                  <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-success-500 peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-700 dark:bg-gray-700 rtl:peer-checked:after:-translate-x-full"></div>
+                  <span class="ms-3 text-sm font-medium text-gray-700 dark:text-gray-300">نشطة وتعمل حالياً</span>
+                </label>
+              </div>
+            </div>
           </div>
-          <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
-            قييد فترات الوصول بـ (أوقات الدوام الرسمي، الدخول من نطاق الشبكة العسكرية الداخلية IP، أو المواقع المعتمدة فقط).
-          </p>
         </div>
       </div>
 
-      <!-- Field-level Permissions Matrix -->
-      <div class="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800 rounded-2xl shadow-theme-xs overflow-hidden">
-        <div class="p-5 border-b border-gray-200 dark:border-gray-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <!-- Field-level Permissions Matrix Card -->
+      <div class="rounded-xl border border-gray-200 bg-white shadow-theme-sm dark:border-gray-800 dark:bg-gray-900/50 overflow-hidden">
+        <div class="flex flex-col gap-4 border-b border-gray-100 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
           <div>
-            <h3 class="text-sm font-black text-gray-900 dark:text-white">مصفوفة صلاحيات الحقول لبيانات الأفراد</h3>
-            <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
-              تحديد الحقول التي يمكن قراءتها وتعديلها لكل دور من الأدوار الأمنية في النظام.
-            </p>
-          </div>
-          
-          <div class="flex items-center gap-2">
-            <select class="text-xs border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-950 text-gray-700 dark:text-gray-300">
-              <option>جدول الأفراد والضباط</option>
-              <option>جدول الكشوفات والاستحقاق</option>
-              <option>سجل السكرتارية والمستندات</option>
-            </select>
-            <button class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg cursor-pointer">
-              حفظ المصفوفة
-            </button>
+            <h3 class="text-base font-semibold text-gray-900 dark:text-white">جدول توزيع صلاحيات الحقول</h3>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">حدد حقول القراءة (عرض الحقل) وحقول الكتابة (السماح بالتعديل) لكل دور أمني.</p>
           </div>
         </div>
 
-        <div class="overflow-x-auto">
-          <table class="w-full text-right border-collapse text-xs">
-            <thead>
-              <tr class="border-b border-gray-200 dark:border-gray-800 text-[10px] font-bold text-gray-400 bg-gray-50/50 dark:bg-gray-950/20">
-                <th class="px-5 py-3 text-start">حقل البيانات</th>
-                <th class="px-5 py-3 text-center">مدير النظام (Admin)</th>
-                <th class="px-5 py-3 text-center">ضابط شؤون الأفراد</th>
-                <th class="px-5 py-3 text-center">أمين سر السكرتارية</th>
-                <th class="px-5 py-3 text-center">المدقق المالي والمفتش</th>
+        <div class="overflow-x-auto w-full">
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800 text-right">
+            <thead class="bg-gray-50/50 dark:bg-gray-800/30">
+              <tr>
+                <th class="px-5 py-4 text-start text-sm font-semibold text-gray-700 dark:text-gray-300 min-w-[200px] border-l border-gray-200 dark:border-gray-800">الحقل في قاعدة البيانات</th>
+                <th 
+                  v-for="role in roles" 
+                  :key="role.code" 
+                  class="px-4 py-4 text-center border-l border-gray-200 dark:border-gray-800 last:border-0"
+                >
+                  <div class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ role.label }}</div>
+                  <div class="text-[10px] text-gray-400 font-mono mt-0.5">{{ role.code }}</div>
+                </th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-150 dark:divide-gray-850">
-              <tr v-for="field in fields" :key="field.key" class="hover:bg-gray-50/40 dark:hover:bg-gray-800/10">
-                <td class="px-5 py-3.5">
-                  <div class="font-extrabold text-gray-900 dark:text-white">{{ field.label }}</div>
-                  <div class="text-[10px] text-gray-400 font-mono mt-0.5">{{ field.key }}</div>
-                </td>
+            
+            <tbody class="divide-y divide-gray-100 bg-white dark:divide-gray-800 dark:bg-transparent">
+              <template v-for="group in groups" :key="group.title">
+                <!-- Group Header Row -->
+                <tr class="bg-gray-50/70 dark:bg-gray-950/20 font-bold text-gray-900 dark:text-gray-100">
+                  <td :colspan="roles.length + 1" class="px-5 py-3 text-start border-y border-gray-200 dark:border-gray-800 text-xs font-black">
+                    📁 {{ group.title }}
+                  </td>
+                </tr>
                 
-                <td v-for="role in roles" :key="role" class="px-5 py-3.5 text-center">
-                  <div class="inline-flex items-center gap-3">
-                    <label class="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" checked class="rounded border-gray-300 text-brand-600 focus:ring-brand-500 h-3.5 w-3.5" />
-                      <span class="text-[10px] text-gray-500">قراءة</span>
-                    </label>
-                    <label class="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" :checked="field.writeRoles.includes(role)" class="rounded border-gray-300 text-brand-600 focus:ring-brand-500 h-3.5 w-3.5" />
-                      <span class="text-[10px] text-gray-500">كتابة</span>
-                    </label>
-                  </div>
-                </td>
-              </tr>
+                <!-- Fields Rows -->
+                <tr v-for="field in group.fields" :key="field.key" class="border-b border-gray-100 last:border-0 dark:border-gray-850 hover:bg-gray-50/40 dark:hover:bg-gray-800/10">
+                  <td class="px-5 py-4 text-start border-l border-gray-200 dark:border-gray-850">
+                    <div class="font-semibold text-gray-900 dark:text-white text-xs">{{ field.label }}</div>
+                    <div class="text-[10px] text-gray-400 font-mono mt-0.5">{{ field.key }}</div>
+                  </td>
+                  
+                  <td 
+                    v-for="role in roles" 
+                    :key="role.code" 
+                    class="px-4 py-4 text-center border-l border-gray-200 dark:border-gray-850 last:border-0"
+                  >
+                    <div v-if="permissions[field.key] && permissions[field.key][role.code]" class="inline-flex items-center gap-4 justify-center">
+                      <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          v-model="permissions[field.key][role.code].read"
+                          class="h-4.5 w-4.5 rounded border-gray-300 text-brand-600 focus:ring-brand-500 bg-white dark:border-gray-600 dark:bg-gray-800 cursor-pointer transition-colors"
+                        />
+                        <span class="text-[11px] text-gray-600 dark:text-gray-400 font-medium">قراءة</span>
+                      </label>
+                      
+                      <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          v-model="permissions[field.key][role.code].write"
+                          class="h-4.5 w-4.5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 bg-white dark:border-gray-600 dark:bg-gray-800 cursor-pointer transition-colors"
+                        />
+                        <span class="text-[11px] text-gray-600 dark:text-gray-400 font-medium">كتابة</span>
+                      </label>
+                    </div>
+                  </td>
+                </tr>
+              </template>
             </tbody>
           </table>
         </div>
       </div>
-
-      <!-- Policy Editor / ABAC Rule Builder -->
-      <div class="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-theme-xs">
-        <h3 class="text-sm font-black text-gray-900 dark:text-white mb-1">مصمم قواعد الـ ABAC الذكية</h3>
-        <p class="text-[11px] text-gray-400 dark:text-gray-500 mb-5">
-          صياغة قواعد وصول شرطية ديناميكية استناداً للمطابقة الجغرافية أو الرتب والمنصب العسكري الفعلي.
-        </p>
-
-        <div class="space-y-4">
-          <div class="flex flex-wrap items-center gap-3 bg-gray-50 dark:bg-gray-950/40 p-4 rounded-xl border border-gray-150 dark:border-gray-850">
-            <span class="text-xs font-bold text-gray-650">قاعدة 1: السماح بالوصول إذا كان</span>
-            
-            <select class="text-xs border border-gray-200 dark:border-gray-800 rounded-lg px-2.5 py-1 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300">
-              <option>محافظة المستخدم (Subject.Region)</option>
-              <option>رتبة المستخدم (Subject.Rank)</option>
-              <option>المنصب الوظيفي (Subject.Role)</option>
-            </select>
-
-            <span class="text-xs font-bold text-gray-400">تساوي (=)</span>
-
-            <select class="text-xs border border-gray-200 dark:border-gray-800 rounded-lg px-2.5 py-1 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300">
-              <option>محافظة السجل (Resource.Region)</option>
-              <option>منطقة الفرع عسكري (Resource.Branch)</option>
-            </select>
-
-            <span class="text-xs font-bold text-gray-650">و</span>
-
-            <select class="text-xs border border-gray-200 dark:border-gray-800 rounded-lg px-2.5 py-1 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300">
-              <option>نوع العملية (Action.Type)</option>
-              <option>وقت الطلب (Environment.Time)</option>
-            </select>
-
-            <span class="text-xs font-bold text-gray-400">ضمن (IN)</span>
-
-            <span class="px-2 py-0.5 rounded text-[10px] bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 font-bold">
-              [قراءة، تصدير الكشوفات]
-            </span>
-          </div>
-
-          <div class="flex justify-between items-center">
-            <button class="text-xs text-brand-600 hover:text-brand-700 font-black cursor-pointer flex items-center gap-1">
-              <span>+ إضافة شرط فرعي آخر</span>
-            </button>
-            <button class="bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-300 text-xs font-bold px-3.5 py-1.5 rounded-lg cursor-pointer">
-              تطبيق واختبار القاعدة
-            </button>
-          </div>
-        </div>
-      </div>
-
     </div>
   </admin-layout>
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
+import Swal from 'sweetalert2'
 
-const roles = ['admin', 'officer', 'secretary', 'auditor']
+const selectedTable = ref('personnel')
+const policyMode = ref('strict')
+const policyActive = ref(true)
 
-const fields = [
-  { label: 'الاسم الكامل واللقب للضابط', key: 'full_name', writeRoles: ['admin', 'officer'] },
-  { label: 'الرتبة العسكرية الحالية', key: 'rank_id', writeRoles: ['admin', 'officer'] },
-  { label: 'الرقم المالي والراتب الأساسي', key: 'salary_details', writeRoles: ['admin', 'auditor'] },
-  { label: 'رقم الجوال ووسيلة الاتصال', key: 'phone_number', writeRoles: ['admin', 'officer', 'secretary'] },
-  { label: 'المحافظة الحالية ومحل الميلاد', key: 'region_id', writeRoles: ['admin', 'officer'] },
-  { label: 'سجل الملاحظات والتقارير السرية', key: 'secret_reports', writeRoles: ['admin'] }
+const roles = [
+  { code: 'admin', label: 'مدير كامل' },
+  { code: 'governorate_admin', label: 'مدير أمن المحافظة' },
+  { code: 'district_admin', label: 'مدير أمن المديرية' },
+  { code: 'regular_user', label: 'مدخل بيانات' }
 ]
+
+const groups = [
+  {
+    title: 'بيانات الهوية والبيانات الشخصية',
+    fields: [
+      { key: 'military_number', label: 'الرقم العسكري', defaultRead: ['admin', 'governorate_admin', 'district_admin', 'regular_user'], defaultWrite: ['admin'] },
+      { key: 'old_military_number', label: 'الرقم العسكري القديم', defaultRead: ['admin', 'governorate_admin', 'district_admin', 'regular_user'], defaultWrite: ['admin', 'governorate_admin'] },
+      { key: 'full_name', label: 'الاسم الكامل', defaultRead: ['admin', 'governorate_admin', 'district_admin', 'regular_user'], defaultWrite: ['admin'] },
+      { key: 'national_id', label: 'الرقم الوطني', defaultRead: ['admin', 'governorate_admin', 'district_admin'], defaultWrite: ['admin'] },
+      { key: 'phone_number', label: 'رقم الهاتف', defaultRead: ['admin', 'governorate_admin', 'district_admin', 'regular_user'], defaultWrite: ['admin', 'governorate_admin', 'district_admin', 'regular_user'] },
+      { key: 'birth_date', label: 'تاريخ الميلاد', defaultRead: ['admin', 'governorate_admin', 'district_admin'], defaultWrite: ['admin'] },
+      { key: 'qualification', label: 'المؤهل الدراسي', defaultRead: ['admin', 'governorate_admin', 'district_admin', 'regular_user'], defaultWrite: ['admin', 'governorate_admin'] },
+    ]
+  },
+  {
+    title: 'بيانات الهيكل التنظيمي والجغرافي',
+    fields: [
+      { key: 'security_admin', label: 'إدارة أمن المحافظة', defaultRead: ['admin', 'governorate_admin', 'district_admin', 'regular_user'], defaultWrite: ['admin'] },
+      { key: 'central_department', label: 'الإدارة المركزية', defaultRead: ['admin', 'governorate_admin', 'district_admin', 'regular_user'], defaultWrite: ['admin'] },
+      { key: 'branch', label: 'الفرع', defaultRead: ['admin', 'governorate_admin', 'district_admin', 'regular_user'], defaultWrite: ['admin'] },
+      { key: 'district_police', label: 'أمن المديرية', defaultRead: ['admin', 'governorate_admin', 'district_admin', 'regular_user'], defaultWrite: ['admin'] },
+      { key: 'force_classification', label: 'تصنيف القوة', defaultRead: ['admin', 'governorate_admin', 'district_admin', 'regular_user'], defaultWrite: ['admin'] },
+    ]
+  },
+  {
+    title: 'الحالة الخدمية والقرارات',
+    fields: [
+      { key: 'current_rank', label: 'الرتبة الحالية', defaultRead: ['admin', 'governorate_admin', 'district_admin', 'regular_user'], defaultWrite: ['admin'] },
+      { key: 'current_status_classification', label: 'تصنيف الحالة الخدمية', defaultRead: ['admin', 'governorate_admin', 'district_admin', 'regular_user'], defaultWrite: ['admin'] },
+      { key: 'current_status', label: 'الحالة الخدمية الحالية', defaultRead: ['admin', 'governorate_admin', 'district_admin', 'regular_user'], defaultWrite: ['admin'] },
+      { key: 'join_date', label: 'تاريخ الالتحاق', defaultRead: ['admin', 'governorate_admin', 'district_admin'], defaultWrite: ['admin'] },
+    ]
+  }
+]
+
+const permissions = ref<Record<string, Record<string, { read: boolean; write: boolean }>>>({})
+
+const initializePermissions = () => {
+  groups.forEach(group => {
+    group.fields.forEach(field => {
+      permissions.value[field.key] = {}
+      roles.forEach(role => {
+        permissions.value[field.key][role.code] = {
+          read: field.defaultRead.includes(role.code),
+          write: field.defaultWrite.includes(role.code)
+        }
+      })
+    })
+  })
+}
+
+onMounted(() => {
+  initializePermissions()
+})
+
+const saveMatrix = () => {
+  Swal.fire({
+    toast: true,
+    position: 'top-end',
+    icon: 'success',
+    title: 'تم حفظ مصفوفة صلاحيات الحقول بنجاح',
+    showConfirmButton: false,
+    timer: 3000
+  })
+}
 </script>

@@ -1,7 +1,7 @@
 <template>
   <admin-layout>
     <!-- Breadcrumb -->
-    <PageBreadcrumb pageTitle="إعداد وتصدير النماذج" />
+    <PageBreadcrumb pageTitle="تهيئة وتصدير النماذج المقيدة" />
 
     <div class="space-y-6 text-start" dir="rtl">
       
@@ -12,322 +12,451 @@
             <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            لوحة إعداد وتصدير النماذج الذكية
+            لوحة تهيئة وتصدير النماذج المقيدة
           </h1>
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-1.5 max-w-2xl leading-relaxed">
-            منظومة التحكم بحماية حقول البيانات وتوليد نماذج الإدخال المؤتمتة للأفراد. يمكنك تحديد الإدارات والمديريات المستهدفة، وعزل الأعمدة الحساسة بقفل للحماية.
+            المنصة المركزية لتوليد الكشوفات ونماذج الإدخال المخصصة للقطاعات الأمنية والمديريات. حدّد نطاق الإرسال المستهدف وعيّن حماية الأعمدة لمنع التعديل على الحقول السيادية.
           </p>
         </div>
         
-        <!-- Quick Stats -->
-        <div class="flex gap-3 bg-gray-50 dark:bg-white/[0.02] p-3 rounded-2xl border border-gray-200 dark:border-gray-800/80">
-          <div class="text-center px-4 border-l border-gray-200 dark:border-gray-800">
-            <span class="block text-xs font-bold text-gray-400">الحقول المضمنة</span>
+        <!-- Live Counters -->
+        <div class="flex gap-4 bg-gray-50 dark:bg-white/[0.02] p-3 rounded-2xl border border-gray-200 dark:border-gray-800/80">
+          <div class="text-center px-4 border-l border-gray-200 dark:border-gray-850">
+            <span class="block text-[10px] font-bold text-gray-400">حقول التصدير النشطة</span>
             <span class="text-lg font-black text-blue-600 dark:text-blue-400">{{ totalExportable }}</span>
           </div>
           <div class="text-center px-4">
-            <span class="block text-xs font-bold text-gray-400">الحقول المقفلة</span>
+            <span class="block text-[10px] font-bold text-gray-400">حقول القراءة فقط (المغلقة)</span>
             <span class="text-lg font-black text-red-600 dark:text-red-400">{{ totalLocked }}</span>
           </div>
         </div>
       </div>
 
-      <!-- Main Layout -->
+      <!-- Main Configurator Layout -->
       <div class="grid gap-6 lg:grid-cols-12">
         
-        <!-- Right Column: Smart Filter & Partition Control (Width: 4/12) -->
-        <div class="lg:col-span-4 space-y-6">
+        <!-- Right Column: Target Scope Selector & Advanced Config (Width: 5/12) -->
+        <div class="lg:col-span-5 space-y-6">
           
-          <!-- Section 1: Grouping/Partitioning -->
-          <div class="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800/80 rounded-3xl p-5 shadow-sm space-y-4">
-            <h3 class="text-sm font-black text-gray-900 dark:text-white flex items-center gap-2">
-              <span class="flex items-center justify-center w-5 h-5 rounded-full bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400 text-xs font-black">1</span>
-              طريقة التصدير والتقسيم
-            </h3>
-            
-            <div class="grid grid-cols-1 gap-2.5">
-              <label 
-                v-for="opt in splitOptions" 
-                :key="opt.value"
-                :class="[
-                  splitBy === opt.value 
-                    ? 'border-brand-500 bg-brand-50/20 dark:bg-brand-950/10' 
-                    : 'border-gray-200 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-900/20'
-                ]"
-                class="flex items-start gap-3 p-3.5 border rounded-2xl cursor-pointer transition-all duration-200"
+          <!-- Card 1: Target Scope Selector -->
+          <div class="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800/80 rounded-3xl p-5 shadow-sm space-y-5">
+            <div>
+              <h3 class="text-sm font-black text-gray-900 dark:text-white flex items-center gap-2">
+                <span class="flex items-center justify-center w-5 h-5 rounded-full bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400 text-xs font-black">1</span>
+                النطاق المستهدف لتوليد النموذج
+              </h3>
+              <p class="text-[10px] text-gray-450 dark:text-gray-400 mt-1">
+                اختر إدارة أمن المحافظة والجهة المستهدفة بالتصدير لإصدار الكشف لصالحها وتوزيع النموذج عليها.
+              </p>
+            </div>
+
+            <!-- Target Governorate / Security Administration -->
+            <div class="space-y-2">
+              <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">إدارة أمن المحافظة:</label>
+              
+              <div v-if="!canExportAllGovernorates" class="p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 text-xs text-gray-700 dark:text-gray-300 font-bold flex items-center justify-between">
+                <span>{{ restrictedSecurityAdminName }}</span>
+                <span class="text-[9px] px-2 py-0.5 bg-red-50 dark:bg-red-950/30 text-red-750 dark:text-red-400 rounded-lg">
+                  نطاق الصلاحية الخاص بك
+                </span>
+              </div>
+              
+              <select 
+                v-else
+                v-model="selectedSecurityAdminId"
+                class="w-full text-xs border border-gray-200 dark:border-gray-800 rounded-xl px-3 py-2.5 bg-gray-50/50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-brand-500"
               >
-                <input 
-                  type="radio" 
-                  name="split_by" 
-                  :value="opt.value" 
-                  v-model="splitBy"
-                  class="mt-1 text-brand-600 focus:ring-brand-500 cursor-pointer"
-                />
-                <div>
-                  <span class="block text-xs font-bold text-gray-900 dark:text-white">{{ opt.label }}</span>
-                  <span class="block text-[10px] text-gray-400 mt-0.5 leading-relaxed">{{ opt.description }}</span>
-                </div>
+                <option :value="null">-- اختر إدارة أمن المحافظة --</option>
+                <option v-for="admin in coreStore.securityAdmins" :key="admin.id" :value="admin.id">
+                  {{ admin.name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Sub-Unit selection level -->
+            <div class="space-y-3">
+              <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">مستوى تصنيف الجهة الفرعية:</label>
+              <div class="grid grid-cols-2 gap-2">
+                <button 
+                  v-for="type in subUnitTypes"
+                  :key="type.value"
+                  type="button"
+                  :disabled="type.value !== 'all' && !selectedSecurityAdminId"
+                  @click="selectedSubUnitType = type.value"
+                  :class="[
+                    selectedSubUnitType === type.value
+                      ? 'bg-brand-600 text-white shadow-sm ring-2 ring-brand-500/20'
+                      : 'bg-gray-50 dark:bg-gray-900/50 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed'
+                  ]"
+                  class="px-3 py-2 rounded-xl text-[11px] font-bold transition-all duration-200 text-center"
+                >
+                  {{ type.label }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Specific Sub-Unit selection dropdown -->
+            <div v-if="selectedSubUnitType !== 'all'" class="space-y-2">
+              <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                اختر {{ subUnitTypeLabel }}:
               </label>
+              
+              <select
+                v-model="selectedSubUnitId"
+                class="w-full text-xs border border-gray-200 dark:border-gray-800 rounded-xl px-3 py-2.5 bg-gray-50/50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              >
+                <option :value="null">-- اختر {{ subUnitTypeLabel }} (الكل) --</option>
+                <option v-for="item in filteredSubUnits" :key="item.id" :value="item.id">
+                  {{ item.name }}
+                </option>
+              </select>
             </div>
           </div>
 
-          <!-- Section 2: Multi-select Scope Filters -->
+          <!-- Card 2: Filter by Service Status (Optional) -->
           <div class="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800/80 rounded-3xl p-5 shadow-sm space-y-4">
             <h3 class="text-sm font-black text-gray-900 dark:text-white flex items-center gap-2">
               <span class="flex items-center justify-center w-5 h-5 rounded-full bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400 text-xs font-black">2</span>
-              فلاتر النطاق المستهدف
+              فلترة الحالات الخدمية
             </h3>
-
-            <!-- Accordion/Tabs for filters -->
-            <div class="space-y-4">
-              <!-- Security Admins Filter -->
-              <div class="border border-gray-150 dark:border-gray-800/60 rounded-2xl overflow-hidden bg-gray-50/30 dark:bg-transparent">
-                <div class="flex justify-between items-center p-3 bg-gray-50/80 dark:bg-white/[0.01] border-b border-gray-150 dark:border-gray-800/60">
-                  <span class="text-xs font-bold text-gray-800 dark:text-gray-200">إدارات أمن المحافظات / المديريات</span>
-                  <div class="flex gap-2">
-                    <button @click="selectAllAdmins" class="text-[9px] text-brand-600 hover:underline font-bold">الكل</button>
-                    <span class="text-gray-300">|</span>
-                    <button @click="clearAllAdmins" class="text-[9px] text-gray-400 hover:underline">مسح</button>
-                  </div>
-                </div>
-                <div class="p-3 space-y-2">
-                  <input v-model="searchAdmins" placeholder="بحث سريع..." type="text" class="w-full text-[11px] border border-gray-200 dark:border-gray-850 rounded-lg px-2.5 py-1.5 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-                  <div class="max-h-[140px] overflow-y-auto space-y-1.5 custom-scrollbar pr-1">
-                    <label v-for="item in filteredAdmins" :key="item.id" class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-white/[0.02] cursor-pointer text-right">
-                      <input type="checkbox" :value="item.id" v-model="selectedAdmins" class="h-3.5 w-3.5 text-brand-600 border-gray-300 rounded focus:ring-brand-500 cursor-pointer" />
-                      <span class="text-[11px] font-medium text-gray-700 dark:text-gray-300">{{ item.name }}</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Central Departments Filter -->
-              <div class="border border-gray-150 dark:border-gray-800/60 rounded-2xl overflow-hidden bg-gray-50/30 dark:bg-transparent">
-                <div class="flex justify-between items-center p-3 bg-gray-50/80 dark:bg-white/[0.01] border-b border-gray-150 dark:border-gray-800/60">
-                  <span class="text-xs font-bold text-gray-800 dark:text-gray-200">الجهات والدوائر المركزية</span>
-                  <div class="flex gap-2">
-                    <button @click="selectAllDepts" class="text-[9px] text-brand-600 hover:underline font-bold">الكل</button>
-                    <span class="text-gray-300">|</span>
-                    <button @click="clearAllDepts" class="text-[9px] text-gray-400 hover:underline">مسح</button>
-                  </div>
-                </div>
-                <div class="p-3 space-y-2">
-                  <input v-model="searchDepts" placeholder="بحث سريع..." type="text" class="w-full text-[11px] border border-gray-200 dark:border-gray-850 rounded-lg px-2.5 py-1.5 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-                  <div class="max-h-[140px] overflow-y-auto space-y-1.5 custom-scrollbar pr-1">
-                    <label v-for="item in filteredDepts" :key="item.id" class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-white/[0.02] cursor-pointer text-right">
-                      <input type="checkbox" :value="item.id" v-model="selectedDepts" class="h-3.5 w-3.5 text-brand-600 border-gray-300 rounded focus:ring-brand-500 cursor-pointer" />
-                      <span class="text-[11px] font-medium text-gray-700 dark:text-gray-300">{{ item.name }}</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Branches Filter -->
-              <div class="border border-gray-150 dark:border-gray-800/60 rounded-2xl overflow-hidden bg-gray-50/30 dark:bg-transparent">
-                <div class="flex justify-between items-center p-3 bg-gray-50/80 dark:bg-white/[0.01] border-b border-gray-150 dark:border-gray-800/60">
-                  <span class="text-xs font-bold text-gray-800 dark:text-gray-200">الفروع والمحاور</span>
-                  <div class="flex gap-2">
-                    <button @click="selectAllBranches" class="text-[9px] text-brand-600 hover:underline font-bold">الكل</button>
-                    <span class="text-gray-300">|</span>
-                    <button @click="clearAllBranches" class="text-[9px] text-gray-400 hover:underline">مسح</button>
-                  </div>
-                </div>
-                <div class="p-3 space-y-2">
-                  <input v-model="searchBranches" placeholder="بحث سريع..." type="text" class="w-full text-[11px] border border-gray-200 dark:border-gray-850 rounded-lg px-2.5 py-1.5 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-                  <div class="max-h-[140px] overflow-y-auto space-y-1.5 custom-scrollbar pr-1">
-                    <label v-for="item in filteredBranches" :key="item.id" class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-white/[0.02] cursor-pointer text-right">
-                      <input type="checkbox" :value="item.id" v-model="selectedBranches" class="h-3.5 w-3.5 text-brand-600 border-gray-300 rounded focus:ring-brand-500 cursor-pointer" />
-                      <span class="text-[11px] font-medium text-gray-700 dark:text-gray-300">{{ item.name }}</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Statuses Filter -->
-              <div class="border border-gray-150 dark:border-gray-800/60 rounded-2xl overflow-hidden bg-gray-50/30 dark:bg-transparent">
-                <div class="flex justify-between items-center p-3 bg-gray-50/80 dark:bg-white/[0.01] border-b border-gray-150 dark:border-gray-800/60">
-                  <span class="text-xs font-bold text-gray-800 dark:text-gray-200">الحالات الخدمية عسكرياً</span>
-                  <div class="flex gap-2">
-                    <button @click="selectAllStatuses" class="text-[9px] text-brand-600 hover:underline font-bold">الكل</button>
-                    <span class="text-gray-300">|</span>
-                    <button @click="clearAllStatuses" class="text-[9px] text-gray-400 hover:underline">مسح</button>
-                  </div>
-                </div>
-                <div class="p-3">
-                  <div class="max-h-[140px] overflow-y-auto space-y-1.5 custom-scrollbar pr-1">
-                    <label v-for="item in coreStore.statuses" :key="item.id" class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-white/[0.02] cursor-pointer text-right">
-                      <input type="checkbox" :value="item.id" v-model="selectedStatuses" class="h-3.5 w-3.5 text-brand-600 border-gray-300 rounded focus:ring-brand-500 cursor-pointer" />
-                      <span class="text-[11px] font-medium text-gray-700 dark:text-gray-300">{{ item.name }}</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
+            
+            <!-- Description Box -->
+            <div class="p-3 bg-blue-50/30 dark:bg-blue-950/10 border border-blue-100/30 dark:border-blue-900/20 rounded-2xl text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed space-y-1">
+              <span class="font-bold block text-blue-600 dark:text-blue-400">توضيح فلترة الحالات الخدمية:</span>
+              <p>تتيح لك هذه الميزة اختيار فئات معينة من الأفراد فقط لتضمينهم في الكشف (مثلاً: تصدير الأفراد العاملين فقط، أو استبعاد المتقاعدين). إذا تركتها فارغة، سيتم تصدير كافة الحالات تلقائياً.</p>
             </div>
 
-            <!-- Trigger Export Action -->
-            <div class="pt-3 border-t border-gray-150 dark:border-gray-800">
-              <button
-                @click="triggerExport"
-                :disabled="loading"
-                class="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-black py-3 rounded-2xl transition-all duration-200 cursor-pointer shadow-sm hover:shadow flex items-center justify-center gap-2"
-              >
-                <span v-if="loading" class="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                <svg v-else class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                تصدير نموذج الكشف المقفل المعتمد
-              </button>
+            <div class="border border-gray-150 dark:border-gray-800/60 rounded-2xl overflow-hidden bg-gray-50/20 dark:bg-transparent">
+              <div class="flex justify-between items-center p-2.5 bg-gray-50/80 dark:bg-white/[0.01] border-b border-gray-150 dark:border-gray-800/60">
+                <span class="text-[11px] font-bold text-gray-800 dark:text-gray-200 font-mono">تحديد الحالات المطلوبة</span>
+                <div class="flex gap-2">
+                  <button @click="selectAllStatuses" type="button" class="text-[9px] text-brand-600 hover:underline font-bold">الكل</button>
+                  <span class="text-gray-300">|</span>
+                  <button @click="clearAllStatuses" type="button" class="text-[9px] text-gray-400 hover:underline">مسح</button>
+                </div>
+              </div>
+              <div class="p-3">
+                <div class="max-h-[140px] overflow-y-auto space-y-1.5 custom-scrollbar pr-1">
+                  <label v-for="item in coreStore.statuses" :key="item.id" class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-white/[0.02] cursor-pointer text-right">
+                    <input type="checkbox" :value="item.id" v-model="selectedStatuses" class="h-3.5 w-3.5 text-brand-600 border-gray-300 rounded focus:ring-brand-500 cursor-pointer" />
+                    <span class="text-[11px] font-medium text-gray-700 dark:text-gray-300">{{ item.name }}</span>
+                  </label>
+                </div>
+              </div>
             </div>
-
           </div>
+
+          <!-- Card 3: Advanced Options (Partition / Split By) -->
+          <div v-if="isPartitioningAvailable" class="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800/80 rounded-3xl p-5 shadow-sm space-y-4 animate-fadeIn">
+            <div class="flex justify-between items-center">
+              <h3 class="text-sm font-black text-gray-900 dark:text-white flex items-center gap-2">
+                <span class="flex items-center justify-center w-5 h-5 rounded-full bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400 text-xs font-black">3</span>
+                تبويب وتقسيم ملف الإكسل (Sheets)
+              </h3>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" v-model="enablePartitioning" class="sr-only peer" />
+                <div class="w-8 h-4.5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-600"></div>
+              </label>
+            </div>
+            
+            <!-- Description Box -->
+            <div class="p-3 bg-amber-50/30 dark:bg-amber-950/10 border border-amber-100/30 dark:border-amber-900/20 rounded-2xl text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed space-y-1">
+              <span class="font-bold block text-amber-600 dark:text-amber-400">توضيح تبويب صفحات الإكسل:</span>
+              <p>تفعيل هذا الخيار سيقوم بفصل كشوفات الأفراد إلى صفحات متعددة (Sheets مستقلة) داخل ملف الإكسل المصدّر بناءً على نوع التبويب المختار (مثلاً: صفحة لكل أمن مديرية)، بدلاً من جعل كافة الأفراد في صفحة واحدة.</p>
+            </div>
+
+            <div v-if="enablePartitioning" class="space-y-3 pt-2">
+              <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">تقسيم الملف تلقائياً حسب:</label>
+              <div class="grid grid-cols-1 gap-2">
+                <label 
+                  v-for="opt in splitOptions" 
+                  :key="opt.value"
+                  :class="[
+                    splitBy === opt.value 
+                      ? 'border-brand-500 bg-brand-50/20 dark:bg-brand-950/10' 
+                      : 'border-gray-200 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-900/20'
+                  ]"
+                  class="flex items-start gap-3 p-3 border rounded-2xl cursor-pointer transition-all duration-200"
+                >
+                  <input 
+                    type="radio" 
+                    name="split_by" 
+                    :value="opt.value" 
+                    v-model="splitBy"
+                    class="mt-1 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                  />
+                  <div>
+                    <span class="block text-xs font-bold text-gray-900 dark:text-white">{{ opt.label }}</span>
+                    <span class="block text-[9px] text-gray-400 mt-0.5 leading-relaxed">{{ opt.description }}</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Trigger Export Button -->
+          <button
+            @click="triggerExport"
+            :disabled="loading"
+            class="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-black py-3.5 rounded-2xl transition-all duration-200 cursor-pointer shadow-sm hover:shadow flex items-center justify-center gap-2"
+          >
+            <span v-if="loading" class="h-4.5 w-4.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            <svg v-else class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            تصدير وتوليد نموذج الكشف المقيد المعتمد
+          </button>
 
         </div>
 
-        <!-- Left Column: Lock Column Configurator (Width: 8/12) -->
-        <div class="lg:col-span-8 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800/80 rounded-3xl p-5 shadow-sm space-y-5">
+        <!-- Left Column: Columns Protection Grid Configurator (Width: 7/12) -->
+        <div class="lg:col-span-7 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800/80 rounded-3xl p-5 shadow-sm space-y-5">
           
+          <!-- Column Matrix Header -->
           <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-150 dark:border-gray-800/80 pb-4">
             <div>
-              <h3 class="text-sm font-black text-gray-900 dark:text-white">3. مصفوفة تحديد أعمدة التصدير وحمايتها</h3>
-              <p class="text-[10px] text-gray-400 mt-1">حدّد الأعمدة المراد تضمينها في الملف، وحالة القفل الخاصة بكل عمود لمنع التعديل العشوائي في الملف المصدّر.</p>
+              <h3 class="text-sm font-black text-gray-900 dark:text-white">إعداد وتخصيص الأعمدة ومستويات الحماية</h3>
+              <p class="text-[10px] text-gray-455 mt-1">حدّد الأعمدة التي تود تضمينها في الكشف المصدّر، وعيّن حالة القفل لمنع تعديل خلاياها داخل الإكسل.</p>
             </div>
             
-            <div class="flex items-center gap-3">
-              <button @click="resetToDefaultLocks" class="text-[10px] text-brand-600 hover:underline font-bold cursor-pointer">
-                إعادة تعيين الافتراضي
-              </button>
-              <span class="text-gray-300">|</span>
-              <button @click="toggleSelectAllFields" class="text-[10px] text-blue-600 hover:underline font-bold cursor-pointer">
-                {{ isAllFieldsSelected ? 'إلغاء تحديد حقول التصدير' : 'تحديد جميع حقول التصدير' }}
+            <div class="flex items-center gap-2 bg-gray-50 dark:bg-white/[0.02] p-1.5 rounded-xl border border-gray-100 dark:border-gray-855">
+              <button @click="resetToDefaultLocks" type="button" class="text-[9px] text-brand-600 hover:text-brand-700 font-bold px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                الوضع الافتراضي
               </button>
             </div>
           </div>
 
-          <!-- Quick Matrix Search -->
+          <!-- Quick Actions & Global Setup Bar -->
+          <div class="bg-gray-50/50 dark:bg-white/[0.01] p-3 rounded-2xl border border-gray-150 dark:border-gray-800 flex flex-wrap gap-2.5 items-center justify-between">
+            <span class="text-[10px] font-bold text-gray-455">التحكم الدفعي الجماعي:</span>
+            <div class="flex flex-wrap gap-1.5">
+              <button @click="bulkExport(true)" type="button" class="text-[9.5px] font-bold px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/30 rounded-lg transition-all">
+                تضمين كافة الحقول
+              </button>
+              <button @click="bulkExport(false)" type="button" class="text-[9.5px] font-bold px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-900 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-800 rounded-lg transition-all">
+                استبعاد كافة الاختياري
+              </button>
+              <span class="w-[1px] h-5 bg-gray-200 dark:bg-gray-800 self-center mx-1"></span>
+              <button @click="bulkLock(true)" type="button" class="text-[9.5px] font-bold px-2.5 py-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 text-red-700 dark:text-red-400 border border-red-200/50 dark:border-red-900/30 rounded-lg transition-all">
+                قفل الأعمدة النشطة
+              </button>
+              <button @click="bulkLock(false)" type="button" class="text-[9.5px] font-bold px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-900/30 rounded-lg transition-all">
+                فتح الأعمدة النشطة
+              </button>
+            </div>
+          </div>
+
+          <!-- FIXED: Quick Unified Columns Configurator Card with Sticky Frozen Header -->
+          <div class="bg-gray-50/40 dark:bg-white/[0.01] border border-gray-200 dark:border-gray-850 rounded-2xl p-4 space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-black text-gray-950 dark:text-white">اللوحة السريعة لإدارة الأعمدة والحماية (تحديث مباشر)</span>
+              <span class="text-[9px] text-gray-450 font-medium">تحديث تلقائي للمصفوفة بالأسفل دون الحاجة للتمرير</span>
+            </div>
+
+            <!-- Unified compact checkboxes table -->
+            <div class="max-h-[240px] overflow-y-auto border border-gray-150 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-900/20 custom-scrollbar relative">
+              <table class="w-full text-right border-collapse table-fixed">
+                <thead class="sticky top-0 bg-gray-50 dark:bg-gray-900 z-10 shadow-xs">
+                  <tr class="border-b border-gray-150 dark:border-gray-800 text-[10px] text-gray-455 font-bold">
+                    <th class="p-2.5 w-1/2 text-right bg-gray-50 dark:bg-gray-900">اسم العمود</th>
+                    <th class="p-2.5 text-center w-1/4 bg-gray-50 dark:bg-gray-900">تضمين بالتصدير</th>
+                    <th class="p-2.5 text-center w-1/4 bg-gray-50 dark:bg-gray-900">قفل (قراءة فقط)</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-850 text-xs">
+                  <tr v-for="col in allFlatColumns" :key="col.field" class="hover:bg-gray-50/30 dark:hover:bg-white/[0.01]">
+                    <td class="p-2">
+                      <span class="font-bold text-gray-800 dark:text-gray-200">{{ col.label }}</span>
+                      <span class="block text-[9.5px] text-gray-400 font-mono mt-0.5">{{ col.field }}</span>
+                    </td>
+                    <td class="p-2 text-center">
+                      <input 
+                        type="checkbox" 
+                        v-model="col.exportable" 
+                        :disabled="col.alwaysExportable" 
+                        class="h-3.5 w-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer" 
+                      />
+                    </td>
+                    <td class="p-2 text-center">
+                      <input 
+                        type="checkbox" 
+                        v-model="col.locked" 
+                        :disabled="col.alwaysLocked || !col.exportable" 
+                        class="h-3.5 w-3.5 text-brand-600 border-gray-300 rounded focus:ring-brand-500 cursor-pointer" 
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Matrix Search input -->
           <div class="relative">
             <input 
               v-model="searchFieldsQuery" 
-              placeholder="ابحث عن حقول معينة في مصفوفة الأعمدة المرجعية..." 
+              placeholder="ابحث عن حقول معينة في مصفوفة الأعمدة المرجعية للتفصيل..." 
               type="text" 
-              class="w-full text-xs border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-2.5 bg-gray-50/50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-brand-500" 
+              class="w-full text-xs border border-gray-250 dark:border-gray-800 rounded-xl px-4 py-2.5 bg-gray-50/50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-brand-500" 
             />
-            <span class="absolute left-3.5 top-3.5 text-gray-400">
+            <span class="absolute left-3.5 top-3 text-gray-400">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </span>
           </div>
 
-          <!-- Loading state -->
-          <div v-if="loading" class="py-16 flex flex-col items-center justify-center gap-3">
-            <div class="h-8 w-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-xs text-gray-400">جاري تحميل مصفوفة الحقول وقواعد البيانات المعتمدة...</p>
-          </div>
+          <!-- Columns Groups Matrix Detail Tables -->
+          <div class="space-y-6">
 
-          <!-- Columns Groups Grid -->
-          <div v-else class="space-y-6">
-            
-            <!-- Table Header Helper -->
-            <div class="grid grid-cols-12 gap-2 px-4 py-2 bg-gray-50/60 dark:bg-gray-900/60 rounded-xl text-[10px] font-black text-gray-400">
-              <span class="col-span-5 text-right">العمود المرجعي في قاعدة البيانات</span>
-              <span class="col-span-4 text-center">حالة التصدير</span>
-              <span class="col-span-3 text-center">حماية القفل</span>
-            </div>
-
-            <!-- Identity & Personal Info group -->
-            <div v-if="filteredGroups.identity.length > 0">
-              <h4 class="text-[11px] font-black text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-950/60 px-3 py-2 rounded-xl mb-3 flex items-center gap-2">
-                <span class="w-1.5 h-3 bg-brand-500 rounded-full"></span>
+            <!-- 1. Identity & Personal Info group -->
+            <div v-if="filteredGroups.identity.length > 0" class="bg-gray-50/20 dark:bg-white/[0.01] border border-gray-150 dark:border-gray-800/80 rounded-3xl p-4 space-y-3">
+              <h4 class="text-xs font-black text-gray-900 dark:text-white flex items-center gap-2 border-b border-gray-100 dark:border-gray-850 pb-2">
+                <span class="w-2 h-4 bg-blue-500 rounded-full"></span>
                 بيانات الهوية والبيانات الشخصية
               </h4>
-              <div class="grid grid-cols-1 gap-2.5">
-                <div v-for="col in filteredGroups.identity" :key="col.field" class="grid grid-cols-12 gap-2 items-center p-3 rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50/10 dark:bg-gray-900/10 hover:bg-gray-50/50 dark:hover:bg-gray-900/20 transition-all duration-200">
-                  <div class="col-span-5 text-right">
-                    <span class="text-xs font-bold text-gray-800 dark:text-gray-200">{{ col.label }}</span>
-                    <span class="block text-[9px] text-gray-450 font-mono mt-1 select-all">{{ col.field }}</span>
-                  </div>
-                  
-                  <div class="col-span-4 flex items-center justify-center gap-3">
-                    <span :class="col.exportable ? 'text-blue-600 bg-blue-50 dark:bg-blue-950/20 border-blue-200/50 dark:border-blue-900/30' : 'text-gray-400 bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-800'" class="text-[9px] font-bold px-2 py-0.5 rounded-lg border min-w-[54px] text-center">
-                      {{ col.exportable ? 'تصدير' : 'استبعاد' }}
-                    </span>
-                    <input type="checkbox" v-model="col.exportable" :disabled="col.alwaysExportable" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer" />
-                  </div>
-
-                  <div class="col-span-3 flex items-center justify-center gap-3">
-                    <span :class="col.locked && col.exportable ? 'text-red-600 bg-red-50 dark:bg-red-950/20 border-red-200/50 dark:border-red-900/30' : 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200/50 dark:border-emerald-900/30'" class="text-[9px] font-bold px-2 py-0.5 rounded-lg border min-w-[54px] text-center">
-                      {{ col.locked && col.exportable ? 'مغلق' : 'مفتوح' }}
-                    </span>
-                    <input type="checkbox" v-model="col.locked" :disabled="col.alwaysLocked || !col.exportable" class="h-4 w-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500 cursor-pointer" />
-                  </div>
-                </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-right border-collapse table-fixed">
+                  <thead>
+                    <tr class="text-[10px] text-gray-400 font-bold border-b border-gray-100 dark:border-gray-855">
+                      <th class="pb-2 w-5/12 text-right">اسم العمود البرمجي</th>
+                      <th class="pb-2 text-center w-3/12">حالة التضمين</th>
+                      <th class="pb-2 text-center w-4/12">حماية قفل الخلايا</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100 dark:divide-gray-800 text-xs">
+                    <tr v-for="col in filteredGroups.identity" :key="col.field" class="hover:bg-gray-50/20 dark:hover:bg-white/[0.01]">
+                      <td class="py-3">
+                        <div class="flex items-center gap-2">
+                          <span class="font-bold text-gray-850 dark:text-gray-250">{{ col.label }}</span>
+                          <code class="px-1.5 py-0.5 bg-gray-50 dark:bg-gray-900 text-gray-450 dark:text-gray-400 font-mono text-[9px] rounded-md border border-gray-200/50 dark:border-gray-800/80 select-all">
+                            {{ col.field }}
+                          </code>
+                        </div>
+                      </td>
+                      <td class="py-3 text-center">
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" v-model="col.exportable" :disabled="col.alwaysExportable" class="h-3.5 w-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer" />
+                          <span :class="col.exportable ? 'text-blue-600 bg-blue-50/60 dark:bg-blue-950/20' : 'text-gray-400 bg-gray-50 dark:bg-gray-900/20'" class="text-[9.5px] font-bold px-2 py-0.5 rounded-lg border border-transparent">
+                            {{ col.exportable ? 'تصدير' : 'مستبعد' }}
+                          </span>
+                        </label>
+                      </td>
+                      <td class="py-3 text-center">
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" v-model="col.locked" :disabled="col.alwaysLocked || !col.exportable" class="h-3.5 w-3.5 text-brand-600 border-gray-300 rounded focus:ring-brand-500 cursor-pointer" />
+                          <span v-if="col.exportable" :class="col.locked ? 'text-red-650 bg-red-50/60 dark:bg-red-950/20 border-red-200/30' : 'text-emerald-650 bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200/30'" class="text-[9.5px] font-bold px-2 py-0.5 rounded-lg border">
+                            {{ col.locked ? 'مغلق' : 'مفتوح للتعديل' }}
+                          </span>
+                          <span v-else class="text-[9.5px] text-gray-400 font-bold bg-gray-50 dark:bg-gray-900/20 px-2 py-0.5 rounded-lg border border-transparent">
+                            غير مدرج
+                          </span>
+                        </label>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
 
-            <!-- Structure group -->
-            <div v-if="filteredGroups.structure.length > 0">
-              <h4 class="text-[11px] font-black text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-950/60 px-3 py-2 rounded-xl mb-3 flex items-center gap-2">
-                <span class="w-1.5 h-3 bg-brand-500 rounded-full"></span>
+            <!-- 2. Structure group -->
+            <div v-if="filteredGroups.structure.length > 0" class="bg-gray-50/20 dark:bg-white/[0.01] border border-gray-150 dark:border-gray-800/80 rounded-3xl p-4 space-y-3">
+              <h4 class="text-xs font-black text-gray-900 dark:text-white flex items-center gap-2 border-b border-gray-100 dark:border-gray-855 pb-2">
+                <span class="w-2 h-4 bg-purple-500 rounded-full"></span>
                 الهيكل التنظيمي والوظيفي
               </h4>
-              <div class="grid grid-cols-1 gap-2.5">
-                <div v-for="col in filteredGroups.structure" :key="col.field" class="grid grid-cols-12 gap-2 items-center p-3 rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50/10 dark:bg-gray-900/10 hover:bg-gray-50/50 dark:hover:bg-gray-900/20 transition-all duration-200">
-                  <div class="col-span-5 text-right">
-                    <span class="text-xs font-bold text-gray-800 dark:text-gray-200">{{ col.label }}</span>
-                    <span class="block text-[9px] text-gray-455 font-mono mt-1 select-all">{{ col.field }}</span>
-                  </div>
-                  
-                  <div class="col-span-4 flex items-center justify-center gap-3">
-                    <span :class="col.exportable ? 'text-blue-600 bg-blue-50 dark:bg-blue-950/20 border-blue-200/50 dark:border-blue-900/30' : 'text-gray-400 bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-800'" class="text-[9px] font-bold px-2 py-0.5 rounded-lg border min-w-[54px] text-center">
-                      {{ col.exportable ? 'تصدير' : 'استبعاد' }}
-                    </span>
-                    <input type="checkbox" v-model="col.exportable" :disabled="col.alwaysExportable" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer" />
-                  </div>
-
-                  <div class="col-span-3 flex items-center justify-center gap-3">
-                    <span :class="col.locked && col.exportable ? 'text-red-600 bg-red-50 dark:bg-red-950/20 border-red-200/50 dark:border-red-900/30' : 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200/50 dark:border-emerald-900/30'" class="text-[9px] font-bold px-2 py-0.5 rounded-lg border min-w-[54px] text-center">
-                      {{ col.locked && col.exportable ? 'مغلق' : 'مفتوح' }}
-                    </span>
-                    <input type="checkbox" v-model="col.locked" :disabled="col.alwaysLocked || !col.exportable" class="h-4 w-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500 cursor-pointer" />
-                  </div>
-                </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-right border-collapse table-fixed">
+                  <thead>
+                    <tr class="text-[10px] text-gray-400 font-bold border-b border-gray-100 dark:border-gray-855">
+                      <th class="pb-2 w-5/12 text-right">اسم العمود البرمجي</th>
+                      <th class="pb-2 text-center w-3/12">حالة التضمين</th>
+                      <th class="pb-2 text-center w-4/12">حماية قفل الخلايا</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100 dark:divide-gray-800 text-xs">
+                    <tr v-for="col in filteredGroups.structure" :key="col.field" class="hover:bg-gray-50/20 dark:hover:bg-white/[0.01]">
+                      <td class="py-3">
+                        <div class="flex items-center gap-2">
+                          <span class="font-bold text-gray-855 dark:text-gray-250">{{ col.label }}</span>
+                          <code class="px-1.5 py-0.5 bg-gray-50 dark:bg-gray-900 text-gray-455 dark:text-gray-400 font-mono text-[9px] rounded-md border border-gray-200/50 dark:border-gray-800/80 select-all">
+                            {{ col.field }}
+                          </code>
+                        </div>
+                      </td>
+                      <td class="py-3 text-center">
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" v-model="col.exportable" :disabled="col.alwaysExportable" class="h-3.5 w-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer" />
+                          <span :class="col.exportable ? 'text-blue-600 bg-blue-50/60 dark:bg-blue-950/20' : 'text-gray-400 bg-gray-50 dark:bg-gray-900/20'" class="text-[9.5px] font-bold px-2 py-0.5 rounded-lg border border-transparent font-mono">
+                            {{ col.exportable ? 'تصدير' : 'مستبعد' }}
+                          </span>
+                        </label>
+                      </td>
+                      <td class="py-3 text-center">
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" v-model="col.locked" :disabled="col.alwaysLocked || !col.exportable" class="h-3.5 w-3.5 text-brand-600 border-gray-300 rounded focus:ring-brand-500 cursor-pointer" />
+                          <span v-if="col.exportable" :class="col.locked ? 'text-red-655 bg-red-50/60 dark:bg-red-950/20 border-red-200/30' : 'text-emerald-655 bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200/30'" class="text-[9.5px] font-bold px-2 py-0.5 rounded-lg border">
+                            {{ col.locked ? 'مغلق' : 'مفتوح للتعديل' }}
+                          </span>
+                          <span v-else class="text-[9.5px] text-gray-400 font-bold bg-gray-50 dark:bg-gray-900/20 px-2 py-0.5 rounded-lg border border-transparent">
+                            غير مدرج
+                          </span>
+                        </label>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
 
-            <!-- Status and Decisions group -->
-            <div v-if="filteredGroups.statusAndDecisions.length > 0">
-              <h4 class="text-[11px] font-black text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-950/60 px-3 py-2 rounded-xl mb-3 flex items-center gap-2">
-                <span class="w-1.5 h-3 bg-brand-500 rounded-full"></span>
+            <!-- 3. Status and Decisions group -->
+            <div v-if="filteredGroups.statusAndDecisions.length > 0" class="bg-gray-50/20 dark:bg-white/[0.01] border border-gray-150 dark:border-gray-800/80 rounded-3xl p-4 space-y-3">
+              <h4 class="text-xs font-black text-gray-900 dark:text-white flex items-center gap-2 border-b border-gray-100 dark:border-gray-855 pb-2">
+                <span class="w-2 h-4 bg-amber-500 rounded-full"></span>
                 الحالة الخدمية والقرارات
               </h4>
-              <div class="grid grid-cols-1 gap-2.5">
-                <div v-for="col in filteredGroups.statusAndDecisions" :key="col.field" class="grid grid-cols-12 gap-2 items-center p-3 rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50/10 dark:bg-gray-900/10 hover:bg-gray-50/50 dark:hover:bg-gray-900/20 transition-all duration-200">
-                  <div class="col-span-5 text-right">
-                    <span class="text-xs font-bold text-gray-800 dark:text-gray-200">{{ col.label }}</span>
-                    <span class="block text-[9px] text-gray-455 font-mono mt-1 select-all">{{ col.field }}</span>
-                  </div>
-                  
-                  <div class="col-span-4 flex items-center justify-center gap-3">
-                    <span :class="col.exportable ? 'text-blue-600 bg-blue-50 dark:bg-blue-950/20 border-blue-200/50 dark:border-blue-900/30' : 'text-gray-400 bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-800'" class="text-[9px] font-bold px-2 py-0.5 rounded-lg border min-w-[54px] text-center">
-                      {{ col.exportable ? 'تصدير' : 'استبعاد' }}
-                    </span>
-                    <input type="checkbox" v-model="col.exportable" :disabled="col.alwaysExportable" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer" />
-                  </div>
-
-                  <div class="col-span-3 flex items-center justify-center gap-3">
-                    <span :class="col.locked && col.exportable ? 'text-red-600 bg-red-50 dark:bg-red-950/20 border-red-200/50 dark:border-red-900/30' : 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200/50 dark:border-emerald-900/30'" class="text-[9px] font-bold px-2 py-0.5 rounded-lg border min-w-[54px] text-center">
-                      {{ col.locked && col.exportable ? 'مغلق' : 'مفتوح' }}
-                    </span>
-                    <input type="checkbox" v-model="col.locked" :disabled="col.alwaysLocked || !col.exportable" class="h-4 w-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500 cursor-pointer" />
-                  </div>
-                </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-right border-collapse table-fixed">
+                  <thead>
+                    <tr class="text-[10px] text-gray-400 font-bold border-b border-gray-100 dark:border-gray-855">
+                      <th class="pb-2 w-5/12 text-right">اسم العمود البرمجي</th>
+                      <th class="pb-2 text-center w-3/12">حالة التضمين</th>
+                      <th class="pb-2 text-center w-4/12">حماية قفل الخلايا</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100 dark:divide-gray-800 text-xs">
+                    <tr v-for="col in filteredGroups.statusAndDecisions" :key="col.field" class="hover:bg-gray-50/20 dark:hover:bg-white/[0.01]">
+                      <td class="py-3">
+                        <div class="flex items-center gap-2">
+                          <span class="font-bold text-gray-855 dark:text-gray-255">{{ col.label }}</span>
+                          <code class="px-1.5 py-0.5 bg-gray-50 dark:bg-gray-900 text-gray-455 dark:text-gray-400 font-mono text-[9px] rounded-md border border-gray-200/50 dark:border-gray-800/80 select-all">
+                            {{ col.field }}
+                          </code>
+                        </div>
+                      </td>
+                      <td class="py-3 text-center">
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" v-model="col.exportable" :disabled="col.alwaysExportable" class="h-3.5 w-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer" />
+                          <span :class="col.exportable ? 'text-blue-600 bg-blue-50/60 dark:bg-blue-950/20' : 'text-gray-400 bg-gray-50 dark:bg-gray-900/20'" class="text-[9.5px] font-bold px-2 py-0.5 rounded-lg border border-transparent font-mono">
+                            {{ col.exportable ? 'تصدير' : 'مستبعد' }}
+                          </span>
+                        </label>
+                      </td>
+                      <td class="py-3 text-center">
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" v-model="col.locked" :disabled="col.alwaysLocked || !col.exportable" class="h-3.5 w-3.5 text-brand-600 border-gray-300 rounded focus:ring-brand-500 cursor-pointer" />
+                          <span v-if="col.exportable" :class="col.locked ? 'text-red-655 bg-red-50/60 dark:bg-red-950/20 border-red-200/30' : 'text-emerald-655 bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200/30'" class="text-[9.5px] font-bold px-2 py-0.5 rounded-lg border">
+                            {{ col.locked ? 'مغلق' : 'مفتوح للتعديل' }}
+                          </span>
+                          <span v-else class="text-[9.5px] text-gray-400 font-bold bg-gray-50 dark:bg-gray-900/20 px-2 py-0.5 rounded-lg border border-transparent">
+                            غير مدرج
+                          </span>
+                        </label>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
-            </div>
-
-            <!-- Empty Search state -->
-            <div v-if="filteredGroups.identity.length === 0 && filteredGroups.structure.length === 0 && filteredGroups.statusAndDecisions.length === 0" class="py-12 text-center text-xs text-gray-400 bg-gray-50/50 dark:bg-white/[0.01] rounded-2xl border border-dashed border-gray-200 dark:border-gray-800">
-              لا توجد أعمدة مطابقة لبحثك الحالي.
             </div>
 
           </div>
@@ -340,48 +469,128 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import { useCoreStore } from '@/stores/core'
+import { useAuthStore } from '@/stores/auth'
 import api from '@/lib/api'
 import Swal from 'sweetalert2'
 
 const coreStore = useCoreStore()
+const authStore = useAuthStore()
 const loading = ref(false)
 
-// Split Options
-const splitBy = ref('')
-const splitOptions = [
-  { value: '', label: 'ورقة عمل موحدة', description: 'تصدير جميع الأفراد في كشف واحد مقفل داخل ورقة العمل الرئيسية.' },
-  { value: 'security_admin', label: 'مبوبة حسب إدارة الأمن', description: 'تقسيم كشوفات الأفراد تلقائياً إلى صفحات منفصلة داخل ملف الإكسل (Sheet لكل إدارة أمن).' },
-  { value: 'central_department', label: 'مبوبة حسب الإدارة العامة / الجهة', description: 'تقسيم كشوفات الأفراد تلقائياً إلى صفحات منفصلة داخل ملف الإكسل (Sheet لكل إدارة عامة).' },
-  { value: 'branch', label: 'مبوبة حسب الفروع والمحاور', description: 'تقسيم كشوفات الأفراد تلقائياً إلى صفحات منفصلة داخل ملف الإكسل (Sheet لكل فرع).' }
-]
+// Role-based permissions to determine if user can configure/select all governorates
+const canExportAllGovernorates = computed(() => {
+  if (authStore.user?.is_superuser || authStore.user?.is_staff) {
+    return true
+  }
+  const profile = authStore.user?.authz_profile
+  if (profile?.supervises_all) {
+    return true
+  }
+  return false
+})
 
-// Scope Filter Selection
-const selectedAdmins = ref<number[]>([])
-const selectedDepts = ref<number[]>([])
-const selectedBranches = ref<number[]>([])
+const isSecurityAdminRestricted = computed(() => !canExportAllGovernorates.value)
+
+const restrictedSecurityAdminName = computed(() => {
+  const profile = authStore.user?.authz_profile
+  if (!profile || !profile.security_admin_id) return ''
+  
+  const found = coreStore.securityAdmins.find(a => a.id === profile.security_admin_id)
+  return found ? found.name : `إدارة أمن رقم ${profile.security_admin_id}`
+})
+
+// 1. Target Scope Selection state
+const selectedSecurityAdminId = ref<number | null>(null)
+const selectedSubUnitType = ref<'all' | 'central_department' | 'branch' | 'district_police'>('all')
+const selectedSubUnitId = ref<number | null>(null)
+
+const subUnitTypes = [
+  { value: 'all', label: 'كافة الأفراد بالمحافظة' },
+  { value: 'central_department', label: 'إدارة مركزية' },
+  { value: 'branch', label: 'فرع' },
+  { value: 'district_police', label: 'أمن مديرية' }
+] as const
+
+const subUnitTypeLabel = computed(() => {
+  switch (selectedSubUnitType.value) {
+    case 'central_department': return 'الإدارة المركزية'
+    case 'branch': return 'الفرع'
+    case 'district_police': return 'أمن المديرية'
+    default: return ''
+  }
+})
+
+// Filter sub-units dynamically based on chosen security admin
+const filteredSubUnits = computed(() => {
+  if (!selectedSecurityAdminId.value) return []
+  
+  switch (selectedSubUnitType.value) {
+    case 'central_department':
+      return coreStore.centralDepartments.filter(dep => dep.security_admin === selectedSecurityAdminId.value)
+    case 'branch':
+      return coreStore.branches.filter(br => br.security_admin === selectedSecurityAdminId.value)
+    case 'district_police':
+      return coreStore.districtPolices.filter(dp => dp.security_admin === selectedSecurityAdminId.value)
+    default:
+      return []
+  }
+})
+
+// Initialize restricted scope
+function initGeographicScope() {
+  const profile = authStore.user?.authz_profile
+  if (isSecurityAdminRestricted.value && profile && profile.security_admin_id) {
+    selectedSecurityAdminId.value = profile.security_admin_id
+  }
+}
+
+watch(() => authStore.user, initGeographicScope, { immediate: true })
+
+watch(selectedSecurityAdminId, () => {
+  selectedSubUnitId.value = null
+  selectedSubUnitType.value = 'all'
+})
+
+watch(selectedSubUnitType, () => {
+  selectedSubUnitId.value = null
+})
+
+// 2. Additional Filters (Service Statuses)
 const selectedStatuses = ref<number[]>([])
 
-// Filter Search Queries
-const searchAdmins = ref('')
-const searchDepts = ref('')
-const searchBranches = ref('')
-const searchFieldsQuery = ref('')
+function selectAllStatuses() {
+  selectedStatuses.value = coreStore.statuses.map(s => s.id)
+}
+function clearAllStatuses() {
+  selectedStatuses.value = []
+}
 
-// Compute filtered lists
-const filteredAdmins = computed(() => {
-  return coreStore.securityAdmins.filter(a => a.name.toLowerCase().includes(searchAdmins.value.toLowerCase()))
-})
-const filteredDepts = computed(() => {
-  return coreStore.centralDepartments.filter(d => d.name.toLowerCase().includes(searchDepts.value.toLowerCase()))
-})
-const filteredBranches = computed(() => {
-  return coreStore.branches.filter(b => b.name.toLowerCase().includes(searchBranches.value.toLowerCase()))
+// 3. Advanced Excel Sheet Division option (Only active when exporting broad scopes like "كافة الأفراد بالمحافظة")
+const isPartitioningAvailable = computed(() => {
+  return selectedSubUnitType.value === 'all'
 })
 
+const enablePartitioning = ref(false)
+const splitBy = ref('')
+const splitOptions = [
+  { value: 'central_department', label: 'مبوبة حسب الإدارة المركزية', description: 'تقسيم كشوفات الأفراد تلقائياً إلى صفحات منفصلة داخل ملف الإكسل (Sheet لكل إدارة مركزية).' },
+  { value: 'branch', label: 'مبوبة حسب الفروع', description: 'تقسيم كشوفات الأفراد تلقائياً إلى صفحات منفصلة داخل ملف الإكسل (Sheet لكل فرع).' },
+  { value: 'district_police', label: 'مبوبة حسب أمن المديريات', description: 'تقسيم كشوفات الأفراد تلقائياً إلى صفحات منفصلة داخل ملف الإكسل (Sheet لكل أمن مديرية).' }
+]
+
+// Automatically disable partitioning when not available
+watch(isPartitioningAvailable, (newVal) => {
+  if (!newVal) {
+    enablePartitioning.value = false
+    splitBy.value = ''
+  }
+})
+
+// 4. Column Configurator matrix state
 interface ColumnConfig {
   label: string
   field: string
@@ -401,7 +610,18 @@ const columns = ref<{
   statusAndDecisions: []
 })
 
-// Filter grid columns dynamically by search field query
+const searchFieldsQuery = ref('')
+
+// Flat columns helper for the top compact unified configurator table
+const allFlatColumns = computed(() => {
+  return [
+    ...columns.value.identity,
+    ...columns.value.structure,
+    ...columns.value.statusAndDecisions
+  ]
+})
+
+// Compute filtered columns by search query
 const filteredGroups = computed(() => {
   const query = searchFieldsQuery.value.trim().toLowerCase()
   if (!query) return columns.value
@@ -416,61 +636,34 @@ const filteredGroups = computed(() => {
   }
 })
 
-// Stats computed properties
 const totalExportable = computed(() => {
-  return Object.values(columns.value).flat().filter(c => c.exportable).length
+  return allFlatColumns.value.filter(c => c.exportable).length
 })
 
 const totalLocked = computed(() => {
-  return Object.values(columns.value).flat().filter(c => c.exportable && c.locked).length
+  return allFlatColumns.value.filter(c => c.exportable && c.locked).length
 })
 
-// Select All Helpers for Filters
-function selectAllAdmins() { selectedAdmins.value = coreStore.securityAdmins.map(a => a.id) }
-function clearAllAdmins() { selectedAdmins.value = [] }
-
-function selectAllDepts() { selectedDepts.value = coreStore.centralDepartments.map(d => d.id) }
-function clearAllDepts() { selectedDepts.value = [] }
-
-function selectAllBranches() { selectedBranches.value = coreStore.branches.map(b => b.id) }
-function clearAllBranches() { selectedBranches.value = [] }
-
-function selectAllStatuses() { selectedStatuses.value = coreStore.statuses.map(s => s.id) }
-function clearAllStatuses() { selectedStatuses.value = [] }
-
-// Select All Fields Matrix
-const isAllFieldsSelected = computed(() => {
-  const list = Object.values(columns.value).flat()
-  if (list.length === 0) return false
-  return list.every(c => c.exportable)
-})
-
-function toggleSelectAllFields() {
-  const target = !isAllFieldsSelected.value
-  Object.values(columns.value).flat().forEach(c => {
+// Bulk operations
+function bulkExport(enable: boolean) {
+  allFlatColumns.value.forEach(c => {
     if (!c.alwaysExportable) {
-      c.exportable = target
+      c.exportable = enable
     }
   })
 }
 
-async function fetchExportFields() {
-  try {
-    loading.value = true
-    const response = await api.get('/personnel/export-fields/')
-    if (response.data && response.data.groups) {
-      columns.value = response.data.groups
+function bulkLock(lock: boolean) {
+  allFlatColumns.value.forEach(c => {
+    if (c.exportable && !c.alwaysLocked) {
+      c.locked = lock
     }
-  } catch (err) {
-    console.error('Failed to fetch export fields:', err)
-  } finally {
-    loading.value = false
-  }
+  })
 }
 
 function resetToDefaultLocks() {
-  Object.values(columns.value).flat().forEach(c => {
-    c.locked = c.alwaysLocked || ['military_number', 'full_name', 'national_id', 'security_admin', 'current_rank', 'current_status'].includes(c.field)
+  allFlatColumns.value.forEach(c => {
+    c.locked = c.alwaysLocked || ['military_number', 'full_name', 'national_id', 'security_admin', 'current_rank', 'current_status', 'current_status_classification'].includes(c.field)
     c.exportable = true
   })
   Swal.fire({
@@ -483,15 +676,41 @@ function resetToDefaultLocks() {
   })
 }
 
+// Fetch columns matrix structure from backend
+async function fetchExportFields() {
+  try {
+    loading.value = true
+    const response = await api.get('/personnel/export-fields/')
+    if (response.data && response.data.groups) {
+      columns.value = response.data.groups
+      
+      // Update custom labels to match corrected terminology
+      const renameFieldLabel = (fieldList: ColumnConfig[], fieldName: string, newLabel: string) => {
+        const found = fieldList.find(c => c.field === fieldName)
+        if (found) found.label = newLabel
+      }
+      renameFieldLabel(columns.value.structure, 'security_admin', 'إدارة أمن المحافظة')
+      renameFieldLabel(columns.value.structure, 'central_department', 'الإدارة المركزية')
+      renameFieldLabel(columns.value.structure, 'branch', 'الفرع')
+      renameFieldLabel(columns.value.structure, 'district_police', 'أمن المديرية')
+    }
+  } catch (err) {
+    console.error('Failed to fetch export fields:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+// Trigger Excel Generation and Download
 async function triggerExport() {
   try {
     loading.value = true
     
-    // Assemble export fields & locked fields
+    // 1. Gather configured fields and locks
     const exportFields: string[] = []
     const lockedFields: string[] = []
     
-    Object.values(columns.value).flat().forEach(c => {
+    allFlatColumns.value.forEach(c => {
       if (c.exportable) {
         exportFields.push(c.field)
         if (c.locked) {
@@ -500,16 +719,32 @@ async function triggerExport() {
       }
     })
 
+    // 2. Set scope IDs based on selection type
+    const queryParams: Record<string, any> = {
+      columns: exportFields.join(','),
+      locked_columns: lockedFields.join(','),
+      statuses: selectedStatuses.value.join(',')
+    }
+
+    if (selectedSecurityAdminId.value) {
+      queryParams.security_admins = selectedSecurityAdminId.value.toString()
+    }
+
+    if (selectedSubUnitType.value === 'central_department' && selectedSubUnitId.value) {
+      queryParams.central_departments = selectedSubUnitId.value.toString()
+    } else if (selectedSubUnitType.value === 'branch' && selectedSubUnitId.value) {
+      queryParams.branches = selectedSubUnitId.value.toString()
+    } else if (selectedSubUnitType.value === 'district_police' && selectedSubUnitId.value) {
+      queryParams.district_polices = selectedSubUnitId.value.toString()
+    }
+
+    // 3. Set partitioning param if active
+    if (enablePartitioning.value && splitBy.value) {
+      queryParams.split_by = splitBy.value
+    }
+
     const response = await api.get('/personnel/export_csv/', {
-      params: {
-        columns: exportFields.join(','),
-        locked_columns: lockedFields.join(','),
-        security_admins: selectedAdmins.value.join(','),
-        central_departments: selectedDepts.value.join(','),
-        branches: selectedBranches.value.join(','),
-        statuses: selectedStatuses.value.join(','),
-        split_by: splitBy.value || undefined
-      },
+      params: queryParams,
       responseType: 'blob'
     })
 
@@ -517,7 +752,10 @@ async function triggerExport() {
     const downloadUrl = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = downloadUrl
-    a.download = `نماذج_كشوفات_الأفراد_المقننة.xlsx`
+    
+    // Custom filename
+    a.download = `كشف_أفراد_مقيد.xlsx`
+    
     document.body.appendChild(a)
     a.click()
     window.URL.revokeObjectURL(downloadUrl)
@@ -527,7 +765,7 @@ async function triggerExport() {
       toast: true,
       position: 'top-end',
       icon: 'success',
-      title: 'تم تصدير النموذج المقفل بنجاح',
+      title: 'تم توليد وتصدير الكشف المعتمد بنجاح',
       showConfirmButton: false,
       timer: 3000
     })
@@ -543,11 +781,15 @@ async function triggerExport() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  if (!authStore.user) {
+    await authStore.fetchMe()
+  }
   if (coreStore.securityAdmins.length === 0) {
     coreStore.fetchAllReferences()
   }
   fetchExportFields()
+  initGeographicScope()
 })
 </script>
 
@@ -567,5 +809,13 @@ onMounted(() => {
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 </style>
