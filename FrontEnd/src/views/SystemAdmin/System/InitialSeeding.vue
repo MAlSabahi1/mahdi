@@ -215,96 +215,378 @@
 
         <!-- STEP 3: VALIDATION GRID -->
         <div v-if="currentStep === 3" class="space-y-6">
-          <!-- Summary Cards banner -->
+          
+          <!-- Summary Cards Banner (Premium Redesign) -->
           <div class="grid gap-4 sm:grid-cols-4">
-            <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-white/[0.03]">
-              <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">إجمالي السجلات</span>
-              <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ validationResult.total_rows }}</h3>
+            <!-- Total Rows -->
+            <div class="relative overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/40 to-indigo-50/10 p-5 shadow-sm dark:border-blue-900/40 dark:from-blue-950/25 dark:to-indigo-950/5 group hover:shadow-md transition-all duration-300">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-blue-600 dark:text-blue-400 tracking-wide uppercase">إجمالي السجلات</span>
+                <div class="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300">
+                  <Layers class="w-5 h-5" />
+                </div>
+              </div>
+              <h3 class="text-3xl font-extrabold text-gray-900 dark:text-white mt-3 leading-none">{{ validationResult.total_rows }}</h3>
+              <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-2">سجلاً تم تحليلها من ملف الإكسل</p>
             </div>
             
-            <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-white/[0.03]">
-              <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">السجلات السليمة</span>
-              <h3 class="text-2xl font-bold text-green-600 mt-1">{{ validationResult.valid_rows }}</h3>
+            <!-- Valid Rows -->
+            <div class="relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50/40 to-green-50/10 p-5 shadow-sm dark:border-emerald-900/40 dark:from-emerald-950/20 dark:to-green-950/5 group hover:shadow-md transition-all duration-300">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 tracking-wide uppercase">السجلات السليمة</span>
+                <div class="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300">
+                  <CheckSquare class="w-5 h-5" />
+                </div>
+              </div>
+              <h3 class="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-3 leading-none">{{ validationResult.valid_rows }}</h3>
+              <p class="text-[10px] text-emerald-600/80 dark:text-emerald-500 mt-2">جاهزة للاعتماد النهائي مباشرة</p>
             </div>
 
-            <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-white/[0.03]">
-              <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">السجلات التي تحتوي على أخطاء</span>
-              <h3 class="text-2xl font-bold text-red-600 mt-1">{{ validationResult.errors.length }}</h3>
+            <!-- Erroneous Rows -->
+            <div class="relative overflow-hidden rounded-2xl border border-rose-100 bg-gradient-to-br from-rose-50/40 to-red-50/10 p-5 shadow-sm dark:border-rose-900/40 dark:from-rose-950/20 dark:to-red-950/5 group hover:shadow-md transition-all duration-300">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-rose-600 dark:text-rose-400 tracking-wide uppercase">سجلات بها أخطاء</span>
+                <div class="p-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform duration-300" :class="{'animate-pulse': (validationResult.errors || []).length > 0}">
+                  <ShieldAlert class="w-5 h-5" />
+                </div>
+              </div>
+              <h3 class="text-3xl font-extrabold text-rose-600 dark:text-rose-400 mt-3 leading-none">{{ (validationResult.errors || []).length }}</h3>
+              <p class="text-[10px] text-rose-600/80 dark:text-rose-500 mt-2">تحتاج إلى مراجعة وتعديل يدوي</p>
             </div>
 
-            <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-white/[0.03]">
-              <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">إجمالي الأخطاء المرصودة</span>
-              <h3 class="text-2xl font-bold text-red-500 mt-1">{{ validationResult.error_count }}</h3>
+            <!-- Total Errors -->
+            <div class="relative overflow-hidden rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/40 to-orange-50/10 p-5 shadow-sm dark:border-amber-900/40 dark:from-amber-950/20 dark:to-orange-950/5 group hover:shadow-md transition-all duration-300">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-amber-600 dark:text-amber-400 tracking-wide uppercase">إجمالي الأخطاء</span>
+                <div class="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform duration-300">
+                  <AlertTriangle class="w-5 h-5" />
+                </div>
+              </div>
+              <h3 class="text-3xl font-extrabold text-amber-600 dark:text-amber-400 mt-3 leading-none">{{ validationResult.error_count }}</h3>
+              <p class="text-[10px] text-amber-600/80 dark:text-amber-500 mt-2">حقول غير متطابقة أو قيم غير معرّفة</p>
             </div>
           </div>
 
-          <!-- Controls Panel -->
-          <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-white/[0.03] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">عرض:</span>
-              <button 
-                @click="showErrorsOnly = false"
-                class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all"
-                :class="[!showErrorsOnly ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400']"
-              >
-                الكل ({{ allRowsData.length }})
-              </button>
-              <button 
-                @click="showErrorsOnly = true"
-                class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1"
-                :class="[showErrorsOnly ? 'bg-red-600 text-white shadow-sm' : 'bg-red-50 dark:bg-red-950/20 text-red-600']"
-              >
-                أخطاء فقط ({{ validationResult.errors.length }})
-              </button>
+          <!-- Premium Action Toolbar & Control Hub -->
+          <div class="rounded-2xl border border-gray-200 bg-white/70 dark:bg-white/[0.02] backdrop-blur-md p-4 shadow-sm dark:border-gray-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <!-- Left Side: Status Toggles & Global Search -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 max-w-2xl">
+              <!-- Grid Toggle -->
+              <div class="flex items-center bg-gray-100 dark:bg-gray-800 p-1 rounded-xl shrink-0">
+                <button 
+                  @click="showErrorsOnly = false; currentPage = 1"
+                  class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-1.5"
+                  :class="[!showErrorsOnly ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900']"
+                >
+                  <Database class="w-3.5 h-3.5" />
+                  الكل ({{ allRowsData.length }})
+                </button>
+                <button 
+                  @click="showErrorsOnly = true; currentPage = 1"
+                  class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-1.5"
+                  :class="[showErrorsOnly ? 'bg-red-500 text-white shadow-sm' : 'text-red-500 hover:bg-red-500/5']"
+                >
+                  <ShieldAlert class="w-3.5 h-3.5" />
+                  أخطاء فقط ({{ (validationResult.errors || []).length }})
+                </button>
+              </div>
+
+              <!-- Global Search Input -->
+              <div class="relative flex-1">
+                <span class="absolute inset-y-0 right-3 flex items-center text-gray-400">
+                  <Search class="w-4 h-4" />
+                </span>
+                <input 
+                  type="text" 
+                  v-model="globalSearchQuery"
+                  @input="currentPage = 1"
+                  placeholder="بحث سريع برقم عسكري، اسم، رتبة، أو أي قيمة..."
+                  class="w-full text-xs pr-9 pl-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-950 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
+                />
+                <button 
+                  v-if="globalSearchQuery" 
+                  @click="globalSearchQuery = ''; currentPage = 1"
+                  class="absolute inset-y-0 left-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                >
+                  <X class="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
 
-            <div class="flex items-center gap-2">
+            <!-- Right Side: Action Operations -->
+            <div class="flex items-center flex-wrap gap-2 shrink-0">
+              <button 
+                @click="refreshDictionaries"
+                class="border border-blue-200 text-blue-700 hover:bg-blue-50/50 dark:border-blue-800/60 dark:text-blue-400 dark:hover:bg-blue-950/20 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all"
+                title="تحديث قواميس النظام وجداول المراجع من السيرفر"
+              >
+                <RefreshCw class="w-3.5 h-3.5" />
+                تحديث القواميس
+              </button>
+
+              <button 
+                @click="handleBulkCleanMilitaryNumbers"
+                class="border border-emerald-200 text-emerald-700 hover:bg-emerald-50/50 dark:border-emerald-800/60 dark:text-emerald-400 dark:hover:bg-emerald-950/20 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all"
+                title="تفريغ الرقم العسكري الصحيح إذا طابق الرقم العسكري الأساسي"
+              >
+                <Trash2 class="w-3.5 h-3.5" />
+                تنظيف المتطابقات
+              </button>
+
               <button 
                 @click="revalidateEdits"
-                class="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-4 py-2 rounded-lg flex items-center gap-1.5 shadow-sm transition-all"
+                class="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow-sm hover:shadow transition-all"
               >
                 <RefreshCw class="w-3.5 h-3.5" />
                 إعادة فحص التعديلات
               </button>
 
-              <button 
-                @click="commitSeeding"
-                :disabled="validationResult.errors.length > 0"
-                class="font-bold text-xs px-5 py-2 rounded-lg flex items-center gap-1.5 shadow-md transition-all"
-                :class="[
-                  validationResult.errors.length > 0
-                    ? 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-600 cursor-not-allowed'
-                    : 'bg-green-600 hover:bg-green-700 text-white shadow-green-500/10'
-                ]"
-              >
-                <CheckCircle2 class="w-3.5 h-3.5" />
-                اعتماد وحفظ السجلات نهائياً
-              </button>
+              <div class="relative group">
+                <button 
+                  @click="commitSeeding"
+                  :disabled="(validationResult.errors || []).length > 0"
+                  class="font-bold text-xs px-5 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-md"
+                  :class="[
+                    (validationResult.errors || []).length > 0
+                      ? 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-600 cursor-not-allowed border dark:border-gray-800'
+                      : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/10 hover:shadow-lg animate-pulse-subtle'
+                  ]"
+                >
+                  <FileCheck class="w-4 h-4" />
+                  حفظ واعتماد التأسيس نهائياً
+                </button>
+                <div v-if="(validationResult.errors || []).length > 0" class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-xl">
+                  يجب إصلاح جميع الأخطاء أولاً لتفعيل الاعتماد
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Data Grid -->
-          <div class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-white/[0.03] overflow-hidden">
+          <!-- Data Grid & Premium Table -->
+          <div class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-white/[0.02] overflow-hidden flex flex-col">
             <div class="overflow-x-auto max-w-full custom-scrollbar">
-              <table class="w-full text-right border-collapse min-w-[2000px]">
-                <thead class="bg-gray-50/80 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800">
+              <table class="w-full text-right border-collapse min-w-[2100px]">
+                <thead class="bg-gray-50/80 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-20 backdrop-blur-md">
                   <tr>
-                    <th class="p-3 text-center font-bold text-sm w-16 border-l border-gray-200 dark:border-gray-800">رقم الصف</th>
+                    <!-- Row number header -->
+                    <th class="p-4 text-center font-bold text-xs w-16 border-l border-b border-gray-200 dark:border-gray-800 text-gray-500">رقم الصف</th>
+                    
+                    <!-- Column Headers -->
                     <th 
                       v-for="col in errorColumns" 
                       :key="col"
-                      class="p-3 font-bold text-sm border-l border-gray-200 dark:border-gray-800 group hover:bg-gray-100/50 transition-colors relative"
+                      class="p-3 font-bold text-xs border-l border-b border-gray-200 dark:border-gray-800 group hover:bg-gray-100/50 dark:hover:bg-gray-800/30 transition-colors relative min-w-[230px]"
                     >
-                      <div class="flex items-center justify-between gap-2">
-                        <span>{{ col }}</span>
-                        <!-- Bulk change trigger -->
-                        <button 
-                          @click="openBulkChange(col)"
-                          class="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-white dark:hover:bg-gray-800 opacity-0 group-hover:opacity-100 transition-all"
-                          title="تعديل هذا العمود لجميع السجلات دفعة واحدة"
-                        >
-                          <Copy class="w-3.5 h-3.5" />
-                        </button>
+                      <div class="flex flex-col gap-2">
+                        <div class="flex items-center justify-between gap-1.5 text-gray-700 dark:text-gray-300">
+                          <span class="truncate" :title="col">{{ col }}</span>
+                          <!-- Bulk change trigger -->
+                          <button 
+                            @click="openBulkChange(col)"
+                            class="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                            title="تعديل هذا العمود لجميع السجلات دفعة واحدة"
+                          >
+                            <Copy class="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        
+                        <div class="relative flex items-center">
+                          <button 
+                            @click.stop="openFilterCol = openFilterCol === col ? null : col"
+                            class="w-full text-[11px] p-1.5 px-2.5 rounded-lg border focus:outline-none flex justify-between items-center transition-all duration-200 font-semibold"
+                            :class="[
+                              columnFilters[col]?.length > 0
+                                ? 'bg-blue-600 border-blue-600 text-white shadow-sm hover:bg-blue-700'
+                                : 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                            ]"
+                          >
+                            <span class="truncate">
+                              {{ columnFilters[col]?.length > 0 ? `مفلتر (${columnFilters[col].length})` : 'تصفية (الكل)' }}
+                            </span>
+                            <Filter class="w-3 h-3 ml-1 shrink-0" />
+                          </button>
+                          
+                          <!-- Multi-Select Popover/Dropdown Menu (With click.stop and values search) -->
+                          <div 
+                            v-if="openFilterCol === col"
+                            @click.stop
+                            class="absolute top-full mt-1.5 right-0 w-[260px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-2xl rounded-2xl z-50 max-h-80 flex flex-col overflow-hidden text-right animate-fade-in"
+                          >
+                            <!-- Popover Header -->
+                            <div class="p-3 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center sticky top-0 z-10">
+                              <span class="text-xs font-extrabold text-gray-800 dark:text-gray-200">خيارات التصفية</span>
+                              <button 
+                                @click="columnFilters[col] = []; currentPage = 1; openFilterCol = null"
+                                class="text-[10px] font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 px-2 py-1 rounded-lg transition-colors"
+                              >
+                                إعادة تعيين
+                              </button>
+                            </div>
+                            
+                            <!-- Search inside filter popover -->
+                            <div class="p-2 border-b border-gray-100 dark:border-gray-800/50 bg-white dark:bg-gray-900">
+                              <div class="relative">
+                                <span class="absolute inset-y-0 right-2.5 flex items-center text-gray-400">
+                                  <Search class="w-3 h-3" />
+                                </span>
+                                <input 
+                                  type="text" 
+                                  v-model="filterSearchQueries[col]"
+                                  placeholder="بحث في القيم المتاحة..."
+                                  class="w-full text-[10px] pr-7 pl-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-blue-500"
+                                />
+                              </div>
+                            </div>
+                            
+                            <!-- Scrollable Options List -->
+                            <div class="overflow-y-auto p-2 flex flex-col gap-0.5 text-[11px] text-gray-700 dark:text-gray-300 custom-scrollbar">
+                              <!-- System Filters -->
+                              <label class="flex items-center gap-2.5 p-2 hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-lg cursor-pointer transition-colors">
+                                <input 
+                                  type="checkbox" 
+                                  class="rounded text-blue-600 focus:ring-blue-500/20 w-3.5 h-3.5 border-gray-300 dark:border-gray-700 dark:bg-gray-800"
+                                  :checked="columnFilters[col]?.includes('__errors__') || false"
+                                  @change="(e) => {
+                                    const current = columnFilters[col] || []
+                                    columnFilters[col] = (e.target as HTMLInputElement).checked ? [...current, '__errors__'] : current.filter(x => x !== '__errors__')
+                                    currentPage = 1
+                                  }"
+                                />
+                                <span class="font-bold text-red-600 dark:text-red-400 flex items-center gap-1">
+                                  <AlertTriangle class="w-3.5 h-3.5 shrink-0" />
+                                  الأخطاء ({{ getColumnStats(col).errorsCount }})
+                                </span>
+                              </label>
+                              
+                              <label class="flex items-center gap-2.5 p-2 hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-lg cursor-pointer transition-colors">
+                                <input 
+                                  type="checkbox" 
+                                  class="rounded text-blue-600 focus:ring-blue-500/20 w-3.5 h-3.5 border-gray-300 dark:border-gray-700 dark:bg-gray-800"
+                                  :checked="columnFilters[col]?.includes('__valid__') || false"
+                                  @change="(e) => {
+                                    const current = columnFilters[col] || []
+                                    columnFilters[col] = (e.target as HTMLInputElement).checked ? [...current, '__valid__'] : current.filter(x => x !== '__valid__')
+                                    currentPage = 1
+                                  }"
+                                />
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                  <CheckCircle2 class="w-3.5 h-3.5 shrink-0" />
+                                  الصحيحة ({{ getColumnStats(col).validCount }})
+                                </span>
+                              </label>
+
+                              <label class="flex items-center gap-2.5 p-2 hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-lg cursor-pointer transition-colors">
+                                <input 
+                                  type="checkbox" 
+                                  class="rounded text-blue-600 focus:ring-blue-500/20 w-3.5 h-3.5 border-gray-300 dark:border-gray-700 dark:bg-gray-800"
+                                  :checked="columnFilters[col]?.includes('__empty__') || false"
+                                  @change="(e) => {
+                                    const current = columnFilters[col] || []
+                                    columnFilters[col] = (e.target as HTMLInputElement).checked ? [...current, '__empty__'] : current.filter(x => x !== '__empty__')
+                                    currentPage = 1
+                                  }"
+                                />
+                                <span class="font-bold text-gray-500 flex items-center gap-1">
+                                  <X class="w-3.5 h-3.5 shrink-0" />
+                                  فارغة ({{ getColumnStats(col).emptyCount }})
+                                </span>
+                              </label>
+
+                              <label class="flex items-center gap-2.5 p-2 hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-lg cursor-pointer transition-colors">
+                                <input 
+                                  type="checkbox" 
+                                  class="rounded text-blue-600 focus:ring-blue-500/20 w-3.5 h-3.5 border-gray-300 dark:border-gray-700 dark:bg-gray-800"
+                                  :checked="columnFilters[col]?.includes('__has_value__') || false"
+                                  @change="(e) => {
+                                    const current = columnFilters[col] || []
+                                    columnFilters[col] = (e.target as HTMLInputElement).checked ? [...current, '__has_value__'] : current.filter(x => x !== '__has_value__')
+                                    currentPage = 1
+                                  }"
+                                />
+                                <span class="font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                                  <Database class="w-3.5 h-3.5 shrink-0" />
+                                  معبأة ({{ getColumnStats(col).hasValueCount }})
+                                </span>
+                              </label>
+                              
+                              <!-- Military correction matches if valid column -->
+                              <template v-if="col === 'الرقم العسكري الصحيح'">
+                                <label class="flex items-center gap-2.5 p-2 hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-lg cursor-pointer transition-colors">
+                                  <input 
+                                    type="checkbox" 
+                                    class="rounded text-blue-600 focus:ring-blue-500/20 w-3.5 h-3.5 border-gray-300 dark:border-gray-700 dark:bg-gray-800"
+                                    :checked="columnFilters[col]?.includes('__match_mil__') || false"
+                                    @change="(e) => {
+                                      const current = columnFilters[col] || []
+                                      columnFilters[col] = (e.target as HTMLInputElement).checked ? [...current, '__match_mil__'] : current.filter(x => x !== '__match_mil__')
+                                      currentPage = 1
+                                    }"
+                                  />
+                                  <span class="font-bold text-green-600 dark:text-green-400 flex items-center gap-1">
+                                    <Check class="w-3.5 h-3.5 shrink-0" />
+                                    مطابق للأساسي ({{ getColumnStats(col).matchCount }})
+                                  </span>
+                                </label>
+                                
+                                <label class="flex items-center gap-2.5 p-2 hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-lg cursor-pointer transition-colors">
+                                  <input 
+                                    type="checkbox" 
+                                    class="rounded text-blue-600 focus:ring-blue-500/20 w-3.5 h-3.5 border-gray-300 dark:border-gray-700 dark:bg-gray-800"
+                                    :checked="columnFilters[col]?.includes('__diff_mil__') || false"
+                                    @change="(e) => {
+                                      const current = columnFilters[col] || []
+                                      columnFilters[col] = (e.target as HTMLInputElement).checked ? [...current, '__diff_mil__'] : current.filter(x => x !== '__diff_mil__')
+                                      currentPage = 1
+                                    }"
+                                  />
+                                  <span class="font-bold text-red-600 dark:text-red-400 flex items-center gap-1">
+                                    <AlertTriangle class="w-3.5 h-3.5 shrink-0" />
+                                    مختلف عن الأساسي ({{ getColumnStats(col).diffCount }})
+                                  </span>
+                                </label>
+                              </template>
+                              
+                              <div class="my-1.5 border-t border-gray-100 dark:border-gray-800/60"></div>
+                              <div class="text-[9px] text-gray-400 dark:text-gray-500 mb-1 px-1 font-bold">القيم المكتشفة:</div>
+                              
+                              <!-- Distinct Values counts -->
+                              <label 
+                                v-for="[v, count] in getFilteredValueCounts(col)"
+                                :key="v"
+                                class="flex items-center gap-2 p-2 hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-lg cursor-pointer transition-colors"
+                              >
+                                <input 
+                                  type="checkbox" 
+                                  class="rounded text-blue-600 focus:ring-blue-500/20 w-3.5 h-3.5 border-gray-300 dark:border-gray-700 dark:bg-gray-800"
+                                  :checked="columnFilters[col]?.includes(v) || false"
+                                  @change="(e) => {
+                                    const current = columnFilters[col] || []
+                                    columnFilters[col] = (e.target as HTMLInputElement).checked ? [...current, v] : current.filter(x => x !== v)
+                                    currentPage = 1
+                                  }"
+                                />
+                                <span class="truncate max-w-[180px]" :title="v">
+                                  {{ v || '(فارغ)' }}
+                                  <span class="text-gray-400 dark:text-gray-500 font-normal">({{ count }})</span>
+                                </span>
+                              </label>
+                              
+                              <div v-if="getFilteredValueCounts(col).length === 0" class="text-center py-4 text-gray-400 dark:text-gray-500 text-[10px]">
+                                لا توجد قيم تطابق البحث
+                              </div>
+                            </div>
+                            
+                            <!-- Popover Footer -->
+                            <div class="p-2 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-850 flex justify-center">
+                              <button 
+                                @click.stop="openFilterCol = null"
+                                class="text-xs bg-blue-600 text-white w-full py-1.5 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-sm"
+                              >
+                                تطبيق وإغلاق
+                              </button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </th>
                   </tr>
@@ -313,52 +595,53 @@
                   <tr 
                     v-for="row in paginatedRows" 
                     :key="row.rowIdx"
-                    class="hover:bg-gray-50/40 dark:hover:bg-gray-900/20 transition-colors"
+                    class="hover:bg-gray-50/50 dark:hover:bg-gray-800/10 transition-colors duration-150"
+                    :class="[row.err ? 'bg-red-50/5 dark:bg-red-950/2' : '']"
                   >
-                    <!-- Row Number -->
-                    <td class="p-3 text-center border-l border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/20 font-mono text-xs font-bold">
-                      <span :class="[row.err ? 'text-red-600' : 'text-gray-600 dark:text-gray-400']">
+                    <!-- Row Number cell -->
+                    <td class="p-3 text-center border-l border-b border-gray-200 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/10 font-mono text-xs font-bold shrink-0">
+                      <span :class="[row.err ? 'text-red-500' : 'text-gray-500 dark:text-gray-400']">
                         {{ row.rowIdx + 2 }}
                       </span>
                     </td>
 
-                    <!-- Cells -->
+                    <!-- Values Cells -->
                     <td 
                       v-for="col in errorColumns" 
                       :key="col"
-                      class="p-2 border-l border-gray-100 dark:border-gray-800 align-top"
-                      :class="[getCellError(row, col) ? 'bg-red-50/20 dark:bg-red-950/10' : '']"
+                      class="p-2 border-l border-b border-gray-200 dark:border-gray-800 align-top transition-colors duration-150"
+                      :class="[getCellError(row, col) ? 'bg-red-50/15 dark:bg-red-950/5' : '']"
                     >
-                      <div class="relative min-w-[160px]">
+                      <div class="relative min-w-[190px]">
                         <!-- Render dynamic Select dropdowns based on field type -->
                         <select 
                           v-if="hasDropdownOptions(col)"
                           v-model="row.rowData[col]"
                           @change="handleCellChange(row.rowIdx, col, row.rowData[col])"
-                          class="w-full text-xs p-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
-                          :class="[getCellError(row, col) ? 'border-red-300 dark:border-red-900 text-red-900 dark:text-red-300' : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700']"
+                          class="w-full text-xs p-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-950 dark:text-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer hover:border-gray-300 dark:hover:border-gray-700 focus:border-blue-500 focus:bg-white dark:focus:bg-gray-950"
+                          :class="[getCellError(row, col) ? 'border-red-300 dark:border-red-900/60 bg-red-50/20 dark:bg-red-950/10 text-red-950 dark:text-red-200' : '']"
                         >
                           <option value="">-- اختر القيمة --</option>
                           <option 
                             v-if="isOptionUnknown(row.rowData[col], col)"
                             :value="row.rowData[col]"
-                            class="text-red-600 font-bold bg-red-50"
+                            class="text-red-600 dark:text-red-400 font-bold bg-red-50 dark:bg-red-950/30"
                           >
                             [غير معرّف]: {{ row.rowData[col] }}
                           </option>
                           
-                          <!-- Groups for CD, Branches, Police -->
-                          <template v-if="col === 'جهة_العمل' || col === 'الإدارة_السرية'">
-                            <optgroup label="🏢 الإدارات المركزية">
-                              <option v-for="opt in getFilteredCDs(row.rowData)" :key="opt.id" :value="opt.name">{{ opt.name }}</option>
-                            </optgroup>
-                            <optgroup label="🏢 الفروع">
-                              <option v-for="opt in getFilteredBranches(row.rowData)" :key="opt.id" :value="opt.name">{{ opt.name }}</option>
-                            </optgroup>
-                            <optgroup label="🏛️ شرطة المديرية">
-                              <option v-for="opt in getFilteredDistrictPolice(row.rowData)" :key="opt.id" :value="opt.name">{{ opt.name }}</option>
-                            </optgroup>
-                          </template>
+                           <!-- Groups for CD, Branches, Police -->
+                           <template v-if="col === 'جهة_العمل' || col === 'الإدارة_السرية'">
+                             <optgroup label="الإدارات المركزية">
+                               <option v-for="opt in getFilteredCDs(row.rowData)" :key="opt.id" :value="opt.name">{{ opt.name }}</option>
+                             </optgroup>
+                             <optgroup label="الفروع">
+                               <option v-for="opt in getFilteredBranches(row.rowData)" :key="opt.id" :value="opt.name">{{ opt.name }}</option>
+                             </optgroup>
+                             <optgroup label="شرطة المديرية">
+                               <option v-for="opt in getFilteredDistrictPolice(row.rowData)" :key="opt.id" :value="opt.name">{{ opt.name }}</option>
+                             </optgroup>
+                           </template>
                           
                           <!-- Standard Options -->
                           <template v-else>
@@ -378,8 +661,8 @@
                           type="date"
                           v-model="row.rowData[col]"
                           @change="handleCellChange(row.rowIdx, col, row.rowData[col])"
-                          class="w-full text-xs p-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                          :class="[getCellError(row, col) ? 'border-red-300 dark:border-red-900 text-red-900 dark:text-red-300' : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700']"
+                          class="w-full text-xs p-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-950 dark:text-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 hover:border-gray-300 dark:hover:border-gray-700 focus:border-blue-500"
+                          :class="[getCellError(row, col) ? 'border-red-300 dark:border-red-900/60 bg-red-50/20 dark:bg-red-950/10 text-red-950 dark:text-red-200' : '']"
                         />
 
                         <!-- Fallback normal text input -->
@@ -388,28 +671,28 @@
                           type="text"
                           v-model="row.rowData[col]"
                           @blur="handleCellChange(row.rowIdx, col, row.rowData[col])"
-                          class="w-full text-xs p-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                          :class="[getCellError(row, col) ? 'border-red-300 dark:border-red-900 text-red-900 dark:text-red-300 font-bold' : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700']"
+                          class="w-full text-xs p-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-950 dark:text-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 hover:border-gray-300 dark:hover:border-gray-700 focus:border-blue-500"
+                          :class="[getCellError(row, col) ? 'border-red-300 dark:border-red-900/60 bg-red-50/20 dark:bg-red-950/10 text-red-950 dark:text-red-200 font-semibold' : '']"
                         />
 
-                        <!-- Error tooltip & quick-fix suggestions -->
-                        <div v-if="getCellError(row, col)" class="mt-1 flex flex-col gap-1">
-                          <span class="text-[10px] font-bold text-red-500 flex items-start gap-1">
-                            <AlertTriangle class="w-3.5 h-3.5 shrink-0" />
+                        <!-- Error alert badge & quick-fix recommendations -->
+                        <div v-if="getCellError(row, col)" class="mt-1.5 p-2 rounded-xl bg-red-50/80 dark:bg-red-950/20 border border-red-100/50 dark:border-red-950/40 flex flex-col gap-1.5 shadow-sm">
+                          <span class="text-[10px] font-bold text-red-600 dark:text-red-400 flex items-start gap-1 leading-normal">
+                            <AlertTriangle class="w-3.5 h-3.5 shrink-0 mt-0.5" />
                             {{ getCellError(row, col).message }}
                           </span>
                           
-                          <!-- Custom suggestions helper -->
-                          <div v-if="col === 'الرقم العسكري الصحيح' && getCellError(row, col).message.includes('يوجد اختلاف')" class="flex gap-1">
+                          <!-- Quick Fix operations -->
+                          <div v-if="col === 'الرقم العسكري الصحيح' && getCellError(row, col).message.includes('يوجد اختلاف')" class="flex gap-1 border-t border-red-100/30 pt-1 mt-0.5">
                             <button 
                               @click="applyQuickFix(row.rowIdx, 'الرقم العسكري', row.rowData['الرقم العسكري الصحيح'], 'الرقم العسكري الصحيح', '')"
-                              class="bg-green-100 hover:bg-green-200 text-green-700 dark:bg-green-950/30 dark:text-green-400 px-2 py-0.5 rounded text-[10px] font-bold"
+                              class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-0.5 rounded-lg text-[9px] font-bold transition-colors"
                             >
                               اعتماد وتصحيح
                             </button>
                             <button 
                               @click="applyQuickFix(row.rowIdx, 'الرقم العسكري الصحيح', '', null, null)"
-                              class="bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-400 px-2 py-0.5 rounded text-[10px]"
+                              class="bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-lg text-[9px] font-semibold transition-colors"
                             >
                               تجاهل
                             </button>
@@ -418,46 +701,64 @@
                       </div>
                     </td>
                   </tr>
+                  
+                  <!-- Empty search state -->
+                  <tr v-if="paginatedRows.length === 0">
+                    <td :colspan="errorColumns.length + 1" class="text-center py-12 text-gray-500 dark:text-gray-400 bg-gray-50/20 dark:bg-gray-900/5">
+                      <div class="max-w-md mx-auto flex flex-col items-center gap-3">
+                        <Database class="w-10 h-10 text-gray-300 dark:text-gray-700" />
+                        <h4 class="font-extrabold text-sm text-gray-700 dark:text-gray-300">لا توجد سجلات تطابق عوامل التصفية الحالية</h4>
+                        <p class="text-xs text-gray-400">جرب البحث بكلمات مختلفة أو إزالة الفلاتر النشطة من عناوين الأعمدة.</p>
+                        <button 
+                          v-if="globalSearchQuery || Object.values(columnFilters).some(v => v.length > 0)"
+                          @click="globalSearchQuery = ''; columnFilters = {}; currentPage = 1"
+                          class="mt-2 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          إلغاء كافة الفلاتر والبحث
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
 
-            <!-- Pagination controls -->
-            <div v-if="totalPages > 1" class="flex items-center justify-between px-6 py-4 bg-gray-50/80 dark:bg-gray-900/10 border-t border-gray-100 dark:border-gray-800">
-              <span class="text-xs text-gray-500">
-                عرض الصفوف من <span class="font-bold">{{ (currentPage - 1) * itemsPerPage + 1 }}</span> إلى <span class="font-bold">{{ Math.min(currentPage * itemsPerPage, filteredRowsCount) }}</span> من أصل <span class="font-bold">{{ filteredRowsCount }}</span> سجل
+            <!-- Pagination Footer Controls (Premium Redesign) -->
+            <div v-if="totalPages > 1" class="flex flex-col sm:flex-row items-center justify-between px-6 py-4 bg-gray-50/80 dark:bg-gray-900/20 border-t border-gray-150 dark:border-gray-800 gap-4">
+              <span class="text-xs text-gray-500 dark:text-gray-400">
+                عرض الصفوف من <span class="font-bold text-gray-900 dark:text-white">{{ (currentPage - 1) * itemsPerPage + 1 }}</span> إلى <span class="font-bold text-gray-900 dark:text-white">{{ Math.min(currentPage * itemsPerPage, filteredRowsCount) }}</span> من أصل <span class="font-bold text-gray-900 dark:text-white">{{ filteredRowsCount }}</span> سجل
               </span>
-              <div class="flex items-center gap-1">
+              <div class="flex items-center gap-1.5">
                 <button 
                   @click="currentPage = 1" 
                   :disabled="currentPage === 1"
-                  class="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                  class="p-2 border border-gray-200 dark:border-gray-850 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 disabled:opacity-40 transition-colors"
                 >
-                  <ChevronsRight class="w-4 h-4" />
+                  <ChevronsRight class="w-4 h-4 text-gray-600 dark:text-gray-400" />
                 </button>
                 <button 
                   @click="currentPage--" 
                   :disabled="currentPage === 1"
-                  class="px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-xs font-bold"
+                  class="px-3.5 py-1.5 border border-gray-200 dark:border-gray-850 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 disabled:opacity-40 text-xs font-bold text-gray-600 dark:text-gray-400 transition-colors"
                 >
                   السابق
                 </button>
-                <div class="px-4 text-xs font-bold text-gray-700 dark:text-gray-300">
+                <div class="px-4 text-xs font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 py-1.5 rounded-lg">
                   صفحة {{ currentPage }} من {{ totalPages }}
                 </div>
                 <button 
                   @click="currentPage++" 
                   :disabled="currentPage === totalPages"
-                  class="px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-xs font-bold"
+                  class="px-3.5 py-1.5 border border-gray-200 dark:border-gray-850 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 disabled:opacity-40 text-xs font-bold text-gray-600 dark:text-gray-400 transition-colors"
                 >
                   التالي
                 </button>
                 <button 
                   @click="currentPage = totalPages" 
                   :disabled="currentPage === totalPages"
-                  class="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                  class="p-2 border border-gray-200 dark:border-gray-850 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 disabled:opacity-40 transition-colors"
                 >
-                  <ChevronsLeft class="w-4 h-4" />
+                  <ChevronsLeft class="w-4 h-4 text-gray-600 dark:text-gray-400" />
                 </button>
               </div>
             </div>
@@ -542,13 +843,13 @@
               
               <!-- Groups for CDs, Branches, Police -->
               <template v-if="bulkEditColumn === 'جهة_العمل' || bulkEditColumn === 'الإدارة_السرية'">
-                <optgroup label="🏢 الإدارات المركزية">
+                <optgroup label="الإدارات المركزية">
                   <option v-for="opt in getFilteredCDs(null)" :key="opt.id" :value="opt.name">{{ opt.name }}</option>
                 </optgroup>
-                <optgroup label="🏢 الفروع">
+                <optgroup label="الفروع">
                   <option v-for="opt in getFilteredBranches(null)" :key="opt.id" :value="opt.name">{{ opt.name }}</option>
                 </optgroup>
-                <optgroup label="🏛️ شرطة المديرية">
+                <optgroup label="شرطة المديرية">
                   <option v-for="opt in getFilteredDistrictPolice(null)" :key="opt.id" :value="opt.name">{{ opt.name }}</option>
                 </optgroup>
               </template>
@@ -594,13 +895,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Swal from 'sweetalert2'
 import { 
   UploadCloud, FileSpreadsheet, CheckCircle2, AlertTriangle, 
   ArrowLeft, ArrowRight, Trash2, RefreshCw, Loader2, Check, 
-  Copy, ChevronsRight, ChevronsLeft, X 
+  Copy, ChevronsRight, ChevronsLeft, X, Filter,
+  Layers, Search, CheckSquare, ShieldAlert, FileCheck, Database
 } from 'lucide-vue-next'
 
 import AdminLayout from '@/components/layout/AdminLayout.vue'
@@ -672,6 +974,17 @@ const constants = ref<ConstantsState | null>(null)
 const showErrorsOnly = ref(false)
 const currentPage = ref(1)
 const itemsPerPage = ref(15)
+const columnFilters = ref<Record<string, string[]>>({})
+const openFilterCol = ref<string | null>(null)
+const globalSearchQuery = ref('')
+const filterSearchQueries = ref<Record<string, string>>({})
+
+function getFilteredValueCounts(col: string) {
+  const stats = getColumnStats(col)
+  const query = (filterSearchQueries.value[col] || '').trim().toLowerCase()
+  if (!query) return stats.valueCounts
+  return stats.valueCounts.filter(([v]) => String(v).toLowerCase().includes(query))
+}
 
 // Bulk Edit State
 const bulkEditColumn = ref<string | null>(null)
@@ -685,6 +998,10 @@ const successStats = ref<CommitSeedResponse>({
   monthly_vars: 0
 })
 
+const closePopoverHandler = () => {
+  openFilterCol.value = null
+}
+
 // Load constants on mount
 onMounted(async () => {
   try {
@@ -692,6 +1009,11 @@ onMounted(async () => {
   } catch (error) {
     console.error('Failed to load constants dictionaries', error)
   }
+  window.addEventListener('click', closePopoverHandler)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('click', closePopoverHandler)
 })
 
 // Bytes Formatting Helper
@@ -866,7 +1188,8 @@ const errorColumns = computed(() => {
 // Client filter and pagination calculations
 const filteredRows = computed(() => {
   const errorMap = new Map<number, SeedRowError>()
-  validationResult.value.errors.forEach(e => {
+  const errors = validationResult.value?.errors || []
+  errors.forEach(e => {
     errorMap.set(e.row - 2, e)
   })
 
@@ -879,6 +1202,38 @@ const filteredRows = computed(() => {
   if (showErrorsOnly.value) {
     rows = rows.filter(r => r.err !== null)
   }
+
+  // Global search across all fields
+  if (globalSearchQuery.value) {
+    const q = globalSearchQuery.value.trim().toLowerCase()
+    rows = rows.filter(r => {
+      return Object.entries(r.rowData).some(([k, v]) => {
+        if (k.startsWith('_')) return false
+        return String(v || '').toLowerCase().includes(q)
+      })
+    })
+  }
+
+  // Apply Column Filters (Multi-Select)
+  Object.entries(columnFilters.value).forEach(([col, filterValues]) => {
+    if (filterValues && filterValues.length > 0) {
+      rows = rows.filter(r => {
+        const cellVal = String(r.rowData[col] || '')
+        const hasErr = r.err?.errors?.some((e: any) => e.field === col) || false
+        const isEmpty = !cellVal || cellVal.trim() === ''
+        
+        return filterValues.some(val => {
+          if (val === '__errors__') return hasErr
+          if (val === '__valid__') return !hasErr
+          if (val === '__empty__') return isEmpty
+          if (val === '__has_value__') return !isEmpty
+          if (val === '__match_mil__') return !isEmpty && cellVal.trim() === String(r.rowData['الرقم العسكري'] || '').trim()
+          if (val === '__diff_mil__') return !isEmpty && cellVal.trim() !== String(r.rowData['الرقم العسكري'] || '').trim()
+          return cellVal === val
+        })
+      })
+    }
+  })
 
   return rows
 })
@@ -915,14 +1270,18 @@ function applyQuickFix(rowIdx: number, targetCol: string, val: any, clearCol: st
 
 // Inline change flow
 function handleCellChange(rowIdx: number, col: string, value: any) {
+  // Update the field
+  allRowsData.value[rowIdx][col] = value
+
   // Cascading dependency clears
   if (col === 'الوحدة') {
-    // Reset workplace, division, unit
     allRowsData.value[rowIdx]['جهة_العمل'] = ''
     allRowsData.value[rowIdx]['القسم'] = ''
+    allRowsData.value[rowIdx]['القسم_فرع السرية'] = ''
     allRowsData.value[rowIdx]['الوحدة_الفرعية'] = ''
   } else if (col === 'جهة_العمل' || col === 'الإدارة_السرية') {
     allRowsData.value[rowIdx]['القسم'] = ''
+    allRowsData.value[rowIdx]['القسم_فرع السرية'] = ''
     allRowsData.value[rowIdx]['الوحدة_الفرعية'] = ''
   } else if (col === 'القسم' || col === 'القسم_فرع السرية') {
     allRowsData.value[rowIdx]['الوحدة_الفرعية'] = ''
@@ -932,10 +1291,44 @@ function handleCellChange(rowIdx: number, col: string, value: any) {
   } else if (col === 'الحالة') {
     allRowsData.value[rowIdx]['نوع الحالة'] = ''
   }
-  
+
   // Clean dates if modified
   if (isDateColumn(col) && typeof value === 'string' && value.length > 10) {
     allRowsData.value[rowIdx][col] = value.substring(0, 10)
+  }
+
+  // Auto-fill JobTitle based on Position (Business Rule)
+  if (col === 'المنصب' && value && constants.value) {
+    const normalizeAr = (t: string) => t.replace(/ال/g, '').replace(/\s+/g, '')
+    const posNorm = normalizeAr(value)
+    const matchingJob = constants.value.jobTitles.find(jt => normalizeAr(jt.name) === posNorm)
+    if (matchingJob) {
+      allRowsData.value[rowIdx]['نوع العمل'] = matchingJob.name
+    }
+  }
+
+  // Instant Client-side Error Clearance for modified/cascaded fields
+  if (validationResult.value.errors) {
+    const clearedFields = [col]
+    if (col === 'الوحدة') clearedFields.push('جهة_العمل', 'الإدارة_السرية', 'القسم', 'القسم_فرع السرية', 'الوحدة_الفرعية')
+    else if (col === 'جهة_العمل' || col === 'الإدارة_السرية') clearedFields.push('القسم', 'القسم_فرع السرية', 'الوحدة_الفرعية')
+    else if (col === 'القسم' || col === 'القسم_فرع السرية') clearedFields.push('الوحدة_الفرعية')
+    else if (col === 'الفئة') clearedFields.push('المنصب', 'نوع العمل')
+    else if (col === 'الحالة') clearedFields.push('نوع الحالة')
+
+    validationResult.value.errors = validationResult.value.errors.map(r => {
+      if (r.row - 2 === rowIdx) {
+        return {
+          ...r,
+          errors: r.errors.filter((e: any) => !clearedFields.includes(e.field))
+        }
+      }
+      return r
+    }).filter(r => r.errors.length > 0)
+    
+    validationResult.value.error_count = validationResult.value.errors.reduce((acc, curr) => acc + curr.errors.length, 0)
+    validationResult.value.valid_rows = validationResult.value.total_rows - validationResult.value.errors.length
+    validationResult.value.is_valid = validationResult.value.errors.length === 0
   }
 }
 
@@ -946,6 +1339,7 @@ async function revalidateEdits() {
     const res = await validateInitialSeedJson(allRowsData.value)
     if (res.success && res.data) {
       validationResult.value = res.data
+      allRowsData.value = res.data.all_rows || []
       Swal.fire({
         icon: res.data.is_valid ? 'success' : 'warning',
         title: res.data.is_valid ? 'تم الفحص بنجاح' : 'تنبيه الأخطاء',
@@ -1183,11 +1577,12 @@ function closeBulkChange() {
 
 function getBulkDistinctErroneousValues() {
   const col = bulkEditColumn.value
-  if (!col || !validationResult.value.errors) return []
+  const errors = validationResult.value?.errors || []
+  if (!col || errors.length === 0) return []
   
   const values = new Set<string>()
-  validationResult.value.errors.forEach(errRow => {
-    const hasErr = errRow.errors.some((e: any) => e.field === col)
+  errors.forEach(errRow => {
+    const hasErr = errRow.errors?.some((e: any) => e.field === col) || false
     if (hasErr) {
       const idx = errRow.row - 2
       const val = allRowsData.value[idx]?.[col]
@@ -1204,7 +1599,6 @@ function applyBulkChange() {
   allRowsData.value.forEach((row, idx) => {
     const currentVal = String(row[col] || '')
     if (bulkEditTargetValues.value.includes(currentVal)) {
-      allRowsData.value[idx][col] = bulkEditNewValue.value
       // Clear downstream fields
       handleCellChange(idx, col, bulkEditNewValue.value)
     }
@@ -1218,9 +1612,104 @@ function applyBulkChange() {
   })
 }
 
+// Get column validation stats and values counts for rendering headers' filter lists
+function getColumnStats(col: string) {
+  const total = allRowsData.value.length
+  const errors = validationResult.value?.errors || []
+  const errorsCount = errors.filter(r => r.errors?.some((e: any) => e.field === col) || false).length
+  const validCount = total - errorsCount
+  
+  const valueCounts = new Map<string, number>()
+  allRowsData.value.forEach(r => {
+    const v = String(r[col] || '')
+    if (v) {
+      valueCounts.set(v, (valueCounts.get(v) || 0) + 1)
+    }
+  })
+  
+  const emptyCount = allRowsData.value.filter(r => !String(r[col] || '')).length
+  const hasValueCount = total - emptyCount
+  
+  let matchCount = 0
+  let diffCount = 0
+  if (col === 'الرقم العسكري الصحيح') {
+    allRowsData.value.forEach(r => {
+      const v = String(r[col] || '').trim()
+      const mil = String(r['الرقم العسكري'] || '').trim()
+      if (v && v === mil) matchCount++
+      else if (v && v !== mil) diffCount++
+    })
+  }
+  
+  // Sort values descending by frequency count
+  const sortedValues = Array.from(valueCounts.entries()).sort((a, b) => b[1] - a[1])
+  
+  return {
+    errorsCount,
+    validCount,
+    valueCounts: sortedValues,
+    emptyCount,
+    hasValueCount,
+    matchCount,
+    diffCount
+  }
+}
+
+// Bulk clean matching correct military numbers
+function handleBulkCleanMilitaryNumbers() {
+  if (!allRowsData.value) return
+  let modifiedCount = 0
+  allRowsData.value.forEach((row, idx) => {
+    const normalMil = String(row['الرقم العسكري'] || '').trim()
+    const correctMil = String(row['الرقم العسكري الصحيح'] || '').trim()
+    if (correctMil && normalMil === correctMil) {
+      modifiedCount++
+      handleCellChange(idx, 'الرقم العسكري الصحيح', '')
+    }
+  })
+  
+  if (modifiedCount > 0) {
+    Swal.fire({
+      icon: 'success',
+      title: 'تنظيف المتطابقات',
+      text: `تم تنظيف ${modifiedCount} سجلاً متطابقاً بنجاح. يرجى الضغط على زر "إعادة فحص التعديلات" لتحديث تقرير الأخطاء.`
+    })
+  } else {
+    Swal.fire({
+      icon: 'info',
+      title: 'تنظيف المتطابقات',
+      text: 'لم يتم العثور على أي سجلات متطابقة تحتاج إلى تنظيف.'
+    })
+  }
+}
+
+// Fetch fresh constants dictionaries from the server
+async function refreshDictionaries() {
+  isLoading.value = true
+  try {
+    constants.value = await fetchAllConstants()
+    Swal.fire({
+      icon: 'success',
+      title: 'تحديث القواميس',
+      text: 'تم جلب وتحديث قواميس وجداول مراجع النظام بنجاح.'
+    })
+  } catch (error) {
+    console.error('Failed to load constants dictionaries', error)
+    Swal.fire({
+      icon: 'error',
+      title: 'فشل التحديث',
+      text: 'حدث خطأ أثناء محاولة جلب قواميس النظام الحديثة من الخادم.'
+    })
+  } finally {
+    isLoading.value = false
+  }
+}
+
 // Reset entire flow
 function resetWizard() {
   removeFile()
+  columnFilters.value = {}
+  openFilterCol.value = null
   currentStep.value = 1
 }
 </script>
@@ -1239,5 +1728,12 @@ function resetWizard() {
 }
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #475569;
+}
+@keyframes pulse-subtle {
+  0%, 100% { transform: scale(1); box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1), 0 2.5px 4px -1px rgba(16, 185, 129, 0.06); }
+  50% { transform: scale(1.02); box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2), 0 4px 6px -2px rgba(16, 185, 129, 0.1); }
+}
+.animate-pulse-subtle {
+  animation: pulse-subtle 2.5s infinite ease-in-out;
 }
 </style>

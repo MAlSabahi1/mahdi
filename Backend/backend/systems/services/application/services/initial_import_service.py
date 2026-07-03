@@ -29,6 +29,17 @@ from systems.personnel.models import (
     HistoricalMonthlyVariables
 )
 
+
+def format_validation_error(e: ValidationError) -> str:
+    msg = e.message
+    if hasattr(e, 'params') and e.params:
+        try:
+            msg = msg % e.params
+        except Exception:
+            pass
+    return str(msg)
+
+
 # ── جداول تصحيح الرتب (للمطابقة الذكية قبل الرفض) ──
 RANK_MAP = {
     'لواء': 'لواء', 'عميد': 'عميد', 'عقيد': 'عقيد',
@@ -578,7 +589,7 @@ class StrictInitialImportService:
                 try:
                     validate_national_id(nat_id)
                 except ValidationError as e:
-                    row_errors.append({"field": col_national, "message": str(e.message)})
+                    row_errors.append({"field": col_national, "message": format_validation_error(e)})
 
             col_phone = 'رقم التليفون' if 'رقم التليفون' in headers else ''
             phone = self._clean(row_dict.get(col_phone, ''))
@@ -587,7 +598,7 @@ class StrictInitialImportService:
                 try:
                     validate_phone_number(phone)
                 except ValidationError as e:
-                    row_errors.append({"field": col_phone, "message": str(e.message)})
+                    row_errors.append({"field": col_phone, "message": format_validation_error(e)})
 
             col_birth = 'تاريخ الميلاد' if 'تاريخ الميلاد' in headers else ''
             col_join = 'تاريخ الألتحاق' if 'تاريخ الألتحاق' in headers else ('تاريخ الالتحاق' if 'تاريخ الالتحاق' in headers else '')
@@ -604,7 +615,7 @@ class StrictInitialImportService:
                         try:
                             validate_birth_date(birth_date_obj)
                         except ValidationError as e:
-                            row_errors.append({"field": col_birth, "message": str(e.message)})
+                            row_errors.append({"field": col_birth, "message": format_validation_error(e)})
 
             if col_join:
                 join_str = self._clean(row_dict.get(col_join, ''))
@@ -617,7 +628,7 @@ class StrictInitialImportService:
                         try:
                             validate_join_date(join_date_obj, birth_date_obj)
                         except ValidationError as e:
-                            row_errors.append({"field": col_join, "message": str(e.message)})
+                            row_errors.append({"field": col_join, "message": format_validation_error(e)})
 
             # 4. الرتبة الصارمة
             raw_rank = self._clean(row_dict.get(col_rank, ''))

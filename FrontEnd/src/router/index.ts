@@ -28,6 +28,76 @@ const router = createRouter({
       },
     },
     {
+      path: '/users/governance',
+      name: 'AccountGovernance',
+      component: () => import('@/views/UserManagement/AccountGovernanceDashboard.vue'),
+      meta: {
+        title: 'حوكمة الحسابات وأمن النظام',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/users/sessions',
+      name: 'ActiveSessions',
+      component: () => import('@/views/UserManagement/ActiveSessions.vue'),
+      meta: {
+        title: 'إدارة الجلسات والأجهزة النشطة',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/users/audit-trail',
+      name: 'AuditTrail',
+      component: () => import('@/views/UserManagement/AuditTrail.vue'),
+      meta: {
+        title: 'السجل المركزي لتدقيق البيانات',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/users/policy-simulator',
+      name: 'PolicySimulator',
+      component: () => import('@/views/UserManagement/PolicySimulator.vue'),
+      meta: {
+        title: 'أداة محاكاة واختبار الصلاحيات',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/users/policy-matrix',
+      name: 'PolicyMatrix',
+      component: () => import('@/views/UserManagement/PolicyMatrix.vue'),
+      meta: {
+        title: 'مصفوفة صلاحيات الحقول والسياسات',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/users/emergency-access',
+      name: 'EmergencyAccess',
+      component: () => import('@/views/UserManagement/EmergencyAccess.vue'),
+      meta: {
+        title: 'تفويض الصلاحيات والوصول الطارئ',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/users/dual-auth',
+      name: 'DualAuthHub',
+      component: () => import('@/views/UserManagement/DualAuthHub.vue'),
+      meta: {
+        title: 'مجمع الاعتماد الثنائي',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
       path: '/users/:id',
       name: 'user-details',
       component: () => import('@/views/UserManagement/UserDetails.vue'),
@@ -63,6 +133,16 @@ const router = createRouter({
       component: () => import('@/views/UserManagement/RoleEditor.vue'),
       meta: {
         title: 'تعديل بيانات وصلاحيات المجموعة',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/users/settings',
+      name: 'security-settings',
+      component: () => import('../views/Pages/BlankPage.vue'),
+      meta: {
+        title: 'الإعدادات الأمنية للنظام',
         requiresAuth: true,
         requiresAdmin: true,
       },
@@ -205,6 +285,15 @@ const router = createRouter({
       },
     },
     {
+      path: '/personnel/profile-search',
+      name: 'PersonnelProfileSearch',
+      component: () => import('@/views/Personnel/PersonnelProfileSearch.vue'),
+      meta: {
+        title: 'الملف الكامل للمنتسب',
+        requiresAuth: true,
+      },
+    },
+    {
       path: '/personnel/create',
       name: 'PersonnelCreate',
       component: () => import('@/views/Personnel/PersonnelCreate.vue'),
@@ -309,6 +398,87 @@ const router = createRouter({
       component: () => import('@/views/Services/ReportsDashboard.vue'),
       meta: {
         title: 'التقارير والإقفال',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/export-config',
+      name: 'ExcelExportConfigurator',
+      component: () => import('@/views/Services/ExcelExportConfigurator.vue'),
+      meta: {
+        title: 'إعداد وتصدير النماذج المقفلة',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/import-wizard',
+      name: 'ExcelImportWizard',
+      component: () => import('@/views/Services/ExcelImportWizard.vue'),
+      meta: {
+        title: 'معالج الاستيراد الجماعي وتتبع Celery',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/monthly-exports',
+      name: 'MonthlyExports',
+      component: () => import('@/views/Services/MonthlyExports.vue'),
+      meta: {
+        title: 'تصدير الخدمات الشهرية',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/official-reports',
+      name: 'OfficialReports',
+      component: () => import('@/views/Services/OfficialReports.vue'),
+      meta: {
+        title: 'تصدير التقارير الرسمية',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/directory',
+      name: 'ServiceDirectory',
+      component: () => import('@/views/Services/ServiceDirectory.vue'),
+      meta: {
+        title: 'دليل الخدمات والاستمارات',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/request',
+      name: 'UnifiedRequestForm',
+      component: () => import('@/views/Services/UnifiedRequestForm.vue'),
+      meta: {
+        title: 'واجهة تقديم الطلب الموحدة',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/inbox',
+      name: 'InboxTransactions',
+      component: () => import('@/views/Services/InboxTransactions.vue'),
+      meta: {
+        title: 'قائمة المعاملات والمهام',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/workflows',
+      name: 'WorkflowTracking',
+      component: () => import('@/views/Services/WorkflowTracking.vue'),
+      meta: {
+        title: 'تتبع سير الموافقات',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/editor-react',
+      name: 'ServicesEditorReact',
+      component: () => import('@/views/Services/ReactGridEditor.vue'),
+      meta: {
+        title: 'تعديل الخدمات المطور (React)',
         requiresAuth: true,
       },
     },

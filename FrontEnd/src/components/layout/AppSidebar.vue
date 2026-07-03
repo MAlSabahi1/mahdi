@@ -295,6 +295,14 @@ const menuGroups = computed(() => {
               {
                 name: "nav.rank_settlements",
                 path: "/personnel/settlements",
+              },
+              {
+                name: "nav.profile_search",
+                path: "/personnel/profile-search",
+              },
+              {
+                name: "nav.editor_react",
+                path: "/services/editor-react",
               }
             ]
           },
@@ -303,8 +311,12 @@ const menuGroups = computed(() => {
             name: "nav.service_cycle",
             subItems: [
               {
-                name: "services.service_dashboard",
-                path: "/services/dashboard",
+                name: "nav.excel_export_config",
+                path: "/services/export-config",
+              },
+              {
+                name: "nav.excel_import_wizard",
+                path: "/services/import-wizard",
               },
               {
                 name: "services.staging",
@@ -313,14 +325,42 @@ const menuGroups = computed(() => {
               {
                 name: "services.rejections",
                 path: "/services/rejections",
+              }
+            ]
+          },
+          {
+            icon: GridIcon,
+            name: "nav.services_reports_module",
+            subItems: [
+              {
+                name: "nav.monthly_exports",
+                path: "/services/monthly-exports",
               },
               {
-                name: "services.reconciliation",
-                path: "/services/reconciliation",
+                name: "nav.official_reports",
+                path: "/services/official-reports",
+              }
+            ]
+          },
+          {
+            icon: PlugInIcon,
+            name: "nav.transactions_management_module",
+            subItems: [
+              {
+                name: "nav.cards_directory",
+                path: "/services/directory",
               },
               {
-                name: "services.reports_and_close",
-                path: "/services/reports",
+                name: "nav.unified_request",
+                path: "/services/request",
+              },
+              {
+                name: "nav.inbox_transactions",
+                path: "/services/inbox",
+              },
+              {
+                name: "nav.workflow_tracking",
+                path: "/services/workflows",
               }
             ]
           }
@@ -333,19 +373,57 @@ const menuGroups = computed(() => {
         title: "systems.users_permissions",
         items: [
           {
-            icon: UserCircleIcon,
-            name: "nav.users",
-            path: "/users",
+            icon: UserGroupIcon,
+            name: "nav.account_governance_module",
+            subItems: [
+              {
+                name: "nav.users_manage",
+                path: "/users",
+              },
+              {
+                name: "nav.governance",
+                path: "/users/governance",
+              },
+              {
+                name: "nav.active_sessions",
+                path: "/users/sessions",
+              }
+            ]
           },
           {
             icon: PlugInIcon,
-            name: "nav.roles",
-            path: "/roles",
+            name: "nav.advanced_policy_module",
+            subItems: [
+              {
+                name: "nav.roles",
+                path: "/roles",
+              },
+              {
+                name: "nav.policy_matrix",
+                path: "/users/policy-matrix",
+              },
+              {
+                name: "nav.emergency_access",
+                path: "/users/emergency-access",
+              },
+              {
+                name: "nav.dual_auth",
+                path: "/users/dual-auth",
+              },
+              {
+                name: "nav.audit_trail",
+                path: "/users/audit-trail",
+              },
+              {
+                name: "nav.policy_simulator",
+                path: "/users/policy-simulator",
+              }
+            ]
           },
           {
             icon: SettingsIcon,
             name: "nav.settings",
-            path: "/blank",
+            path: "/users/settings",
           }
         ]
       }
