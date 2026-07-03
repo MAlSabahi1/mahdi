@@ -1,14 +1,14 @@
 <template>
   <admin-layout>
     <!-- Breadcrumb -->
-    <PageBreadcrumb pageTitle="لوحة التحكم بتصدير القوالب وإعدادات الأعمدة المقفلة" />
+    <PageBreadcrumb pageTitle="إعداد وتصدير النماذج" />
 
     <div class="space-y-6 text-start" dir="rtl">
       
       <!-- Page Header -->
       <div class="border-b border-gray-200 dark:border-gray-800 pb-5">
         <h1 class="text-2xl font-black text-gray-900 dark:text-white">
-          لوحة التحكم بتصدير القوالب وإعدادات الأعمدة المقفلة (Excel Export & Column Locker)
+          إعداد وتصدير النماذج
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
           قم بتحديد المديرية المعنية واختيار الأعمدة المقفلة (غير القابلة للتعديل) لحماية سلامة السجلات العسكرية والمالية قبل إرسال النموذج.
@@ -72,19 +72,19 @@
           </div>
 
           <!-- Column Groups Grid -->
-          <div class="space-y-4">
-            <!-- Basic Info group -->
+          <div class="space-y-6">
+            <!-- Identity & Personal Info group -->
             <div>
               <h4 class="text-[11px] font-black text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-950 px-2.5 py-1.5 rounded-lg mb-2">بيانات الهوية والبيانات الشخصية</h4>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div v-for="col in columns.basicInfo" :key="col.field" class="flex items-center justify-between p-2 rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/20">
+                <div v-for="col in columns.identity" :key="col.field" class="flex items-center justify-between p-2 rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/20">
                   <div class="text-right">
                     <span class="text-xs font-bold text-gray-800 dark:text-gray-200">{{ col.label }}</span>
                     <span class="block text-[9px] text-gray-400 font-mono mt-0.5">{{ col.field }}</span>
                   </div>
                   <div class="flex items-center gap-2">
-                    <span :class="col.locked ? 'text-red-500 bg-red-50 dark:bg-red-950/20' : 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/20'" class="text-[9px] font-bold px-2 py-0.5 rounded">
-                      {{ col.locked ? 'مغلق 🔒' : 'مفتوح 🔓' }}
+                    <span :class="col.locked ? 'text-red-600 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30' : 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/30'" class="text-[9px] font-bold px-2 py-0.5 rounded border">
+                      {{ col.locked ? 'مغلق' : 'مفتوح' }}
                     </span>
                     <input type="checkbox" v-model="col.locked" :disabled="col.alwaysLocked" class="h-4 w-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500 cursor-pointer" />
                   </div>
@@ -92,39 +92,39 @@
               </div>
             </div>
 
-            <!-- Financial Data group -->
+            <!-- Structure group -->
             <div>
-              <h4 class="text-[11px] font-black text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-950 px-2.5 py-1.5 rounded-lg mb-2">المتغيرات المالية والاستحقاقات والبدلات</h4>
+              <h4 class="text-[11px] font-black text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-950 px-2.5 py-1.5 rounded-lg mb-2">الهيكل التنظيمي والوظيفي</h4>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div v-for="col in columns.financial" :key="col.field" class="flex items-center justify-between p-2 rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/20">
+                <div v-for="col in columns.structure" :key="col.field" class="flex items-center justify-between p-2 rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/20">
                   <div class="text-right">
                     <span class="text-xs font-bold text-gray-800 dark:text-gray-200">{{ col.label }}</span>
                     <span class="block text-[9px] text-gray-400 font-mono mt-0.5">{{ col.field }}</span>
                   </div>
                   <div class="flex items-center gap-2">
-                    <span :class="col.locked ? 'text-red-500 bg-red-50 dark:bg-red-950/20' : 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/20'" class="text-[9px] font-bold px-2 py-0.5 rounded">
-                      {{ col.locked ? 'مغلق 🔒' : 'مفتوح 🔓' }}
+                    <span :class="col.locked ? 'text-red-600 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30' : 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/30'" class="text-[9px] font-bold px-2 py-0.5 rounded border">
+                      {{ col.locked ? 'مغلق' : 'مفتوح' }}
                     </span>
-                    <input type="checkbox" v-model="col.locked" class="h-4 w-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500 cursor-pointer" />
+                    <input type="checkbox" v-model="col.locked" :disabled="col.alwaysLocked" class="h-4 w-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500 cursor-pointer" />
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Attendance Data group -->
+            <!-- Status and Decisions group -->
             <div>
-              <h4 class="text-[11px] font-black text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-950 px-2.5 py-1.5 rounded-lg mb-2">الحضور والغياب والانضباط</h4>
+              <h4 class="text-[11px] font-black text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-950 px-2.5 py-1.5 rounded-lg mb-2">الحالة الخدمية والقرارات</h4>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div v-for="col in columns.attendance" :key="col.field" class="flex items-center justify-between p-2 rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/20">
+                <div v-for="col in columns.statusAndDecisions" :key="col.field" class="flex items-center justify-between p-2 rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/20">
                   <div class="text-right">
                     <span class="text-xs font-bold text-gray-800 dark:text-gray-200">{{ col.label }}</span>
                     <span class="block text-[9px] text-gray-400 font-mono mt-0.5">{{ col.field }}</span>
                   </div>
                   <div class="flex items-center gap-2">
-                    <span :class="col.locked ? 'text-red-500 bg-red-50 dark:bg-red-950/20' : 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/20'" class="text-[9px] font-bold px-2 py-0.5 rounded">
-                      {{ col.locked ? 'مغلق 🔒' : 'مفتوح 🔓' }}
+                    <span :class="col.locked ? 'text-red-600 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30' : 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/30'" class="text-[9px] font-bold px-2 py-0.5 rounded border">
+                      {{ col.locked ? 'مغلق' : 'مفتوح' }}
                     </span>
-                    <input type="checkbox" v-model="col.locked" class="h-4 w-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500 cursor-pointer" />
+                    <input type="checkbox" v-model="col.locked" :disabled="col.alwaysLocked" class="h-4 w-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500 cursor-pointer" />
                   </div>
                 </div>
               </div>
@@ -157,29 +157,41 @@ interface ColumnConfig {
 }
 
 const columns = ref({
-  basicInfo: [
+  identity: [
     { label: 'الرقم العسكري', field: 'military_number', locked: true, alwaysLocked: true },
+    { label: 'الرقم العسكري القديم', field: 'old_military_number', locked: false, alwaysLocked: false },
     { label: 'الاسم الكامل', field: 'full_name', locked: true, alwaysLocked: true },
-    { label: 'الرقم الوطني', field: 'national_number', locked: true, alwaysLocked: false },
-    { label: 'الرتبة العسكرية', field: 'rank_name', locked: true, alwaysLocked: false }
+    { label: 'الرقم الوطني', field: 'national_id', locked: true, alwaysLocked: false },
+    { label: 'رقم الهاتف', field: 'phone_number', locked: false, alwaysLocked: false },
+    { label: 'تاريخ الميلاد', field: 'birth_date', locked: false, alwaysLocked: false },
+    { label: 'المؤهل الدراسي', field: 'qualification', locked: false, alwaysLocked: false }
   ] as ColumnConfig[],
-  financial: [
-    { label: 'الراتب الأساسي', field: 'base_salary', locked: true, alwaysLocked: false },
-    { label: 'بدل السكن', field: 'housing_allowance', locked: false, alwaysLocked: false },
-    { label: 'علاوة الرتبة', field: 'rank_allowance', locked: true, alwaysLocked: false },
-    { label: 'المتغيرات الاستثنائية', field: 'extraordinary_allowance', locked: false, alwaysLocked: false }
+  structure: [
+    { label: 'إدارة أمن المحافظة', field: 'security_admin', locked: true, alwaysLocked: false },
+    { label: 'الإدارة المركزية', field: 'central_department', locked: false, alwaysLocked: false },
+    { label: 'الفرع', field: 'branch', locked: false, alwaysLocked: false },
+    { label: 'أمن المديرية', field: 'district_police', locked: false, alwaysLocked: false },
+    { label: 'القسم', field: 'division', locked: false, alwaysLocked: false },
+    { label: 'الوحدة', field: 'unit', locked: false, alwaysLocked: false },
+    { label: 'تصنيف القوة', field: 'force_classification', locked: false, alwaysLocked: false },
+    { label: 'نوع العمل', field: 'job_title', locked: false, alwaysLocked: false },
+    { label: 'المنصب', field: 'position', locked: false, alwaysLocked: false }
   ] as ColumnConfig[],
-  attendance: [
-    { label: 'أيام الغياب الفعلي', field: 'absent_days', locked: false, alwaysLocked: false },
-    { label: 'حالة الانضباط السلوكي', field: 'discipline_status', locked: false, alwaysLocked: false },
-    { label: 'ملاحظات المحافظة', field: 'regional_remarks', locked: false, alwaysLocked: false }
+  statusAndDecisions: [
+    { label: 'الرتبة الحالية', field: 'current_rank', locked: true, alwaysLocked: false },
+    { label: 'الحالة الخدمية الحالية', field: 'current_status', locked: true, alwaysLocked: false },
+    { label: 'تاريخ الالتحاق', field: 'join_date', locked: false, alwaysLocked: false },
+    { label: 'تاريخ صدور القرار', field: 'decision_date', locked: false, alwaysLocked: false },
+    { label: 'تاريخ التصدور إلينا', field: 'transfer_date', locked: false, alwaysLocked: false },
+    { label: 'حالة النفقات', field: 'expense_status', locked: false, alwaysLocked: false },
+    { label: 'الملاحظات', field: 'notes', locked: false, alwaysLocked: false }
   ] as ColumnConfig[]
 })
 
 function resetToDefaultLocks() {
-  columns.value.basicInfo.forEach(c => c.locked = true)
-  columns.value.financial.forEach((c, idx) => c.locked = idx !== 1 && idx !== 3)
-  columns.value.attendance.forEach(c => c.locked = false)
+  columns.value.identity.forEach(c => c.locked = c.alwaysLocked || c.field === 'military_number' || c.field === 'full_name' || c.field === 'national_id')
+  columns.value.structure.forEach(c => c.locked = c.field === 'security_admin')
+  columns.value.statusAndDecisions.forEach(c => c.locked = c.field === 'current_rank' || c.field === 'current_status')
   Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'تمت إعادة ضبط القفل الافتراضي', showConfirmButton: false, timer: 2000 })
 }
 
