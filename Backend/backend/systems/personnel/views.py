@@ -163,37 +163,132 @@ class PersonnelViewSet(BaseModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
     
+    @extend_schema(summary='حقول التصدير المتاحة وتكويناتها', tags=['personnel'])
+    @action(detail=False, methods=['get'], url_path='export-fields')
+    def export_fields(self, request, *args, **kwargs):
+        from django.apps import apps
+        PersonnelMaster = apps.get_model('personnel', 'PersonnelMaster')
+        
+        def get_label(field_name):
+            try:
+                return str(PersonnelMaster._meta.get_field(field_name).verbose_name)
+            except Exception:
+                if field_name == 'qualification':
+                    return 'المؤهل الدراسي'
+                elif field_name == 'current_rank':
+                    return 'الرتبة الحالية'
+                elif field_name == 'current_status':
+                    return 'الحالة الخدمية الحالية'
+                elif field_name == 'force_classification':
+                    return 'تصنيف القوة'
+                elif field_name == 'job_title':
+                    return 'نوع العمل'
+                return field_name
+        
+        data = {
+            'identity': [
+                {'field': 'military_number', 'label': get_label('military_number'), 'locked': True, 'alwaysLocked': True, 'exportable': True, 'alwaysExportable': True},
+                {'field': 'old_military_number', 'label': get_label('old_military_number'), 'locked': False, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+                {'field': 'full_name', 'label': get_label('full_name'), 'locked': True, 'alwaysLocked': True, 'exportable': True, 'alwaysExportable': True},
+                {'field': 'national_id', 'label': get_label('national_id'), 'locked': True, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+                {'field': 'phone_number', 'label': get_label('phone_number'), 'locked': False, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+                {'field': 'birth_date', 'label': get_label('birth_date'), 'locked': False, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+                {'field': 'qualification', 'label': get_label('qualification'), 'locked': False, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+            ],
+            'structure': [
+                {'field': 'security_admin', 'label': get_label('security_admin'), 'locked': True, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+                {'field': 'central_department', 'label': get_label('central_department'), 'locked': False, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+                {'field': 'branch', 'label': get_label('branch'), 'locked': False, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+                {'field': 'district_police', 'label': get_label('district_police'), 'locked': False, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+                {'field': 'division', 'label': get_label('division'), 'locked': False, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+                {'field': 'unit', 'label': get_label('unit'), 'locked': False, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+                {'field': 'force_classification', 'label': get_label('force_classification'), 'locked': False, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+                {'field': 'job_title', 'label': get_label('job_title'), 'locked': False, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+                {'field': 'position', 'label': get_label('position'), 'locked': False, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+            ],
+            'statusAndDecisions': [
+                {'field': 'current_rank', 'label': get_label('current_rank'), 'locked': True, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+                {'field': 'current_status', 'label': get_label('current_status'), 'locked': True, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+                {'field': 'join_date', 'label': get_label('join_date'), 'locked': False, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+                {'field': 'decision_date', 'label': get_label('decision_date'), 'locked': False, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+                {'field': 'transfer_date', 'label': get_label('transfer_date'), 'locked': False, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+                {'field': 'expense_status', 'label': get_label('expense_status'), 'locked': False, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+                {'field': 'notes', 'label': get_label('notes'), 'locked': False, 'alwaysLocked': False, 'exportable': True, 'alwaysExportable': False},
+            ]
+        }
+        return Response({'success': True, 'groups': data})
+
     @extend_schema(summary='تصدير قائمة الأفراد', tags=['personnel'])
     @action(detail=False, methods=['get'])
     def export_csv(self, request, *args, **kwargs):
         import csv
         from django.http import HttpResponse
+        from django.apps import apps
 
+        columns_param = request.query_params.get('columns', '')
+        
         qs = self.filter_queryset(self.get_queryset())
         
+        PersonnelMaster = apps.get_model('personnel', 'PersonnelMaster')
+        
+        def get_field_label(field_name):
+            try:
+                return str(PersonnelMaster._meta.get_field(field_name).verbose_name)
+            except Exception:
+                if field_name == 'qualification':
+                    return 'المؤهل الدراسي'
+                elif field_name == 'current_rank':
+                    return 'الرتبة الحالية'
+                elif field_name == 'current_status':
+                    return 'الحالة الخدمية الحالية'
+                elif field_name == 'force_classification':
+                    return 'تصنيف القوة'
+                elif field_name == 'job_title':
+                    return 'نوع العمل'
+                return field_name
+
+        supported_fields = [
+            'military_number', 'old_military_number', 'full_name', 'national_id',
+            'phone_number', 'birth_date', 'qualification', 'security_admin',
+            'central_department', 'branch', 'district_police', 'division',
+            'unit', 'force_classification', 'job_title', 'position',
+            'current_rank', 'current_status', 'join_date', 'decision_date',
+            'transfer_date', 'expense_status', 'notes'
+        ]
+        
+        if columns_param:
+            export_fields = [f.strip() for f in columns_param.split(',') if f.strip() in supported_fields]
+        else:
+            export_fields = supported_fields
+            
+        if 'military_number' not in export_fields:
+            export_fields.insert(0, 'military_number')
+        if 'full_name' not in export_fields:
+            idx = export_fields.index('military_number') + 1
+            export_fields.insert(idx, 'full_name')
+
         response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
         response['Content-Disposition'] = 'attachment; filename="personnel.csv"'
         
         writer = csv.writer(response)
-        writer.writerow([
-            'الرقم العسكري', 'الرقم الوطني', 'الاسم الكامل', 
-            'الرتبة', 'الحالة', 'تاريخ الميلاد', 'رقم الهاتف',
-            'الجهة'
-        ])
         
+        headers = [get_field_label(f) for f in export_fields]
+        writer.writerow(headers)
+        
+        def get_val(person, field_name):
+            val = getattr(person, field_name, None)
+            if val is None:
+                return ''
+            if hasattr(val, 'name'):
+                return val.name
+            from datetime import date
+            if isinstance(val, date):
+                return val.strftime('%Y-%m-%d')
+            return str(val)
+            
         for person in qs:
-            branch_name = person.branch.name if person.branch else \
-                          person.security_admin.name if person.security_admin else 'غير محدد'
-            writer.writerow([
-                person.military_number,
-                person.national_id or '',
-                person.full_name,
-                person.current_rank.name if person.current_rank else '',
-                person.current_status.name if person.current_status else '',
-                person.birth_date or '',
-                person.phone_number or '',
-                branch_name
-            ])
+            row_data = [get_val(person, f) for f in export_fields]
+            writer.writerow(row_data)
             
         return response
     
