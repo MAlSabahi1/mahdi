@@ -38,12 +38,12 @@ services:
   # Django Backend
   backend:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
     container_name: hrms_backend
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - ./backend:/app
+      - .:/app
       - static_volume:/app/staticfiles
       - media_volume:/app/media
     ports:
@@ -62,12 +62,12 @@ services:
   # Celery Worker (المرحلة 4: مهام غير متزامنة)
   celery_worker:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
     container_name: hrms_celery
     command: celery -A hrms worker --loglevel=info --concurrency=2
     volumes:
-      - ./backend:/app
+      - .:/app
       - media_volume:/app/media
     env_file:
       - .env
