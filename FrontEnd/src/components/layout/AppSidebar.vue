@@ -10,8 +10,7 @@
     },
   ]" @mouseenter="!isExpanded && (isHovered = true)" @mouseleave="isHovered = false">
     <div :class="[
-      'py-6 flex',
-      !isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start',
+      'py-6 flex items-center justify-center border-b border-gray-100 dark:border-gray-800 mb-6 -mx-5 px-5',
     ]">
       <router-link to="/">
         <img v-if="isExpanded || isHovered || isMobileOpen" src="/images/logo/logoBase.svg" alt="Logo" class="h-10 md:h-14 w-auto max-w-[220px]" />
@@ -52,7 +51,7 @@
                   ]">
                     <component :is="item.icon" />
                   </span>
-                  <span v-if="isExpanded || isHovered || isMobileOpen" class="menu-item-text">{{ $t(item.name) }}</span>
+                  <span v-if="isExpanded || isHovered || isMobileOpen" class="menu-item-text text-start flex-1">{{ $t(item.name) }}</span>
                   <ChevronDownIcon v-if="isExpanded || isHovered || isMobileOpen" :class="[
                     'ms-auto w-5 h-5 transition-transform duration-200',
                     {
@@ -77,7 +76,7 @@
                   ]">
                     <component :is="item.icon" />
                   </span>
-                  <span v-if="isExpanded || isHovered || isMobileOpen" class="menu-item-text">{{ $t(item.name) }}</span>
+                  <span v-if="isExpanded || isHovered || isMobileOpen" class="menu-item-text text-start flex-1">{{ $t(item.name) }}</span>
                 </router-link>
                 <transition @enter="startTransition" @after-enter="endTransition" @before-leave="startTransition"
                   @after-leave="endTransition">
