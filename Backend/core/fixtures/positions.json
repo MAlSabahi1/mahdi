@@ -1,0 +1,194 @@
+[
+  {
+    "model": "core.position",
+    "pk": 1,
+    "fields": {
+      "name": "وزير",
+      "level": 1,
+      "requires_rank": 1,
+      "allowed_categories": ["إداري"],
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.position",
+    "pk": 2,
+    "fields": {
+      "name": "نائب وزير",
+      "level": 2,
+      "requires_rank": 1,
+      "allowed_categories": ["إداري"],
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.position",
+    "pk": 3,
+    "fields": {
+      "name": "مستشار",
+      "level": 2,
+      "requires_rank": 2,
+      "allowed_categories": ["إداري"],
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.position",
+    "pk": 4,
+    "fields": {
+      "name": "وكيل قطاع",
+      "level": 3,
+      "requires_rank": 1,
+      "allowed_categories": ["إداري"],
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.position",
+    "pk": 5,
+    "fields": {
+      "name": "مدير عام",
+      "level": 4,
+      "requires_rank": 1,
+      "allowed_categories": ["إداري"],
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.position",
+    "pk": 6,
+    "fields": {
+      "name": "مدير مصلحة",
+      "level": 5,
+      "requires_rank": 2,
+      "allowed_categories": ["إداري"],
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.position",
+    "pk": 7,
+    "fields": {
+      "name": "مدير مكتب",
+      "level": 5,
+      "requires_rank": 3,
+      "allowed_categories": ["إداري"],
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.position",
+    "pk": 8,
+    "fields": {
+      "name": "مدير إدارة",
+      "level": 6,
+      "requires_rank": 3,
+      "allowed_categories": ["إداري"],
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.position",
+    "pk": 9,
+    "fields": {
+      "name": "نائب مدير إدارة",
+      "level": 7,
+      "requires_rank": 4,
+      "allowed_categories": ["إداري"],
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.position",
+    "pk": 10,
+    "fields": {
+      "name": "مدير إدارة أمن المديرية",
+      "level": 6,
+      "requires_rank": 4,
+      "allowed_categories": ["إداري"],
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.position",
+    "pk": 11,
+    "fields": {
+      "name": "رئيس قسم",
+      "level": 8,
+      "requires_rank": 5,
+      "allowed_categories": ["إداري"],
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.position",
+    "pk": 12,
+    "fields": {
+      "name": "مسؤول وحدة",
+      "level": 9,
+      "requires_rank": null,
+      "allowed_categories": ["إداري"],
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.position",
+    "pk": 13,
+    "fields": {
+      "name": "قائد كتيبة",
+      "level": 6,
+      "requires_rank": 3,
+      "allowed_categories": ["ميداني"],
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.position",
+    "pk": 14,
+    "fields": {
+      "name": "قائد سرية",
+      "level": 7,
+      "requires_rank": 4,
+      "allowed_categories": ["ميداني"],
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.position",
+    "pk": 15,
+    "fields": {
+      "name": "ضابط أمن",
+      "level": 8,
+      "requires_rank": null,
+      "allowed_categories": ["ميداني"],
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.position",
+    "pk": 16,
+    "fields": {
+      "name": "مدير المركز",
+      "level": 7,
+      "requires_rank": 4,
+      "allowed_categories": ["إداري", "ميداني"],
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]

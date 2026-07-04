@@ -75,6 +75,14 @@ class Permission(TimeStampedModel):
     requires_dual_auth = models.BooleanField(
         default=False, verbose_name=_('تتطلب تفويض مزدوج'),
     )
+    group = models.ForeignKey(
+        'authorization.PermissionGroup',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='permissions',
+        verbose_name=_('مجموعة الصلاحيات'),
+        help_text=_('يُحدد تلقائياً بواسطة seed_permissions حسب الوحدة (module)'),
+    )
 
     class Meta:
         db_table = 'authorization_permission'

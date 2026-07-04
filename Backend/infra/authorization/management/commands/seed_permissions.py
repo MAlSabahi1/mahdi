@@ -14,8 +14,12 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from infra.authorization.models.permission import Permission
+from infra.authorization.models.permission_group import PermissionGroup
+from infra.authorization.models.field_permission import FieldPermission
 from infra.authorization.models.role import Role, RolePermission
-from infra.authorization.registry.permissions import Perms, PERMISSION_LABELS
+from infra.authorization.registry.permissions import (
+    Perms, PERMISSION_LABELS, PERMISSION_GROUPS, FIELD_PERMISSIONS,
+)
 
 
 # ══════════════════════════════════════════════════════════════
@@ -138,15 +142,57 @@ class Command(BaseCommand):
         self.stdout.write(self.style.MIGRATE_HEADING(' 🔑 زرع الصلاحيات الشاملة'))
         self.stdout.write(self.style.MIGRATE_HEADING('═' * 60))
 
+        # ── 0. زرع مجموعات الصلاحيات (Permission Groups) ──
+        self.stdout.write(self.style.MIGRATE_HEADING('── 0. مجموعات الصلاحيات ──'))
+        groups_created = 0
+        groups_updated = 0
+        
+        group_objects = {}
+        for code, (name, icon, order) in PERMISSION_GROUPS.items():
+            group, created = PermissionGroup.objects.update_or_create(
+                code=code,
+                defaults={
+                    'name': name,
+                    'icon': icon,
+                    'display_order': order,
+                    'is_active': True,
+                }
+            )
+            group_objects[code] = group
+            if created:
+                groups_created += 1
+            else:
+                groups_updated += 1
+                
+        self.stdout.write(
+            f'  ✅ المجموعات: {groups_created} جديدة، {groups_updated} محدّثة\n'
+        )
+
         # ── 1. زرع / تحديث الصلاحيات ──
+        self.stdout.write(self.style.MIGRATE_HEADING('── 1. الصلاحيات ──'))
         created_count = 0
         updated_count = 0
 
-        for code, (label, category) in PERMISSION_LABELS.items():
+        for code, details in PERMISSION_LABELS.items():
             parts = code.split('.')
+            if len(parts) < 3:
+                continue
+
             module = parts[0]
-            action = parts[1] if len(parts) > 1 else 'view'
-            scope = parts[2] if len(parts) > 2 else 'all'
+            action = parts[1]
+            scope = parts[2]
+            
+            if isinstance(details, tuple) and len(details) == 2:
+                label, category = details
+            elif isinstance(details, dict):
+                label = details.get('label', '')
+                category = details.get('category', 'action')
+            else:
+                label = str(details)
+                category = 'action'
+
+            # تحديد المجموعة بناءً على الوحدة (module)
+            group = group_objects.get(module)
 
             perm, created = Permission.objects.update_or_create(
                 code=code,
@@ -156,6 +202,7 @@ class Command(BaseCommand):
                     'scope': scope,
                     'label': label,
                     'category': category,
+                    'group': group,
                     'is_active': True,
                     'is_system': True,
                 }
@@ -167,10 +214,11 @@ class Command(BaseCommand):
 
         self.stdout.write(
             f'  ✅ صلاحيات: {created_count} جديدة، {updated_count} محدّثة '
-            f'(المجموع: {Permission.objects.filter(is_active=True).count()})'
+            f'(المجموع: {Permission.objects.filter(is_active=True).count()})\n'
         )
 
         # ── 2. تعيين الصلاحيات للأدوار ──
+        self.stdout.write(self.style.MIGRATE_HEADING('── 2. تعيين الصلاحيات للأدوار ──'))
         reset_roles = options.get('reset_roles', False)
 
         for role_code, perm_codes in ROLE_PERMISSIONS.items():
@@ -215,5 +263,31 @@ class Command(BaseCommand):
                 self.stdout.write(
                     f'  🔧 {role.name}: +{assigned} جديدة (المجموع: {total})'
                 )
+
+        # ── 3. زرع الحقول الحساسة (Field Permissions) ──
+        self.stdout.write('\n' + self.style.MIGRATE_HEADING('── 3. الحقول الحساسة ──'))
+        fp_created = 0
+        fp_updated = 0
+        
+        for (module, field_name), (label, view_perm, edit_perm, is_sensitive) in FIELD_PERMISSIONS.items():
+            fp, created = FieldPermission.objects.update_or_create(
+                module=module,
+                field_name=field_name,
+                defaults={
+                    'label': label,
+                    'view_permission': view_perm,
+                    'edit_permission': edit_perm,
+                    'is_sensitive': is_sensitive,
+                    'is_active': True,
+                }
+            )
+            if created:
+                fp_created += 1
+            else:
+                fp_updated += 1
+                
+        self.stdout.write(
+            f'  ✅ قيود الحقول: {fp_created} جديدة، {fp_updated} محدّثة'
+        )
 
         self.stdout.write(self.style.SUCCESS('\n✅ تم بنجاح!'))

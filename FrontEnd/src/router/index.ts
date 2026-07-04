@@ -118,6 +118,26 @@ const router = createRouter({
       },
     },
     {
+      path: '/roles/permission-groups',
+      name: 'permission-groups',
+      component: () => import('@/views/UserManagement/PermissionGroups.vue'),
+      meta: {
+        title: 'مجموعات الصلاحيات',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/roles/permissions',
+      name: 'permissions-list',
+      component: () => import('@/views/UserManagement/Permissions.vue'),
+      meta: {
+        title: 'الصلاحيات المباشرة',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
       path: '/roles/create',
       name: 'role-create',
       component: () => import('@/views/UserManagement/RoleEditor.vue'),
