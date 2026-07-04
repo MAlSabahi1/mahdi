@@ -33,7 +33,7 @@
           </svg>
           <svg
             v-else
-            width="16"
+            width="100"
             height="12"
             viewBox="0 0 16 12"
             fill="none"
@@ -56,8 +56,9 @@
         <div class="relative hidden lg:block" ref="systemDropdownRef">
           <button
             @click="isSystemOpen = !isSystemOpen"
-            class="flex items-center gap-2 py-1.5 text-gray-800 dark:text-white/90 hover:text-brand-600 dark:hover:text-brand-400 transition-colors duration-200 cursor-pointer"
+            class="flex items-center justify-between min-w-[240px] gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 dark:bg-gray-800 dark:border-gray-700 dark:text-white/90 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 cursor-pointer"
           >
+            <div class="flex items-center gap-2">
             <!-- Grid Icon 㗊 -->
             <svg class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <rect x="3" y="3" width="7" height="7" rx="1.5" />
@@ -69,9 +70,11 @@
             <!-- Active System Name -->
             <span class="text-sm font-semibold">{{ $t(activeSystem.nameKey) }}</span>
 
+            </div>
+
             <!-- Caret Down Icon ▼ -->
             <svg
-              class="h-2.5 w-2.5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ms-1"
+              class="h-4 w-4 text-gray-500 dark:text-gray-400 transition-transform duration-200"
               viewBox="0 0 24 24"
               fill="currentColor"
               :class="isSystemOpen ? 'rotate-180 text-brand-500' : ''"
