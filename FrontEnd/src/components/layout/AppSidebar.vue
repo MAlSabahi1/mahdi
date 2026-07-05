@@ -394,6 +394,14 @@ const menuGroups = computed(() => {
             name: "nav.advanced_policy_module",
             subItems: [
               {
+                name: "مجموعات الصلاحيات",
+                path: "/roles/permission-groups",
+              },
+              {
+                name: "الصلاحيات المباشرة",
+                path: "/roles/permissions",
+              },
+              {
                 name: "nav.roles",
                 path: "/roles",
               },
