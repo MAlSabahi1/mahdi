@@ -1,369 +1,325 @@
 <template>
   <admin-layout>
-    <!-- Breadcrumb -->
-    <PageBreadcrumb pageTitle="دليل الأفراد والضباط الرئيسي (Personnel Master Directory Grid)" />
+    <PageBreadcrumb :pageTitle="$t?.('personnel.title') || 'شؤون الأفراد'" />
 
-    <div class="space-y-4 text-start" dir="rtl">
-      
-      <!-- Top Action Bar -->
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white dark:bg-white/[0.03] p-4 rounded-xl border border-gray-200 dark:border-gray-800">
-        <!-- Smart Search Shortcut Indicator -->
-        <div class="flex items-center gap-2">
-          <button
-            @click="searchOpen = true"
-            class="flex items-center gap-2 px-3 py-1.5 text-xs text-gray-500 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-100 transition-colors w-64 shadow-theme-xs cursor-pointer"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <span class="flex-1 text-right">البحث الشامل في السجل...</span>
-            <kbd class="inline-flex items-center gap-0.5 px-1.5 font-mono text-[9px] text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-theme-xs">
-              ⌘F
-            </kbd>
-          </button>
+    <div class="space-y-5 text-start">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!-- Stats + Add Button Row                                  -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1 w-full">
+          <div class="rounded-xl border border-gray-200 bg-white p-3.5 dark:border-gray-800 dark:bg-white/[0.03]">
+            <div class="flex items-center gap-3">
+              <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 dark:bg-brand-500/10">
+                <svg class="h-4.5 w-4.5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <div>
+                <p class="text-theme-xs text-gray-500 dark:text-gray-400">{{ $t?.('personnel.total') || 'الإجمالي' }}</p>
+                <p class="text-base font-bold text-gray-900 dark:text-white">{{ personnelStore.totalCount }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="rounded-xl border border-gray-200 bg-white p-3.5 dark:border-gray-800 dark:bg-white/[0.03]">
+            <div class="flex items-center gap-3">
+              <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-success-50 dark:bg-success-500/10">
+                <svg class="h-4.5 w-4.5 text-success-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p class="text-theme-xs text-gray-500 dark:text-gray-400">{{ $t?.('personnel.active') || 'موجود' }}</p>
+                <p class="text-base font-bold text-success-600 dark:text-success-400">{{ activeCount }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="rounded-xl border border-gray-200 bg-white p-3.5 dark:border-gray-800 dark:bg-white/[0.03]">
+            <div class="flex items-center gap-3">
+              <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-warning-50 dark:bg-warning-500/10">
+                <svg class="h-4.5 w-4.5 text-warning-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div>
+                <p class="text-theme-xs text-gray-500 dark:text-gray-400">{{ $t?.('personnel.incomplete') || 'بيانات ناقصة' }}</p>
+                <p class="text-base font-bold text-warning-600 dark:text-warning-400">{{ incompleteCount }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="rounded-xl border border-gray-200 bg-white p-3.5 dark:border-gray-800 dark:bg-white/[0.03]">
+            <div class="flex items-center gap-3">
+              <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-error-50 dark:bg-error-500/10">
+                <svg class="h-4.5 w-4.5 text-error-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+              </div>
+              <div>
+                <p class="text-theme-xs text-gray-500 dark:text-gray-400">{{ $t?.('personnel.inactive') || 'غير موجود' }}</p>
+                <p class="text-base font-bold text-error-600 dark:text-error-400">{{ inactiveCount }}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-          <button
-            @click="exportData"
-            class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3.5 py-1.5 text-xs font-bold text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors cursor-pointer"
-          >
-            <svg class="h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            تصدير الكشف (CSV)
-          </button>
-          
-          <button
-            @click="showFilters = !showFilters"
-            class="flex items-center gap-2 rounded-lg border px-3.5 py-1.5 text-xs font-bold transition-colors cursor-pointer"
-            :class="showFilters || hasActiveFilters ? 'border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-400' : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800'"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-            تصفية متقدمة
-          </button>
+        <!-- Add Button moved to DataTable toolbar -->
+      </div>
 
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!-- DataTable Component                                     -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <DataTable
+        :columns="tableColumns"
+        :data="personnelStore.records"
+        row-key="military_number"
+        :loading="personnelStore.loading"
+        :error="personnelStore.error"
+        :current-page="personnelStore.currentPage"
+        :total-pages="personnelStore.totalPages"
+        :total-count="personnelStore.totalCount"
+        :page-size="pageSize"
+        :has-actions="true"
+        actions-width="90px"
+        :has-filters="true"
+        :active-filter-count="activeFilterCount"
+        :search-placeholder="$t?.('personnel.search_placeholder') || 'بحث بالاسم، الرقم العسكري...'"
+        :loading-text="$t?.('common.loading_data') || 'جاري تحميل السجل الموحد...'"
+        :empty-title="$t?.('common.empty_registry') || 'السجل فارغ'"
+        :empty-description="$t?.('common.empty_registry_desc') || 'لم يتم العثور على أفراد يطابقون معايير البحث الحالية.'"
+        @search="onSearch"
+        @refresh="loadPersonnel(personnelStore.currentPage)"
+        @export="exportData"
+        @change-page="goToPage"
+        @change-page-size="changePageSize"
+      >
+        <!-- ── Toolbar Actions Slot ──────────────────────────── -->
+        <template #toolbar-actions>
           <RouterLink
             to="/personnel/create"
-            class="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-theme-xs hover:bg-brand-700 transition-colors cursor-pointer"
+            class="flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-theme-sm font-bold text-white shadow-theme-xs hover:bg-brand-600 hover:shadow-theme-sm hover:-translate-y-0.5 transition-all duration-200 ease-in-out cursor-pointer whitespace-nowrap shrink-0"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
             </svg>
-            إضافة منتسب جديد
+            {{ $t?.('personnel.add_personnel') || 'إضافة منتسب' }}
           </RouterLink>
-        </div>
-      </div>
+        </template>
 
-      <!-- Advanced Filters Collapsible -->
-      <div v-show="showFilters" class="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-theme-xs">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label class="mb-1.5 block text-xs font-bold text-gray-500 dark:text-gray-400">الرتبة العسكرية</label>
-            <select v-model="filters.current_rank" class="block w-full rounded-lg border border-gray-200 bg-white p-2 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-800 dark:bg-gray-900 dark:text-white">
-              <option :value="null">الكل</option>
-              <option v-for="r in coreStore.ranks" :key="r.id" :value="r.id">{{ r.name }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="mb-1.5 block text-xs font-bold text-gray-500 dark:text-gray-400">تصنيف الحالة الوظيفية</label>
-            <select v-model="filters.current_status" class="block w-full rounded-lg border border-gray-200 bg-white p-2 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-800 dark:bg-gray-900 dark:text-white">
-              <option :value="null">الكل</option>
-              <option v-for="s in coreStore.statuses" :key="s.id" :value="s.id">{{ s.name }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="mb-1.5 block text-xs font-bold text-gray-500 dark:text-gray-400">المحافظة / النطاق الجغرافي</label>
-            <select v-model="filters.governorate" class="block w-full rounded-lg border border-gray-200 bg-white p-2 text-xs text-gray-900 focus:border-brand-500 dark:border-gray-800 dark:bg-gray-900 dark:text-white">
-              <option :value="null">الكل</option>
-              <option v-for="g in coreStore.governorates" :key="g.id" :value="g.id">{{ g.name }}</option>
-            </select>
-          </div>
-        </div>
-        <div class="mt-4 flex justify-end gap-3 border-t border-gray-150 dark:border-gray-800 pt-3">
-          <button @click="clearFilters" class="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer">إلغاء الفرز</button>
-          <button @click="loadPersonnel(1)" class="rounded-lg bg-brand-600 px-4 py-1.5 text-xs font-bold text-white shadow-theme-xs hover:bg-brand-700 transition-colors cursor-pointer">تطبيق الفرز</button>
-        </div>
-      </div>
-
-      <!-- Excel-like Spreadsheet DataGrid -->
-      <div class="relative bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-xs overflow-hidden">
-        
-        <!-- Loading overlay -->
-        <div v-if="personnelStore.loading && personnelStore.records.length === 0" class="flex justify-center items-center py-16">
-          <svg class="h-7 w-7 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-          </svg>
-          <span class="mr-2 text-xs font-bold text-gray-500">جاري تحميل السجل الموحد...</span>
-        </div>
-
-        <div v-else-if="personnelStore.error" class="p-8 text-center text-xs font-bold text-red-500">
-          {{ personnelStore.error }}
-        </div>
-
-        <div v-else-if="personnelStore.records.length === 0" class="flex flex-col items-center justify-center py-16 px-4">
-          <div class="mb-4 rounded-full bg-gray-50 dark:bg-gray-900 p-4 shadow-theme-xs border border-gray-100 dark:border-gray-800">
-            <svg class="h-10 w-10 text-gray-400 dark:text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4" />
-            </svg>
-          </div>
-          <h3 class="text-sm font-black text-gray-900 dark:text-white">السجل فارغ تماماً</h3>
-          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 text-center max-w-sm">لم يتم العثور على أفراد يطابقون معايير البحث الحالية.</p>
-        </div>
-
-        <!-- Excel Table Grid Container -->
-        <div v-else class="overflow-x-auto w-full">
-          <table class="w-full text-right border-collapse table-fixed text-[11px] font-medium min-w-[1400px]">
-            
-            <!-- Excel Header Groupings -->
-            <thead>
-              <tr class="bg-gray-100 dark:bg-gray-950 text-gray-600 dark:text-gray-400 border-b border-gray-250 dark:border-gray-800">
-                <!-- Pinned Column space (right pin in RTL) -->
-                <th class="sticky right-0 z-20 bg-gray-100 dark:bg-gray-950 border-l border-gray-250 dark:border-gray-800 px-3 py-1.5 w-[110px] text-center font-bold">العمليات</th>
-                
-                <th colspan="4" class="border-l border-gray-250 dark:border-gray-800 text-center font-bold px-3 py-1.5 bg-gray-150/70 dark:bg-gray-900/60">البيانات الأساسية للمنتسب</th>
-                <th colspan="5" class="border-l border-gray-250 dark:border-gray-800 text-center font-bold px-3 py-1.5 bg-gray-100 dark:bg-gray-950/70">الرتبة والوحدة والتنظيم</th>
-                <th colspan="3" class="border-l border-gray-250 dark:border-gray-800 text-center font-bold px-3 py-1.5 bg-gray-150/70 dark:bg-gray-900/60">الحالة الوظيفية والتعليمية</th>
-                <th colspan="2" class="text-center font-bold px-3 py-1.5 bg-gray-100 dark:bg-gray-950/70">جودة وتاريخ السجل</th>
-              </tr>
-              
-              <!-- Column Fields -->
-              <tr class="bg-gray-50 dark:bg-gray-900/40 text-gray-500 dark:text-gray-400 border-b border-gray-250 dark:border-gray-800 text-[10px]">
-                <!-- Pinned Actions header cell -->
-                <th class="sticky right-0 z-20 bg-gray-50 dark:bg-gray-900/80 border-l border-gray-250 dark:border-gray-800 px-3 py-2 w-[110px] text-center">تعديل وملف</th>
-                
-                <!-- Basic Info -->
-                <th class="border-l border-gray-200 dark:border-gray-800 px-3 py-2 w-[160px]">الاسم الكامل</th>
-                <th class="border-l border-gray-200 dark:border-gray-800 px-3 py-2 w-[90px]">الرقم العسكري</th>
-                <th class="border-l border-gray-200 dark:border-gray-800 px-3 py-2 w-[110px]">الرقم الوطني</th>
-                <th class="border-l border-gray-250 dark:border-gray-800 px-3 py-2 w-[100px]">رقم الهاتف</th>
-
-                <!-- Rank & Unit -->
-                <th class="border-l border-gray-200 dark:border-gray-800 px-3 py-2 w-[90px]">الرتبة الحالية</th>
-                <th class="border-l border-gray-200 dark:border-gray-800 px-3 py-2 w-[110px]">الرتبة القادمة</th>
-                <th class="border-l border-gray-200 dark:border-gray-800 px-3 py-2 w-[140px]">المنصب / المسمى</th>
-                <th class="border-l border-gray-200 dark:border-gray-800 px-3 py-2 w-[130px]">الإدارة / المديرية</th>
-                <th class="border-l border-gray-250 dark:border-gray-800 px-3 py-2 w-[120px]">القسم / الفرع</th>
-
-                <!-- Status & Qualification -->
-                <th class="border-l border-gray-200 dark:border-gray-800 px-3 py-2 w-[95px]">تصنيف الحالة</th>
-                <th class="border-l border-gray-200 dark:border-gray-800 px-3 py-2 w-[100px]">نوع الحالة</th>
-                <th class="border-l border-gray-250 dark:border-gray-800 px-3 py-2 w-[90px]">المؤهل العلمي</th>
-
-                <!-- Quality & Date -->
-                <th class="border-l border-gray-200 dark:border-gray-800 px-3 py-2 w-[90px]">جودة السجل %</th>
-                <th class="px-3 py-2 w-[100px]">تاريخ الالتحاق</th>
-              </tr>
-            </thead>
-
-            <!-- Excel Cells Grid -->
-            <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
-              <tr 
-                v-for="person in personnelStore.records" 
-                :key="person.military_number"
-                class="hover:bg-brand-50/20 dark:hover:bg-brand-500/5 transition-colors group"
-              >
-                <!-- Pinned Action Column (RTL sticky right) -->
-                <td class="sticky right-0 z-10 bg-white dark:bg-[#1a1a1a] border-l border-gray-250 dark:border-gray-800 px-2 py-1.5 w-[110px] text-center flex items-center justify-center gap-1.5 h-full">
-                  <RouterLink
-                    :to="`/personnel/${person.military_number}`"
-                    class="p-1 rounded bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-500 hover:text-brand-600 hover:bg-brand-50 transition-all cursor-pointer"
-                    title="الملف"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                      <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-                    </svg>
-                  </RouterLink>
-                  <RouterLink
-                    :to="`/personnel/${person.military_number}/edit`"
-                    class="p-1 rounded bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-all cursor-pointer"
-                    title="تعديل"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                    </svg>
-                  </RouterLink>
-                </td>
-
-                <!-- Basic Info Cells -->
-                <td class="border-l border-gray-200 dark:border-gray-800 px-3 py-2 text-gray-900 dark:text-gray-100 font-bold truncate">
-                  {{ person.full_name }}
-                </td>
-                <td class="border-l border-gray-200 dark:border-gray-800 px-3 py-2 font-mono text-[10px] text-gray-500 dark:text-gray-400">
-                  {{ person.military_number }}
-                </td>
-                <td class="border-l border-gray-200 dark:border-gray-800 px-3 py-2 font-mono text-[10px] text-gray-500 dark:text-gray-400">
-                  {{ person.national_id || '-' }}
-                </td>
-                <td class="border-l border-gray-250 dark:border-gray-800 px-3 py-2 font-mono text-[10px] text-gray-500 dark:text-gray-400">
-                  {{ person.phone_number || '-' }}
-                </td>
-
-                <!-- Rank & Unit Cells -->
-                <td class="border-l border-gray-200 dark:border-gray-800 px-3 py-2 text-gray-700 dark:text-gray-300">
-                  {{ person.rank_name || 'بدون رتبة' }}
-                </td>
-                <td class="border-l border-gray-200 dark:border-gray-800 px-3 py-2 text-warning-600 dark:text-warning-400 font-semibold">
-                  {{ person.pending_rank_name || '-' }}
-                </td>
-                <td class="border-l border-gray-200 dark:border-gray-800 px-3 py-2 text-gray-700 dark:text-gray-300 truncate">
-                  {{ person.position_name || 'بدون منصب' }}
-                </td>
-                <td class="border-l border-gray-200 dark:border-gray-800 px-3 py-2 text-gray-700 dark:text-gray-300 truncate">
-                  {{ person.security_admin_name || '-' }}
-                </td>
-                <td class="border-l border-gray-250 dark:border-gray-800 px-3 py-2 text-gray-700 dark:text-gray-300 truncate">
-                  {{ person.branch_name || '-' }}
-                </td>
-
-                <!-- Status Cells -->
-                <td class="border-l border-gray-200 dark:border-gray-800 px-2 py-1.5">
-                  <span
-                    class="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[9px] font-bold"
-                    :class="getStatusColor(person.status_classification)"
-                  >
-                    <span class="h-1.5 w-1.5 rounded-full" :class="getStatusDotColor(person.status_classification)"></span>
-                    {{ person.status_classification === 'active' ? 'موجود' : 'غير موجود' }}
-                  </span>
-                </td>
-                <td class="border-l border-gray-200 dark:border-gray-800 px-3 py-2 text-gray-500 dark:text-gray-400 truncate">
-                  {{ person.status_name || '-' }}
-                </td>
-                <td class="border-l border-gray-250 dark:border-gray-800 px-3 py-2 text-gray-500 dark:text-gray-400 truncate">
-                  {{ person.qualification_name || '-' }}
-                </td>
-
-                <!-- Quality & Date Cells -->
-                <td class="border-l border-gray-200 dark:border-gray-800 px-3 py-2 font-bold" :class="getQualityScoreTextColor(person.data_quality_score)">
-                  {{ person.data_quality_score }}%
-                </td>
-                <td class="px-3 py-2 font-mono text-[10px] text-gray-500 dark:text-gray-400">
-                  {{ person.join_date || '-' }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Excel Grid Footer & Pagination -->
-        <div v-if="!personnelStore.loading && personnelStore.records.length > 0" class="border-t border-gray-200 dark:border-gray-800 px-4 py-3 bg-gray-50 dark:bg-gray-950/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-xs font-bold text-gray-500">
-          <p class="text-center sm:text-right">
-            الصفحة <span class="text-gray-900 dark:text-white">{{ personnelStore.currentPage }}</span> من <span class="text-gray-900 dark:text-white">{{ personnelStore.totalPages }}</span>
-            (إجمالي: {{ personnelStore.totalCount }} منتسب)
-          </p>
-          <div class="flex justify-center gap-1.5">
-            <button
-              :disabled="personnelStore.currentPage <= 1"
-              @click="goToPage(personnelStore.currentPage - 1)"
-              class="px-2.5 py-1 rounded border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors cursor-pointer"
-            >
-              السابق
-            </button>
-            <button
-              :disabled="personnelStore.currentPage >= personnelStore.totalPages"
-              @click="goToPage(personnelStore.currentPage + 1)"
-              class="px-2.5 py-1 rounded border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors cursor-pointer"
-            >
-              التالي
-            </button>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Smart Search Overlay Drawer (⌘F Drawer) -->
-    <div v-if="searchOpen" class="fixed inset-0 z-50 overflow-hidden flex items-start justify-center pt-24" role="dialog" aria-modal="true">
-      <!-- Backdrop -->
-      <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" @click="searchOpen = false"></div>
-
-      <!-- Drawer Content -->
-      <div class="relative bg-white dark:bg-gray-900 rounded-2xl max-w-2xl w-full mx-4 overflow-hidden border border-gray-200 dark:border-gray-800 shadow-2xl transition-all">
-        <!-- Input section -->
-        <div class="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center gap-3">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            v-model="smartSearchQuery"
-            @input="handleSmartSearch"
-            type="text"
-            placeholder="ابحث بالاسم، الرقم العسكري، أو الرقم الوطني..."
-            class="w-full text-sm bg-transparent border-0 outline-none text-gray-900 dark:text-white placeholder-gray-400"
-            ref="smartSearchInput"
-          />
-          <button @click="searchOpen = false" class="text-xs text-gray-400 hover:text-gray-600 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg cursor-pointer">
-            إغلاق (Esc)
-          </button>
-        </div>
-
-        <!-- Results section -->
-        <div class="max-h-96 overflow-y-auto divide-y divide-gray-150 dark:divide-gray-850">
-          <div v-if="smartSearchResults.length === 0" class="p-8 text-center text-xs text-gray-400">
-            {{ smartSearchQuery ? 'لا توجد نتائج مطابقة' : 'اكتب للبحث في قاعدة البيانات الموحدة...' }}
-          </div>
-          
-          <div
-            v-for="res in smartSearchResults"
-            :key="res.military_number"
-            class="p-4 hover:bg-gray-50 dark:hover:bg-gray-950 flex items-center justify-between cursor-pointer"
-            @click="selectSearchResult(res)"
-          >
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-xs shrink-0">
-                {{ res.rank_name ? res.rank_name[0] : 'ف' }}
-              </div>
-              <div class="text-right">
-                <h4 class="text-xs font-bold text-gray-900 dark:text-white">{{ res.full_name }}</h4>
-                <p class="text-[10px] text-gray-400 mt-0.5">{{ res.rank_name || 'بدون رتبة' }} • الرقم العسكري: {{ res.military_number }}</p>
-              </div>
+        <!-- ── Filters Slot ──────────────────────────────────── -->
+        <template #filters>
+          <div class="p-5">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <BaseSelect
+                v-model="filters.current_rank"
+                :label="$t?.('personnel.military_rank') || 'الرتبة العسكرية'"
+                :placeholder="$t?.('personnel.all_ranks') || 'جميع الرتب'"
+                :options="coreStore.ranks"
+              />
+              <BaseSelect
+                v-model="filters.current_status"
+                :label="$t?.('personnel.employment_status') || 'الحالة الوظيفية'"
+                :placeholder="$t?.('personnel.all_statuses') || 'جميع الحالات'"
+                :options="coreStore.statuses"
+              />
+              <BaseSelect
+                v-model="filters.governorate"
+                :label="$t?.('personnel.governorate') || 'المحافظة'"
+                :placeholder="$t?.('personnel.all_governorates') || 'جميع المحافظات'"
+                :options="coreStore.governorates"
+              />
             </div>
-            
-            <div class="text-left">
-              <span class="text-[10px] font-mono text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
-                {{ res.security_admin_name || 'غير محدد' }}
+            <div class="mt-4 flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-800">
+              <span v-if="hasActiveFilters" class="text-theme-xs text-brand-600 dark:text-brand-400 font-medium">
+                {{ activeFilterCount }} {{ $t?.('personnel.active_filters') || 'فلتر نشط' }}
               </span>
+              <span v-else></span>
+              <div class="flex items-center gap-2">
+                <button @click="clearFilters" class="rounded-lg px-4 py-2 text-theme-sm font-medium text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-colors cursor-pointer">
+                  {{ $t?.('common.clear_all') || 'مسح الكل' }}
+                </button>
+                <button @click="loadPersonnel(1)" class="rounded-lg bg-brand-500 px-5 py-2 text-theme-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 transition-colors cursor-pointer">
+                  {{ $t?.('common.apply') || 'تطبيق' }}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+        </template>
 
+        <!-- ── Empty Action Slot ─────────────────────────────── -->
+        <template #empty-action>
+          <RouterLink
+            to="/personnel/create"
+            class="mt-4 rounded-lg bg-brand-500 px-4 py-2 text-theme-sm font-medium text-white hover:bg-brand-600 transition-colors"
+          >
+            {{ $t?.('personnel.add_first_personnel') || 'إضافة أول منتسب' }}
+          </RouterLink>
+        </template>
+
+        <!-- ── Actions Column ────────────────────────────────── -->
+        <template #actions="{ row }">
+          <RouterLink
+            :to="`/personnel/${row.military_number}`"
+            class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors cursor-pointer p-1"
+            :title="$t?.('common.view') || 'عرض'"
+          >
+            <svg class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </RouterLink>
+          <RouterLink
+            :to="`/personnel/${row.military_number}/edit`"
+            class="text-gray-400 hover:text-blue-600 dark:text-gray-500 dark:hover:text-blue-400 transition-colors cursor-pointer p-1"
+            :title="$t?.('common.edit') || 'تعديل'"
+          >
+            <svg class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </RouterLink>
+          <button
+            class="text-gray-400 hover:text-error-600 dark:text-gray-500 dark:hover:text-error-400 transition-colors cursor-pointer p-1"
+            :title="$t?.('common.delete') || 'حذف'"
+          >
+            <svg class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </template>
+
+        <!-- ── Custom Cell: Full Name ────────────────────────── -->
+        <template #cell-full_name="{ row }">
+          <div class="flex items-center gap-3">
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 font-bold text-theme-xs dark:bg-brand-500/10 dark:text-brand-400">
+              {{ row.full_name ? row.full_name.charAt(0) : 'ف' }}
+            </div>
+            <div>
+              <span class="block font-medium text-gray-800 text-theme-sm dark:text-white/90">{{ row.full_name }}</span>
+              <span v-if="row.rank_name" class="block text-gray-500 text-theme-xs dark:text-gray-400">{{ row.rank_name }}</span>
+            </div>
+          </div>
+        </template>
+
+        <!-- ── Custom Cell: Military Number ──────────────────── -->
+        <template #cell-military_number="{ value }">
+          <p class="text-gray-500 text-theme-sm dark:text-gray-400 font-mono">{{ value }}</p>
+        </template>
+
+        <!-- ── Custom Cell: National ID ──────────────────────── -->
+        <template #cell-national_id="{ value }">
+          <p class="text-gray-500 text-theme-sm dark:text-gray-400 font-mono">{{ value || '—' }}</p>
+        </template>
+
+        <!-- ── Custom Cell: Phone ────────────────────────────── -->
+        <template #cell-phone_number="{ value }">
+          <p class="text-gray-500 text-theme-sm dark:text-gray-400 font-mono">{{ value || '—' }}</p>
+        </template>
+
+        <!-- ── Custom Cell: Rank ─────────────────────────────── -->
+        <template #cell-rank_name="{ value }">
+          <p class="text-gray-800 text-theme-sm dark:text-white/90 font-medium">{{ value || $t?.('personnel.no_rank') || 'بدون رتبة' }}</p>
+        </template>
+
+        <!-- ── Custom Cell: Status Classification ────────────── -->
+        <template #cell-status_classification="{ row }">
+          <span
+            :class="[
+              'rounded-full px-2 py-0.5 text-theme-xs font-medium inline-flex items-center gap-1.5',
+              row.status_classification === 'active'
+                ? 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-500'
+                : 'bg-error-50 text-error-700 dark:bg-error-500/15 dark:text-error-500',
+            ]"
+          >
+            <span
+              class="h-1.5 w-1.5 rounded-full"
+              :class="row.status_classification === 'active' ? 'bg-success-500' : 'bg-error-500'"
+            ></span>
+            {{ row.status_classification === 'active' ? ($t?.('personnel.active') || 'موجود') : ($t?.('personnel.inactive') || 'غير موجود') }}
+          </span>
+        </template>
+
+        <!-- ── Custom Cell: Quality Score ─────────────────────── -->
+        <template #cell-data_quality_score="{ value }">
+          <div class="flex items-center gap-2">
+            <div class="h-1.5 w-14 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+              <div
+                class="h-full rounded-full transition-all duration-500"
+                :class="getQualityBarColor(value)"
+                :style="{ width: value + '%' }"
+              ></div>
+            </div>
+            <span class="text-theme-xs font-semibold" :class="getQualityTextColor(value)">{{ value }}%</span>
+          </div>
+        </template>
+
+        <!-- ── Custom Cell: Join Date ─────────────────────────── -->
+        <template #cell-join_date="{ value }">
+          <p class="text-gray-500 text-theme-sm dark:text-gray-400 font-mono">{{ value || '—' }}</p>
+        </template>
+      </DataTable>
+
+    </div>
   </admin-layout>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, computed, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
+import DataTable from '@/components/tables/DataTable.vue'
+import BaseSelect from '@/components/common/BaseSelect.vue'
+import type { DataTableColumn } from '@/components/tables/DataTable.vue'
 import { usePersonnelStore } from '@/stores/personnel'
 import { useCoreStore } from '@/stores/core'
 import Swal from 'sweetalert2'
 import api from '@/lib/api'
 
+const { t } = useI18n()
 const personnelStore = usePersonnelStore()
 const coreStore = useCoreStore()
 
-const showFilters = ref(false)
-const searchOpen = ref(false)
-const smartSearchQuery = ref('')
-const smartSearchResults = ref<any[]>([])
-const smartSearchInput = ref<HTMLInputElement | null>(null)
+const pageSize = ref(50)
+const searchText = ref('')
 
+// ── Table Column Definitions ───────────────────────────────
+const tableColumns = computed<DataTableColumn[]>(() => [
+  { key: 'full_name', label: t('personnel.full_name') || 'الاسم الكامل' },
+  { key: 'military_number', label: t('personnel.military_number') || 'الرقم العسكري' },
+  { key: 'national_id', label: t('personnel.national_id') || 'الرقم الوطني' },
+  { key: 'phone_number', label: t('personnel.phone_number') || 'رقم الهاتف' },
+  { key: 'rank_name', label: t('personnel.rank') || 'الرتبة' },
+  { key: 'position_name', label: t('personnel.position') || 'المنصب' },
+  { key: 'security_admin_name', label: t('personnel.administration') || 'الإدارة' },
+  { key: 'branch_name', label: t('personnel.branch') || 'الفرع' },
+  { key: 'status_classification', label: t('personnel.classification') || 'التصنيف' },
+  { key: 'status_name', label: t('personnel.status_type') || 'نوع الحالة' },
+  { key: 'qualification_name', label: t('personnel.qualification') || 'المؤهل' },
+  { key: 'data_quality_score', label: t('personnel.quality') || 'الجودة' },
+  { key: 'join_date', label: t('personnel.join_date') || 'تاريخ الالتحاق' },
+])
+
+
+// ── Filters ────────────────────────────────────────────────
 const filters = ref({
   current_rank: null as number | string | null,
   current_status: null as number | string | null,
   governorate: null as number | string | null
 })
 
-const hasActiveFilters = computed(() => {
-  return filters.value.current_rank !== null || 
-         filters.value.current_status !== null || 
-         filters.value.governorate !== null
+const hasActiveFilters = computed(() =>
+  filters.value.current_rank !== null ||
+  filters.value.current_status !== null ||
+  filters.value.governorate !== null
+)
+
+const activeFilterCount = computed(() => {
+  let count = 0
+  if (filters.value.current_rank !== null) count++
+  if (filters.value.current_status !== null) count++
+  if (filters.value.governorate !== null) count++
+  return count
 })
 
 function clearFilters() {
@@ -371,13 +327,31 @@ function clearFilters() {
   loadPersonnel(1)
 }
 
+// ── Stats ──────────────────────────────────────────────────
+const activeCount = computed(() =>
+  personnelStore.records.filter(p => p.status_classification === 'active').length
+)
+const inactiveCount = computed(() =>
+  personnelStore.records.filter(p => p.status_classification !== 'active').length
+)
+const incompleteCount = computed(() =>
+  personnelStore.records.filter(p => p.data_quality_score < 80).length
+)
+
+// ── Data Loading ───────────────────────────────────────────
 function loadPersonnel(page = 1) {
   personnelStore.fetchPersonnel({
+    search: searchText.value || undefined,
     current_rank: filters.value.current_rank || undefined,
     current_status: filters.value.current_status || undefined,
     governorate: filters.value.governorate || undefined,
     page
   })
+}
+
+function onSearch(query: string) {
+  searchText.value = query
+  loadPersonnel(1)
 }
 
 function goToPage(page: number) {
@@ -386,125 +360,58 @@ function goToPage(page: number) {
   }
 }
 
-// Global search handling
-let searchTimer: any = null
-function handleSmartSearch() {
-  if (searchTimer) clearTimeout(searchTimer)
-  searchTimer = setTimeout(async () => {
-    if (!smartSearchQuery.value) {
-      smartSearchResults.value = []
-      return
-    }
-    try {
-      const res = await api.get('/personnel/', {
-        params: { search: smartSearchQuery.value, page_size: 20 }
-      })
-      smartSearchResults.value = res.data.results || []
-    } catch (err) {
-      console.error('Fuzzy smart search failed:', err)
-    }
-  }, 300)
+function changePageSize(size: number) {
+  pageSize.value = size
+  loadPersonnel(1)
 }
 
-function selectSearchResult(person: any) {
-  searchOpen.value = false
-  smartSearchQuery.value = ''
-  smartSearchResults.value = []
-  
-  // Directly fetch the specific records matching or display details
-  Swal.fire({
-    title: person.full_name,
-    html: `
-      <div class="text-right text-xs space-y-2" dir="rtl">
-        <div><strong>الرقم العسكري:</strong> ${person.military_number}</div>
-        <div><strong>الرقم الوطني:</strong> ${person.national_number || '-'}</div>
-        <div><strong>الرتبة:</strong> ${person.rank_name || 'بدون رتبة'}</div>
-        <div><strong>الإدارة:</strong> ${person.security_admin_name || '-'}</div>
-        <div><strong>الحالة:</strong> ${person.status_name || '-'}</div>
-        <div><strong>جودة البيانات:</strong> ${person.data_quality_score}%</div>
-      </div>
-    `,
-    showCancelButton: true,
-    confirmButtonText: 'عرض الملف الكامل',
-    cancelButtonText: 'إغلاق',
-    confirmButtonColor: '#3b82f6',
-  }).then((result) => {
-    if (result.isConfirmed) {
-      window.location.href = `/personnel/${person.military_number}`
-    }
-  })
-}
-
-// Global Hotkeys binding
-function handleKeydown(e: KeyboardEvent) {
-  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') {
-    e.preventDefault()
-    searchOpen.value = true
-    nextTick(() => {
-      smartSearchInput.value?.focus()
-    })
-  } else if (e.key === 'Escape') {
-    searchOpen.value = false
-  }
-}
-
-onMounted(() => {
-  window.addEventListener('keydown', handleKeydown)
-  if (coreStore.ranks.length === 0) {
-    coreStore.fetchAllReferences()
-  }
-  loadPersonnel()
-})
-
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeydown)
-})
-
+// ── Export ──────────────────────────────────────────────────
 async function exportData() {
   try {
     const params: any = {}
     if (filters.value.current_rank) params.current_rank = filters.value.current_rank
     if (filters.value.current_status) params.current_status = filters.value.current_status
     if (filters.value.governorate) params.governorate = filters.value.governorate
-    
+
     const response = await api.get('/personnel/export_csv/', {
       params,
       responseType: 'blob'
     })
-    
+
     const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' })
-    const downloadUrl = window.URL.createObjectURL(blob)
+    const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = downloadUrl
+    a.href = url
     a.download = 'personnel.csv'
     document.body.appendChild(a)
     a.click()
-    window.URL.revokeObjectURL(downloadUrl)
+    window.URL.revokeObjectURL(url)
     document.body.removeChild(a)
-    
-    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم التصدير بنجاح', showConfirmButton: false, timer: 2500 })
+
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: t('common.export_success') || 'تم التصدير بنجاح', showConfirmButton: false, timer: 2500 })
   } catch (err) {
-    console.error('Failed to export:', err)
+    console.error('Export failed:', err)
   }
 }
 
-function getStatusColor(classification: string | null) {
-  switch (classification) {
-    case 'active': return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
-    default: return 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400'
-  }
+// ── Quality Helpers ────────────────────────────────────────
+function getQualityTextColor(score: number) {
+  if (score >= 80) return 'text-success-600 dark:text-success-400'
+  if (score >= 50) return 'text-warning-600 dark:text-warning-400'
+  return 'text-error-600 dark:text-error-400'
 }
 
-function getStatusDotColor(classification: string | null) {
-  switch (classification) {
-    case 'active': return 'bg-emerald-500'
-    default: return 'bg-red-500'
-  }
+function getQualityBarColor(score: number) {
+  if (score >= 80) return 'bg-success-500'
+  if (score >= 50) return 'bg-warning-500'
+  return 'bg-error-500'
 }
 
-function getQualityScoreTextColor(score: number) {
-  if (score >= 80) return 'text-emerald-600 dark:text-emerald-400'
-  if (score >= 50) return 'text-amber-600 dark:text-amber-400'
-  return 'text-red-600 dark:text-red-400'
-}
+// ── Lifecycle ──────────────────────────────────────────────
+onMounted(() => {
+  if (coreStore.ranks.length === 0) {
+    coreStore.fetchAllReferences()
+  }
+  loadPersonnel()
+})
 </script>

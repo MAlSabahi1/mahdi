@@ -1,0 +1,107 @@
+[
+  {
+    "model": "core.forcetype",
+    "pk": 1,
+    "fields": {
+      "name": "القوة الأساسي - ضباط",
+      "code": "BASIC_OFFICER",
+      "category": "basic",
+      "rank_type": "officer",
+      "is_outside_payroll": false,
+      "description": "القوة الأساسية من الضباط",
+      "order": 1,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.forcetype",
+    "pk": 2,
+    "fields": {
+      "name": "القوة الأساسي - أفراد",
+      "code": "BASIC_PERSONNEL",
+      "category": "basic",
+      "rank_type": "personnel",
+      "is_outside_payroll": false,
+      "description": "القوة الأساسية من الأفراد",
+      "order": 2,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.forcetype",
+    "pk": 3,
+    "fields": {
+      "name": "لجان أمنية - ضباط",
+      "code": "COMMITTEE_OFFICER",
+      "category": "committee",
+      "rank_type": "officer",
+      "is_outside_payroll": false,
+      "description": "اللجان الأمنية من الضباط",
+      "order": 3,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.forcetype",
+    "pk": 4,
+    "fields": {
+      "name": "لجان أمنية - أفراد",
+      "code": "COMMITTEE_PERSONNEL",
+      "category": "committee",
+      "rank_type": "personnel",
+      "is_outside_payroll": false,
+      "description": "اللجان الأمنية من الأفراد",
+      "order": 4,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.forcetype",
+    "pk": 5,
+    "fields": {
+      "name": "قوة - مستجدين جديد",
+      "code": "NEWCOMER",
+      "category": "newcomer",
+      "rank_type": "both",
+      "is_outside_payroll": true,
+      "description": "المستجدين الجدد خارج الصرف",
+      "order": 5,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.forcetype",
+    "pk": 6,
+    "fields": {
+      "name": "إداريا فقط",
+      "code": "ADMIN_ONLY",
+      "category": "admin",
+      "rank_type": "both",
+      "is_outside_payroll": false,
+      "description": "قوة إدارية فقط - غير ميدانية",
+      "order": 6,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.forcetype",
+    "pk": 7,
+    "fields": {
+      "name": "قوة منزلة - خارج الصرف",
+      "code": "OUTSIDE_PAY",
+      "category": "transferred",
+      "rank_type": "both",
+      "is_outside_payroll": true,
+      "description": "قوة منزلة من الخدمات - خارج الصرف المالي",
+      "order": 7,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]

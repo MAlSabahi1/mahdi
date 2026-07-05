@@ -19,7 +19,7 @@ Qualification = apps.get_model('core', 'Qualification')
 Position = apps.get_model('core', 'Position')
 ForceType = apps.get_model('core', 'ForceType')
 
-FIXTURES_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'fixtures')
+FIXTURES_DIR = os.path.join(os.path.dirname(__file__), '..', 'fixtures')
 
 def load_governorates():
     print("Loading Governorates...")
