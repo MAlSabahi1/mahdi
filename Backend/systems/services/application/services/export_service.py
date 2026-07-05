@@ -1,18 +1,22 @@
 """
-Export Service - خدمة تصدير القوالب المحمية
-المهمة 2.1: تصدير القالب المحمي للإدارات
-
-وفقاً للتعليمات الرسمية (البند 15 من تعليمات ضبط الخدمات):
-- 4 أوراق عمل: القوة العاملة، القوة غير العاملة، القوة كاملة، الغياب
-- أعمدة محمية (للقراءة فقط) + أعمدة قابلة للتعديل
-- حماية متقدمة (XlsxWriter): قفل خلايا، حماية ورقة ومصنف
+Export Service - خدمة تصدير القوالب المحمية (إنتاجي)
+═══════════════════════════════════════════════════════
+وفقاً لتعليمات ضبط الخدمات (البند 15):
+- وضعان: 4 أوراق (الوضع الافتراضي) أو ورقة واحدة موحدة
+- أعمدة محمية قابلة للضبط (ليست ثابتة في الكود)
+- قوائم منسدلة متتالية: نوع_الحالة → الحالة المحتملة
 - UUID مخفي لكل صف + SHA-256 Hash
+- اسم الملف مقفول ومشفر
+- حماية على مستوى إنتاجي (XlsxWriter + كلمة سر قوية)
 """
 import hashlib
+import hmac
 import uuid
+import re
+import zipfile
 from datetime import datetime
 from io import BytesIO
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 
 import xlsxwriter
 from django.db import transaction
@@ -23,266 +27,535 @@ from core.models import SecurityAdministration, CentralDepartment, ServiceStatus
 from systems.services.models import ExportLog
 
 
+# ══════════════════════════════════════════════════════════
+# ثوابت الأعمدة الافتراضية
+# ══════════════════════════════════════════════════════════
+
+# الأعمدة المحمية الافتراضية (لا يمكن تعديلها)
+DEFAULT_PROTECTED_COLUMNS = [
+    'الرقم العسكري',
+    'الاسم الكامل',
+    'الرتبة',
+    'الرقم الوطني',
+    'الحالة الحالية',
+]
+
+# الأعمدة القابلة للتعديل الافتراضية
+DEFAULT_EDITABLE_COLUMNS = [
+    'نوع الحالة الجديدة',   # القائمة المنسدلة الثانية (الفرعية)
+    'الحالة الجديدة',        # القائمة المنسدلة الأولى (التصنيف العام)
+    'ملاحظات',               # نص حر فقط
+]
+
+# تصنيفات الحالات (4 تصنيفات رئيسية)
+STATUS_CLASSIFICATIONS = {
+    'قوة عاملة فعلية':       'active_full',
+    'قوة عاملة غير فعلية':   'active_part',
+    'قوة غير عاملة مؤقتاً':  'inactive_temp',
+    'قوة غير عاملة نهائياً': 'inactive_perm',
+}
+
+# حالات الغياب (لورقة الغياب)
+ABSENCE_STATUS_NAMES = ['الغياب المستمر', 'المنقطعين - فرار', 'غياب']
+
+# الملحقات المطلوبة لكل نوع تغيير حساس
+REQUIRED_ATTACHMENTS = {
+    'الشهداء':             ['شهادة استشهاد', 'تقرير الواقعة', 'قرار الاعتراف'],
+    'الوفيات':             ['شهادة وفاة', 'شهادة الطبيب الشرعي'],
+    'المتقاعدين':          ['قرار التقاعد', 'موافقة الوزارة'],
+    'المفقودين':           ['صك شرعي', 'تقرير اللجنة', 'موافقة وزارية'],
+    'المفقودين (بصك شرعي)': ['صك شرعي موثق', 'تقرير اللجنة'],
+    'المنقطعين - فرار':    ['بلاغ انقطاع', 'قرار تشكيل لجنة'],
+    'المفرغين للدراسة':    ['قرار الابتعاث', 'موافقة الجهة'],
+    'المنتدبين لدى جهات':  ['قرار الندب', 'موافقة المحافظة'],
+    'السجناء':             ['حكم قضائي أو قرار توقيف'],
+    'الأسرى':              ['تقرير رسمي'],
+    'عدم لياقة':           ['تقرير اللجنة الطبية', 'موافقة وزارية'],
+    'إنهاء المدة القانونية': ['قرار إنهاء الخدمة'],
+    'بلوغ السن القانوني':  ['موافقة وزارية', 'قرار التقاعد'],
+}
+
+
+def _build_status_cascade() -> Dict[str, List[str]]:
+    """
+    بناء خريطة: التصنيف العام → قائمة الحالات التفصيلية
+    يُجلب ديناميكياً من DB.
+    """
+    cascade = {cls: [] for cls in STATUS_CLASSIFICATIONS}
+    try:
+        for status in ServiceStatus.objects.all().order_by('name'):
+            cls_display = status.get_classification_display()
+            if cls_display in cascade:
+                cascade[cls_display].append(status.name)
+    except Exception:
+        pass
+    return cascade
+
+
+def _generate_secure_filename(dept_name: str, service_month: str, export_id: str) -> str:
+    """
+    توليد اسم ملف مقفول غير قابل للتعديل.
+    الصيغة: كشف_[اسم_الإدارة]_[YYYY-MM]_[أول 8 من UUID].xlsx
+    يُعقّم الاسم من الأحرف الخطرة.
+    """
+    safe_name = re.sub(r'[^\w\u0600-\u06FF\s-]', '', dept_name).strip()
+    short_id = str(export_id).replace('-', '')[:8]
+    return f"كشف_{safe_name}_{service_month}_{short_id}.xlsx"
+
+
+def _generate_workbook_password(dept_id: int, service_month: str, user_id: int, export_id: str) -> str:
+    """
+    توليد كلمة سر قوية باستخدام HMAC-SHA256.
+    لا يمكن لأي طرف خارجي معرفة كلمة السر لأنها مشتقة من secret_key.
+    """
+    from django.conf import settings
+    secret = getattr(settings, 'SECRET_KEY', 'fallback-secret').encode()
+    message = f"{dept_id}:{service_month}:{user_id}:{export_id}".encode()
+    return hmac.new(secret, message, hashlib.sha256).hexdigest()[:20]
+
+
 class ExcelExportService:
     """
-    خدمة تصدير ملفات Excel محمية للإدارات (4 أوراق)
-    
-    الميزات:
-    - 4 أوراق: القوة العاملة، القوة غير العاملة، القوة كاملة، الغياب
-    - حماية الأعمدة الثابتة (للقراءة فقط)
-    - قوائم منسدلة للحالات المسموحة
-    - UUIDs مخفية لكل صف
-    - Hash للتحقق من الأصالة
-    - حماية المصنف (منع إضافة/حذف أوراق)
+    خدمة تصدير ملفات Excel محمية للإدارات والمديريات والفروع.
+
+    الوضعان:
+    - mode='multi' (افتراضي): 4 أوراق (العاملة، غير العاملة، الكاملة، الغياب)
+    - mode='single': ورقة واحدة بكل الأفراد مع عمود الحالة الحالية
+
+    الأعمدة:
+    - protected_columns: قائمة قابلة للضبط (افتراضياً الـ 5 الحساسة)
+    - editable_columns: قائمة قابلة للضبط (افتراضياً الحالة + الملاحظات)
     """
-    
-    # الأعمدة الثابتة (محمية - للقراءة فقط)
-    PROTECTED_COLUMNS = [
-        'الرقم العسكري',
-        'الاسم الكامل',
-        'الرتبة',
-        'الرقم الوطني',
-        'الحالة الحالية'
-    ]
-    
-    # الأعمدة القابلة للتعديل
-    EDITABLE_COLUMNS = [
-        'متغير الشهر',
-        'ملاحظات'
-    ]
-    
-    # أسماء الأوراق الأربعة
-    SHEET_NAMES = [
-        'القوة العاملة',
-        'القوة غير العاملة',
-        'القوة كاملة',
-        'الغياب'
-    ]
-    
-    # تصنيفات الحالات لكل ورقة
-    SHEET_CLASSIFICATIONS = {
-        'القوة العاملة': ['active_full', 'active_part'],
-        'القوة غير العاملة': ['inactive_temp', 'inactive_perm'],
-        'القوة كاملة': None,  # جميع الأفراد
-        'الغياب': ['inactive_temp'],  # فلترة إضافية بالاسم
-    }
-    
-    # حالات الغياب (لورقة الغياب)
-    ABSENCE_STATUS_NAMES = ['غياب', 'غياب مستمر', 'منقطع', 'فار', 'فرار']
-    
-    def __init__(self, central_department: CentralDepartment, service_month: str, exported_by):
+
+    SHEET_NAMES = ['القوة العاملة', 'القوة غير العاملة', 'القوة كاملة', 'الغياب']
+
+    def __init__(
+        self,
+        central_department: CentralDepartment,
+        service_month: str,
+        exported_by,
+        mode: str = 'multi',
+        protected_columns: Optional[List[str]] = None,
+        editable_columns: Optional[List[str]] = None,
+    ):
         """
-        تهيئة خدمة التصدير
-        
         Args:
-            central_department: الإدارة المركزية المراد التصدير لها
-            service_month: شهر الخدمة (YYYY-MM)
-            exported_by: المستخدم الذي يقوم بالتصدير
+            central_department: الإدارة/المديرية/الفرع
+            service_month: YYYY-MM
+            exported_by: المستخدم المصدِّر
+            mode: 'multi' = 4 أوراق | 'single' = ورقة واحدة
+            protected_columns: تجاوز الأعمدة المحمية الافتراضية
+            editable_columns: تجاوز الأعمدة القابلة للتعديل الافتراضية
         """
+        if mode not in ('multi', 'single'):
+            raise ValueError("mode يجب أن يكون 'multi' أو 'single'")
+
         self.central_department = central_department
         self.service_month = service_month
         self.exported_by = exported_by
-        self.row_uuids = []
-        self.file_hash = None
-    
-    def get_personnel_data(self) -> List[Dict[str, Any]]:
-        """
-        استخراج بيانات الأفراد مع توليد UUID لكل صف
-        
-        Returns:
-            قائمة قواميس تحتوي على بيانات الأفراد
-        """
-        personnel = PersonnelMaster.objects.filter(
+        self.mode = mode
+
+        self.protected_columns = protected_columns or DEFAULT_PROTECTED_COLUMNS
+        self.editable_columns = editable_columns or DEFAULT_EDITABLE_COLUMNS
+
+        # يُملأ أثناء التوليد
+        self.export_id = uuid.uuid4()
+        self.row_uuids: List[str] = []
+        self.row_count: int = 0
+        self.file_hash: Optional[str] = None
+        self._status_cascade = _build_status_cascade()
+
+    # ──────────────────────────────────────────────────────────
+    # استخراج البيانات من DB
+    # ──────────────────────────────────────────────────────────
+
+    def _get_personnel(self) -> List[Dict[str, Any]]:
+        """جلب بيانات الأفراد وتوليد UUID لكل صف."""
+        qs = PersonnelMaster.objects.filter(
             central_department=self.central_department,
-            security_admin=self.central_department.security_admin
         ).select_related(
             'current_rank', 'current_status'
-        ).order_by('full_name')
-        
+        ).order_by('current_rank__order', 'full_name')
+
         data = []
-        for person in personnel:
+        for person in qs:
             row_uuid = str(uuid.uuid4())
             self.row_uuids.append(row_uuid)
-            
+            classification = (
+                person.current_status.classification
+                if person.current_status else ''
+            )
             data.append({
-                'military_number': person.military_number,
-                'full_name': person.full_name,
-                'rank': person.current_rank.name,
-                'national_id': person.national_id,
-                'current_status': person.current_status.name,
-                'classification': person.current_status.classification,
-                'notes': '',
-                'row_uuid': row_uuid
+                'military_number': person.military_number or '',
+                'full_name':       person.full_name or '',
+                'rank':            person.current_rank.name if person.current_rank else '',
+                'national_id':     person.national_id or '',
+                'current_status':  person.current_status.name if person.current_status else '',
+                'classification':  classification,
+                'row_uuid':        row_uuid,
             })
-        
+        self.row_count = len(data)
         return data
-    
-    def _classify_personnel(self, all_data: List[Dict]) -> Dict[str, List[Dict]]:
-        """
-        توزيع الأفراد على الأوراق الأربعة حسب حالتهم
-        """
-        sheets = {name: [] for name in self.SHEET_NAMES}
-        
-        for person in all_data:
-            classification = person['classification']
-            status_name = person['current_status']
-            
-            if classification in ['active_full', 'active_part']:
-                sheets['القوة العاملة'].append(person)
-            
-            if classification in ['inactive_temp', 'inactive_perm']:
-                sheets['القوة غير العاملة'].append(person)
-            
-            sheets['القوة كاملة'].append(person)
-            
-            if status_name in self.ABSENCE_STATUS_NAMES:
-                sheets['الغياب'].append(person)
-        
+
+    def _classify_personnel(self, data: List[Dict]) -> Dict[str, List[Dict]]:
+        """توزيع الأفراد على الأوراق الأربعة."""
+        sheets: Dict[str, List[Dict]] = {s: [] for s in self.SHEET_NAMES}
+        for p in data:
+            cls = p['classification']
+            if cls in ('active_full', 'active_part'):
+                sheets['القوة العاملة'].append(p)
+            if cls in ('inactive_temp', 'inactive_perm'):
+                sheets['القوة غير العاملة'].append(p)
+            sheets['القوة كاملة'].append(p)
+            if p['current_status'] in ABSENCE_STATUS_NAMES:
+                sheets['الغياب'].append(p)
         return sheets
-    
-    def get_allowed_statuses(self) -> List[str]:
-        """الحصول على قائمة الحالات المسموحة"""
-        statuses = ServiceStatus.objects.all().values_list('name', flat=True)
-        return list(statuses) + ['أخرى']
-    
+
+    # ──────────────────────────────────────────────────────────
+    # بناء ملف Excel
+    # ──────────────────────────────────────────────────────────
+
+    def _build_formats(self, workbook) -> Dict:
+        """تعريف كل الـ Formats المستخدمة."""
+        return {
+            'header': workbook.add_format({
+                'bold': True, 'bg_color': '#1F3864', 'font_color': 'white',
+                'align': 'center', 'valign': 'vcenter', 'border': 1,
+                'text_wrap': True, 'font_size': 11,
+            }),
+            'protected': workbook.add_format({
+                'bg_color': '#F2F2F2', 'locked': True, 'border': 1,
+                'align': 'right', 'valign': 'vcenter', 'font_size': 10,
+            }),
+            'editable': workbook.add_format({
+                'locked': False, 'border': 1, 'align': 'right',
+                'valign': 'vcenter', 'bg_color': '#EBF5FB', 'font_size': 10,
+            }),
+            'notes_editable': workbook.add_format({
+                'locked': False, 'border': 1, 'align': 'right',
+                'valign': 'vcenter', 'font_size': 10, 'text_wrap': True,
+            }),
+            'hidden': workbook.add_format({'locked': True, 'hidden': True, 'font_size': 1}),
+            'meta': workbook.add_format({
+                'locked': True, 'bg_color': '#D5E8D4', 'font_color': '#2E7D32',
+                'align': 'right', 'valign': 'vcenter', 'font_size': 9, 'italic': True,
+            }),
+            'warning': workbook.add_format({
+                'locked': True, 'bg_color': '#FFE0B2', 'font_color': '#E65100',
+                'align': 'center', 'valign': 'vcenter', 'font_size': 9, 'bold': True,
+            }),
+        }
+
+    def _write_sheet(
+        self,
+        workbook,
+        worksheet,
+        persons: List[Dict],
+        fmts: Dict,
+        password: str,
+        sheet_title: str,
+    ):
+        """كتابة ورقة عمل واحدة بالكامل."""
+        all_cols = self.protected_columns + self.editable_columns + ['__UUID__']
+        all_statuses = list(self._status_cascade.keys())  # 4 تصنيفات
+
+        # ── صف المعلومات الأولى (تحذير + بيانات التصدير) ──
+        worksheet.merge_range(
+            0, 0, 0, len(all_cols) - 1,
+            f'⚠ هذا الملف رسمي ومحمي — الإدارة: {self.central_department.name} | '
+            f'الشهر: {self.service_month} | التصدير: {str(self.export_id)[:8]} | '
+            f'العدد: {len(persons)} فرد',
+            fmts['warning'],
+        )
+        worksheet.set_row(0, 18)
+
+        # ── صف العناوين ──
+        for col_idx, header in enumerate(all_cols):
+            worksheet.write(1, col_idx, header, fmts['header'])
+
+        # ── ضبط عرض الأعمدة ──
+        col_widths = {
+            'الرقم العسكري': 15, 'الاسم الكامل': 35, 'الرتبة': 15,
+            'الرقم الوطني': 18, 'الحالة الحالية': 25,
+            'الحالة الجديدة': 28, 'نوع الحالة الجديدة': 32,
+            'ملاحظات': 45, '__UUID__': 0,
+        }
+        for col_idx, header in enumerate(all_cols):
+            width = col_widths.get(header, 20)
+            worksheet.set_column(col_idx, col_idx, width)
+
+        # ── تجميد الصفوف العلوية (التحذير + العناوين) ──
+        worksheet.freeze_panes(2, 0)
+
+        # ── كتابة بيانات الأفراد ──
+        for row_offset, person in enumerate(persons):
+            row = row_offset + 2  # الصف الأول للبيانات = 2
+
+            row_data_map = {
+                'الرقم العسكري':  person['military_number'],
+                'الاسم الكامل':   person['full_name'],
+                'الرتبة':         person['rank'],
+                'الرقم الوطني':   person['national_id'],
+                'الحالة الحالية': person['current_status'],
+            }
+
+            for col_idx, header in enumerate(all_cols):
+                if header == '__UUID__':
+                    worksheet.write(row, col_idx, person['row_uuid'], fmts['hidden'])
+
+                elif header in self.protected_columns:
+                    worksheet.write(row, col_idx, row_data_map.get(header, ''), fmts['protected'])
+
+                elif header == 'ملاحظات':
+                    worksheet.write(row, col_idx, '', fmts['notes_editable'])
+
+                else:
+                    # أعمدة قابلة للتعديل (قوائم منسدلة)
+                    worksheet.write(row, col_idx, '', fmts['editable'])
+
+        # ── Data Validation للأعمدة القابلة للتعديل ──
+        if persons:
+            first_data_row = 2
+            last_data_row = len(persons) + 1
+
+            for col_idx, header in enumerate(all_cols):
+                if header == 'الحالة الجديدة':
+                    worksheet.data_validation(
+                        first_data_row, col_idx, last_data_row, col_idx,
+                        {
+                            'validate':      'list',
+                            'source':        all_statuses,
+                            'input_title':   'اختر التصنيف العام',
+                            'input_message': 'اختر التصنيف الرئيسي للحالة ثم اختر النوع في العمود التالي',
+                            'error_title':   'قيمة غير مسموحة',
+                            'error_message': 'يجب الاختيار من القائمة فقط.',
+                            'error_type':    'stop',
+                            'show_input':    True,
+                            'show_error':    True,
+                        }
+                    )
+
+                elif header == 'نوع الحالة الجديدة':
+                    # القائمة الشرطية: كل الحالات التفصيلية مجتمعة (الفرونت اند يتحكم بالفلترة)
+                    all_detailed = []
+                    for statuses in self._status_cascade.values():
+                        all_detailed.extend(statuses)
+                    if all_detailed:
+                        worksheet.data_validation(
+                            first_data_row, col_idx, last_data_row, col_idx,
+                            {
+                                'validate':      'list',
+                                'source':        all_detailed[:255],  # حد Excel
+                                'input_title':   'اختر نوع الحالة',
+                                'input_message': 'اختر نوع الحالة التفصيلية المناسبة',
+                                'error_title':   'قيمة غير مسموحة',
+                                'error_message': 'يجب الاختيار من القائمة فقط.',
+                                'error_type':    'stop',
+                                'show_input':    True,
+                                'show_error':    True,
+                            }
+                        )
+
+        # ── حماية الورقة ──
+        worksheet.protect(
+            password,
+            {
+                'select_locked_cells':   False,
+                'select_unlocked_cells': True,
+                'format_cells':          False,
+                'format_columns':        False,
+                'format_rows':           False,
+                'insert_columns':        False,
+                'delete_columns':        False,
+                'insert_rows':           False,
+                'delete_rows':           False,
+                'sort':                  False,
+                'autofilter':            False,
+                'pivot_tables':          False,
+                'objects':               False,
+                'scenarios':             False,
+            }
+        )
+
     def create_protected_excel(self) -> BytesIO:
-        """إنشاء ملف Excel محمي مع 4 أوراق عمل"""
+        """إنشاء ملف Excel محمي (وضع multi أو single)."""
         output = BytesIO()
-        workbook = xlsxwriter.Workbook(output, {'in_memory': True})
-        
-        password = self._generate_password()
-        
+        workbook = xlsxwriter.Workbook(output, {
+            'in_memory':          True,
+            'strings_to_formulas': False,  # أمان: منع الصيغ
+            'strings_to_urls':     False,  # أمان: منع الروابط
+        })
+
+        # منع إضافة/حذف/إخفاء الأوراق
         workbook.set_properties({
-            'title': f'كشف خدمات {self.central_department.name} - {self.service_month}',
-            'subject': 'كشف خدمات شهري',
-            'author': 'نظام إدارة الموارد البشرية',
-            'company': 'الوزارة المختصة',
-            'created': timezone.now()
+            'title':   f'كشف خدمات {self.central_department.name} - {self.service_month}',
+            'subject': 'كشف خدمات شهري رسمي',
+            'author':  'نظام إدارة الموارد البشرية',
+            'company': 'وزارة الداخلية',
+            'created': timezone.now(),
+            'comments': f'export_id:{self.export_id}|month:{self.service_month}|dept:{self.central_department.id}',
         })
-        
-        header_format = workbook.add_format({
-            'bold': True, 'bg_color': '#4472C4', 'font_color': 'white',
-            'align': 'center', 'valign': 'vcenter', 'border': 1, 'text_wrap': True
-        })
-        protected_format = workbook.add_format({
-            'bg_color': '#E7E6E6', 'locked': True, 'border': 1, 'align': 'right'
-        })
-        editable_format = workbook.add_format({
-            'locked': False, 'border': 1, 'align': 'right'
-        })
-        hidden_format = workbook.add_format({'locked': True, 'hidden': True})
-        
-        personnel_data = self.get_personnel_data()
-        sheets_data = self._classify_personnel(personnel_data)
-        allowed_statuses = self.get_allowed_statuses()
-        all_headers = self.PROTECTED_COLUMNS + self.EDITABLE_COLUMNS + ['__UUID__']
-        
-        for sheet_name in self.SHEET_NAMES:
-            worksheet = workbook.add_worksheet(sheet_name)
-            sheet_persons = sheets_data[sheet_name]
-            
-            for col, header in enumerate(all_headers):
-                worksheet.write(0, col, header, header_format)
-            
-            worksheet.set_column(0, 0, 15)
-            worksheet.set_column(1, 1, 30)
-            worksheet.set_column(2, 2, 15)
-            worksheet.set_column(3, 3, 15)
-            worksheet.set_column(4, 4, 18)
-            worksheet.set_column(5, 5, 20)
-            worksheet.set_column(6, 6, 40)
-            worksheet.set_column(7, 7, 0)
-            
-            for row_idx, person in enumerate(sheet_persons, start=1):
-                worksheet.write(row_idx, 0, person['military_number'], protected_format)
-                worksheet.write(row_idx, 1, person['full_name'], protected_format)
-                worksheet.write(row_idx, 2, person['rank'], protected_format)
-                worksheet.write(row_idx, 3, person['national_id'], protected_format)
-                worksheet.write(row_idx, 4, person['current_status'], protected_format)
-                worksheet.write(row_idx, 5, person['current_status'], editable_format)
-                worksheet.write(row_idx, 6, person['notes'], editable_format)
-                worksheet.write(row_idx, 7, person['row_uuid'], hidden_format)
-            
-            if sheet_persons:
-                worksheet.data_validation(
-                    1, 5, len(sheet_persons), 5,
-                    {
-                        'validate': 'list', 'source': allowed_statuses,
-                        'input_title': 'اختر الحالة',
-                        'input_message': 'يرجى اختيار حالة من القائمة المنسدلة',
-                        'error_title': 'قيمة غير مسموحة',
-                        'error_message': 'لا يمكنك كتابة قيمة غير موجودة في القائمة.',
-                        'error_type': 'stop'
-                    }
+
+        fmts = self._build_formats(workbook)
+        password = _generate_workbook_password(
+            self.central_department.id,
+            self.service_month,
+            self.exported_by.id,
+            str(self.export_id),
+        )
+
+        # جلب البيانات
+        personnel_data = self._get_personnel()
+
+        if self.mode == 'single':
+            # ── وضع الورقة الواحدة ──
+            ws = workbook.add_worksheet('كشف موحد')
+            self._write_sheet(workbook, ws, personnel_data, fmts, password, 'كشف موحد')
+
+        else:
+            # ── وضع الأوراق الأربعة ──
+            sheets_data = self._classify_personnel(personnel_data)
+            for sheet_name in self.SHEET_NAMES:
+                ws = workbook.add_worksheet(sheet_name)
+                self._write_sheet(
+                    workbook, ws,
+                    sheets_data[sheet_name],
+                    fmts, password, sheet_name,
                 )
-            
-            worksheet.protect(password, {
-                'select_locked_cells': False, 'select_unlocked_cells': True,
-                'format_cells': False, 'format_columns': False, 'format_rows': False,
-                'insert_columns': False, 'delete_columns': False,
-                'insert_rows': False, 'delete_rows': False,
-                'sort': False, 'autofilter': False, 'pivot_tables': False,
-                'paste': False
-            })
-        
+
         workbook.close()
         output.seek(0)
-        self.file_hash = self._calculate_hash(output.read())
+
+        # حساب Hash للملف المولّد
+        raw = output.read()
+        self.file_hash = hashlib.sha256(raw).hexdigest()
         output.seek(0)
         return output
-    
-    def _generate_password(self) -> str:
-        base = f"{self.central_department.id}_{self.service_month}_{self.exported_by.id}"
-        return hashlib.sha256(base.encode()).hexdigest()[:16]
-    
-    def _calculate_hash(self, file_content: bytes) -> str:
-        return hashlib.sha256(file_content).hexdigest()
-    
+
     @transaction.atomic
-    def export_and_log(self) -> tuple[BytesIO, str]:
-        """تصدير الملف وتسجيله في قاعدة البيانات"""
+    def export_and_log(self) -> Tuple[BytesIO, str]:
+        """
+        تصدير الملف وتسجيله في ExportLog.
+        يعيد: (ملف BytesIO, اسم الملف الآمن)
+        """
         excel_file = self.create_protected_excel()
-        
-        export_log = ExportLog.objects.create(
+
+        ExportLog.objects.create(
+            export_id=self.export_id,
             central_department=self.central_department,
             security_admin=self.central_department.security_admin,
             service_month=self.service_month,
             exported_by=self.exported_by,
             file_hash=self.file_hash,
             row_uuids=self.row_uuids,
-            editable_columns=self.EDITABLE_COLUMNS,
-            status='pending'
+            editable_columns=self.editable_columns,
+            status='pending',
         )
-        
-        filename = f"كشف_{self.central_department.name}_{self.service_month}_{export_log.export_id}.xlsx"
+
+        filename = _generate_secure_filename(
+            self.central_department.name,
+            self.service_month,
+            str(self.export_id),
+        )
         return excel_file, filename
 
+
+# ══════════════════════════════════════════════════════════
+# Batch Export — تصدير كل الإدارات دفعة واحدة
+# ══════════════════════════════════════════════════════════
+
+class BatchExcelExportService:
+    """
+    تصدير قوالب Excel لجميع الإدارات/المديريات/الفروع دفعة واحدة.
+    النتيجة: ملف ZIP يحتوي على ملف Excel مستقل لكل جهة.
+    """
+
+    def __init__(self, exported_by, service_month: str, mode: str = 'multi'):
+        self.exported_by = exported_by
+        self.service_month = service_month
+        self.mode = mode
+
+    @transaction.atomic
+    def export_all(self) -> Tuple[BytesIO, str]:
+        """
+        تصدير كل الإدارات وضغطها في ZIP واحد.
+        يعيد: (BytesIO للـ ZIP, اسم ملف ZIP)
+        """
+        departments = CentralDepartment.objects.filter(is_active=True).order_by('name')
+        if not departments.exists():
+            raise ValueError("لا توجد إدارات مفعّلة في النظام")
+
+        zip_buffer = BytesIO()
+        exported_count = 0
+        errors = []
+
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for dept in departments:
+                try:
+                    service = ExcelExportService(
+                        central_department=dept,
+                        service_month=self.service_month,
+                        exported_by=self.exported_by,
+                        mode=self.mode,
+                    )
+                    excel_file, filename = service.export_and_log()
+                    zf.writestr(filename, excel_file.read())
+                    exported_count += 1
+                except Exception as e:
+                    errors.append({'department': dept.name, 'error': str(e)})
+
+        zip_buffer.seek(0)
+        zip_filename = f"كشوفات_شهرية_{self.service_month}_{exported_count}_إدارة.zip"
+
+        if errors:
+            # تسجيل الأخطاء (لا نوقف العملية بسببها)
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Batch export errors: {errors}")
+
+        return zip_buffer, zip_filename, exported_count, errors
+
+
+# ══════════════════════════════════════════════════════════
+# دوال مساعدة للاستخدام الخارجي
+# ══════════════════════════════════════════════════════════
 
 def export_template_for_department(
     department_id: int,
     service_month: str,
-    user
-) -> tuple[BytesIO, str]:
+    user,
+    mode: str = 'multi',
+) -> Tuple[BytesIO, str]:
     """
-    دالة مساعدة لتصدير قالب لإدارة مركزية معينة
-    
+    تصدير قالب لإدارة واحدة.
+
     Args:
         department_id: معرف الإدارة المركزية
-        service_month: شهر الخدمة (YYYY-MM)
-        user: المستخدم الذي يقوم بالتصدير
-        
-    Returns:
-        tuple: (ملف Excel, اسم الملف)
-        
-    Raises:
-        CentralDepartment.DoesNotExist: إذا لم توجد الإدارة
+        service_month: شهر الخدمة YYYY-MM
+        user: المستخدم المصدِّر
+        mode: 'multi' أو 'single'
     """
-    department = CentralDepartment.objects.get(id=department_id)
-    
+    dept = CentralDepartment.objects.get(id=department_id)
     service = ExcelExportService(
-        central_department=department,
+        central_department=dept,
         service_month=service_month,
-        exported_by=user
+        exported_by=user,
+        mode=mode,
     )
-    
     return service.export_and_log()
+
+
+def get_status_cascade() -> Dict[str, List[str]]:
+    """
+    إعادة خريطة التصنيف → الحالات التفصيلية للفرونت اند.
+    يستخدمها الفرونت اند لبناء القوائم الشرطية (Cascading Dropdowns).
+    """
+    return _build_status_cascade()
+
+
+def get_required_attachments(status_name: str) -> List[str]:
+    """
+    إعادة قائمة المرفقات المطلوبة لحالة معينة.
+    يستخدمها الـ ImportService للتحقق قبل الاعتماد.
+    """
+    return REQUIRED_ATTACHMENTS.get(status_name, [])

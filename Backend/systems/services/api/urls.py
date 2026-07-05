@@ -7,6 +7,12 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from systems.services.api.views import main_views as views
+from systems.services.api.views.main_views import (
+    ExportView, ImportView, BatchExportView, StatusCascadeView,
+    TaskStatusView, StagingViewSet, RejectionViewSet,
+    ReconciliationViewSet, ReportViewSet, WebhookConfigViewSet,
+    ComplianceViewSet, SnapshotViewSet,
+)
 from systems.services.api.views.import_views import ImportAPIViewSet
 from systems.services.api.views.raw_data_views import RawDataStandardizedViewSet
 from systems.services.api.views.status_change_views import StatusChangeFormViewSet
@@ -42,12 +48,20 @@ admin_router.register(r'reports', CustomReportTemplateViewSet, basename='admin-r
 
 urlpatterns = [
 
-    # Export / Import (Legacy)
-    path('export/', views.ExportView.as_view({'get': 'list'}), name='export'),
-    path('import/', views.ImportView.as_view({'post': 'create'}), name='import'),
+    # Export — تصدير قالب لإدارة واحدة (multi أو single)
+    path('export/', ExportView.as_view({'get': 'list'}), name='export'),
+
+    # Batch Export — تصدير كل الإدارات دفعة واحدة (ZIP)
+    path('export/batch/', BatchExportView.as_view({'post': 'create'}), name='export-batch'),
+
+    # Status Cascade — خريطة الحالات المتتالية للفرونت اند
+    path('status-cascade/', StatusCascadeView.as_view({'get': 'list'}), name='status-cascade'),
+
+    # Import — استيراد الكشوف المعدلة
+    path('import/', ImportView.as_view({'post': 'create'}), name='import'),
 
     # Task Status (Celery)
-    path('tasks/<str:pk>/', views.TaskStatusView.as_view({'get': 'retrieve'}), name='task-status'),
+    path('tasks/<str:pk>/', TaskStatusView.as_view({'get': 'retrieve'}), name='task-status'),
 
     # Import API (New - Task 5.4)
     path('', include(import_router.urls)),

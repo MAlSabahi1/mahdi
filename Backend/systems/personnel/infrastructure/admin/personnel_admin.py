@@ -359,3 +359,11 @@ class HistoricalMonthlyVariablesAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+from systems.personnel.models import RankSettlement
+
+@admin.register(RankSettlement)
+class RankSettlementAdmin(admin.ModelAdmin):
+    list_display = ['settlement_type', 'personnel', 'from_rank', 'to_rank', 'status', 'decision_date']
+    list_filter = ['settlement_type', 'status']
+
