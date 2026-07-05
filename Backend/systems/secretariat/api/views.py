@@ -28,6 +28,9 @@ class BaseSecretariatViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         profile = get_user_profile(self.request.user)
         security_admin = getattr(profile, 'security_admin', None) if profile else None
+        if not security_admin:
+            from core.models.organization import SecurityAdministration
+            security_admin = SecurityAdministration.objects.first()
         serializer.save(
             created_by=self.request.user,
             security_admin=security_admin
@@ -48,6 +51,8 @@ class CorrespondenceAttachmentViewSet(viewsets.ModelViewSet):
     filterset_fields = ['correspondence']
 
     def get_queryset(self):
+        if self.request.user.is_superuser:
+            return self.queryset
         profile = get_user_profile(self.request.user)
         user_sec_admin = getattr(profile, 'security_admin', None) if profile else None
         if user_sec_admin:
@@ -93,6 +98,9 @@ class InventoryItemViewSet(BaseSecretariatViewSet):
         # override since it does not have created_by
         profile = get_user_profile(self.request.user)
         security_admin = getattr(profile, 'security_admin', None) if profile else None
+        if not security_admin:
+            from core.models.organization import SecurityAdministration
+            security_admin = SecurityAdministration.objects.first()
         serializer.save(security_admin=security_admin)
 
 class InventoryRequestViewSet(BaseSecretariatViewSet):

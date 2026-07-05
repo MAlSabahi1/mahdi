@@ -115,86 +115,102 @@
           </div>
 
           <!-- A4 Sheet Container -->
-          <div class="print-preview-container mx-auto bg-white text-black p-12 md:p-14 border border-gray-300 shadow-lg rounded-md font-serif text-sm max-w-[800px] min-h-[1050px] flex flex-col justify-between" style="font-family: 'Amiri', 'Times New Roman', serif;">
-            <!-- Header Section -->
-            <div>
-              <div class="grid grid-cols-[200px_1fr_200px] items-stretch justify-between pb-2" dir="rtl">
-                <!-- Right Header: Calligraphy image followed by official titles -->
-                <div class="text-right text-xs space-y-1.5 font-bold text-gray-950 flex flex-col items-start justify-end">
-                  <img :src="yemenCalligraphy" class="w-40 h-10 object-contain mr-0 mb-1" alt="الجمهورية اليمنية" />
-                  <p class="text-[13px] font-bold leading-tight pr-1">وزارة الداخلية</p>
-                  <p class="text-[13px] font-bold leading-tight pr-1">شرطة م/ {{ userSecurityAdminName }}</p>
-                  <p class="text-[13px] font-bold leading-tight pr-1">إدارة القوى البشرية</p>
-                </div>
-
-                <!-- Center: Basmala & High Resolution Republican Eagle -->
-                <div class="flex flex-col items-center justify-center space-y-2 mt-1 self-center">
-                  <p class="font-bold text-[1.45rem] tracking-wide text-gray-950 basmala-text leading-none">بسم الله الرحمن الرحيم</p>
-                  <img :src="yemenLogo" class="w-24 h-auto object-contain mt-1" alt="شعار الجمهورية اليمنية" />
-                </div>
-
-                <!-- Left Header: Perfectly aligned Flex data -->
-                <div class="text-right text-xs space-y-1.5 font-bold text-gray-950 w-[190px] self-end pl-1 pb-1">
-                  <div class="flex justify-between items-center">
-                    <span>الرقــم:</span>
-                    <span class="font-sans font-bold text-[12.5px]">{{ memo.refNo || '.........................' }}</span>
+          <div class="print-preview-container mx-auto bg-white text-black p-6 border border-gray-300 shadow-lg rounded-md font-serif text-sm max-w-[800px] min-h-[1050px] flex flex-col justify-between" style="font-family: 'Amiri', 'Times New Roman', serif;">
+            <!-- Inner Letterhead Border Wrapper -->
+            <div class="border-2 border-double border-black p-6 flex flex-col justify-between flex-grow h-full">
+              <!-- Header Section -->
+              <div>
+                <div class="flex justify-between items-end pb-2" dir="rtl" style="width: 100%; display: flex;">
+                  <!-- Right Header: Calligraphy image followed by official titles (Symmetrically Centered & Elegant) -->
+                  <div class="flex flex-col items-center justify-end text-center" style="width: 30%; min-width: 30%; font-family: 'Amiri', serif;">
+                    <img :src="yemenCalligraphy" class="w-[130px] h-8 object-contain mb-2 mx-auto" alt="الجمهورية اليمنية" />
+                    <p class="text-[13px] font-bold text-gray-900 leading-tight">وزارة الداخلية</p>
+                    <p class="text-[13px] font-bold text-gray-900 leading-tight mt-0.5">شرطة م/ {{ userSecurityAdminName }}</p>
+                    <p class="text-[11.5px] font-semibold text-gray-800 leading-tight mt-0.5">إدارة القوى البشرية</p>
                   </div>
-                  <div class="flex justify-between items-center">
-                    <span>التاريخ:</span>
-                    <span class="font-sans font-bold text-[12.5px]">{{ memo.date || '.........................' }}</span>
+
+                  <!-- Center: Basmala (Thin Elegant Calligraphy) & High Resolution Republican Eagle -->
+                  <div class="flex flex-col items-center justify-center space-y-3 mt-1" style="width: 40%; min-width: 40%; text-align: center; align-self: center;">
+                    <p class="text-[1.45rem] tracking-wide text-gray-950 basmala-text leading-none text-center w-full">بسم الله الرحمن الرحيم</p>
+                    <img :src="yemenLogo" class="w-[90px] h-auto object-contain mx-auto" alt="شعار الجمهورية اليمنية" />
                   </div>
-                  <div class="flex justify-between items-center">
-                    <span>الموافق:</span>
-                    <span class="font-sans font-bold text-[12.5px]">{{ memo.gregorianDate || '.........................' }}</span>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span>المرفقات:</span>
-                    <span class="font-sans font-bold text-[12.5px]">{{ memo.attachments || 'لا يوجد' }}</span>
-                  </div>
-                </div>
-              </div>
 
-              <!-- Thick divider -->
-              <div class="border-b-4 border-double border-black my-4"></div>
-
-              <!-- Document Title inside elegant box -->
-              <div class="text-center my-6">
-                <h2 class="text-[18px] font-bold border-2 border-black px-6 py-1.5 rounded inline-block bg-gray-50/30">
-                  {{ memo.templateType === 'memo' ? 'مـذكـــــرة رسميـــــة' : memo.templateType === 'circular' ? 'تـعـمـيـم إداري' : 'قــرار إداري' }}
-                </h2>
-              </div>
-
-              <!-- Recipient Line -->
-              <div class="text-right text-[15px] font-bold my-5 space-y-2">
-                <p class="text-gray-950">الأخ / <span class="border-b border-dotted border-black px-4 pb-0.5 inline-block min-w-[280px] text-center">{{ memo.recipient || '..................................................' }}</span> المحترم</p>
-                <p class="pr-8 text-gray-800">تحية طيبة وبعد،،،</p>
-              </div>
-
-              <!-- Subject Line in border block -->
-              <div class="text-right text-[15px] font-bold my-4 bg-gray-50/50 border border-black/80 p-3.5 rounded-md leading-relaxed">
-                <span>الموضوع: </span>
-                <span class="border-b border-black pb-0.5 inline-block min-w-[320px] font-bold text-gray-900">{{ memo.subject || '.......................................................................' }}</span>
-              </div>
-
-              <!-- Body Line -->
-              <div class="text-right text-[15px] leading-[2.2] text-gray-950 whitespace-pre-wrap px-4 min-h-[350px] text-justify font-normal indent-8" style="font-family: 'Amiri', serif;">
-                {{ memo.body || 'يرجى كتابة نص المذكرة هنا ليتم عرضه كترويسة رسمية...' }}
-              </div>
-            </div>
-
-            <!-- Bottom Section (Signatures & Copy lists) -->
-            <div>
-              <div class="grid grid-cols-2 mt-12 pb-6">
-                <div></div>
-                <!-- Signature Area -->
-                <div class="text-center space-y-2 flex flex-col items-center">
-                  <p class="font-bold text-[16px] text-gray-950 leading-tight">{{ memo.signatoryName || '.....................................' }}</p>
-                  <p class="text-[13px] font-semibold text-gray-700 leading-tight">{{ memo.signatoryTitle || '.....................................' }}</p>
-                  <div class="h-20 flex items-center justify-center">
-                    <span class="text-[11px] text-gray-400 italic font-sans">(التوقيع والختم الرسمي)</span>
+                  <!-- Left Header: Symmetrically aligned metadata container (forced left) -->
+                  <div class="text-xs pb-1 flex flex-col items-start justify-end" style="width: 30%; min-width: 30%; font-family: 'Amiri', serif;">
+                    <div style="width: 145px; display: flex; flex-direction: column; gap: 5px; margin-left: 0; margin-right: auto;">
+                      <div class="flex justify-between items-center w-full text-[12.5px] font-bold text-gray-900" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>الرقــم:</span>
+                        <span class="font-sans font-semibold text-[11.5px] text-left">{{ memo.refNo || '............' }}</span>
+                      </div>
+                      <div class="flex justify-between items-center w-full text-[12.5px] font-bold text-gray-900" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>التاريخ:</span>
+                        <span class="font-sans font-semibold text-[11.5px] text-left">{{ memo.date || '............' }}</span>
+                      </div>
+                      <div class="flex justify-between items-center w-full text-[12.5px] font-bold text-gray-900" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>الموافق:</span>
+                        <span class="font-sans font-semibold text-[11.5px] text-left">{{ memo.gregorianDate || '............' }}</span>
+                      </div>
+                      <div class="flex justify-between items-center w-full text-[12.5px] font-bold text-gray-900" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>المرفقات:</span>
+                        <span class="font-sans font-semibold text-[11.5px] text-left">{{ memo.attachments || 'لا يوجد' }}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
+
+                <!-- Thin solid divider -->
+                <div class="border-b border-black my-4 opacity-70"></div>
+
+                <!-- Document Title inside elegant box -->
+                <div class="text-center my-6">
+                  <h2 class="text-[20px] font-bold tracking-wider text-gray-900 border-b-2 border-black pb-1 px-4 inline-block bg-gray-50/10">
+                    {{ memo.templateType === 'memo' ? 'مـذكـــــرة رسميـــــة' : memo.templateType === 'circular' ? 'تـعـمـيـم إداري' : 'قــرار إداري' }}
+                  </h2>
+                </div>
+
+                <!-- Recipient Line -->
+                <div class="text-right text-[15px] font-bold my-5 space-y-2">
+                  <p class="text-gray-950">
+                    الأخ / 
+                    <span class="px-2 pb-0.5 inline-block text-center" :style="memo.recipient ? 'border-bottom: 1.5px dotted black; min-width: 250px;' : 'min-width: 250px;'">
+                      {{ memo.recipient || '..................................................' }}
+                    </span> 
+                    المحترم
+                  </p>
+                  <p class="pr-8 text-gray-800">تحية طيبة وبعد،،،</p>
+                </div>
+
+                <!-- Subject Line in border block -->
+                <div class="text-right text-[15px] font-bold my-4 bg-gray-50/50 border border-gray-300 p-3 rounded-md leading-relaxed" style="display: flex; align-items: center; justify-content: start; gap: 8px;">
+                  <span class="text-gray-700">الموضوع:</span>
+                  <span class="font-bold text-gray-950" :style="memo.subject ? 'border-bottom: 1.5px solid black; min-width: 320px; padding-bottom: 2px;' : 'min-width: 320px;'">
+                    {{ memo.subject || '.......................................................................' }}
+                  </span>
+                </div>
+
+                <!-- Body Line -->
+                <div class="text-right text-[16px] leading-[2.2] text-gray-950 whitespace-pre-wrap px-4 min-h-[380px] text-justify font-normal indent-8" style="font-family: 'Amiri', serif;">
+                  {{ memo.body || 'يرجى كتابة نص المذكرة هنا ليتم عرضه كترويسة رسمية...' }}
+                </div>
               </div>
+
+              <!-- Bottom Section (Signatures & Copy lists) -->
+              <div>
+                <div class="grid grid-cols-2 mt-8 pb-4">
+                  <div></div>
+                  <!-- Signature Area -->
+                  <div class="text-center space-y-2 flex flex-col items-center">
+                    <p class="font-bold text-[16px] text-gray-950 leading-tight">
+                      {{ memo.signatoryName || '.....................................' }}
+                    </p>
+                    <p class="text-[13px] font-semibold text-gray-700 leading-tight">
+                      {{ memo.signatoryTitle || 'مدير إدارة القوى البشرية' }}
+                    </p>
+                    <div class="h-16 flex items-center justify-center">
+                      <span class="text-[11px] text-gray-400 italic font-sans">(التوقيع والختم الرسمي)</span>
+                    </div>
+                  </div>
+                </div>
 
               <!-- Circular template CC list (نسخة مع التحية) -->
               <div class="text-right text-[11px] text-gray-600 border-t border-gray-250 pt-3 space-y-1">
@@ -203,6 +219,7 @@
                 <p>- ملف المتابعة والرقابة</p>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -354,7 +371,7 @@ const personnelStore = usePersonnelStore()
 const authStore = useAuthStore()
 const coreStore = useCoreStore()
 
-const activeTab = ref('writer')
+const activeTab = ref<any>('writer')
 const loading = ref(false)
 const savingCorrespondence = ref(false)
 const showAddModal = ref(false)
@@ -487,12 +504,12 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Aref+Ruqaa:wght@400;700&display=swap');
 
 .basmala-text {
-  font-family: 'Amiri', serif;
-  font-size: 1.35rem;
-  font-weight: 700;
+  font-family: 'Aref Ruqaa', serif;
+  font-size: 1.45rem;
+  font-weight: 400;
   color: #111827;
   text-align: center;
 }
