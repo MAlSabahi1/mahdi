@@ -42,9 +42,10 @@ DEFAULT_PROTECTED_COLUMNS = [
 
 # الأعمدة القابلة للتعديل الافتراضية
 DEFAULT_EDITABLE_COLUMNS = [
-    'نوع الحالة الجديدة',   # القائمة المنسدلة الثانية (الفرعية)
-    'الحالة الجديدة',        # القائمة المنسدلة الأولى (التصنيف العام)
-    'ملاحظات',               # نص حر فقط
+    'الحالة',                # القائمة المنسدلة الأولى (التصنيف العام)
+    'نوع الحالة',            # القائمة المنسدلة الثانية (الفرعية)
+    'المتغير الشهري',        # المتغير الذي يطبع في سجل المتغيرات
+    'ملاحظات',               # نص حر للتعليقات
 ]
 
 # تصنيفات الحالات (4 تصنيفات رئيسية)
@@ -216,33 +217,27 @@ class ExcelExportService:
     # ──────────────────────────────────────────────────────────
 
     def _build_formats(self, workbook) -> Dict:
-        """تعريف كل الـ Formats المستخدمة."""
+        """تعريف الفورمات بدون ألوان مزعجة لتتوافق مع Native Excel Tables."""
         return {
             'header': workbook.add_format({
-                'bold': True, 'bg_color': '#1F3864', 'font_color': 'white',
-                'align': 'center', 'valign': 'vcenter', 'border': 1,
-                'text_wrap': True, 'font_size': 11,
+                'bold': True, 'align': 'center', 'valign': 'vcenter', 'font_name': 'Arial', 'font_size': 11
             }),
             'protected': workbook.add_format({
-                'bg_color': '#F2F2F2', 'locked': True, 'border': 1,
-                'align': 'right', 'valign': 'vcenter', 'font_size': 10,
+                'locked': True, 'align': 'center', 'valign': 'vcenter', 'font_size': 11, 'font_name': 'Arial',
             }),
             'editable': workbook.add_format({
-                'locked': False, 'border': 1, 'align': 'right',
-                'valign': 'vcenter', 'bg_color': '#EBF5FB', 'font_size': 10,
+                'locked': False, 'align': 'center', 'valign': 'vcenter', 'font_size': 11, 'font_name': 'Arial',
             }),
             'notes_editable': workbook.add_format({
-                'locked': False, 'border': 1, 'align': 'right',
-                'valign': 'vcenter', 'font_size': 10, 'text_wrap': True,
+                'locked': False, 'align': 'right', 'valign': 'vcenter', 'font_size': 11, 'text_wrap': True, 'font_name': 'Arial',
             }),
-            'hidden': workbook.add_format({'locked': True, 'hidden': True, 'font_size': 1}),
+            'hidden': workbook.add_format({'locked': True, 'hidden': True}),
             'meta': workbook.add_format({
-                'locked': True, 'bg_color': '#D5E8D4', 'font_color': '#2E7D32',
-                'align': 'right', 'valign': 'vcenter', 'font_size': 9, 'italic': True,
+                'locked': True, 'align': 'right', 'valign': 'vcenter', 'font_size': 9, 'italic': True,
             }),
             'warning': workbook.add_format({
-                'locked': True, 'bg_color': '#FFE0B2', 'font_color': '#E65100',
-                'align': 'center', 'valign': 'vcenter', 'font_size': 9, 'bold': True,
+                'locked': True, 'bg_color': '#FFF2CC', 'font_color': '#B45F06',
+                'align': 'center', 'valign': 'vcenter', 'font_size': 11, 'bold': True, 'font_name': 'Arial',
             }),
         }
 
@@ -259,26 +254,30 @@ class ExcelExportService:
         all_cols = self.protected_columns + self.editable_columns + ['__UUID__']
         all_statuses = list(self._status_cascade.keys())  # 4 تصنيفات
 
+        worksheet.hide_gridlines(2)  # إخفاء خطوط الشبكة الافتراضية لشكل أنظف
+
         # ── صف المعلومات الأولى (تحذير + بيانات التصدير) ──
         worksheet.merge_range(
             0, 0, 0, len(all_cols) - 1,
-            f'⚠ هذا الملف رسمي ومحمي — الإدارة: {self.central_department.name} | '
-            f'الشهر: {self.service_month} | التصدير: {str(self.export_id)[:8]} | '
-            f'العدد: {len(persons)} فرد',
+            f'معلومات الإدارة: {self.central_department.name} | '
+            f'شهر الخدمة: {self.service_month} | مرجع التصدير: {str(self.export_id)[:8]} | '
+            f'عدد الأفراد: {len(persons)}',
             fmts['warning'],
         )
-        worksheet.set_row(0, 18)
+        worksheet.set_row(0, 25)
 
         # ── صف العناوين ──
+        # لا نحتاج لكتابة العناوين يدوياً لأن add_table ستقوم بذلك، لكن نكتبها تحسباً
         for col_idx, header in enumerate(all_cols):
             worksheet.write(1, col_idx, header, fmts['header'])
+        worksheet.set_row(1, 25)
 
         # ── ضبط عرض الأعمدة ──
         col_widths = {
             'الرقم العسكري': 15, 'الاسم الكامل': 35, 'الرتبة': 15,
             'الرقم الوطني': 18, 'الحالة الحالية': 25,
-            'الحالة الجديدة': 28, 'نوع الحالة الجديدة': 32,
-            'ملاحظات': 45, '__UUID__': 0,
+            'الحالة': 28, 'نوع الحالة': 32,
+            'المتغير الشهري': 35, 'ملاحظات': 45, '__UUID__': 0,
         }
         for col_idx, header in enumerate(all_cols):
             width = col_widths.get(header, 20)
@@ -290,6 +289,7 @@ class ExcelExportService:
         # ── كتابة بيانات الأفراد ──
         for row_offset, person in enumerate(persons):
             row = row_offset + 2  # الصف الأول للبيانات = 2
+            worksheet.set_row(row, 22)  # مساحة مريحة للعين
 
             row_data_map = {
                 'الرقم العسكري':  person['military_number'],
@@ -306,12 +306,21 @@ class ExcelExportService:
                 elif header in self.protected_columns:
                     worksheet.write(row, col_idx, row_data_map.get(header, ''), fmts['protected'])
 
-                elif header == 'ملاحظات':
+                elif header in ['ملاحظات', 'المتغير الشهري']:
                     worksheet.write(row, col_idx, '', fmts['notes_editable'])
 
                 else:
                     # أعمدة قابلة للتعديل (قوائم منسدلة)
                     worksheet.write(row, col_idx, '', fmts['editable'])
+
+        # ── تحويل البيانات إلى Native Excel Table ──
+        if persons:
+            last_row = len(persons) + 1
+            worksheet.add_table(1, 0, last_row, len(all_cols) - 1, {
+                'columns': [{'header': col} for col in all_cols],
+                'style': 'Table Style Light 9',  # الاستايل الأزرق الاحترافي النظيف
+                'banded_rows': True,
+            })
 
         # ── Data Validation للأعمدة القابلة للتعديل ──
         if persons:
@@ -319,7 +328,7 @@ class ExcelExportService:
             last_data_row = len(persons) + 1
 
             for col_idx, header in enumerate(all_cols):
-                if header == 'الحالة الجديدة':
+                if header == 'الحالة':
                     worksheet.data_validation(
                         first_data_row, col_idx, last_data_row, col_idx,
                         {
@@ -335,7 +344,7 @@ class ExcelExportService:
                         }
                     )
 
-                elif header == 'نوع الحالة الجديدة':
+                elif header == 'نوع الحالة':
                     # القائمة الشرطية: كل الحالات التفصيلية مجتمعة (الفرونت اند يتحكم بالفلترة)
                     all_detailed = []
                     for statuses in self._status_cascade.values():
@@ -551,11 +560,3 @@ def get_status_cascade() -> Dict[str, List[str]]:
     يستخدمها الفرونت اند لبناء القوائم الشرطية (Cascading Dropdowns).
     """
     return _build_status_cascade()
-
-
-def get_required_attachments(status_name: str) -> List[str]:
-    """
-    إعادة قائمة المرفقات المطلوبة لحالة معينة.
-    يستخدمها الـ ImportService للتحقق قبل الاعتماد.
-    """
-    return REQUIRED_ATTACHMENTS.get(status_name, [])

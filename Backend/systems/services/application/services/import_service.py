@@ -255,21 +255,37 @@ class ExcelImportService:
                 self.stats['warnings'] += 1
 
             # ── الخطوة 8: كشف التغييرات المسموح بها ──
-            new_status_cls  = row.get('الحالة الجديدة', '').strip()
-            new_status_type = row.get('نوع الحالة الجديدة', '').strip()
-            notes           = row.get('ملاحظات', '').strip()
-            old_status      = person.current_status.name if person.current_status else ''
+            new_status_cls   = row.get('الحالة', '').strip()
+            new_status_type  = row.get('نوع الحالة', '').strip()
+            monthly_variable = row.get('المتغير الشهري', '').strip()
+            notes            = row.get('ملاحظات', '').strip()
+            old_status       = person.current_status.name if person.current_status else ''
 
-            if new_status_type and new_status_type != old_status:
+            if not new_status_type:
+                new_status_type = old_status
+                new_status_cls = person.current_status.get_classification_display() if person.current_status else ''
+
+            is_status_changed = (new_status_type != old_status)
+
+            if is_status_changed or monthly_variable:
                 severity, requires_doc, attachments = self._classify_change(new_status_type)
-                self.stats['changes_detected'] += 1
-                self.stats[severity] += 1
+                if is_status_changed:
+                    self.stats['changes_detected'] += 1
+                    self.stats[severity] += 1
+                else:
+                    # If only monthly variable changed, it's considered a green/low severity change
+                    self.stats['changes_detected'] += 1
+                    self.stats['green'] += 1
+                    severity = 'green'
+                    requires_doc = False
+                    attachments = []
 
                 self.changes.append({
                     'personnel':         person,
                     'old_status':        old_status,
                     'new_status':        new_status_type,
                     'new_classification': new_status_cls,
+                    'monthly_variable':  monthly_variable,
                     'notes':             notes,
                     'severity':          severity,
                     'requires_document': requires_doc,
@@ -334,6 +350,7 @@ class ExcelImportService:
                 proposed_change={
                     'status':              ch['new_status'],
                     'classification':      ch['new_classification'],
+                    'monthly_variable':    ch['monthly_variable'],
                     'service_month':       self.service_month or self.export_log.service_month,
                     'required_attachments': ch['required_attachments'],
                 },
