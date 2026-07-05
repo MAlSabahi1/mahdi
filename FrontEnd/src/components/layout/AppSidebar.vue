@@ -263,13 +263,43 @@ const menuGroups = computed(() => {
           },
           {
             icon: PageIcon,
-            name: "nav.correspondences",
-            path: "/secretariat/correspondences",
+            name: "secretariat.units.secretariat",
+            subItems: [
+              {
+                name: "secretariat.correspondences.title",
+                path: "/secretariat/correspondences",
+              },
+              {
+                name: "secretariat.tasks.title",
+                path: "/secretariat/tasks",
+              },
+              {
+                name: "secretariat.meetings.title",
+                path: "/secretariat/meetings",
+              },
+              {
+                name: "secretariat.office_work.title",
+                path: "/secretariat/document-requests",
+              }
+            ]
           },
           {
-            icon: PageIcon,
-            name: "nav.tasks",
-            path: "/secretariat/tasks",
+            icon: UserGroupIcon,
+            name: "secretariat.units.followup",
+            subItems: [
+              {
+                name: "secretariat.inventory.title",
+                path: "/secretariat/inventory",
+              },
+              {
+                name: "secretariat.attendance.title",
+                path: "/secretariat/attendance",
+              },
+              {
+                name: "secretariat.finance.title",
+                path: "/secretariat/finance",
+              }
+            ]
           }
         ]
       }

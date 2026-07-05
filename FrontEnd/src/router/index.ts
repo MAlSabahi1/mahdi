@@ -368,11 +368,65 @@ const router = createRouter({
       },
     },
     {
+      path: '/secretariat/correspondences/:id',
+      name: 'SecretariatCorrespondenceDetail',
+      component: () => import('@/views/Secretariat/CorrespondenceDetail.vue'),
+      meta: {
+        title: 'تفاصيل وأرشفة المراسلة',
+        requiresAuth: true,
+      },
+    },
+    {
       path: '/secretariat/tasks',
       name: 'SecretariatTasks',
       component: () => import('@/views/Secretariat/TasksBoard.vue'),
       meta: {
         title: 'إدارة المهام',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/secretariat/meetings',
+      name: 'SecretariatMeetings',
+      component: () => import('@/views/Secretariat/MeetingMinutes.vue'),
+      meta: {
+        title: 'محاضر الاجتماعات',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/secretariat/inventory',
+      name: 'SecretariatInventory',
+      component: () => import('@/views/Secretariat/InventoryCustody.vue'),
+      meta: {
+        title: 'القرطاسية والعهد والمخزن',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/secretariat/attendance',
+      name: 'SecretariatAttendance',
+      component: () => import('@/views/Secretariat/AttendanceMonitoring.vue'),
+      meta: {
+        title: 'رقابة الحضور والدوام',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/secretariat/finance',
+      name: 'SecretariatFinance',
+      component: () => import('@/views/Secretariat/FinancialAllocations.vue'),
+      meta: {
+        title: 'الاعتماد المالي والمصروفات',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/secretariat/document-requests',
+      name: 'SecretariatDocumentRequests',
+      component: () => import('@/views/Secretariat/DocumentRequests.vue'),
+      meta: {
+        title: 'طلبات الأعمال المكتبية وصياغة الخطابات',
         requiresAuth: true,
       },
     },
