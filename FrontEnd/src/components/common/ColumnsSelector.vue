@@ -2,8 +2,8 @@
   <div class="relative">
     <button
       @click="isOpen = !isOpen"
-      class="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 hover:text-gray-600 shadow-sm transition-all dark:border-gray-800 dark:bg-gray-950 dark:text-gray-500 cursor-pointer"
-      title="تحديد الأعمدة الظاهرة"
+      class="flex h-10 w-10 items-center justify-center rounded-lg border shadow-theme-xs transition-all duration-200 ease-in-out cursor-pointer hover:shadow-theme-sm hover:-translate-y-0.5 border-gray-200 bg-white text-gray-500 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-200 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-brand-500/10 dark:hover:text-brand-400 dark:hover:border-brand-500/30"
+      :title="$t?.('common.select_columns') || 'تحديد الأعمدة الظاهرة'"
     >
       <svg class="h-5 w-5 stroke-[1.8]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -17,10 +17,10 @@
     <!-- Columns Selection Dropdown Menu -->
     <div
       v-if="isOpen"
-      class="absolute right-0 mt-2 w-56 rounded-2xl border border-gray-150 bg-white p-3 shadow-lg z-50 dark:border-gray-800 dark:bg-gray-900 text-right"
+      class="absolute end-0 mt-2 w-56 rounded-xl border border-gray-150 bg-white p-3 shadow-lg z-50 dark:border-gray-800 dark:bg-gray-900 text-start"
     >
-      <div class="text-xs font-bold text-gray-400 mb-2 select-none px-2">الأعمدة المعروضة</div>
-      <div class="space-y-1 max-h-64 overflow-y-auto pr-1">
+      <div class="text-xs font-bold text-gray-400 mb-2 select-none px-2">{{ $t?.('common.displayed_columns') || 'الأعمدة المعروضة' }}</div>
+      <div class="space-y-1 max-h-64 overflow-y-auto pe-1">
         <label
           v-for="col in columns"
           :key="col.key"

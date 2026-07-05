@@ -132,6 +132,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunSQL(
+            sql="ALTER TABLE authorization_role DROP COLUMN IF EXISTS permissions; ALTER TABLE authorization_role DROP COLUMN IF EXISTS visible_pages;",
+            reverse_sql=migrations.RunSQL.noop,
+        ),
         migrations.RunPython(
             create_missing_roles_and_assign_permissions,
             rollback,

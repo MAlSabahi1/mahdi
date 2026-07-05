@@ -3,138 +3,115 @@
     <PageBreadcrumb :pageTitle="$t('settlements.title') || 'تسويات رتب الأفراد'" />
     <div class="space-y-6">
       
-      <!-- Page Header -->
-      <div class="flex justify-end gap-3">
-        <button @click="fetchData" class="rounded-lg border border-gray-200 bg-white p-2.5 text-gray-500 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors cursor-pointer">
-          <svg class="h-5 w-5" :class="{'animate-spin': store.loading}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-        </button>
-      </div>
-
-      <!-- Main Content -->
-      <div class="rounded-2xl border border-gray-200 bg-white shadow-theme-sm dark:border-gray-800 dark:bg-gray-900">
-        
-        <!-- Table -->
-        <div class="overflow-x-auto">
-          <table class="w-full text-start text-sm text-gray-500 dark:text-gray-400">
-            <thead class="bg-gray-50 text-xs uppercase text-gray-700 dark:bg-gray-800/50 dark:text-gray-300">
-              <tr>
-                <th scope="col" class="px-6 py-4 font-semibold">{{ $t('personnel.military_number') }}</th>
-                <th scope="col" class="px-6 py-4 font-semibold">{{ $t('personnel.full_name') }}</th>
-                <th scope="col" class="px-6 py-4 font-semibold">{{ $t('settlements.settlement_type') }}</th>
-                <th scope="col" class="px-6 py-4 font-semibold text-center">{{ $t('settlements.from_rank') }}</th>
-                <th scope="col" class="px-6 py-4 font-semibold text-center">{{ $t('settlements.to_rank') }}</th>
-                <th scope="col" class="px-6 py-4 font-semibold">{{ $t('settlements.decision_number') }}</th>
-                <th scope="col" class="px-6 py-4 font-semibold text-end">{{ $t('common.actions') }}</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-              <!-- Loading Skeleton -->
-              <tr v-if="store.loading && store.pendingSettlements.length === 0">
-                <td colspan="7" class="px-6 py-8">
-                  <div class="flex justify-center">
-                    <svg class="h-8 w-8 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                    </svg>
-                  </div>
-                </td>
-              </tr>
-
-              <!-- Empty State -->
-              <tr v-else-if="store.pendingSettlements.length === 0">
-                <td colspan="7" class="px-6 py-12 text-center">
-                  <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-                    <svg class="h-8 w-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                    </svg>
-                  </div>
-                  <h3 class="mt-4 text-sm font-medium text-gray-900 dark:text-white">{{ $t('settlements.empty_state') }}</h3>
-                </td>
-              </tr>
-
-              <!-- Data Rows -->
-              <tr v-for="item in store.pendingSettlements" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                  {{ item.personnel_military_number }}
-                </td>
-                <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                  {{ item.personnel_name }}
-                  <div class="text-xs text-gray-500 font-normal mt-0.5" v-if="item.requested_by_name">
-                    مقدم الطلب: {{ item.requested_by_name }}
-                  </div>
-                </td>
-                <td class="px-6 py-4">
-                  <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold"
-                    :class="getTypeColor(item.settlement_type)">
-                    {{ $t(`settlements.types.${item.settlement_type}`) }}
-                  </span>
-                  <div v-if="item.settlement_type === 'personnel_to_officer'" class="text-xs text-brand-600 dark:text-brand-400 mt-1">
-                    الرقم الجديد: {{ item.new_military_number || 'غير محدد' }}
-                  </div>
-                </td>
-                <td class="px-6 py-4 text-center">
-                  <span class="inline-block px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded text-xs">
-                    {{ item.from_rank_name || '؟' }}
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-center">
-                  <svg class="h-4 w-4 mx-auto text-gray-400 mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                  </svg>
-                  <span class="inline-block px-2 py-1 bg-brand-50 text-brand-700 dark:bg-brand-500/20 dark:text-brand-400 font-bold rounded text-xs border border-brand-200 dark:border-brand-800/50">
-                    {{ item.to_rank_name || '؟' }}
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-xs">
-                  <div>{{ item.decision_number || '—' }}</div>
-                  <div class="text-gray-400">{{ item.decision_date || '—' }}</div>
-                </td>
-                <td class="px-6 py-4 text-end">
-                  <div class="flex items-center justify-end gap-2">
-                    <button @click="confirmApply(item)" :disabled="actionLoading" class="inline-flex items-center justify-center rounded-lg bg-success-50 text-success-700 p-2 hover:bg-success-100 dark:bg-success-500/10 dark:text-success-400 dark:hover:bg-success-500/20 transition-colors disabled:opacity-50" title="اعتماد التسوية">
-                      <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </button>
-                    <button @click="openRejectModal(item)" :disabled="actionLoading" class="inline-flex items-center justify-center rounded-lg bg-error-50 text-error-700 p-2 hover:bg-error-100 dark:bg-error-500/10 dark:text-error-400 dark:hover:bg-error-500/20 transition-colors disabled:opacity-50" title="رفض التسوية">
-                      <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        
-        <!-- Pagination -->
-        <div v-if="store.totalPages > 1" class="border-t border-gray-100 px-6 py-4 dark:border-gray-800">
-          <div class="flex items-center justify-between">
-            <p class="text-sm text-gray-700 dark:text-gray-400">
-              إجمالي الطلبات: <span class="font-medium">{{ store.totalCount }}</span>
-            </p>
-            <div class="flex gap-2">
-              <button 
-                @click="changePage(store.currentPage - 1)" 
-                :disabled="store.currentPage === 1"
-                class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+      <!-- Data Table -->
+      <BasicTable
+        :columns="tableColumns"
+        :data="filteredSettlements"
+        row-key="id"
+        :loading="store.loading"
+        :has-actions="true"
+        actions-width="120px"
+        :empty-title="$t('settlements.empty_state') || 'لا توجد طلبات تسوية'"
+        :empty-description="$t('settlements.empty_state_desc') || 'جميع طلبات تسوية الرتب تم البت فيها بنجاح.'"
+      >
+        <!-- Table Header Toolbar -->
+        <template #header>
+          <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 w-full">
+            <!-- Search -->
+            <div class="relative w-full sm:max-w-xs shrink-0">
+              <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+                <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                v-model="searchQuery"
+                type="text"
+                :placeholder="$t('settlements.search_placeholder') || 'بحث باسم الفرد أو الرقم العسكري...'"
+                class="w-full h-10 rounded-lg border border-gray-300 bg-gray-50 py-2 ps-9 pe-8 text-theme-sm text-gray-900 placeholder-gray-400 focus:border-brand-300 focus:bg-white focus:ring-2 focus:ring-brand-500/10 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500 transition-all"
+              />
+            </div>
+            
+            <div class="flex justify-end gap-3 flex-wrap">
+              <button
+                @click="fetchData"
+                class="flex h-10 items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors cursor-pointer"
               >
-                السابق
-              </button>
-              <button 
-                @click="changePage(store.currentPage + 1)" 
-                :disabled="store.currentPage === store.totalPages"
-                class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-              >
-                التالي
+                <svg class="h-4.5 w-4.5 text-gray-500" :class="{'animate-spin': store.loading}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {{ $t('common.refresh') || 'تحديث' }}
               </button>
             </div>
           </div>
-        </div>
-      </div>
+        </template>
+
+        <template #cell-military_number="{ row }">
+          <span class="font-medium text-gray-900 dark:text-white">{{ row.personnel_military_number }}</span>
+        </template>
+
+        <template #cell-full_name="{ row }">
+          <span class="font-medium text-gray-900 dark:text-white">{{ row.personnel_name }}</span>
+          <div class="text-xs text-gray-500 font-normal mt-0.5" v-if="row.requested_by_name">
+            {{ $t('settlements.requester') || 'مقدم الطلب' }}: {{ row.requested_by_name }}
+          </div>
+        </template>
+
+        <template #cell-settlement_type="{ row }">
+          <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold"
+            :class="getTypeColor(row.settlement_type)">
+            {{ $t(`settlements.types.${row.settlement_type}`) }}
+          </span>
+          <div v-if="row.settlement_type === 'personnel_to_officer'" class="text-xs text-brand-600 dark:text-brand-400 mt-1">
+            {{ $t('settlements.new_number') || 'الرقم الجديد' }}: {{ row.new_military_number || $t('personnel.unspecified') || 'غير محدد' }}
+          </div>
+        </template>
+
+        <template #cell-from_rank="{ row }">
+          <span class="inline-block px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded text-xs">
+            {{ row.from_rank_name || '؟' }}
+          </span>
+        </template>
+
+        <template #cell-to_rank="{ row }">
+          <svg class="h-4 w-4 mx-auto text-gray-400 mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
+          <span class="inline-block px-2 py-1 bg-brand-50 text-brand-700 dark:bg-brand-500/20 dark:text-brand-400 font-bold rounded text-xs border border-brand-200 dark:border-brand-800/50">
+            {{ row.to_rank_name || '؟' }}
+          </span>
+        </template>
+
+        <template #cell-decision_number="{ row }">
+          <div>{{ row.decision_number || '—' }}</div>
+          <div class="text-gray-400">{{ row.decision_date || '—' }}</div>
+        </template>
+
+        <template #actions="{ row }">
+          <button @click="confirmApply(row)" :disabled="actionLoading" class="inline-flex items-center justify-center rounded-lg bg-success-50 text-success-700 p-2 hover:bg-success-100 dark:bg-success-500/10 dark:text-success-400 dark:hover:bg-success-500/20 transition-colors disabled:opacity-50" :title="$t('personnel.approve') || 'اعتماد'">
+            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </button>
+          <button @click="openRejectModal(row)" :disabled="actionLoading" class="inline-flex items-center justify-center rounded-lg bg-error-50 text-error-700 p-2 hover:bg-error-100 dark:bg-error-500/10 dark:text-error-400 dark:hover:bg-error-500/20 transition-colors disabled:opacity-50" :title="$t('personnel.reject') || 'رفض'">
+            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </template>
+
+        <template #footer>
+          <TablePagination
+            v-if="!store.loading && store.totalCount > 0"
+            :currentPage="store.currentPage"
+            :totalPages="store.totalPages"
+            :totalCount="store.totalCount"
+            :pageSize="store.pageSize || 15"
+            :visiblePages="computedVisiblePages"
+            @change-page="changePage"
+          />
+        </template>
+      </BasicTable>
     </div>
 
     <!-- Reject Modal -->
@@ -145,24 +122,24 @@
       <!-- Modal Content -->
       <div class="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-start align-middle shadow-xl transition-all dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
         <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">
-          رفض طلب التسوية
+          {{ $t('settlements.reject_modal_title') || 'رفض طلب التسوية' }}
         </h3>
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          يرجى إدخال سبب الرفض لتسوية الرتبة للفرد ({{ selectedSettlement?.personnel_name }}).
+          {{ $t('settlements.reject_modal_desc', { name: selectedSettlement?.personnel_name }) || `يرجى إدخال سبب الرفض لتسوية الرتبة للفرد (${selectedSettlement?.personnel_name}).` }}
         </p>
         
-        <textarea v-model="rejectionReason" v-field-error="'rejectionReason'" rows="3" required class="block w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-900 focus:border-error-500 focus:ring-error-500 dark:border-gray-700 dark:text-white" placeholder="سبب الرفض..."></textarea>
+        <textarea v-model="rejectionReason" v-field-error="'rejectionReason'" rows="3" required class="block w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-900 focus:border-error-500 focus:ring-error-500 dark:border-gray-700 dark:text-white" :placeholder="$t('settlements.reject_reason_placeholder') || 'سبب الرفض...'"></textarea>
         
         <div class="mt-6 flex justify-end gap-3">
           <button @click="showRejectModal = false" class="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
-            إلغاء
+            {{ $t('common.cancel') || 'إلغاء' }}
           </button>
           <button @click="submitReject" :disabled="actionLoading" class="rounded-lg bg-error-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-error-700 transition-colors disabled:opacity-50 flex items-center gap-2">
             <svg v-if="actionLoading" class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
             </svg>
-            تأكيد الرفض
+            {{ $t('settlements.confirm_reject_btn') || 'تأكيد الرفض' }}
           </button>
         </div>
       </div>
@@ -171,10 +148,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
+import BasicTable from '@/components/tables/BasicTable.vue'
+import TablePagination from '@/components/common/TablePagination.vue'
 import { useRankSettlementStore, type RankSettlement } from '@/stores/rankSettlement'
 import Swal from 'sweetalert2'
 import { validateFormFields } from '@/stores/validation'
@@ -182,10 +161,49 @@ import { validateFormFields } from '@/stores/validation'
 const { t } = useI18n()
 const store = useRankSettlementStore()
 
+const tableColumns = [
+  { key: 'military_number', label: t('personnel.military_number') || 'الرقم العسكري' },
+  { key: 'full_name', label: t('personnel.full_name') || 'الاسم' },
+  { key: 'settlement_type', label: t('settlements.settlement_type') || 'نوع التسوية' },
+  { key: 'from_rank', label: t('settlements.from_rank') || 'من رتبة', class: 'text-center', tdClass: 'text-center' },
+  { key: 'to_rank', label: t('settlements.to_rank') || 'إلى رتبة', class: 'text-center', tdClass: 'text-center' },
+  { key: 'decision_number', label: t('settlements.decision_number') || 'رقم القرار' }
+]
+
+const computedVisiblePages = computed((): (number | string)[] => {
+  const total = store.totalPages || 1
+  const current = store.currentPage || 1
+  const pages: (number | string)[] = []
+
+  if (total <= 7) {
+    for (let i = 1; i <= total; i++) pages.push(i)
+  } else {
+    pages.push(1)
+    if (current > 3) pages.push('...')
+    const start = Math.max(2, current - 1)
+    const end = Math.min(total - 1, current + 1)
+    for (let i = start; i <= end; i++) pages.push(i)
+    if (current < total - 2) pages.push('...')
+    pages.push(total)
+  }
+  return pages
+})
+
 const actionLoading = ref(false)
 const showRejectModal = ref(false)
 const selectedSettlement = ref<RankSettlement | null>(null)
 const rejectionReason = ref('')
+
+const searchQuery = ref('')
+const filteredSettlements = computed(() => {
+  if (!searchQuery.value) return store.pendingSettlements
+  const q = searchQuery.value.toLowerCase()
+  return store.pendingSettlements.filter((r: any) => 
+    (r.personnel_name && r.personnel_name.toLowerCase().includes(q)) ||
+    (r.personnel_military_number && r.personnel_military_number.includes(q)) ||
+    (r.decision_number && String(r.decision_number).toLowerCase().includes(q))
+  )
+})
 
 onMounted(() => {
   fetchData()
@@ -219,14 +237,14 @@ function getTypeColor(type: string) {
 
 async function confirmApply(item: RankSettlement) {
   const result = await Swal.fire({
-    title: t('settlements.confirm_apply'),
-    text: `ستقوم بتحديث بيانات الفرد (${item.personnel_name}) إلى الرتبة الجديدة (${item.to_rank_name}).`,
+    title: t('settlements.confirm_apply_title') || 'تأكيد الاعتماد',
+    text: t('settlements.confirm_apply_text', { name: item.personnel_name, rank: item.to_rank_name }) || `ستقوم بتحديث بيانات الفرد (${item.personnel_name}) إلى الرتبة الجديدة (${item.to_rank_name}).`,
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#10B981', // success color
     cancelButtonColor: '#6B7280',
-    confirmButtonText: 'نعم، اعتماد',
-    cancelButtonText: 'إلغاء'
+    confirmButtonText: t('settlements.yes_apply') || 'نعم، اعتماد',
+    cancelButtonText: t('common.cancel') || 'إلغاء'
   })
 
   if (result.isConfirmed) {
@@ -235,7 +253,7 @@ async function confirmApply(item: RankSettlement) {
       await store.applySettlement(item.id)
       Swal.fire({
         toast: true, position: 'top-end',
-        icon: 'success', title: 'تم اعتماد التسوية بنجاح',
+        icon: 'success', title: t('settlements.apply_success') || 'تم اعتماد التسوية بنجاح',
         showConfirmButton: false, timer: 3000
       })
       fetchData(store.currentPage)
@@ -263,7 +281,7 @@ async function submitReject() {
     await store.rejectSettlement(selectedSettlement.value.id, rejectionReason.value)
     Swal.fire({
       toast: true, position: 'top-end',
-      icon: 'success', title: 'تم رفض طلب التسوية',
+      icon: 'success', title: t('settlements.reject_success') || 'تم رفض طلب التسوية',
       showConfirmButton: false, timer: 3000
     })
     showRejectModal.value = false

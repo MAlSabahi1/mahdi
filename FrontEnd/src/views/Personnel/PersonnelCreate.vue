@@ -269,8 +269,8 @@
               </div>
             </div>
             <div>
-              <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الفئة الوظيفية</label>
-              <input :value="computedCategoryName" type="text" readonly disabled class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-500 shadow-theme-xs dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 cursor-not-allowed" placeholder="تتحدد تلقائياً">
+              <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">{{ $t?.('personnel.job_category') }}</label>
+              <input :value="computedCategoryName" type="text" readonly disabled class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-500 shadow-theme-xs dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 cursor-not-allowed" :placeholder="$t?.('personnel.auto_determined')">
             </div>
             <div>
               <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">{{ $t('personnel.force_classification') }}</label>
@@ -369,7 +369,7 @@ const computedCategoryName = computed(() => {
     const job = coreStore.jobTitles.find((j: any) => j.id === form.job_title)
     if (job && job.category) {
       const cat = coreStore.jobCategories.find((c: any) => c.id === job.category)
-      return cat ? cat.name : 'غير محدد'
+      return cat ? cat.name : (t('personnel.unspecified') || 'غير محدد')
     }
   }
   return ''
@@ -414,13 +414,13 @@ function handleNationalIdInput() {
 
 async function handleSubmit() {
   if (!validateFormFields()) {
-    errorMsg.value = 'الرجاء تعبئة جميع الحقول الإجبارية المشار إليها بالنجمة (*)'
+    errorMsg.value = t('common.required_fields_error') || 'الرجاء تعبئة جميع الحقول الإجبارية المشار إليها بالنجمة (*)'
     window.scrollTo({ top: 0, behavior: 'smooth' })
     return
   }
 
   if (isNationalIdDuplicate.value) {
-    errorMsg.value = 'الرقم الوطني المدخل مسجل مسبقاً.'
+    errorMsg.value = t('personnel.duplicate_national_id') || 'الرقم الوطني المدخل مسجل مسبقاً.'
     window.scrollTo({ top: 0, behavior: 'smooth' })
     return
   }
@@ -440,7 +440,7 @@ async function handleSubmit() {
     const newPerson = await personnelStore.createPersonnel(payload)
     router.push(`/personnel/${newPerson.military_number}`) // navigate to detail view (to be built) or back to list
   } catch (err: any) {
-    errorMsg.value = personnelStore.error || 'فشل الحفظ. تأكد من صحة البيانات (الاسم الرباعي، التواريخ).'
+    errorMsg.value = personnelStore.error || t('personnel.save_failed_check_data') || 'فشل الحفظ. تأكد من صحة البيانات (الاسم الرباعي، التواريخ).'
     window.scrollTo({ top: 0, behavior: 'smooth' })
   } finally {
     loading.value = false

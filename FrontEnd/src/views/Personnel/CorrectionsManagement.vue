@@ -2,159 +2,163 @@
   <admin-layout>
     <PageBreadcrumb :pageTitle="$t('personnel.manage_corrections') || 'إدارة طلبات التصحيح'" />
     <div class="space-y-6">
-      <!-- Header Section -->
-      <div class="flex justify-end gap-3">
-        <!-- Batch Actions Toolbar -->
-        <div v-if="selectedIds.length > 0" class="flex items-center gap-3 bg-gray-50 px-4 py-1.5 rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700 shadow-theme-xs">
-          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ selectedIds.length }} محدد</span>
-          <div class="h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
-          <button @click="showBatchApproveModal = true" class="text-sm bg-success-50 text-success-700 px-3 py-1 rounded-md hover:bg-success-100 dark:bg-success-500/10 dark:text-success-400 dark:hover:bg-success-500/20 transition-colors font-medium cursor-pointer">موافقة جماعية</button>
-          <button @click="openBatchRejectModal" class="text-sm bg-error-50 text-error-700 px-3 py-1 rounded-md hover:bg-error-100 dark:bg-error-500/10 dark:text-error-400 dark:hover:bg-error-500/20 transition-colors font-medium cursor-pointer">رفض جماعي</button>
-        </div>
-
-        <button
-          @click="loadCorrections"
-          class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-        >
-          <svg class="h-4.5 w-4.5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          {{ $t('common.refresh') || 'تحديث' }}
-        </button>
-      </div>
 
 
 
       <!-- Data Table -->
-      <div class="rounded-2xl border border-gray-200 bg-white shadow-theme-sm dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
-        
-        <!-- Loading State -->
-        <div v-if="loading" class="flex justify-center p-12">
-          <svg class="h-8 w-8 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-          </svg>
-        </div>
+      <BasicTable
+        :columns="tableColumns"
+        :data="filteredRequests"
+        row-key="id"
+        :loading="loading"
+        :has-actions="true"
+        actions-width="120px"
+        :empty-title="$t('corrections.no_requests') || 'لا توجد طلبات معلقة'"
+        :empty-description="$t('corrections.no_requests_desc') || 'جميع طلبات تصحيح البيانات تم البت فيها بنجاح.'"
+      >
+        <!-- Table Header Toolbar -->
+        <template #header>
+          <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 w-full">
+            <!-- Search -->
+            <div class="relative w-full sm:max-w-xs shrink-0">
+              <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+                <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                v-model="searchQuery"
+                type="text"
+                :placeholder="$t('corrections.search_placeholder') || 'بحث باسم الفرد أو الرقم العسكري...'"
+                class="w-full h-10 rounded-lg border border-gray-300 bg-gray-50 py-2 ps-9 pe-8 text-theme-sm text-gray-900 placeholder-gray-400 focus:border-brand-300 focus:bg-white focus:ring-2 focus:ring-brand-500/10 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500 transition-all"
+              />
+            </div>
+            
+            <div class="flex justify-end gap-3 flex-wrap">
+              <!-- Batch Actions Toolbar -->
+              <div v-if="selectedIds.length > 0" class="flex items-center gap-3 bg-gray-50 px-4 py-1.5 rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700 shadow-theme-xs">
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ selectedIds.length }} {{ $t('common.selected') || 'محدد' }}</span>
+                <div class="h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
+                <button @click="showBatchApproveModal = true" class="text-sm bg-success-50 text-success-700 px-3 py-1 rounded-md hover:bg-success-100 dark:bg-success-500/10 dark:text-success-400 dark:hover:bg-success-500/20 transition-colors font-medium cursor-pointer">{{ $t('common.batch_approve') || 'موافقة جماعية' }}</button>
+                <button @click="openBatchRejectModal" class="text-sm bg-error-50 text-error-700 px-3 py-1 rounded-md hover:bg-error-100 dark:bg-error-500/10 dark:text-error-400 dark:hover:bg-error-500/20 transition-colors font-medium cursor-pointer">{{ $t('common.batch_reject') || 'رفض جماعي' }}</button>
+              </div>
 
-        <!-- Empty State -->
-        <div v-else-if="requests.length === 0" class="flex flex-col items-center justify-center py-16 px-4">
-          <div class="mb-4 rounded-full bg-gray-50 p-4 dark:bg-gray-800 shadow-theme-xs">
-            <svg class="h-10 w-10 text-success-500 dark:text-success-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white">لا توجد طلبات معلقة</h3>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 text-center max-w-sm">جميع طلبات تصحيح البيانات تم البت فيها بنجاح.</p>
-        </div>
-
-        <!-- Table Content -->
-        <div v-else class="overflow-x-auto">
-          <table class="w-full text-start">
-            <thead>
-              <tr class="border-b border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50">
-                <th class="px-5 py-3 text-start w-12">
-                  <input type="checkbox" v-model="selectAll" class="rounded border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-brand-500" />
-                </th>
-                <th class="px-5 py-3 text-start text-sm font-medium text-gray-500 dark:text-gray-400">الفرد</th>
-                <th class="px-5 py-3 text-start text-sm font-medium text-gray-500 dark:text-gray-400">الحقل المطلوب تصحيحه</th>
-                <th class="px-5 py-3 text-start text-sm font-medium text-gray-500 dark:text-gray-400">القيمة القديمة</th>
-                <th class="px-5 py-3 text-start text-sm font-medium text-gray-500 dark:text-gray-400">القيمة الجديدة</th>
-                <th class="px-5 py-3 text-start text-sm font-medium text-gray-500 dark:text-gray-400">تاريخ الطلب</th>
-                <th class="px-5 py-3 text-start text-sm font-medium text-gray-500 dark:text-gray-400">{{ $t('common.actions') || 'الإجراءات' }}</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
-              <tr
-                v-for="req in requests"
-                :key="req.id"
-                class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+              <button
+                @click="loadCorrections"
+                class="flex h-10 items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors cursor-pointer"
               >
-                <td class="px-5 py-4 w-12">
-                  <input type="checkbox" :value="req.id" v-model="selectedIds" class="rounded border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-brand-500" />
-                </td>
-                <td class="px-5 py-4">
-                  <div class="flex items-center gap-3">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400 font-bold">
-                      {{ req.personnel_name?.substring(0, 1) || '؟' }}
-                    </div>
-                    <div>
-                      <div class="text-sm font-medium text-gray-900 dark:text-white">
-                        <RouterLink :to="`/personnel/${req.military_number}`" class="hover:text-brand-500 transition-colors">
-                          {{ req.personnel_name || 'غير محدد' }}
-                        </RouterLink>
-                      </div>
-                      <div class="text-xs text-gray-500 flex items-center gap-2 mt-0.5">
-                        <span>{{ req.military_number }}</span>
-                        <span class="inline-block h-1 w-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
-                        <span>{{ req.personnel_rank || 'غير محدد' }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-5 py-4">
-                  <span class="inline-flex items-center rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-800 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
-                    {{ getFieldLabel(req.field) }}
-                  </span>
-                  <div v-if="req.requested_by_name" class="mt-1.5 text-xs text-gray-500 flex items-center gap-1">
-                    <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    بواسطة: {{ req.requested_by_name }}
-                  </div>
-                </td>
-                <td class="px-5 py-4">
-                  <div class="text-sm text-gray-500 dark:text-gray-400 line-through decoration-error-500/50">
-                    {{ req.old_value || 'فارغ' }}
-                  </div>
-                </td>
-                <td class="px-5 py-4">
-                  <div class="text-sm font-medium text-success-600 dark:text-success-400 flex items-center gap-1.5">
-                    <svg class="h-4 w-4 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                    </svg>
-                    {{ req.new_value }}
-                  </div>
-                </td>
-                <td class="px-5 py-4">
-                  <div class="text-sm text-gray-900 dark:text-white">{{ formatDate(req.requested_at) }}</div>
-                </td>
-                <td class="px-5 py-4">
-                  <div class="flex items-center gap-2">
-                    <button
-                      @click="openApproveModal(req)"
-                      class="flex items-center justify-center rounded-lg bg-success-50 p-2 text-success-600 hover:bg-success-100 dark:bg-success-500/10 dark:text-success-400 dark:hover:bg-success-500/20 transition-colors"
-                      title="موافقة"
-                    >
-                      <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </button>
-                    <button
-                      @click="openRejectModal(req)"
-                      class="flex items-center justify-center rounded-lg bg-error-50 p-2 text-error-600 hover:bg-error-100 dark:bg-error-500/10 dark:text-error-400 dark:hover:bg-error-500/20 transition-colors"
-                      title="رفض"
-                    >
-                      <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        
-        <!-- Pagination -->
-        <div v-if="!loading && store.totalItems > 0" class="border-t border-gray-200 px-5 py-4 dark:border-gray-800 flex justify-between items-center">
-          <span class="text-sm text-gray-500">{{ $t('common.page') }} {{ store.currentPage }} {{ $t('common.from') }} {{ store.totalPages }} ({{ $t('common.total') }}: {{ store.totalItems }})</span>
-          <div class="flex gap-2">
-            <button :disabled="store.currentPage <= 1" @click="goToPage(store.currentPage - 1)" class="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800">{{ $t('common.previous') }}</button>
-            <button :disabled="store.currentPage >= store.totalPages" @click="goToPage(store.currentPage + 1)" class="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800">{{ $t('common.next') }}</button>
+                <svg class="h-4.5 w-4.5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {{ $t('common.refresh') || 'تحديث' }}
+              </button>
+            </div>
           </div>
-        </div>
+        </template>
+
+        <!-- Header Checkbox -->
+        <template #header-checkbox>
+          <input type="checkbox" v-model="selectAll" class="rounded border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-brand-500" />
+        </template>
+
+        <!-- Cell Checkbox -->
+        <template #cell-checkbox="{ row }">
+          <input type="checkbox" :value="row.id" v-model="selectedIds" class="rounded border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-brand-500" />
+        </template>
+
+        <!-- Cell Personnel -->
+        <template #cell-personnel="{ row }">
+          <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400 font-bold">
+              {{ row.personnel_name?.substring(0, 1) || '؟' }}
+            </div>
+            <div>
+              <div class="text-sm font-medium text-gray-900 dark:text-white">
+                <RouterLink :to="`/personnel/${row.military_number}`" class="hover:text-brand-500 transition-colors">
+                  {{ row.personnel_name || $t('personnel.unspecified') || 'غير محدد' }}
+                </RouterLink>
+              </div>
+              <div class="text-xs text-gray-500 flex items-center gap-2 mt-0.5">
+                <span>{{ row.military_number }}</span>
+                <span class="inline-block h-1 w-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                <span>{{ row.personnel_rank || $t('personnel.unspecified') || 'غير محدد' }}</span>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Cell Field -->
+        <template #cell-field="{ row }">
+          <span class="inline-flex items-center rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-800 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+            {{ getFieldLabel(row.field) }}
+          </span>
+          <div v-if="row.requested_by_name" class="mt-1.5 text-xs text-gray-500 flex items-center gap-1">
+            <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            {{ $t('corrections.by') || 'بواسطة' }}: {{ row.requested_by_name }}
+          </div>
+        </template>
+
+        <!-- Cell Old Value -->
+        <template #cell-old_value="{ row }">
+          <div class="text-sm text-gray-500 dark:text-gray-400 line-through decoration-error-500/50">
+            {{ row.old_value || $t('corrections.empty_val') || 'فارغ' }}
+          </div>
+        </template>
+
+        <!-- Cell New Value -->
+        <template #cell-new_value="{ row }">
+          <div class="text-sm font-medium text-success-600 dark:text-success-400 flex items-center gap-1.5">
+            <svg class="h-4 w-4 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+            </svg>
+            {{ row.new_value }}
+          </div>
+        </template>
+
+        <!-- Cell Requested At -->
+        <template #cell-requested_at="{ row }">
+          <div class="text-sm text-gray-900 dark:text-white">{{ formatDate(row.requested_at) }}</div>
+        </template>
+
+        <!-- Actions -->
+        <template #actions="{ row }">
+          <div class="flex items-center gap-2">
+            <button
+              @click="openApproveModal(row)"
+              class="flex items-center justify-center rounded-lg bg-success-50 p-2 text-success-600 hover:bg-success-100 dark:bg-success-500/10 dark:text-success-400 dark:hover:bg-success-500/20 transition-colors cursor-pointer"
+              :title="$t('personnel.approve') || 'موافقة'"
+            >
+              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </button>
+            <button
+              @click="openRejectModal(row)"
+              class="flex items-center justify-center rounded-lg bg-error-50 p-2 text-error-600 hover:bg-error-100 dark:bg-error-500/10 dark:text-error-400 dark:hover:bg-error-500/20 transition-colors cursor-pointer"
+              :title="$t('personnel.reject') || 'رفض'"
+            >
+              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </template>
+        <!-- Pagination Footer -->
+        <template #footer>
+          <TablePagination
+            v-if="!loading && store.totalItems > 0"
+            :currentPage="store.currentPage"
+            :totalPages="store.totalPages"
+            :totalCount="store.totalItems"
+            :pageSize="15"
+            :visiblePages="computedVisiblePages"
+            @change-page="goToPage"
+          />
+        </template>
+      </BasicTable>
       </div>
-    </div>
 
     <!-- Approve Modal -->
     <div v-if="showApproveModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0 bg-gray-900/50">
@@ -220,7 +224,7 @@
                   v-model="rejectionReason"
                   rows="3"
                   class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-error-500 focus:ring-error-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 dark:focus:border-error-500 dark:focus:ring-error-500"
-                  placeholder="أدخل السبب بوضوح..."
+                  :placeholder="$t('corrections.reason_placeholder') || 'أدخل السبب بوضوح...'"
                 ></textarea>
                 <p v-if="rejectError" class="mt-1 text-xs text-error-500">{{ rejectError }}</p>
               </div>
@@ -262,18 +266,18 @@
               </svg>
             </div>
             <div class="mt-1 w-full">
-              <h3 class="text-lg font-bold text-gray-900 dark:text-white">تأكيد الموافقة الجماعية</h3>
+              <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ $t('corrections.confirm_batch_approve') || 'تأكيد الموافقة الجماعية' }}</h3>
               <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                سيتم اعتماد {{ selectedIds.length }} طلبات تصحيح وتحديث السجلات. يرجى إدخال رقم وثيقة المذكرة الداعمة للتصحيح الجماعي.
+                {{ $t('corrections.confirm_batch_approve_desc', { count: selectedIds.length }) || `سيتم اعتماد ${selectedIds.length} طلبات تصحيح وتحديث السجلات. يرجى إدخال رقم وثيقة المذكرة الداعمة للتصحيح الجماعي.` }}
               </p>
               
               <div class="mt-4">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">رقم/معرّف وثيقة الاعتماد <span class="text-error-500">*</span></label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ $t('corrections.memo_doc_id') || 'رقم/معرّف وثيقة الاعتماد' }} <span class="text-error-500">*</span></label>
                 <input
                   v-model="memoDocumentId"
                   type="text"
                   class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-success-500 focus:ring-success-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                  placeholder="مثال: DOC-2026-001"
+                  :placeholder="$t('corrections.memo_doc_placeholder') || 'مثال: DOC-2026-001'"
                 />
                 <p v-if="approveError" class="mt-1 text-xs text-error-500">{{ approveError }}</p>
               </div>
@@ -298,7 +302,7 @@
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
             </svg>
-            اعتماد الكل
+            {{ $t('corrections.approve_all') || 'اعتماد الكل' }}
           </button>
         </div>
       </div>
@@ -315,9 +319,9 @@
               </svg>
             </div>
             <div class="mt-1 w-full">
-              <h3 class="text-lg font-bold text-gray-900 dark:text-white">تأكيد الرفض الجماعي</h3>
+              <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ $t('corrections.confirm_batch_reject') || 'تأكيد الرفض الجماعي' }}</h3>
               <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                سيتم رفض {{ selectedIds.length }} طلبات تصحيح. يرجى إدخال سبب الرفض الجماعي.
+                {{ $t('corrections.confirm_batch_reject_desc', { count: selectedIds.length }) || `سيتم رفض ${selectedIds.length} طلبات تصحيح. يرجى إدخال سبب الرفض الجماعي.` }}
               </p>
               
               <div class="mt-4">
@@ -326,7 +330,7 @@
                   v-model="rejectionReason"
                   rows="3"
                   class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-error-500 focus:ring-error-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 dark:focus:border-error-500 dark:focus:ring-error-500"
-                  placeholder="أدخل السبب بوضوح..."
+                  :placeholder="$t('corrections.reason_placeholder') || 'أدخل السبب بوضوح...'"
                 ></textarea>
                 <p v-if="rejectError" class="mt-1 text-xs text-error-500">{{ rejectError }}</p>
               </div>
@@ -351,7 +355,7 @@
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
             </svg>
-            رفض الكل
+            {{ $t('corrections.reject_all') || 'رفض الكل' }}
           </button>
         </div>
       </div>
@@ -367,11 +371,57 @@ import { useCorrectionStore } from '@/stores/correction'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import Swal from 'sweetalert2'
+import BasicTable from '@/components/tables/BasicTable.vue'
+import TablePagination from '@/components/common/TablePagination.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
+const tableColumns = computed(() => [
+  { key: 'checkbox', label: '', class: 'w-12 text-center', tdClass: 'w-12 text-center', sortable: false },
+  { key: 'personnel', label: t('corrections.personnel_col') || 'الفرد' },
+  { key: 'field', label: t('corrections.field_col') || 'الحقل المطلوب تصحيحه' },
+  { key: 'old_value', label: t('corrections.old_val_col') || 'القيمة القديمة' },
+  { key: 'new_value', label: t('corrections.new_val_col') || 'القيمة الجديدة' },
+  { key: 'requested_at', label: t('corrections.req_date_col') || 'تاريخ الطلب' }
+])
 
 const store = useCorrectionStore()
 
 const requests = ref<any[]>([])
 const loading = ref(true)
+
+const searchQuery = ref('')
+const filteredRequests = computed(() => {
+  if (!searchQuery.value) return requests.value
+  const q = searchQuery.value.toLowerCase()
+  return requests.value.filter(r => 
+    (r.personnel_name && r.personnel_name.toLowerCase().includes(q)) ||
+    (r.military_number && r.military_number.includes(q)) ||
+    (r.old_value && String(r.old_value).toLowerCase().includes(q)) ||
+    (r.new_value && String(r.new_value).toLowerCase().includes(q))
+  )
+})
+
+// Pagination logic for TablePagination
+const computedVisiblePages = computed((): (number | string)[] => {
+  const total = store.totalPages || 1
+  const current = store.currentPage || 1
+  const pages: (number | string)[] = []
+
+  if (total <= 7) {
+    for (let i = 1; i <= total; i++) pages.push(i)
+  } else {
+    pages.push(1)
+    if (current > 3) pages.push('...')
+    const start = Math.max(2, current - 1)
+    const end = Math.min(total - 1, current + 1)
+    for (let i = start; i <= end; i++) pages.push(i)
+    if (current < total - 2) pages.push('...')
+    pages.push(total)
+  }
+  return pages
+})
 
 // Modals State
 const showApproveModal = ref(false)
@@ -469,7 +519,7 @@ async function confirmApprove() {
   actionLoading.value = true
   try {
     await store.approveCorrection(selectedRequest.value.id)
-    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم اعتماد التصحيح وتحديث بيانات الفرد بنجاح', showConfirmButton: false, timer: 3000 })
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: t('corrections.approve_success') || 'تم اعتماد التصحيح وتحديث بيانات الفرد بنجاح', showConfirmButton: false, timer: 3000 })
     showApproveModal.value = false
     requests.value = requests.value.filter(r => r.id !== selectedRequest.value.id)
   } catch (err) {
@@ -481,14 +531,14 @@ async function confirmApprove() {
 
 async function confirmReject() {
   if (!rejectionReason.value.trim()) {
-    rejectError.value = 'الرجاء إدخال سبب الرفض'
+    rejectError.value = t('personnel.enter_rejection_reason') || 'الرجاء إدخال سبب الرفض'
     return
   }
   
   actionLoading.value = true
   try {
     await store.rejectCorrection(selectedRequest.value.id, rejectionReason.value)
-    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم رفض الطلب بنجاح', showConfirmButton: false, timer: 3000 })
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: t('corrections.reject_success') || 'تم رفض الطلب بنجاح', showConfirmButton: false, timer: 3000 })
     showRejectModal.value = false
     requests.value = requests.value.filter(r => r.id !== selectedRequest.value.id)
   } catch (err) {
@@ -499,14 +549,14 @@ async function confirmReject() {
 }
 async function confirmBatchApprove() {
   if (!memoDocumentId.value.trim()) {
-    approveError.value = 'الرجاء إدخال رقم/معرّف المذكرة'
+    approveError.value = t('corrections.memo_required') || 'الرجاء إدخال رقم/معرّف المذكرة'
     return
   }
   
   actionLoading.value = true
   try {
     await store.approveBatchCorrection(selectedIds.value, memoDocumentId.value)
-    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم اعتماد الطلبات المحددة بنجاح', showConfirmButton: false, timer: 3000 })
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: t('corrections.batch_approve_success') || 'تم اعتماد الطلبات المحددة بنجاح', showConfirmButton: false, timer: 3000 })
     showBatchApproveModal.value = false
     requests.value = requests.value.filter(r => !selectedIds.value.includes(r.id))
     selectedIds.value = []
@@ -521,14 +571,14 @@ async function confirmBatchApprove() {
 
 async function confirmBatchReject() {
   if (!rejectionReason.value.trim()) {
-    rejectError.value = 'الرجاء إدخال سبب الرفض الجماعي'
+    rejectError.value = t('corrections.batch_reject_reason_required') || 'الرجاء إدخال سبب الرفض الجماعي'
     return
   }
   
   actionLoading.value = true
   try {
     await store.rejectBatchCorrection(selectedIds.value, rejectionReason.value)
-    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم رفض الطلبات المحددة بنجاح', showConfirmButton: false, timer: 3000 })
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: t('corrections.batch_reject_success') || 'تم رفض الطلبات المحددة بنجاح', showConfirmButton: false, timer: 3000 })
     showBatchRejectModal.value = false
     requests.value = requests.value.filter(r => !selectedIds.value.includes(r.id))
     selectedIds.value = []

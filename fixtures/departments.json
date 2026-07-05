@@ -1,0 +1,405 @@
+[
+  {
+    "model": "core.department",
+    "pk": 1,
+    "fields": {
+      "name": "مكتب المدير العام",
+      "code": "DIR-GEN",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 2,
+    "fields": {
+      "name": "مكتب نائب المدير العام",
+      "code": "DEPUTY-DIR",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 3,
+    "fields": {
+      "name": "مكتب المساعدين",
+      "code": "ASSIST",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 4,
+    "fields": {
+      "name": "أمن الوحدة",
+      "code": "UNIT-SEC",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 5,
+    "fields": {
+      "name": "إدارة القوى البشرية",
+      "code": "HR",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 6,
+    "fields": {
+      "name": "إدارة الشؤون المالية",
+      "code": "FIN",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 7,
+    "fields": {
+      "name": "إدارة الأمن الوقائي",
+      "code": "PREV-SEC",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 8,
+    "fields": {
+      "name": "إدارة المشاريع",
+      "code": "PROJ",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 9,
+    "fields": {
+      "name": "إدارة القيادة والسيطرة",
+      "code": "CMD-CTRL",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 10,
+    "fields": {
+      "name": "إدارة الاتصالات",
+      "code": "COMM",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 11,
+    "fields": {
+      "name": "إدارة التدريب والتوجيه",
+      "code": "TRAIN",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 12,
+    "fields": {
+      "name": "إدارة الإمداد والتموين",
+      "code": "SUPPLY",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 13,
+    "fields": {
+      "name": "فرع جهاز المفتش",
+      "code": "INSPECT",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 14,
+    "fields": {
+      "name": "فرع الأحوال المدنية",
+      "code": "CIVIL",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 15,
+    "fields": {
+      "name": "فرع الهجرة والجوازات",
+      "code": "IMMIG",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 16,
+    "fields": {
+      "name": "فرع الإصلاح والتأهيل",
+      "code": "REHAB",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 17,
+    "fields": {
+      "name": "فرع الدفاع المدني",
+      "code": "CIVIL-DEF",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 18,
+    "fields": {
+      "name": "فرع خفر السواحل",
+      "code": "COAST",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 19,
+    "fields": {
+      "name": "إدارات المطارات والمنافذ",
+      "code": "AIRPORT",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 20,
+    "fields": {
+      "name": "إدارة البحث الجنائي",
+      "code": "CID",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 21,
+    "fields": {
+      "name": "إدارة الأدلة الجنائية",
+      "code": "FORENSIC",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 22,
+    "fields": {
+      "name": "إدارة مباحث الأموال",
+      "code": "FIN-INV",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 23,
+    "fields": {
+      "name": "فرع الأمن المركزي",
+      "code": "CENT-SEC",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 24,
+    "fields": {
+      "name": "فرع النجدة",
+      "code": "RESCUE",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 25,
+    "fields": {
+      "name": "إدارة المرور",
+      "code": "TRAFFIC",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 26,
+    "fields": {
+      "name": "إدارة مكافحة المخدرات",
+      "code": "NARCOTICS",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 27,
+    "fields": {
+      "name": "إدارة مكافحة الإرهاب",
+      "code": "COUNTER-TERROR",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 28,
+    "fields": {
+      "name": "التدخل السريع",
+      "code": "RAPID-RESP",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 29,
+    "fields": {
+      "name": "إدارة المنشآت",
+      "code": "FACILITIES",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 30,
+    "fields": {
+      "name": "الكادر الصحي",
+      "code": "MEDICAL",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.department",
+    "pk": 31,
+    "fields": {
+      "name": "شرطة المديريات",
+      "code": "DISTRICT-POL",
+      "parent": null,
+      "level": 1,
+      "is_internal": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]

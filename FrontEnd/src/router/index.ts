@@ -476,7 +476,7 @@ const router = createRouter({
     {
       path: '/services/editor-react',
       name: 'ServicesEditorReact',
-      component: () => import('@/views/Services/ReactGridEditor.vue'),
+      component: () => import('@/views/Services/VueGridEditor.vue'),
       meta: {
         title: 'تعديل الخدمات المطور (React)',
         requiresAuth: true,
