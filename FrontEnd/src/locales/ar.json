@@ -77,6 +77,8 @@
     "monthly_exports": "تصدير التقارير الشهرية الموحدة",
     "official_reports": "تصدير تقارير رسمية",
     "cards_directory": "دليل الخدمات والاستمارات",
+    "service_builder": "مُنشئ الخدمات (Admin)",
+    "workflow_builder": "مُنشئ مسارات العمل (Admin)",
     "unified_request": "واجهة تقديم الطلب الموحدة",
     "inbox_transactions": "قائمة المعاملات والمهام",
     "workflow_tracking": "تتبع سير الموافقات",

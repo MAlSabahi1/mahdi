@@ -1,0 +1,61 @@
+{
+    "label_ar": "الغاء وقف القيد",
+    "label_en": "Cancellation of Suspension",
+    "attrs": "{fk_section: {param: data.fk_college},fk_specialization: {param: data.fk_section},fk_batch: {param: data.fk_specialization},fk_student_batch: {param: data.fk_batch}}",
+    "fields": [
+        {
+            "name": "fk_college",
+            "type": "ForeignKey",
+            "null": false,
+            "name_list": "College",
+            "default": null,
+            "model": "College",
+            "is_main": false,
+            "add": false,
+            "cols": 3
+        },
+        {
+            "name": "fk_section",
+            "type": "ForeignKey",
+            "null": false,
+            "name_list": "Section",
+            "default": null,
+            "model": "Section",
+            "is_main": false,
+            "add": false,
+            "cols": 3
+        },
+        {
+            "name": "fk_specialization",
+            "type": "ForeignKey",
+            "null": false,
+            "name_list": "SpecializationForSection",
+            "default": null,
+            "model": "Specialization",
+            "is_main": false,
+            "add": false,
+            "cols": 3
+        },
+        {
+            "name": "fk_level",
+            "type": "ForeignKey",
+            "null": false,
+            "name_list": "BatchBySpecialization",
+            "default": null,
+            "model": "Batch",
+            "is_main": false,
+            "add": false,
+            "cols": 3
+        },
+        {
+            "name": "fk_student_batch",
+            "type": "ForeignKey",
+            "null": false,
+            "name_list": "StudentBatchByLevel",
+            "default": null,
+            "model": "StudentBatch",
+            "is_main": true,
+            "cols": 3
+        }
+    ]
+}

@@ -1,0 +1,136 @@
+{
+    "0": {
+        "schema_data": {
+            "date": "",
+            "reason_field": "ssgdfgfg",
+            "fk_string": "dfgdfgdfg",
+            "fk_type": "wizard",
+            "fk_arr": "execute_approval_workflow",
+            "fk_param": 5,
+            "fk_num_param": 5
+        }
+    },
+    "1": {
+        "attrs": "{\nfk_param: {\nparam: 5\n}, \nfk_num_param: {\nparam: administrative}\n}",
+        "fields": [
+            {
+                "add": false,
+                "attr": {},
+                "name": "date",
+                "null": false,
+                "type": "DateField",
+                "index": 1,
+                "items": [],
+                "rules": [
+                    null
+                ],
+                "default": "",
+                "label_ar": "تاريخ الفقدان",
+                "label_en": "",
+                "input_type": "date",
+                "placeholder": ""
+            },
+            {
+                "add": false,
+                "attr": {},
+                "cols": 3,
+                "name": "reason_field",
+                "null": false,
+                "type": "TextField",
+                "index": 2,
+                "items": [],
+                "rules": [
+                    null
+                ],
+                "default": "",
+                "label_ar": "سبب الفقدان",
+                "label_en": "",
+                "placeholder": ""
+            },
+            {
+                "add": false,
+                "cols": 3,
+                "name": "fk_string",
+                "null": false,
+                "type": "CharField",
+                "index": 1,
+                "rules": [],
+                "default": "",
+                "label_ar": "hellooooo",
+                "label_en": "",
+                "max_length": 255,
+                "min_length": null,
+                "placeholder": ""
+            },
+            {
+                "add": false,
+                "cols": 3,
+                "name": "fk_type",
+                "null": false,
+                "type": "CharField",
+                "group": "",
+                "rules": [],
+                "default": "",
+                "label_ar": "النوع",
+                "label_en": "",
+                "name_list": "ComponentTypeChoice",
+                "input_type": "number",
+                "max_length": 255,
+                "min_length": null,
+                "placeholder": "",
+                "is_items_exists": true
+            },
+            {
+                "add": false,
+                "name": "fk_arr",
+                "null": false,
+                "type": "CharField",
+                "rules": [
+                    null,
+                    null
+                ],
+                "default": "",
+                "label_ar": "يبيب",
+                "label_en": "",
+                "name_list": "AvailableFunctionsChoice",
+                "input_type": "number",
+                "max_length": 255,
+                "min_length": null,
+                "placeholder": "",
+                "is_items_exists": true
+            },
+            {
+                "add": false,
+                "name": "fk_param",
+                "null": false,
+                "type": "CharField",
+                "rules": [],
+                "default": "",
+                "label_ar": "متصل",
+                "label_en": "",
+                "name_list": "ServiceWorkflowSteps",
+                "input_type": "number",
+                "max_length": 255,
+                "min_length": null,
+                "placeholder": "",
+                "is_items_exists": true
+            },
+            {
+                "add": false,
+                "name": "fk_num_param",
+                "null": false,
+                "type": "CharField",
+                "index": 1,
+                "rules": [],
+                "default": "",
+                "label_ar": "متصل رقم",
+                "label_en": "",
+                "name_list": "ServicesByCategory",
+                "max_length": 255,
+                "min_length": null,
+                "placeholder": "",
+                "is_items_exists": true
+            }
+        ]
+    }
+}

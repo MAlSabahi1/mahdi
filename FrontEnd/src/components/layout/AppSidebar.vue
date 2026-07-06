@@ -350,6 +350,14 @@ const menuGroups = computed(() => {
                 path: "/services/directory",
               },
               {
+                name: "nav.service_builder",
+                path: "/services/builder",
+              },
+              {
+                name: "nav.workflow_builder",
+                path: "/services/workflow-builder",
+              },
+              {
                 name: "nav.unified_request",
                 path: "/services/request",
               },

@@ -447,6 +447,24 @@ const router = createRouter({
       },
     },
     {
+      path: '/services/builder',
+      name: 'ServiceBuilder',
+      component: () => import('@/views/Services/ServiceBuilder.vue'),
+      meta: {
+        title: 'مُنشئ الخدمات (Admin)',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/workflow-builder',
+      name: 'WorkflowBuilder',
+      component: () => import('@/views/Services/WorkflowBuilder.vue'),
+      meta: {
+        title: 'مُنشئ مسارات العمل (Admin)',
+        requiresAuth: true,
+      },
+    },
+    {
       path: '/services/request',
       name: 'UnifiedRequestForm',
       component: () => import('@/views/Services/UnifiedRequestForm.vue'),
@@ -470,6 +488,15 @@ const router = createRouter({
       component: () => import('@/views/Services/WorkflowTracking.vue'),
       meta: {
         title: 'تتبع سير الموافقات',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/forms/:id',
+      name: 'FormDetail',
+      component: () => import('@/views/Services/FormDetail.vue'),
+      meta: {
+        title: 'تفاصيل المعاملة',
         requiresAuth: true,
       },
     },

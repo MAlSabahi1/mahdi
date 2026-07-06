@@ -32,6 +32,11 @@ export const useServicesStore = defineStore('services', () => {
   const complianceRecords = ref<any[]>([])
   const reportTemplates = ref<any[]>([])
   
+  // Status Change Forms State
+  const forms = ref<any[]>([])
+  const formSchemas = ref<any>({})
+  const currentSchema = ref<any>(null)
+  
   const loading = ref(false)
   const error = ref<string | null>(null)
   
@@ -403,6 +408,218 @@ export const useServicesStore = defineStore('services', () => {
     }
   }
 
+  // --- Status Change Forms ---
+  async function fetchFormSchemas() {
+    try {
+      const response = await api.get('/service-cycle/forms/schema/')
+      if (response.data?.success) {
+        formSchemas.value = response.data.data
+      }
+    } catch (err: any) {
+      console.error('Failed to fetch form schemas', err)
+    }
+  }
+
+  async function fetchFormSchema(type: string) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await api.get(`/service-cycle/forms/schema/?type=${type}`)
+      if (response.data?.success) {
+        currentSchema.value = response.data.data
+        return response.data.data
+      }
+    } catch (err: any) {
+      error.value = err.response?.data?.error || 'فشل جلب هيكل الاستمارة'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchForms(params: any = {}) {
+    loading.value = true
+    error.value = null
+    try {
+      const queryParams = new URLSearchParams()
+      if (params.type) queryParams.append('type', params.type)
+      if (params.status) queryParams.append('status', params.status)
+      if (params.personnel) queryParams.append('personnel', params.personnel)
+      if (params.page) queryParams.append('page', params.page.toString())
+      
+      const response = await api.get(`/service-cycle/forms/?${queryParams.toString()}`)
+      forms.value = response.data.results || response.data
+      totalCount.value = response.data.count || forms.value.length
+      return response.data
+    } catch (err: any) {
+      error.value = err.response?.data?.error || 'فشل جلب الاستمارات'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function createForm(data: any) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await api.post('/service-cycle/forms/', data)
+      return response.data
+    } catch (err: any) {
+      error.value = err.response?.data?.error || 'فشل إنشاء الاستمارة'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function submitForm(id: number | string) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await api.post(`/service-cycle/forms/${id}/submit/`)
+      return response.data
+    } catch (err: any) {
+      error.value = err.response?.data?.error || 'فشل تقديم الاستمارة'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function approveForm(id: number | string) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await api.post(`/service-cycle/forms/${id}/approve/`)
+      return response.data
+    } catch (err: any) {
+      error.value = err.response?.data?.error || 'فشل اعتماد الاستمارة'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function rejectForm(id: number | string, reason: string) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await api.post(`/service-cycle/forms/${id}/reject/`, { reason })
+      return response.data
+    } catch (err: any) {
+      error.value = err.response?.data?.error || 'فشل رفض الاستمارة'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchFormById(id: number | string) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await api.get(`/service-cycle/forms/${id}/`)
+      return response.data?.data || response.data
+    } catch (err: any) {
+      error.value = err.response?.data?.error || 'فشل جلب تفاصيل المعاملة'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // --- Extended Service Cycle (Timeline, Notes, Return, Checklist, Catalog) ---
+  
+  async function fetchFormTimeline(id: number | string) {
+    try {
+      const response = await api.get(`/service-cycle/form-actions/${id}/timeline/`)
+      return response.data
+    } catch (err: any) {
+      console.error('Failed to fetch timeline', err)
+      return []
+    }
+  }
+
+  async function fetchFormNotes(id: number | string) {
+    try {
+      const response = await api.get(`/service-cycle/form-actions/${id}/notes/`)
+      return response.data
+    } catch (err: any) {
+      console.error('Failed to fetch notes', err)
+      return []
+    }
+  }
+
+  async function addFormNote(id: number | string, content: string) {
+    try {
+      const response = await api.post(`/service-cycle/form-actions/${id}/notes/`, { content })
+      return response.data
+    } catch (err: any) {
+      throw err
+    }
+  }
+
+  async function returnForm(id: number | string, data: { reason: string, details?: string, to_status?: string }) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await api.post(`/service-cycle/form-actions/${id}/return_form/`, data)
+      return response.data
+    } catch (err: any) {
+      error.value = err.response?.data?.error || 'فشل إرجاع الاستمارة'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchFormChecklist(id: number | string, stage?: string) {
+    try {
+      const url = `/service-cycle/form-actions/${id}/checklist/` + (stage ? `?stage=${stage}` : '')
+      const response = await api.get(url)
+      return response.data
+    } catch (err: any) {
+      console.error('Failed to fetch checklist', err)
+      return []
+    }
+  }
+
+  async function toggleChecklistItem(itemId: number | string, isChecked: boolean) {
+    try {
+      const response = await api.patch(`/service-cycle/checklist/${itemId}/toggle/`, { is_checked: isChecked })
+      return response.data
+    } catch (err: any) {
+      throw err
+    }
+  }
+
+  const catalogServices = ref<any[]>([])
+
+  async function fetchServiceCatalog(params: any = {}) {
+    loading.value = true
+    try {
+      const response = await api.get('/service-cycle/catalog/', { params })
+      catalogServices.value = response.data.results || response.data
+      return catalogServices.value
+    } catch (err: any) {
+      console.error('Failed to fetch catalog', err)
+      return []
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function validatePrerequisites(formId: number | string) {
+    try {
+      const response = await api.post(`/service-cycle/catalog-validation/${formId}/validate/`)
+      return response.data
+    } catch (err: any) {
+      console.error('Failed to validate prerequisites', err)
+      return { valid: false, errors: ['فشل التحقق من الشروط المسبقة'] }
+    }
+  }
+
   return {
     stagingRecords,
     stagingStats,
@@ -432,6 +649,32 @@ export const useServicesStore = defineStore('services', () => {
     fetchCompliance,
     fetchReportTemplates,
     generateReport,
-    closeMonth
+    closeMonth,
+    
+    // Status Change Forms
+    forms,
+    formSchemas,
+    currentSchema,
+    fetchFormSchemas,
+    fetchFormSchema,
+    fetchForms,
+    createForm,
+    submitForm,
+    approveForm,
+    rejectForm,
+    fetchFormById,
+    
+    // Extended Actions
+    fetchFormTimeline,
+    fetchFormNotes,
+    addFormNote,
+    returnForm,
+    fetchFormChecklist,
+    toggleChecklistItem,
+    
+    // Catalog
+    catalogServices,
+    fetchServiceCatalog,
+    validatePrerequisites
   }
 })

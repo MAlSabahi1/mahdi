@@ -27,9 +27,6 @@ from uuid import UUID
 from ..value_objects.status_change import (
     FormStatus,
     FormType,
-    ApprovalLevel,
-    APPROVAL_TRANSITIONS,
-    REJECTABLE_STATUSES,
 )
 
 
@@ -42,7 +39,7 @@ class StatusChangeFormEntity:
     # ── بيانات أساسية ──
     personnel_id:      int
     security_admin_id: int
-    form_type:         FormType
+    form_type:         str
     submitted_by_id:   int
 
     # ── الحالتان ──
@@ -59,12 +56,8 @@ class StatusChangeFormEntity:
 
     # ── بيانات دورة الاعتماد ──
     submitted_at:             Optional[datetime] = None
-    services_approved_by_id:  Optional[int]      = None
-    services_approved_at:     Optional[datetime] = None
-    hr_approved_by_id:        Optional[int]      = None
-    hr_approved_at:           Optional[datetime] = None
-    director_approved_by_id:  Optional[int]      = None
-    director_approved_at:     Optional[datetime] = None
+    current_step_id:          Optional[int]      = None
+    workflow_log:             list               = field(default_factory=list)
 
     # ── الرفض ──
     rejection_reason:  str           = ""
@@ -82,66 +75,59 @@ class StatusChangeFormEntity:
     # ══════════════════════════════════════════════════════════════
 
     def can_be_submitted(self) -> bool:
-        """يمكن تقديم المسودات فقط — من: view.submit()"""
+        """يمكن تقديم المسودات فقط"""
         return self.status == FormStatus.DRAFT
 
-    def submit(self, submitted_at: datetime) -> None:
-        """
-        تقديم الاستمارة: draft → pending_services
-        مطابق لـ: form.status = 'pending_services'
-        """
+    def submit(self, submitted_at: datetime, first_step_id: int) -> None:
+        """تقديم الاستمارة وبدء المسار في الخطوة الأولى"""
         if not self.can_be_submitted():
             raise ValueError(f"يمكن تقديم المسودات فقط. الحالة الحالية: {self.status.value}")
 
-        self.status       = FormStatus.PENDING_SERVICES
+        self.status       = FormStatus.IN_PROGRESS
         self.submitted_at = submitted_at
+        self.current_step_id = first_step_id
+        
+        self.workflow_log.append({
+            'action': 'submitted',
+            'at': submitted_at.isoformat()
+        })
 
-    def can_be_approved_by(self, level: ApprovalLevel) -> bool:
-        """هل يمكن اعتماد الاستمارة من هذا المستوى؟"""
-        return (self.status, level) in APPROVAL_TRANSITIONS
-
-    def approve(self, level: ApprovalLevel, approved_by_id: int, approved_at: datetime) -> None:
+    def approve_current_step(self, approved_by_id: int, approved_at: datetime, next_step_id: Optional[int]) -> None:
         """
-        اعتماد الاستمارة بمستوى محدد.
-        مطابق لـ: view._advance() و view.approve_director()
-
-        الانتقالات:
-            SERVICES: pending_services → pending_hr
-            HR:       pending_hr       → pending_director
-            DIRECTOR: pending_director → approved  (النهائي)
+        اعتماد المرحلة الحالية وتمريرها للمرحلة القادمة أو إنهاؤها
         """
-        if not self.can_be_approved_by(level):
-            raise ValueError(
-                f"لا يمكن اعتماد استمارة بحالة '{self.status.value}' "
-                f"من مستوى '{level.name}'"
-            )
+        if self.status != FormStatus.IN_PROGRESS:
+            raise ValueError(f"لا يمكن الاعتماد واستمارة بحالة '{self.status.value}'")
 
-        next_status = APPROVAL_TRANSITIONS[(self.status, level)]
-        self.status = next_status
+        # سجل الاعتماد
+        self.workflow_log.append({
+            'action': 'approved_step',
+            'step_id': self.current_step_id,
+            'approved_by': approved_by_id,
+            'at': approved_at.isoformat()
+        })
 
-        if level == ApprovalLevel.SERVICES:
-            self.services_approved_by_id = approved_by_id
-            self.services_approved_at    = approved_at
-        elif level == ApprovalLevel.HR:
-            self.hr_approved_by_id = approved_by_id
-            self.hr_approved_at    = approved_at
-        elif level == ApprovalLevel.DIRECTOR:
-            self.director_approved_by_id = approved_by_id
-            self.director_approved_at    = approved_at
+        if next_step_id:
+            # الانتقال للمرحلة التالية
+            self.current_step_id = next_step_id
+        else:
+            # تم الوصول للنهاية
+            self.current_step_id = None
+            self.status = FormStatus.APPROVED
 
     def can_be_rejected(self) -> bool:
-        """يمكن الرفض في أي مرحلة pending — مطابق لـ: view.reject()"""
-        return self.status in REJECTABLE_STATUSES
+        """يمكن الرفض في أي مرحلة قيد الإجراء (in_progress)"""
+        return self.status == FormStatus.IN_PROGRESS
 
     def reject(self, reason: str, rejected_by_id: int) -> None:
         """
-        رفض الاستمارة: أي pending_* → rejected
+        رفض الاستمارة: in_progress → rejected
         مطابق لـ: form.status = 'rejected'
         """
         if not self.can_be_rejected():
             raise ValueError(
                 f"لا يمكن الرفض في الحالة '{self.status.value}'. "
-                f"مسموح فقط من: {[s.value for s in REJECTABLE_STATUSES]}"
+                f"مسموح فقط في حالة: '{FormStatus.IN_PROGRESS.value}'"
             )
 
         self.status           = FormStatus.REJECTED
@@ -156,30 +142,8 @@ class StatusChangeFormEntity:
         """هل تمت الموافقة النهائية؟"""
         return self.status == FormStatus.APPROVED
 
-    def get_next_approver_level(self) -> Optional[ApprovalLevel]:
-        """ما هو المستوى المطلوب لاعتماد هذه الاستمارة الآن؟"""
-        _map = {
-            FormStatus.PENDING_SERVICES: ApprovalLevel.SERVICES,
-            FormStatus.PENDING_HR:       ApprovalLevel.HR,
-            FormStatus.PENDING_DIRECTOR: ApprovalLevel.DIRECTOR,
-        }
-        return _map.get(self.status)
-
-    def get_fields_to_update_on_approve(self, level: ApprovalLevel) -> list[str]:
-        """
-        يُعيد قائمة الحقول التي يجب تحديثها في DB بعد الاعتماد.
-        مطابق لـ: form.save(update_fields=[...])
-        """
-        base = ['status']
-        fields_map = {
-            ApprovalLevel.SERVICES: ['services_approved_by', 'services_approved_at'],
-            ApprovalLevel.HR:       ['hr_approved_by', 'hr_approved_at'],
-            ApprovalLevel.DIRECTOR: ['director_approved_by', 'director_approved_at'],
-        }
-        return base + fields_map.get(level, [])
-
     def __repr__(self) -> str:
         return (
             f"StatusChangeFormEntity("
-            f"id={self.id}, type={self.form_type.value}, status={self.status.value})"
+            f"id={self.id}, type={self.form_type}, status={self.status.value})"
         )

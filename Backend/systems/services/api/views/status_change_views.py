@@ -67,17 +67,37 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
             qs = qs.filter(status=params['status'])
         if params.get('personnel'):
             qs = qs.filter(personnel__military_number=params['personnel'])
-        if params.get('governorate'):
-            qs = qs.filter(governorate_id=params['governorate'])
+        if params.get('security_admin'):
+            qs = qs.filter(security_admin_id=params['security_admin'])
         return qs
 
     # ─── Serializer موحد ───
     def _serialize(self, form):
         p = form.personnel
+        
+        # Dynamic resolution of form_type_display
+        form_type_display = form.form_type
+        from systems.services.models import ServiceCatalog
+        catalog = ServiceCatalog.objects.prefetch_related('workflow_steps__stage').filter(code=form.form_type).first()
+        all_steps = []
+        current_step_index = -1
+        if catalog:
+            form_type_display = catalog.name_ar
+            ordered_steps = catalog.workflow_steps.order_by('order')
+            all_steps = [getattr(getattr(s, 'stage', None), 'name_ar', '') for s in ordered_steps]
+            if getattr(form, 'current_step', None):
+                for idx, s in enumerate(ordered_steps):
+                    if s.id == form.current_step.id:
+                        current_step_index = idx
+                        break
+        else:
+            # Fallback for legacy types
+            form_type_display = dict(form.FORM_TYPE_CHOICES).get(form.form_type, form.form_type)
+            
         return {
             'id': form.pk,
             'form_type': form.form_type,
-            'form_type_display': form.get_form_type_display(),
+            'form_type_display': form_type_display,
             'status': form.status,
             'status_display': form.get_status_display(),
             'personnel': {
@@ -95,12 +115,10 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
             'attachments_complete': form.attachments_complete,
             'submitted_by': getattr(form.submitted_by, 'username', None),
             'submitted_at': form.submitted_at,
-            'services_approved_by': getattr(form.services_approved_by, 'username', None),
-            'services_approved_at': form.services_approved_at,
-            'hr_approved_by': getattr(form.hr_approved_by, 'username', None),
-            'hr_approved_at': form.hr_approved_at,
-            'director_approved_by': getattr(form.director_approved_by, 'username', None),
-            'director_approved_at': form.director_approved_at,
+            'current_step_name': form.current_step.stage.name_ar if getattr(form, 'current_step', None) and getattr(form.current_step, 'stage', None) else None,
+            'all_steps': all_steps,
+            'current_step_index': current_step_index,
+            'workflow_log': form.workflow_log,
             'rejection_reason': form.rejection_reason,
             'created_at': form.created_at,
             'updated_at': form.updated_at,
@@ -135,10 +153,15 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
             return Response({'success': False, 'error': 'الرقم العسكري ونوع الاستمارة مطلوبان'},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        # ── التحقق من النوع عبر Registry ──
+        # ── التحقق من النوع عبر Registry أو Catalog ──
+        from systems.services.models import ServiceCatalog
+        is_dynamic = False
+        
         if not FormRegistry.exists(form_type):
-            return Response({'success': False, 'error': f'نوع غير صالح: {form_type}'},
-                            status=status.HTTP_400_BAD_REQUEST)
+            if not ServiceCatalog.objects.filter(code=form_type).exists():
+                return Response({'success': False, 'error': f'نوع غير صالح: {form_type}'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            is_dynamic = True
 
         try:
             personnel = PersonnelMaster.objects.get(military_number=mil)
@@ -148,13 +171,14 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
 
         # ── التحقق من form_data عبر Registry ──
         form_data = d.get('form_data', {})
-        is_valid, errors = FormRegistry.validate(form_type, form_data)
-        if not is_valid:
-            return Response({
-                'success': False, 'error': 'حقول ناقصة في بيانات الاستمارة',
-                'validation_errors': errors,
-                'required_fields': FormRegistry.schema(form_type)['fields'],
-            }, status=status.HTTP_400_BAD_REQUEST)
+        if not is_dynamic:
+            is_valid, errors = FormRegistry.validate(form_type, form_data)
+            if not is_valid:
+                return Response({
+                    'success': False, 'error': 'حقول ناقصة في بيانات الاستمارة',
+                    'validation_errors': errors,
+                    'required_fields': FormRegistry.required_field_keys(form_type),
+                }, status=status.HTTP_400_BAD_REQUEST)
 
         # ── الحالة المستهدفة ──
         from core.models import ServiceStatus
@@ -164,13 +188,20 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
             to_status_obj = ServiceStatus.objects.filter(pk=to_id).first()
 
         # ── الإنشاء ──
-        defn = FormRegistry.get(form_type)
-        att_labels = FormRegistry.attachment_labels(form_type)
+        if is_dynamic:
+            att_labels = []
+            min_docs = 0
+            label_msg = f'طلب خدمة {form_type}'
+        else:
+            defn = FormRegistry.get(form_type)
+            att_labels = FormRegistry.attachment_labels(form_type)
+            min_docs = defn.min_documents
+            label_msg = defn.label
 
         with transaction.atomic():
             form = StatusChangeForm.objects.create(
                 personnel=personnel,
-                governorate=getattr(personnel, 'governorate', None),
+                security_admin=getattr(personnel, 'security_admin', None),
                 form_type=form_type,
                 form_data=form_data,
                 from_status=personnel.current_status,
@@ -186,22 +217,60 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
             if doc_ids:
                 docs = Document.objects.filter(id__in=doc_ids)
                 form.attachments.set(docs)
-                form.attachments_complete = len(docs) >= defn.min_documents
+                form.attachments_complete = len(docs) >= min_docs
                 form.save(update_fields=['attachments_complete'])
 
         # ── بعد نجاح المعاملة — تسجيل التدقيق (يُنفَّذ فقط بعد commit) ──
-        transaction.on_commit(lambda: AuditService.log_form_created(request.user, form, mil))
+        transaction.on_commit(lambda: AuditService.log_create(user=request.user, obj=form, module='SERVICES'))
 
         return Response({
             'success': True,
-            'message': f'تم إنشاء مسودة {defn.label}',
+            'message': f'تم إنشاء مسودة {label_msg}',
             'data': self._serialize(form),
         }, status=status.HTTP_201_CREATED)
 
     # ═══════ دورة الاعتماد (Workflow) — Mixin pattern ═══════
 
-    def _execute_approve(self, request, level, msg):
+    @action(detail=True, methods=['post'])
+    def submit(self, request, pk=None):
         try:
+            form = self.get_object()
+            from systems.services.models import ServiceCatalog
+            catalog = ServiceCatalog.objects.filter(code=form.form_type).first()
+            if not catalog:
+                return Response({'success': False, 'error': 'لم يتم العثور على الخدمة'}, status=400)
+            
+            first_step = catalog.workflow_steps.order_by('order').first()
+            if not first_step:
+                return Response({'success': False, 'error': 'لم يتم تكوين مراحل لهذه الخدمة'}, status=400)
+
+            uc = SubmitStatusFormUseCase(self.repo)
+            cmd = SubmitFormCommand(
+                form_id=form.id,
+                submitted_by=request.user.id,
+                submitted_at=timezone.now(),
+                first_step_id=first_step.id
+            )
+            uc.execute(cmd)
+            step_name = getattr(getattr(first_step, 'stage', None), 'name_ar', '')
+            return Response({'success': True, 'message': f'تم التقديم بنجاح. بانتظار: {step_name}'})
+        except ValueError as e:
+            return Response({'success': False, 'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def approve(self, request, pk=None):
+        try:
+            form = self.get_object()
+            if getattr(form, 'status', None) != 'in_progress' or not getattr(form, 'current_step', None):
+                return Response({'success': False, 'error': 'الطلب ليس في مرحلة انتظار'}, status=400)
+            
+            from systems.services.models import ServiceCatalog
+            catalog = ServiceCatalog.objects.filter(code=form.form_type).first()
+            
+            next_step = None
+            if catalog:
+                next_step = catalog.workflow_steps.filter(order__gt=form.current_step.order).order_by('order').first()
+            
             uc = ApproveStatusFormUseCase(
                 self.repo,
                 self.personnel_updater,
@@ -209,45 +278,22 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
                 self.event_publisher
             )
             cmd = ApproveFormCommand(
-                form_id=self.get_object().id,
-                level=level,
+                form_id=form.id,
                 approved_by=request.user.id,
-                approved_at=timezone.now()
+                approved_at=timezone.now(),
+                next_step_id=next_step.id if next_step else None
             )
             uc.execute(cmd)
+            
+            if next_step:
+                step_name = getattr(getattr(next_step, 'stage', None), 'name_ar', '')
+                msg = f'تم الاعتماد بنجاح. بانتظار: {step_name}'
+            else:
+                msg = 'تم الاعتماد النهائي للطلب.'
+                
             return Response({'success': True, 'message': msg})
         except ValueError as e:
             return Response({'success': False, 'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=['post'])
-    def submit(self, request, pk=None):
-        try:
-            uc = SubmitStatusFormUseCase(self.repo)
-            cmd = SubmitFormCommand(
-                form_id=self.get_object().id,
-                submitted_by=request.user.id,
-                submitted_at=timezone.now()
-            )
-            uc.execute(cmd)
-            return Response({'success': True, 'message': 'بانتظار اعتماد قسم الخدمات'})
-        except ValueError as e:
-            return Response({'success': False, 'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=['post'], url_path='approve-services')
-    def approve_services(self, request, pk=None):
-        return self._execute_approve(request, ApprovalLevel.SERVICES, 'تم اعتماد الخدمات — بانتظار الموارد البشرية')
-
-    @action(detail=True, methods=['post'], url_path='approve-hr')
-    def approve_hr(self, request, pk=None):
-        return self._execute_approve(request, ApprovalLevel.HR, 'تم اعتماد الموارد البشرية — بانتظار المدير العام')
-
-    @action(detail=True, methods=['post'], url_path='approve-director')
-    def approve_director(self, request, pk=None):
-        form_obj = self.get_object()
-        old_status_name = form_obj.personnel.current_status.name if form_obj.personnel and form_obj.personnel.current_status else ''
-        to_status_name = form_obj.to_status.name if form_obj.to_status else ''
-        msg = f'تم الاعتماد — الحالة: {old_status_name} → {to_status_name}'
-        return self._execute_approve(request, ApprovalLevel.DIRECTOR, msg)
 
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
@@ -270,6 +316,12 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
         """GET /forms/schema/?type=martyr أو بدون type للكل"""
         ft = request.query_params.get('type')
         if ft:
+            from systems.services.models import ServiceCatalog
+            service = ServiceCatalog.objects.filter(code=ft).first()
+            if service and service.fields_schema:
+                return Response({'success': True, 'data': service.fields_schema})
+            
+            # Fallback to FormRegistry if not in DB (for backward compatibility)
             if not FormRegistry.exists(ft):
                 return Response({'success': False, 'error': f'نوع غير صالح: {ft}'},
                                 status=status.HTTP_400_BAD_REQUEST)

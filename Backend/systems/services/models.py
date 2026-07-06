@@ -32,6 +32,15 @@ from systems.services.infrastructure.models import (  # noqa: F401
     CustomFormTemplate,
     CustomReportTemplate,
     StatusChangeForm,
+    FormNote,
+    FormEventLog,
+    FormReturnLog,
+    FormChecklist,
+    ServiceCatalog,
+    ServicePrerequisite,
+    ChecklistTemplate,
+    WorkflowStage,
+    ServiceWorkflowStep,
 )
 
 # ── Re-exports للتوافق الخلفي (من الكود الأصلي) ─────────────────────────────
@@ -52,6 +61,15 @@ __all__ = [
     'CustomFormTemplate',
     'CustomReportTemplate',
     'StatusChangeForm',
+    'FormNote',
+    'FormEventLog',
+    'FormReturnLog',
+    'FormChecklist',
+    'ServiceCatalog',
+    'ServicePrerequisite',
+    'ChecklistTemplate',
+    'WorkflowStage',
+    'ServiceWorkflowStep',
     # Re-exports
     'AuditLog',
     'NotificationRecord',

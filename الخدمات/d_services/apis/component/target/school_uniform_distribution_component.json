@@ -1,0 +1,18 @@
+{
+    "label_ar": "صرف الزي المدرسي ",
+    "label_en": "School Uniform Distribution",
+    "attrs": "{external_id: {param: data.external_id}}",
+    "fields": [
+        {
+            "name": "external_id",
+            "type": "ForeignKey",
+            "null": false,
+            "name_list": "ProgramsByStudent",
+            "default": null,
+            "model": "StudentAcademic",
+            "is_main": true,
+            "add": false,
+            "cols": 3
+        }
+    ]
+}

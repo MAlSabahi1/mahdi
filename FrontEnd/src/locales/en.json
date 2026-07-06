@@ -138,6 +138,8 @@
     "monthly_exports": "Monthly Services Export",
     "official_reports": "Official Reports Export",
     "cards_directory": "Services Directory & Cards",
+    "service_builder": "Service Builder (Admin)",
+    "workflow_builder": "Workflow Builder (Admin)",
     "unified_request": "Unified Request Form",
     "inbox_transactions": "Inbox Transactions & Tasks",
     "workflow_tracking": "Workflow Approvals Tracking",

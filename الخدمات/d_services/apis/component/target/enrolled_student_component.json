@@ -1,0 +1,53 @@
+{
+    "label_ar": "طلب بيان حالة",
+    "label_en": "Enrolled Student",
+    "attrs": "{fk_specialization: {param: data.fk_college},fk_batch: {param: data.fk_specialization},fk_student_batch: {param: data.fk_batch}}",
+    "fields": [
+        {
+            "name": "fk_college",
+            "type": "ForeignKey",
+            "null": false,
+            "name_list": "College",
+            "default": null,
+            "model": "College",
+            "is_main": false,
+            "add": false,
+
+            "cols": 3
+        },
+        {
+            "name": "fk_specialization",
+            "type": "ForeignKey",
+            "null": false,
+            "name_list": "SpecializationForCollege",
+            "default": null,
+            "model": "Specialization",
+            "is_main": false,
+            "add": false,
+
+            "cols": 3
+        },
+        {
+            "name": "fk_batch",
+            "type": "ForeignKey",
+            "null": false,
+            "name_list": "BatchBySpecialization",
+            "default": null,
+            "model": "Batch",
+            "is_main": false,
+            "add": false,
+
+            "cols": 3
+        },
+        {
+            "name": "fk_student_batch",
+            "type": "ForeignKey",
+            "null": false,
+            "name_list": "StudentBatch",
+            "default": null,
+            "model": "StudentBatch",
+            "is_main": true,
+            "cols": 3
+        }
+    ]
+}

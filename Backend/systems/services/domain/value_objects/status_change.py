@@ -10,11 +10,10 @@ from enum import Enum
 class FormStatus(str, Enum):
     """حالات الاستمارة — تعكس STATUS_CHOICES في النموذج الموجود"""
     DRAFT             = "draft"
-    PENDING_SERVICES  = "pending_services"
-    PENDING_HR        = "pending_hr"
-    PENDING_DIRECTOR  = "pending_director"
+    IN_PROGRESS       = "in_progress"
     APPROVED          = "approved"
     REJECTED          = "rejected"
+    RETURNED          = "returned"
 
 
 class FormType(str, Enum):
@@ -39,16 +38,7 @@ class ApprovalLevel(int, Enum):
     DIRECTOR = 3   # المدير العام
 
 
-# خريطة انتقال الحالة: من + مستوى → إلى
-APPROVAL_TRANSITIONS = {
-    (FormStatus.PENDING_SERVICES, ApprovalLevel.SERVICES): FormStatus.PENDING_HR,
-    (FormStatus.PENDING_HR,       ApprovalLevel.HR):       FormStatus.PENDING_DIRECTOR,
-    (FormStatus.PENDING_DIRECTOR, ApprovalLevel.DIRECTOR): FormStatus.APPROVED,
-}
-
 # الحالات التي يمكن رفضها
 REJECTABLE_STATUSES = {
-    FormStatus.PENDING_SERVICES,
-    FormStatus.PENDING_HR,
-    FormStatus.PENDING_DIRECTOR,
+    FormStatus.IN_PROGRESS,
 }

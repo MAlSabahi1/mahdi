@@ -38,11 +38,17 @@ class StatusChangeForm(TimeStampedModel):
 
     STATUS_CHOICES = [
         ('draft',             _('مسودة')),
-        ('pending_services',  _('بانتظار قسم الخدمات')),
-        ('pending_hr',        _('بانتظار مدير الموارد البشرية')),
-        ('pending_director',  _('بانتظار المدير العام')),
+        ('in_progress',       _('قيد الإجراء')),
         ('approved',          _('معتمد')),
         ('rejected',          _('مرفوض')),
+        ('returned',          _('مُرجع — بحاجة لتعديل')),
+    ]
+    
+    PRIORITY_CHOICES = [
+        ('low', _('منخفضة')),
+        ('normal', _('عادية')),
+        ('high', _('عالية')),
+        ('urgent', _('عاجلة')),
     ]
 
     personnel = models.ForeignKey(
@@ -59,8 +65,7 @@ class StatusChangeForm(TimeStampedModel):
         verbose_name=_('إدارة الأمن')
     )
     form_type = models.CharField(
-        max_length=30,
-        choices=FORM_TYPE_CHOICES,
+        max_length=100,
         verbose_name=_('نوع الاستمارة')
     )
     form_data = models.JSONField(
@@ -97,31 +102,46 @@ class StatusChangeForm(TimeStampedModel):
         default='draft',
         verbose_name=_('حالة الاستمارة')
     )
+    
+    # حقول جديدة (دمج نظام الخدمات)
+    priority = models.CharField(
+        max_length=20,
+        choices=PRIORITY_CHOICES,
+        default='normal',
+        verbose_name=_('الأولوية')
+    )
+    sla_deadline = models.DateTimeField(null=True, blank=True, verbose_name=_('الموعد النهائي (SLA)'))
+    is_overdue = models.BooleanField(default=False, verbose_name=_('متأخر'))
+    service_catalog = models.ForeignKey(
+        'services.ServiceCatalog',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='forms',
+        verbose_name=_('دليل الخدمة المرتبط')
+    )
 
-    # دورة الاعتماد الثلاثية
+    # دورة الاعتماد الديناميكية
     submitted_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True,
         related_name='submitted_forms', verbose_name=_('مقدم الطلب')
     )
     submitted_at = models.DateTimeField(null=True, blank=True, verbose_name=_('تاريخ التقديم'))
-
-    services_approved_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True,
-        related_name='services_approved_forms', verbose_name=_('اعتماد قسم الخدمات')
+    
+    current_step = models.ForeignKey(
+        'services.ServiceWorkflowStep',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='pending_forms',
+        verbose_name=_('المرحلة الحالية')
     )
-    services_approved_at = models.DateTimeField(null=True, blank=True)
-
-    hr_approved_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True,
-        related_name='hr_approved_forms', verbose_name=_('اعتماد الموارد البشرية')
+    
+    workflow_log = models.JSONField(
+        default=list,
+        verbose_name=_('سجل الاعتمادات'),
+        help_text=_('سجل ديناميكي لمن اعتمد الاستمارة في كل مرحلة ومتى')
     )
-    hr_approved_at = models.DateTimeField(null=True, blank=True)
-
-    director_approved_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True,
-        related_name='director_approved_forms', verbose_name=_('اعتماد المدير العام')
-    )
-    director_approved_at = models.DateTimeField(null=True, blank=True)
 
     rejection_reason = models.TextField(blank=True, verbose_name=_('سبب الرفض'))
     rejected_by = models.ForeignKey(

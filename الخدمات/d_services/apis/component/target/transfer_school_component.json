@@ -1,0 +1,18 @@
+{
+    "label_ar": "نقل طالب بين المدارس ",
+    "label_en": "Transfer School",
+    "attrs": "{external_id: {param: data.external_id}}",
+    "fields": [
+        {
+            "name": "external_id",
+            "type": "ForeignKey",
+            "null": false,
+            "name_list": "ProgramsByStudent",
+            "default": null,
+            "model": "StudentAcademic",
+            "is_main": true,
+            "add": false,
+            "cols": 3
+        }
+    ]
+}
