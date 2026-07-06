@@ -31,6 +31,9 @@ router.register(r'variable-types', views.VariableTypeViewSet, basename='variable
 # Workflow & Rules
 router.register(r'transition-rules', views.StateTransitionRuleViewSet, basename='transition-rule')
 
+# Notifications
+router.register(r'notifications', views.NotificationRecordViewSet, basename='notification')
+
 from django.urls import path
 
 urlpatterns = [

@@ -1,0 +1,41 @@
+{
+  "national_id_front": "بطاقة وطنية - أمامي",
+  "national_id_back": "بطاقة وطنية - خلفي",
+  "national_id_scan": "بطاقة وطنية - ماسح ضوئي",
+  "military_id_front": "بطاقة عسكرية - أمامي",
+  "military_id_back": "بطاقة عسكرية - خلفي",
+  
+  "rank_decision": "قرار ترقية",
+  "settlement_decision": "قرار تسوية فرد→ضابط",
+  "transfer_order": "أمر نقل",
+  "name_correction_order": "قرار تصحيح اسم",
+  "status_change_order": "قرار تغيير حالة خدمية",
+  
+  "leave_request": "طلب إجازة",
+  "medical_report": "القرار الطبي الأصل",
+  "sick_leave": "إجازة مرضية",
+  
+  "death_cert": "شهادة الوفاة",
+  "inheritance_ruling": "حكم انحصار الورثة",
+  "legal_power_of_attorney": "وكالة شرعية",
+  "installation_ruling": "حكم التنصيب",
+  "court_ruling_missing": "حكم شرعي بالفقدان",
+  "newspaper_announcement": "إعلان الجريدة (لإثبات النشر عن فقدان الفرد)",
+  "missing_report": "بلاغ الفقدان",
+  "incident_report": "بلاغ العمليات (لإثبات واقعة الاستشهاد ميدانياً)",
+  "martyr_form": "استمارة إثبات حالة (شهيد)",
+  
+  "personal_request": "الطلب الشخصي المقدم من المذكور",
+  "agent_id_copy": "صورة البطاقة الشخصية للوكيل",
+  "patient_photo": "صورة حديثة للمريض",
+  "court_verdict": "نسخة من الحكم (في حال صدوره)",
+  "prison_memo": "مذكرة توضح بأن الفرد لا زال في السجن من النيابة",
+  "assignment_order": "نسخة من الأمر الصادر بالتكليف / المهمة",
+  "study_leave_order": "نسخة من الأمر الصادر بالتفرغ الدراسي",
+  "secondment_order": "نسخة من الأمر الصادر بالانتداب",
+  "memo": "مذكرة توضيحية / إرسال",
+  "letter": "خطاب رسمي",
+  "certificate": "شهادة",
+  "personal_photo": "صورة شخصية",
+  "other": "أخرى"
+}

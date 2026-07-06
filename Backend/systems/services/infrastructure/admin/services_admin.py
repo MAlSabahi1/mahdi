@@ -308,3 +308,26 @@ class CustomReportTemplateAdmin(admin.ModelAdmin):
             'fields': ('is_active', 'created_by')
         }),
     )
+
+from systems.services.infrastructure.models.status_change import StatusChangeForm
+from systems.services.infrastructure.models.disciplinary import DisciplinaryAction, AbsenceRecord, DisciplinaryCouncilVerdict
+
+@admin.register(StatusChangeForm)
+class StatusChangeFormAdmin(admin.ModelAdmin):
+    list_display = ['form_type', 'personnel', 'status', 'created_at']
+    list_filter = ['form_type', 'status']
+    search_fields = ['personnel__military_number', 'personnel__full_name']
+
+@admin.register(DisciplinaryAction)
+class DisciplinaryActionAdmin(admin.ModelAdmin):
+    list_display = ['action_type', 'personnel', 'status', 'issued_date']
+    list_filter = ['action_type', 'status']
+
+@admin.register(AbsenceRecord)
+class AbsenceRecordAdmin(admin.ModelAdmin):
+    list_display = ['absence_type', 'personnel', 'status', 'from_date']
+
+@admin.register(DisciplinaryCouncilVerdict)
+class DisciplinaryCouncilVerdictAdmin(admin.ModelAdmin):
+    list_display = ['verdict_type', 'personnel', 'status', 'verdict_date']
+

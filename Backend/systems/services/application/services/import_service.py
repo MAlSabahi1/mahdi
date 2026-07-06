@@ -1,17 +1,22 @@
 """
-Import Service - خدمة استيراد الكشوفات المعدلة
-المهمة 2.2: استقبال الملف المعدل ووضعه في منطقة الفحص
-
-الميزات:
-- قراءة ملف Excel المعدل (4 أوراق)
-- التحقق من Hash و UUIDs
-- استخراج التغييرات المقترحة
-- إنشاء سجلات في StagingRecord
-- تقرير الأخطاء والتنبيهات
-- تصنيف التغييرات حسب الأهمية (أخضر/أصفر/أحمر)
+Import Service - خدمة استيراد الكشوفات المعدلة (إنتاجي)
+═══════════════════════════════════════════════════════════
+سلسلة التحقق الكاملة:
+1. التحقق من اسم الملف (مطابقة النمط الرسمي)
+2. التحقق من ExportLog (هل صادر منا؟)
+3. التحقق من بنية الأوراق (single أو multi)
+4. فحص الماكروز والمحتوى الخطر
+5. التحقق من العدد الإجمالي (لا زيادة ولا نقصان)
+6. لكل صف: UUID + الرقم العسكري + الاسم + الرقم الوطني
+7. كشف التلاعب بالأعمدة المقفولة
+8. اكتشاف التغييرات في الأعمدة المسموحة فقط
+9. تصنيف كل تغيير: أخضر / أصفر / أحمر + تحديد المرفقات المطلوبة
+10. وضع التغييرات في StagingRecord
 """
 import hashlib
 import uuid
+import re
+import zipfile
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple
 from io import BytesIO
@@ -23,414 +28,382 @@ from django.core.exceptions import ValidationError
 
 from systems.personnel.models import PersonnelMaster
 from core.models import ServiceStatus, CentralDepartment
-from systems.services.models import (
-    ExportLog, StagingRecord, RejectionLog,
-    DirectorateCompliance, AuditLog
+from systems.services.models import ExportLog, StagingRecord, AuditLog
+
+# المرفقات المطلوبة لكل حالة حساسة
+REQUIRED_ATTACHMENTS: Dict[str, List[str]] = {
+    'الشهداء':               ['شهادة استشهاد', 'تقرير الواقعة', 'قرار الاعتراف'],
+    'الوفيات':               ['شهادة وفاة', 'شهادة الطبيب الشرعي'],
+    'المتقاعدين':            ['قرار التقاعد', 'موافقة الوزارة'],
+    'المفقودين':             ['صك شرعي', 'تقرير اللجنة', 'موافقة وزارية'],
+    'المفقودين (بصك شرعي)': ['صك شرعي موثق', 'تقرير اللجنة'],
+    'المنقطعين - فرار':      ['بلاغ انقطاع', 'قرار تشكيل لجنة'],
+    'المفرغين للدراسة':      ['قرار الابتعاث', 'موافقة الجهة'],
+    'المنتدبين لدى جهات':   ['قرار الندب', 'موافقة المحافظة'],
+    'السجناء':               ['حكم قضائي أو قرار توقيف'],
+    'الأسرى':                ['تقرير رسمي'],
+    'عدم لياقة':             ['تقرير اللجنة الطبية', 'موافقة وزارية'],
+    'إنهاء المدة القانونية': ['قرار إنهاء الخدمة'],
+    'بلوغ السن القانوني':   ['موافقة وزارية', 'قرار التقاعد'],
+}
+
+# الأعمدة المحمية التي يُعدّ تعديلها تلاعباً
+PROTECTED_FIELD_MAP = {
+    'الرقم العسكري':  'military_number',
+    'الاسم الكامل':   'full_name',
+    'الرتبة':         'current_rank__name',
+    'الرقم الوطني':   'national_id',
+    'الحالة الحالية': 'current_status__name',
+}
+
+# نمط اسم الملف الرسمي
+FILENAME_PATTERN = re.compile(
+    r'^كشف_(?P<dept>.+)_(?P<month>\d{4}-\d{2})_(?P<uid>[a-f0-9]{8})\.xlsx$'
 )
+
+# كلمات تدل على ماكروز أو محتوى خطر
+DANGEROUS_PATTERNS = [b'xl/vbaProject', b'<vba', b'Auto_Open', b'Workbook_Open']
 
 
 class ImportValidationError(Exception):
-    """خطأ في التحقق من صحة الملف"""
+    """فشل التحقق — يوقف المعالجة بالكامل"""
     pass
 
 
 class ExcelImportService:
     """
-    خدمة استيراد ملفات Excel المعدلة من الإدارات
-    
-    الميزات:
-    - التحقق من صحة الملف (Hash, UUIDs)
-    - قراءة التغييرات من 4 أوراق
-    - تصنيف التغييرات (أخضر/أصفر/أحمر)
-    - إنشاء سجلات في منطقة الفحص
-    - تقرير شامل بالأخطاء والتنبيهات
+    خدمة استيراد الكشوفات المعدلة مع تحقق أمني متكامل.
     """
-    
-    # أسماء الأوراق المتوقعة
-    EXPECTED_SHEETS = [
-        'القوة العاملة',
-        'القوة غير العاملة',
-        'القوة كاملة',
-        'الغياب'
-    ]
-    
-    # أسماء الأعمدة المتوقعة
-    EXPECTED_COLUMNS = [
-        'الرقم العسكري',
-        'الاسم الكامل',
-        'الرتبة',
-        'الرقم الوطني',
-        'الحالة الحالية',
-        'متغير الشهر',
-        'ملاحظات',
-        '__UUID__'
-    ]
-    
-    # الحالات التي تتطلب مستندات (عالية الأهمية)
-    HIGH_SEVERITY_STATUSES = [
-        'شهيد', 'متوفى', 'متقاعد', 'مفصول',
-        'منتدب', 'دراسة', 'إعارة', 'استقالة'
-    ]
-    
-    def __init__(
-        self,
-        file_content: bytes,
-        export_id: str,
-        imported_by,
-        service_month: Optional[str] = None
-    ):
-        """
-        تهيئة خدمة الاستيراد
-        
-        Args:
-            file_content: محتوى ملف Excel
-            export_id: معرف التصدير (UUID)
-            imported_by: المستخدم الذي يقوم بالاستيراد
-            service_month: شهر الخدمة (اختياري)
-        """
-        self.file_content = file_content
-        self.export_id = export_id
-        self.imported_by = imported_by
-        self.service_month = service_month
-        
-        # سيتم تعبئتها أثناء المعالجة
-        self.export_log = None
-        self.workbook = None
-        self.errors = []
-        self.warnings = []
-        self.changes = []
+
+    EXPECTED_SHEETS_MULTI  = ['القوة العاملة', 'القوة غير العاملة', 'القوة كاملة', 'الغياب']
+    EXPECTED_SHEETS_SINGLE = ['كشف موحد']
+
+    def __init__(self, file_content: bytes, export_id: str, imported_by, original_filename: str = '', service_month: str = ''):
+        self.file_content      = file_content
+        self.export_id         = export_id
+        self.imported_by       = imported_by
+        self.original_filename = original_filename.strip()
+        self.service_month     = service_month
+
+        self.export_log  = None
+        self.workbook    = None
+        self.errors:   List[Dict] = []
+        self.warnings: List[Dict] = []
+        self.changes:  List[Dict] = []
         self.batch_id = uuid.uuid4()
-        
-        # إحصائيات
+
         self.stats = {
-            'total_rows': 0,
-            'changes_detected': 0,
-            'errors': 0,
-            'warnings': 0,
-            'green_changes': 0,  # لا تحتاج مستند
-            'yellow_changes': 0,  # تحتاج مستند
-            'red_changes': 0,  # غير متوقعة
+            'total_rows': 0, 'changes_detected': 0,
+            'errors': 0, 'warnings': 0,
+            'green': 0, 'yellow': 0, 'red': 0,
         }
-    
-    def _calculate_file_hash(self) -> str:
-        """حساب SHA-256 hash للملف"""
-        return hashlib.sha256(self.file_content).hexdigest()
-    
-    def _verify_export_log(self):
-        """
-        التحقق من وجود سجل التصدير
-        
-        Raises:
-            ImportValidationError: إذا لم يوجد سجل التصدير
-        """
+
+    # ─────────────────────── خطوات التحقق ───────────────────────
+
+    def _step1_verify_filename(self):
+        """الخطوة 1: التحقق من اسم الملف."""
+        if not self.original_filename:
+            return  # اسم الملف اختياري في بعض الاستخدامات
+        m = FILENAME_PATTERN.match(self.original_filename)
+        if not m:
+            raise ImportValidationError(
+                f"اسم الملف غير مطابق للصيغة الرسمية. "
+                f"الصيغة المطلوبة: كشف_[الإدارة]_[YYYY-MM]_[uid].xlsx\n"
+                f"المُستلم: {self.original_filename}"
+            )
+        # التحقق من الشهر المُضمَّن في الاسم
+        if self.service_month and m.group('month') != self.service_month:
+            raise ImportValidationError(
+                f"الشهر في اسم الملف ({m.group('month')}) "
+                f"لا يطابق الشهر المُمرَّر ({self.service_month})"
+            )
+
+    def _step2_verify_export_log(self):
+        """الخطوة 2: التحقق من وجود سجل التصدير."""
         try:
-            self.export_log = ExportLog.objects.get(export_id=self.export_id)
+            self.export_log = ExportLog.objects.select_related(
+                'central_department', 'security_admin'
+            ).get(export_id=self.export_id)
         except ExportLog.DoesNotExist:
-            raise ImportValidationError(
-                f"لم يتم العثور على سجل تصدير بالمعرف: {self.export_id}"
-            )
-        
-        # التحقق من الحالة
+            raise ImportValidationError(f"لم يُعثر على سجل تصدير بالمعرف: {self.export_id}")
+
+        if self.export_log.status == 'expired':
+            raise ImportValidationError("هذا الملف منتهي الصلاحية.")
+
         if self.export_log.status == 'returned':
-            self.warnings.append(
-                "تحذير: هذا الملف تم استيراده مسبقاً"
-            )
-        elif self.export_log.status == 'expired':
-            raise ImportValidationError(
-                "هذا الملف منتهي الصلاحية ولا يمكن استيراده"
-            )
-    
-    def _verify_file_integrity(self):
-        """
-        التحقق من سلامة الملف (Hash)
-        
-        Note: نتجاهل التحقق من Hash لأن Excel يتغير عند التعديل
-        بدلاً من ذلك، نتحقق من UUIDs
-        """
-        # لا نتحقق من Hash لأن الملف تم تعديله
-        # سنتحقق من UUIDs بدلاً من ذلك
-        pass
-    
-    def _load_workbook(self):
-        """
-        تحميل ملف Excel
-        
-        Raises:
-            ImportValidationError: إذا فشل تحميل الملف
-        """
+            self.warnings.append({'warning': 'هذا الملف سبق استيراده. سيتم معالجته مجدداً.'})
+
+    def _step3_scan_for_malware(self):
+        """الخطوة 3: فحص المحتوى الخطر (ماكروز - فيروسات)."""
+        for pattern in DANGEROUS_PATTERNS:
+            if pattern in self.file_content:
+                raise ImportValidationError(
+                    f"تم رفض الملف: يحتوي على محتوى خطر ({pattern.decode(errors='ignore')}). "
+                    "لا يُسمح بالماكروز أو الأكواد القابلة للتنفيذ."
+                )
+
+    def _step4_load_workbook(self):
+        """الخطوة 4: تحميل الملف والتحقق من بنيته."""
         try:
             self.workbook = openpyxl.load_workbook(
-                BytesIO(self.file_content),
-                data_only=True
+                BytesIO(self.file_content), data_only=True, read_only=False
             )
         except Exception as e:
-            raise ImportValidationError(
-                f"فشل تحميل ملف Excel: {str(e)}"
-            )
-    
-    def _verify_sheet_structure(self):
-        """
-        التحقق من بنية الأوراق
-        
-        Raises:
-            ImportValidationError: إذا كانت البنية غير صحيحة
-        """
+            raise ImportValidationError(f"فشل قراءة ملف Excel: {e}")
+
         sheet_names = self.workbook.sheetnames
-        
-        # التحقق من وجود الأوراق المتوقعة
-        for expected_sheet in self.EXPECTED_SHEETS:
-            if expected_sheet not in sheet_names:
-                raise ImportValidationError(
-                    f"الورقة المطلوبة '{expected_sheet}' غير موجودة في الملف"
-                )
-    
-    def _read_sheet_data(self, sheet_name: str) -> List[Dict[str, Any]]:
-        """
-        قراءة بيانات ورقة عمل
-        
-        Args:
-            sheet_name: اسم الورقة
-            
-        Returns:
-            قائمة قواميس تحتوي على بيانات الصفوف
-        """
-        sheet = self.workbook[sheet_name]
-        data = []
-        
-        # قراءة العناوين من الصف الأول
-        headers = []
-        for cell in sheet[1]:
-            headers.append(cell.value)
-        
-        # التحقق من الأعمدة المتوقعة
-        for expected_col in self.EXPECTED_COLUMNS:
-            if expected_col not in headers:
-                self.errors.append(
-                    f"العمود '{expected_col}' غير موجود في ورقة '{sheet_name}'"
-                )
-        
-        # قراءة البيانات
-        for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
-            if not any(row):  # تجاهل الصفوف الفارغة
+
+        # تحديد الوضع (single أو multi)
+        if 'كشف موحد' in sheet_names:
+            self.sheet_mode = 'single'
+            self.expected_sheets = self.EXPECTED_SHEETS_SINGLE
+        else:
+            self.sheet_mode = 'multi'
+            self.expected_sheets = self.EXPECTED_SHEETS_MULTI
+
+        for expected in self.expected_sheets:
+            if expected not in sheet_names:
+                raise ImportValidationError(f"الورقة '{expected}' مفقودة.")
+
+        # التحقق من عدم إضافة أوراق إضافية
+        extra = set(sheet_names) - set(self.expected_sheets)
+        if extra:
+            raise ImportValidationError(f"تم اكتشاف أوراق إضافية غير مصرح بها: {extra}")
+
+    def _step5_verify_row_count(self, all_rows: List[Dict]):
+        """الخطوة 5: التحقق من عدد الصفوف (لا زيادة ولا نقصان)."""
+        expected_count = len(self.export_log.row_uuids)
+
+        # حساب الصفوف الفعلية (بدون تكرار UUID في أوراق متعددة)
+        seen_uuids = set()
+        unique_count = 0
+        for row in all_rows:
+            uid = str(row.get('__UUID__', ''))
+            if uid and uid not in seen_uuids:
+                seen_uuids.add(uid)
+                unique_count += 1
+
+        if unique_count != expected_count:
+            raise ImportValidationError(
+                f"عدد الصفوف غير متطابق! "
+                f"المُصدَّر: {expected_count} فرد، المُستلَم: {unique_count} فرد. "
+                "يُمنع إضافة أو حذف أي صف."
+            )
+
+    def _read_all_rows(self) -> List[Dict]:
+        """قراءة كل الصفوف من كل الأوراق."""
+        all_rows = []
+        for sheet_name in self.expected_sheets:
+            ws = self.workbook[sheet_name]
+            rows = list(ws.iter_rows(values_only=True))
+            if len(rows) < 2:
                 continue
-            
-            row_data = {}
-            for col_idx, header in enumerate(headers):
-                if col_idx < len(row):
-                    row_data[header] = row[col_idx]
-                else:
-                    row_data[header] = None
-            
-            row_data['_sheet_name'] = sheet_name
-            row_data['_row_number'] = row_idx
-            data.append(row_data)
-        
-        return data
-    
-    def _verify_uuid(self, row_uuid: str) -> bool:
-        """
-        التحقق من صحة UUID
-        
-        Args:
-            row_uuid: UUID الصف
-            
-        Returns:
-            True إذا كان UUID صحيحاً
-        """
-        if not row_uuid:
-            return False
-        
-        # التحقق من وجود UUID في سجل التصدير
-        return str(row_uuid) in [str(u) for u in self.export_log.row_uuids]
-    
-    def _classify_change_severity(
-        self,
-        old_status: str,
-        new_status: str
-    ) -> Tuple[str, bool]:
-        """
-        تصنيف التغيير حسب الأهمية
-        
-        Args:
-            old_status: الحالة القديمة
-            new_status: الحالة الجديدة
-            
-        Returns:
-            tuple: (severity, requires_document)
-                - severity: 'low' أو 'high'
-                - requires_document: True إذا كان يتطلب مستند
-        """
-        # إذا كانت الحالة الجديدة من الحالات الحساسة
-        if new_status in self.HIGH_SEVERITY_STATUSES:
-            return 'high', True
-        
-        # إذا كانت الحالة الجديدة "أخرى"
-        if new_status == 'أخرى':
-            return 'high', True
-        
-        # تغييرات بسيطة
-        return 'low', False
-    
-    def _detect_changes(self, all_rows: List[Dict[str, Any]]):
-        """
-        اكتشاف التغييرات المقترحة
-        
-        Args:
-            all_rows: جميع الصفوف من جميع الأوراق
-        """
-        processed_military_numbers = set()
-        
+
+            # إيجاد صف العناوين (تجاوز صف التحذير الأول)
+            # صف 0: التحذير، صف 1: العناوين
+            headers = [str(h).strip() if h else '' for h in rows[1]]
+
+            for row_idx, row_vals in enumerate(rows[2:], start=3):
+                if not any(row_vals):
+                    continue
+                row_dict = {}
+                for col_i, h in enumerate(headers):
+                    if col_i < len(row_vals):
+                        val = row_vals[col_i]
+                        row_dict[h] = str(val).strip() if val is not None else ''
+                row_dict['_sheet'] = sheet_name
+                row_dict['_row']   = row_idx
+                all_rows.append(row_dict)
+
+        return all_rows
+
+    def _step6_detect_changes(self, all_rows: List[Dict]):
+        """الخطوة 6–9: كشف التلاعب والتغييرات وتصنيفها."""
+        exported_uuids = {str(u) for u in self.export_log.row_uuids}
+        editable_cols  = set(self.export_log.editable_columns)
+        processed_mil  = set()
+
         for row in all_rows:
             self.stats['total_rows'] += 1
-            
-            military_number = row.get('الرقم العسكري')
-            current_status = row.get('الحالة الحالية')
-            proposed_status = row.get('متغير الشهر')
-            notes = row.get('ملاحظات', '')
-            row_uuid = row.get('__UUID__')
-            sheet_name = row.get('_sheet_name')
-            row_number = row.get('_row_number')
-            
-            # التحقق من الرقم العسكري
-            if not military_number:
-                self.errors.append({
-                    'sheet': sheet_name,
-                    'row': row_number,
-                    'error': 'الرقم العسكري فارغ'
-                })
-                self.stats['errors'] += 1
+            sheet = row.get('_sheet', '')
+            row_n = row.get('_row', 0)
+            mil_num = row.get('الرقم العسكري', '').strip()
+            row_uuid = row.get('__UUID__', '').strip()
+
+            # ── التحقق من UUID ──
+            if row_uuid not in exported_uuids:
+                self._add_error(sheet, row_n, mil_num, 'UUID غير صالح — صف غير أصلي أو مُزوَّر')
                 continue
-            
-            # التحقق من UUID
-            if not self._verify_uuid(row_uuid):
-                self.errors.append({
-                    'sheet': sheet_name,
-                    'row': row_number,
-                    'military_number': military_number,
-                    'error': 'UUID غير صحيح أو غير موجود في سجل التصدير'
-                })
-                self.stats['errors'] += 1
+
+            if mil_num in processed_mil:
                 continue
-            
-            # تجنب معالجة نفس الفرد مرتين (قد يظهر في أكثر من ورقة)
-            if military_number in processed_military_numbers:
-                continue
-            processed_military_numbers.add(military_number)
-            
-            # البحث عن الفرد في قاعدة البيانات
+            processed_mil.add(mil_num)
+
+            # ── البحث في DB ──
             try:
-                personnel = PersonnelMaster.objects.select_related(
-                    'current_status', 'current_rank', 'central_department'
-                ).get(military_number=military_number)
+                person = PersonnelMaster.objects.select_related(
+                    'current_rank', 'current_status'
+                ).get(military_number=mil_num)
             except PersonnelMaster.DoesNotExist:
-                self.errors.append({
-                    'sheet': sheet_name,
-                    'row': row_number,
-                    'military_number': military_number,
-                    'error': 'الرقم العسكري غير موجود في قاعدة البيانات'
-                })
-                self.stats['errors'] += 1
+                self._add_error(sheet, row_n, mil_num, 'الرقم العسكري غير موجود في قاعدة البيانات')
                 continue
-            
-            # التحقق من تطابق البيانات الأساسية
-            name_mismatch = False
-            rank_mismatch = False
-            national_id_mismatch = False
-            
-            if row.get('الاسم الكامل') != personnel.full_name:
-                name_mismatch = True
-                self.warnings.append({
-                    'sheet': sheet_name,
-                    'row': row_number,
-                    'military_number': military_number,
-                    'warning': f"اختلاف في الاسم: '{row.get('الاسم الكامل')}' vs '{personnel.full_name}'"
-                })
+
+            # ── الخطوة 7: كشف التلاعب بالأعمدة المقفولة ──
+            tampering = self._check_tampering(row, person)
+            for t in tampering:
+                self.warnings.append({'sheet': sheet, 'row': row_n, 'military_number': mil_num, **t})
                 self.stats['warnings'] += 1
-            
-            if row.get('الرتبة') != personnel.current_rank.name:
-                rank_mismatch = True
-                self.warnings.append({
-                    'sheet': sheet_name,
-                    'row': row_number,
-                    'military_number': military_number,
-                    'warning': f"اختلاف في الرتبة: '{row.get('الرتبة')}' vs '{personnel.current_rank.name}'"
-                })
-                self.stats['warnings'] += 1
-            
-            if row.get('الرقم الوطني') != personnel.national_id:
-                national_id_mismatch = True
-                self.warnings.append({
-                    'sheet': sheet_name,
-                    'row': row_number,
-                    'military_number': military_number,
-                    'warning': f"اختلاف في الرقم الوطني"
-                })
-                self.stats['warnings'] += 1
-            
-            # اكتشاف التغيير
-            if proposed_status and proposed_status != current_status:
-                # تصنيف التغيير
-                severity, requires_document = self._classify_change_severity(
-                    current_status, proposed_status
-                )
-                
-                # إحصائيات
-                self.stats['changes_detected'] += 1
-                if severity == 'low':
-                    self.stats['green_changes'] += 1
-                elif severity == 'high' and proposed_status != 'أخرى':
-                    self.stats['yellow_changes'] += 1
+
+            # ── الخطوة 8: كشف التغييرات المسموح بها ──
+            new_status_cls   = row.get('الحالة', '').strip()
+            new_status_type  = row.get('نوع الحالة', '').strip()
+            monthly_variable = row.get('المتغير الشهري', '').strip()
+            notes            = row.get('ملاحظات', '').strip()
+            old_status       = person.current_status.name if person.current_status else ''
+
+            if not new_status_type:
+                new_status_type = old_status
+                new_status_cls = person.current_status.get_classification_display() if person.current_status else ''
+
+            is_status_changed = (new_status_type != old_status)
+
+            if is_status_changed or monthly_variable:
+                severity, requires_doc, attachments = self._classify_change(new_status_type)
+                if is_status_changed:
+                    self.stats['changes_detected'] += 1
+                    self.stats[severity] += 1
                 else:
-                    self.stats['red_changes'] += 1
-                
-                # حفظ التغيير
+                    # If only monthly variable changed, it's considered a green/low severity change
+                    self.stats['changes_detected'] += 1
+                    self.stats['green'] += 1
+                    severity = 'green'
+                    requires_doc = False
+                    attachments = []
+
                 self.changes.append({
-                    'personnel': personnel,
-                    'proposed_change': {
-                        'status': proposed_status,
-                        'service_month': self.service_month or self.export_log.service_month,
-                    },
-                    'notes': notes or '',
-                    'severity': severity,
-                    'requires_document': requires_document,
-                    'name_mismatch': name_mismatch,
-                    'rank_mismatch': rank_mismatch,
-                    'national_id_mismatch': national_id_mismatch,
-                    'sheet_name': sheet_name,
-                    'row_number': row_number,
+                    'personnel':         person,
+                    'old_status':        old_status,
+                    'new_status':        new_status_type,
+                    'new_classification': new_status_cls,
+                    'monthly_variable':  monthly_variable,
+                    'notes':             notes,
+                    'severity':          severity,
+                    'requires_document': requires_doc,
+                    'required_attachments': attachments,
+                    'tampered_fields':   tampering,
+                    'sheet':             sheet,
+                    'row':               row_n,
                 })
-    
+
+    def _check_tampering(self, row: Dict, person: PersonnelMaster) -> List[Dict]:
+        """فحص التلاعب بالأعمدة المقفولة."""
+        issues = []
+        db_vals = {
+            'الرقم العسكري':  person.military_number or '',
+            'الاسم الكامل':   person.full_name or '',
+            'الرتبة':         person.current_rank.name if person.current_rank else '',
+            'الرقم الوطني':   person.national_id or '',
+            'الحالة الحالية': person.current_status.name if person.current_status else '',
+        }
+        for col, db_val in db_vals.items():
+            file_val = row.get(col, '').strip()
+            if file_val and file_val != str(db_val).strip():
+                issues.append({
+                    'type':      'tampered_locked_column',
+                    'column':    col,
+                    'file_value': file_val,
+                    'db_value':  db_val,
+                    'warning':   f'تلاعب في العمود المقفول "{col}": الملف="{file_val}" | DB="{db_val}"',
+                })
+        return issues
+
+    def _classify_change(self, new_status: str) -> Tuple[str, bool, List[str]]:
+        """
+        تصنيف التغيير:
+        Returns: (severity, requires_document, required_attachments)
+        - green: لا يحتاج مستند
+        - yellow: يحتاج مستند محدد
+        - red: مريب أو غير معروف
+        """
+        attachments = REQUIRED_ATTACHMENTS.get(new_status, [])
+        if attachments:
+            return 'yellow', True, attachments
+        try:
+            ServiceStatus.objects.get(name=new_status)
+            return 'green', False, []
+        except ServiceStatus.DoesNotExist:
+            return 'red', True, ['وثيقة تثبت صحة الحالة']
+
+    def _add_error(self, sheet, row, mil, msg):
+        self.errors.append({'sheet': sheet, 'row': row, 'military_number': mil, 'error': msg})
+        self.stats['errors'] += 1
+
     @transaction.atomic
     def _create_staging_records(self):
-        """
-        إنشاء سجلات في منطقة الفحص
-        """
-        staging_records = []
-        
-        for change in self.changes:
-            staging_record = StagingRecord(
-                personnel=change['personnel'],
+        """إنشاء سجلات StagingRecord دفعة واحدة."""
+        records = []
+        for ch in self.changes:
+            records.append(StagingRecord(
+                personnel=ch['personnel'],
                 security_admin=self.export_log.security_admin,
                 upload_batch_id=self.batch_id,
-                proposed_change=change['proposed_change'],
-                notes=change['notes'],
+                proposed_change={
+                    'status':              ch['new_status'],
+                    'classification':      ch['new_classification'],
+                    'monthly_variable':    ch['monthly_variable'],
+                    'service_month':       self.service_month or self.export_log.service_month,
+                    'required_attachments': ch['required_attachments'],
+                },
+                notes=ch['notes'],
                 status='pending',
-                severity=change['severity'],
-                requires_document=change['requires_document'],
-                name_mismatch=change['name_mismatch'],
-                rank_mismatch=change['rank_mismatch'],
-                national_id_mismatch=change['national_id_mismatch'],
-            )
-            staging_records.append(staging_record)
-        
-        # حفظ دفعة واحدة
-        StagingRecord.objects.bulk_create(staging_records)
-        
-        # تحديث حالة ExportLog
+                severity=ch['severity'],
+                requires_document=ch['requires_document'],
+                name_mismatch=any(t['column'] == 'الاسم الكامل' for t in ch['tampered_fields']),
+                rank_mismatch=any(t['column'] == 'الرتبة' for t in ch['tampered_fields']),
+                national_id_mismatch=any(t['column'] == 'الرقم الوطني' for t in ch['tampered_fields']),
+            ))
+
+        StagingRecord.objects.bulk_create(records)
+
         self.export_log.status = 'returned'
         self.export_log.save(update_fields=['status'])
-        
-        # تسجيل في AuditLog
+
+        AuditLog.objects.create(
+            user=self.imported_by,
+            action='IMPORT',
+            model_name='ExportLog',
+            object_id=str(self.export_log.export_id),
+            new_data={
+                'batch_id':      str(self.batch_id),
+                'changes':       self.stats['changes_detected'],
+                'errors':        self.stats['errors'],
+                'green':         self.stats['green'],
+                'yellow':        self.stats['yellow'],
+                'red':           self.stats['red'],
+                'filename':      self.original_filename,
+            },
+        )
+
+    @transaction.atomic
+    def process(self) -> Dict[str, Any]:
+        """تشغيل سلسلة التحقق الكاملة."""
+        self._step1_verify_filename()
+        self._step2_verify_export_log()
+        self._step3_scan_for_malware()
+        self._step4_load_workbook()
+
+        all_rows = self._read_all_rows()
+
+        self._step5_verify_row_count(all_rows)
+        self._step6_detect_changes(all_rows)
+
+        if self.changes:
+            self._create_staging_records()
+
+        # دائماً نسجّل حالة الإرجاع + AuditLog حتى بدون تغييرات
+        self.export_log.status = 'returned'
+        self.export_log.save(update_fields=['status'])
+
         AuditLog.objects.create(
             user=self.imported_by,
             action='IMPORT',
@@ -438,141 +411,46 @@ class ExcelImportService:
             object_id=str(self.export_log.export_id),
             new_data={
                 'batch_id': str(self.batch_id),
-                'changes_count': len(self.changes),
-                'errors_count': self.stats['errors'],
-                'warnings_count': self.stats['warnings'],
+                'changes':  self.stats['changes_detected'],
+                'errors':   self.stats['errors'],
+                'green':    self.stats['green'],
+                'yellow':   self.stats['yellow'],
+                'red':      self.stats['red'],
+                'filename': self.original_filename,
             },
-            ip_address=None,
         )
-    
-    def _update_directorate_compliance(self):
-        """
-        تحديث سجل التزام المديرية/الإدارة
-        """
-        if not self.service_month:
-            return
-        
-        compliance, created = DirectorateCompliance.objects.get_or_create(
-            central_department=self.export_log.central_department,
-            security_admin=self.export_log.security_admin,
-            service_month=self.service_month,
-            defaults={
-                'submitted_at': timezone.now(),
-                'error_count': self.stats['errors'],
-                'quality_score': 100,
-            }
-        )
-        
-        if not created:
-            compliance.submitted_at = timezone.now()
-            compliance.error_count = self.stats['errors']
-            compliance.save(update_fields=['submitted_at', 'error_count'])
-    
-    def process(self) -> Dict[str, Any]:
-        """
-        معالجة الملف بالكامل
-        
-        Returns:
-            تقرير شامل بالنتائج
-            
-        Raises:
-            ImportValidationError: إذا فشلت المعالجة
-        """
-        # 1. التحقق من سجل التصدير
-        self._verify_export_log()
-        
-        # 2. تحميل الملف
-        self._load_workbook()
-        
-        # 3. التحقق من البنية
-        self._verify_sheet_structure()
-        
-        # 4. قراءة البيانات من جميع الأوراق
-        all_rows = []
-        for sheet_name in self.EXPECTED_SHEETS:
-            sheet_data = self._read_sheet_data(sheet_name)
-            all_rows.extend(sheet_data)
-        
-        # 5. اكتشاف التغييرات
-        self._detect_changes(all_rows)
-        
-        # 6. إنشاء سجلات في منطقة الفحص
-        if self.changes:
-            self._create_staging_records()
-        
-        # 7. تحديث التزام الإدارة
-        self._update_directorate_compliance()
-        
-        # 8. إنشاء التقرير
-        
-        report = {
-            'success': True,
-            'batch_id': str(self.batch_id),
-            'central_department': self.export_log.central_department.name if self.export_log.central_department else 'غير معروف',
-            'service_month': self.service_month or self.export_log.service_month,
-            'stats': self.stats,
-            'errors': self.errors,
-            'warnings': self.warnings,
-            'message': self._generate_summary_message(),
+
+        return {
+            'success':    True,
+            'batch_id':   str(self.batch_id),
+            'department': self.export_log.central_department.name if self.export_log.central_department else '—',
+            'month':      self.service_month or self.export_log.service_month,
+            'stats':      self.stats,
+            'errors':     self.errors,
+            'warnings':   self.warnings,
+            'summary':    self._summary(),
         }
-        
-        return report
-    
-    def _generate_summary_message(self) -> str:
-        """توليد رسالة ملخص"""
-        parts = []
-        
-        parts.append(
-            f"تم استلام {self.stats['total_rows']} صف"
-        )
-        
-        if self.stats['changes_detected'] > 0:
+
+    def _summary(self) -> str:
+        parts = [f"إجمالي الصفوف: {self.stats['total_rows']}"]
+        if self.stats['changes_detected']:
             parts.append(
-                f"تم اكتشاف {self.stats['changes_detected']} تغييراً مقترحاً"
+                f"تغييرات: {self.stats['changes_detected']} "
+                f"(🟢{self.stats['green']} 🟡{self.stats['yellow']} 🔴{self.stats['red']})"
             )
-            parts.append(
-                f"({self.stats['green_changes']} أخضر، "
-                f"{self.stats['yellow_changes']} أصفر، "
-                f"{self.stats['red_changes']} أحمر)"
-            )
-        else:
-            parts.append("لم يتم اكتشاف أي تغييرات")
-        
-        if self.stats['errors'] > 0:
-            parts.append(f"{self.stats['errors']} خطأ")
-        
-        if self.stats['warnings'] > 0:
-            parts.append(f"{self.stats['warnings']} تحذير")
-        
-        return "، ".join(parts) + "."
+        if self.stats['errors']:
+            parts.append(f"أخطاء: {self.stats['errors']}")
+        if self.stats['warnings']:
+            parts.append(f"تحذيرات: {self.stats['warnings']}")
+        return ' | '.join(parts)
 
 
-def import_service_file(
-    file_content: bytes,
-    export_id: str,
-    user,
-    service_month: Optional[str] = None
-) -> Dict[str, Any]:
-    """
-    دالة مساعدة لاستيراد ملف خدمات
-    
-    Args:
-        file_content: محتوى ملف Excel
-        export_id: معرف التصدير (UUID)
-        user: المستخدم الذي يقوم بالاستيراد
-        service_month: شهر الخدمة (اختياري)
-        
-    Returns:
-        تقرير شامل بالنتائج
-        
-    Raises:
-        ImportValidationError: إذا فشلت المعالجة
-    """
-    service = ExcelImportService(
+def import_service_file(file_content: bytes, export_id: str, user, service_month: str = '', filename: str = '') -> Dict:
+    svc = ExcelImportService(
         file_content=file_content,
         export_id=export_id,
         imported_by=user,
-        service_month=service_month
+        original_filename=filename,
+        service_month=service_month,
     )
-    
-    return service.process()
+    return svc.process()

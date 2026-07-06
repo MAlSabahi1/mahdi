@@ -2,6 +2,18 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useSystemStore } from '@/stores/system'
 
+// Augment Vue Router's RouteMeta to include our custom fields
+declare module 'vue-router' {
+  interface RouteMeta {
+    title?: string
+    requiresAuth?: boolean
+    requiresAdmin?: boolean
+    requiresPermission?: string | string[]
+    guest?: boolean
+  }
+}
+
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   scrollBehavior(to, from, savedPosition) {
@@ -113,6 +125,26 @@ const router = createRouter({
       component: () => import('@/views/UserManagement/RolesManagement.vue'),
       meta: {
         title: 'إدارة المجموعات والصلاحيات',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/roles/permission-groups',
+      name: 'permission-groups',
+      component: () => import('@/views/UserManagement/PermissionGroups.vue'),
+      meta: {
+        title: 'مجموعات الصلاحيات',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/roles/permissions',
+      name: 'permissions-list',
+      component: () => import('@/views/UserManagement/Permissions.vue'),
+      meta: {
+        title: 'الصلاحيات المباشرة',
         requiresAuth: true,
         requiresAdmin: true,
       },
@@ -336,6 +368,7 @@ const router = createRouter({
       meta: {
         title: 'لوحة تحكم السكرتارية',
         requiresAuth: true,
+        requiresPermission: 'secretariat.view.all',
       },
     },
     {
@@ -345,6 +378,17 @@ const router = createRouter({
       meta: {
         title: 'صادر ووارد',
         requiresAuth: true,
+        requiresPermission: ['secretariat.view.all', 'secretariat.view.own'],
+      },
+    },
+    {
+      path: '/secretariat/correspondences/:id',
+      name: 'SecretariatCorrespondenceDetail',
+      component: () => import('@/views/Secretariat/CorrespondenceDetail.vue'),
+      meta: {
+        title: 'تفاصيل وأرشفة المراسلة',
+        requiresAuth: true,
+        requiresPermission: ['secretariat.view.all', 'secretariat.view.own', 'secretariat.task.execute'],
       },
     },
     {
@@ -354,6 +398,57 @@ const router = createRouter({
       meta: {
         title: 'إدارة المهام',
         requiresAuth: true,
+        requiresPermission: ['secretariat.task.manage', 'secretariat.task.execute'],
+      },
+    },
+    {
+      path: '/secretariat/meetings',
+      name: 'SecretariatMeetings',
+      component: () => import('@/views/Secretariat/MeetingMinutes.vue'),
+      meta: {
+        title: 'محاضر الاجتماعات',
+        requiresAuth: true,
+        requiresPermission: 'secretariat.view.all',
+      },
+    },
+    {
+      path: '/secretariat/inventory',
+      name: 'SecretariatInventory',
+      component: () => import('@/views/Secretariat/InventoryCustody.vue'),
+      meta: {
+        title: 'القرطاسية والعهد والمخزن',
+        requiresAuth: true,
+        requiresPermission: 'secretariat.view.all',
+      },
+    },
+    {
+      path: '/secretariat/attendance',
+      name: 'SecretariatAttendance',
+      component: () => import('@/views/Secretariat/AttendanceMonitoring.vue'),
+      meta: {
+        title: 'رقابة الحضور والدوام',
+        requiresAuth: true,
+        requiresPermission: 'secretariat.view.all',
+      },
+    },
+    {
+      path: '/secretariat/finance',
+      name: 'SecretariatFinance',
+      component: () => import('@/views/Secretariat/FinancialAllocations.vue'),
+      meta: {
+        title: 'الاعتماد المالي والمصروفات',
+        requiresAuth: true,
+        requiresPermission: 'secretariat.view.all',
+      },
+    },
+    {
+      path: '/secretariat/document-requests',
+      name: 'SecretariatDocumentRequests',
+      component: () => import('@/views/Secretariat/DocumentRequests.vue'),
+      meta: {
+        title: 'طلبات الأعمال المكتبية وصياغة الخطابات',
+        requiresAuth: true,
+        requiresPermission: 'secretariat.view.all',
       },
     },
     {
@@ -565,6 +660,26 @@ router.beforeEach((to, from, next) => {
   // إذا كانت الصفحة تتطلب صلاحية مدير والمستخدم ليس مدير
   if (to.meta.requiresAdmin && !authStore.isAdmin) {
     return next({ name: 'Dashboard' })
+  }
+
+  // تحقق من الصلاحيات المحددة (ABAC)
+  if (to.meta.requiresPermission && authStore.isAuthenticated) {
+    const required = to.meta.requiresPermission
+    // السوبر أدمين يمر دائماً
+    if (!authStore.user?.is_superuser) {
+      const hasAccess = Array.isArray(required)
+        ? required.some((p: string) => authStore.hasPermission(p))
+        : authStore.hasPermission(required as string)
+
+      if (!hasAccess) {
+        // إعادة توجيه لصفحة مهام الموظف إذا كان لديه صلاحية تنفيذ المهام
+        if (authStore.hasPermission('secretariat.task.execute') && to.name !== 'SecretariatTasks') {
+          return next({ name: 'SecretariatTasks' })
+        }
+        // وإلا للوحة الرئيسية
+        return next({ name: 'Dashboard' })
+      }
+    }
   }
 
   // إذا كان المستخدم مسجل ويحاول الوصول لصفحة الضيف (تسجيل الدخول)
