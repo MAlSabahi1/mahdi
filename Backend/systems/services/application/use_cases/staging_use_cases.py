@@ -26,6 +26,7 @@ from systems.services.infrastructure.models.event_log import ServiceEventLog
 from systems.services.infrastructure.models.logs import RejectionLog
 from systems.services.infrastructure.models.snapshots import DirectorateCompliance
 from core.models import ServiceStatus
+from systems.personnel.models import HistoricalMonthlyVariables
 
 
 @dataclass
@@ -88,6 +89,17 @@ class ReviewStagingRecordUseCase:
                 old_data={'current_status': old_status_name},
                 new_data={'current_status': new_status_name}
             )
+            
+            # 4. حفظ المتغير الشهري في السجل التاريخي (إن وجد)
+            monthly_variable = entity.changes.get('monthly_variable')
+            if monthly_variable:
+                HistoricalMonthlyVariables.objects.create(
+                    personnel_id=personnel.id,
+                    month=date.today().strftime('%Y-%m'),
+                    variable_value=monthly_variable,
+                    source='excel_import',
+                    created_by_id=cmd.reviewer_id
+                )
             
         elif cmd.action == 'reject':
             entity.reject(cmd.reason, cmd.reviewer_id)

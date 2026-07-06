@@ -1,6 +1,7 @@
 """
 Personnel Views - واجهات API إدارة الأفراد
-المرحلة 4 - المهمة 4.2: CRUD + ABAC + History + Shadow Table
+The personnel views use PermissionRequiredMixin + Perms.* for clean,
+type-safe permission checks integrated with the ABAC data-scope engine.
 """
 from rest_framework import status, permissions
 from rest_framework.decorators import action
@@ -18,11 +19,18 @@ from .serializers import (
     PersonnelHistorySerializer, SuggestedCorrectionSerializer,
     HistoricalMonthlyVariablesSerializer
 )
+
+# نظام الصلاحيات المتقدم — PermissionRequiredMixin مع Perms.* Registry
+from infra.authorization.mixins.permission_mixin import PermissionRequiredMixin, ServicePermission
+from infra.authorization.registry.permissions import Perms
+
+# ABAC scope helpers — تصفية البيانات حسب نطاق المستخدم
 from infra.security.permissions import (
-    ABACPermission, has_permission as check_perm,
+    has_permission as check_perm,
     has_department_scope, filter_by_department_scope,
     check_permission, check_permission_for_department,
 )
+
 from core.base_views import BaseModelViewSet
 from infra.security.dual_auth_service import DualAuthorizationService, DualAuthError
 from infra.audit.models import AuditLog
@@ -36,32 +44,42 @@ from infra.audit.models import AuditLog
     partial_update=extend_schema(summary='تعديل جزئي', tags=['personnel']),
     destroy=extend_schema(summary='حذف فرد (يتطلب تفويض مزدوج)', tags=['personnel']),
 )
-class PersonnelViewSet(BaseModelViewSet):
+class PersonnelViewSet(PermissionRequiredMixin, BaseModelViewSet):
     """
     إدارة الأفراد الكاملة مع ABAC scope filtering
-    
-    - GET /personnel/ — قائمة (مع بحث وفلترة + ABAC)
-    - GET /personnel/{military_number}/ — تفاصيل
-    - POST /personnel/ — إضافة (idempotent)
-    - PUT /personnel/{military_number}/ — تعديل (idempotent)
-    - DELETE /personnel/{military_number}/ — حذف (Four-Eyes)
-    - GET /personnel/{military_number}/history/ — تاريخ Shadow Table
+
+    نظام الصلاحيات:
+      - PermissionRequiredMixin يفحص permission_map حسب الإجراء
+      - Perms.* ثوابت تمنع أخطاء الإملاء
+      - get_queryset يطبّق ABAC Data Scope تلقائياً
+
+    - GET    /personnel/                       — قائمة (مع بحث وفلترة + ABAC)
+    - GET    /personnel/{military_number}/     — تفاصيل
+    - POST   /personnel/                       — إضافة (idempotent)
+    - PUT    /personnel/{military_number}/     — تعديل (idempotent)
+    - DELETE /personnel/{military_number}/     — حذف (Four-Eyes)
+    - GET    /personnel/{military_number}/history/ — تاريخ Shadow Table
     """
-    permission_classes = [permissions.IsAuthenticated, ABACPermission]
     lookup_field = 'military_number'
     idempotent_actions = ['create', 'update', 'partial_update']
-    
-    # صلاحيات حسب الإجراء
-    required_permission = {
-        'list': 'view_personnel',
-        'retrieve': 'view_personnel',
-        'create': 'edit_personnel_basic',
-        'update': 'edit_personnel_basic',
-        'partial_update': 'edit_personnel_basic',
-        'destroy': 'delete_personnel',
-        'history': 'view_personnel',
+
+    # ——— خريطة الصلاحيات ———
+    # PermissionRequiredMixin يقرأ هذه الخريطة تلقائياً بناءاً على الـ action الحالي
+    permission_map = {
+        'list':           Perms.PERSONNEL_VIEW,
+        'retrieve':       Perms.PERSONNEL_VIEW,
+        'create':         Perms.PERSONNEL_CREATE,
+        'update':         Perms.PERSONNEL_EDIT,
+        'partial_update': Perms.PERSONNEL_EDIT,
+        'destroy':        Perms.PERSONNEL_DELETE,
+        'history':        Perms.PERSONNEL_VIEW,
+        'stats':          Perms.PERSONNEL_VIEW,
+        'export_csv':     Perms.SHEETS_EXPORT,
+        'monthly_variables': Perms.PERSONNEL_VIEW,
+        'active_variables':  Perms.PERSONNEL_VIEW,
+        'upsert_variable':   Perms.PERSONNEL_EDIT,
     }
-    
+
     filterset_fields = [
         'security_admin', 'central_department', 'branch', 'district_police',
         'current_rank', 'current_status',
@@ -73,6 +91,7 @@ class PersonnelViewSet(BaseModelViewSet):
         'data_quality_score', 'updated_at',
     ]
     ordering = ['military_number']
+
     
     def get_queryset(self):
         qs = PersonnelMaster.objects.select_related(
@@ -1159,10 +1178,10 @@ class RankSettlementView(APIView):
 # RankSettlement CRUD + Apply/Reject
 # ═══════════════════════════════════════════════════
 
-class RankSettlementViewSet(BaseModelViewSet):
+class RankSettlementViewSet(PermissionRequiredMixin, BaseModelViewSet):
     """
     إدارة طلبات تسوية الرتب الرسمية.
-    
+
     - GET    /rank-settlements/                  → قائمة الطلبات
     - POST   /rank-settlements/                  → إنشاء طلب جديد
     - GET    /rank-settlements/{id}/             → تفاصيل طلب
@@ -1170,16 +1189,14 @@ class RankSettlementViewSet(BaseModelViewSet):
     - POST   /rank-settlements/{id}/reject/      → رفض
     """
     from .serializers import RankSettlementSerializer
-    
-    permission_classes = [permissions.IsAuthenticated, ABACPermission]
+
     serializer_class = RankSettlementSerializer
-    
-    required_permission = {
-        'list': 'view_personnel',
-        'retrieve': 'view_personnel',
-        'create': 'edit_personnel_basic',
-        'apply': 'approve_change',
-        'reject': 'approve_change',
+    permission_map = {
+        'list':     Perms.RANK_SETTLEMENT_VIEW,
+        'retrieve': Perms.RANK_SETTLEMENT_VIEW,
+        'create':   Perms.RANK_SETTLEMENT_CREATE,
+        'apply':    Perms.RANK_SETTLEMENT_EXECUTE,
+        'reject':   Perms.RANK_SETTLEMENT_EXECUTE,
     }
     
     filterset_fields = ['status', 'settlement_type']

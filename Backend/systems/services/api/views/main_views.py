@@ -41,132 +41,223 @@ from core.base_views import BaseModelViewSet, BaseReadOnlyViewSet, BaseViewSet
 
 
 # ============================================================================
-# Export View (المهمة 4.3.1)
+# Export View — تصدير قالب لإدارة واحدة
 # ============================================================================
 
 class ExportView(BaseViewSet):
-    """تصدير كشوفات Excel"""
+    """
+    GET  /api/services/export/?directorate_id=X&month=YYYY-MM&mode=multi
+    يدعم وضعين: mode=multi (4 أوراق) | mode=single (ورقة واحدة)
+    """
     permission_classes = [permissions.IsAuthenticated, ABACPermission]
     required_permission = 'export_sheet'
-    
+
     @extend_schema(
         parameters=[
-            OpenApiParameter('directorate_id', int, required=True),
+            OpenApiParameter('directorate_id', int, required=True, description='معرف الإدارة'),
             OpenApiParameter('month', str, required=True, description='YYYY-MM'),
+            OpenApiParameter('mode', str, required=False, description='multi أو single (افتراضي: multi)'),
         ],
-        summary='تصدير كشوفة مديرية',
+        summary='تصدير قالب كشف لإدارة واحدة',
         tags=['service-cycle'],
     )
     def list(self, request):
-        """تصدير كشوفة (متزامن)"""
-        dept_id = request.query_params.get('directorate_id') or request.query_params.get('directorate_id')
-        month = request.query_params.get('month')
-        
+        dept_id = request.query_params.get('directorate_id')
+        month   = request.query_params.get('month')
+        mode    = request.query_params.get('mode', 'multi')
+
         if not dept_id or not month:
             return Response(
                 {'success': False, 'error': 'directorate_id و month مطلوبان'},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        
-        # Check permissions - using has_governorate_scope to isolate by governorate
-        # Ideally, we should also check if the directorate is within the user's governorate
+        if mode not in ('multi', 'single'):
+            return Response(
+                {'success': False, 'error': 'mode يجب أن يكون multi أو single'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         from core.models import CentralDepartment
         try:
-            directorate = CentralDepartment.objects.get(id=int(dept_id))
-            if getattr(request.user, 'profile', None) and request.user.profile.governorate_id:
-                if directorate.governorate_id != request.user.profile.governorate_id:
-                    return Response(
-                        {'success': False, 'error': 'ليس لديك صلاحية على هذه المديرية في هذه المحافظة'},
-                        status=status.HTTP_403_FORBIDDEN
-                    )
+            dept = CentralDepartment.objects.get(id=int(dept_id))
         except CentralDepartment.DoesNotExist:
-            return Response(
-                {'success': False, 'error': 'المديرية غير موجودة'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-            
+            return Response({'success': False, 'error': 'الإدارة غير موجودة'}, status=status.HTTP_404_NOT_FOUND)
+
+        # فحص نطاق المحافظة
+        if getattr(request.user, 'profile', None) and getattr(request.user.profile, 'governorate_id', None):
+            if hasattr(dept, 'security_admin') and dept.security_admin:
+                if getattr(dept.security_admin, 'governorate_id', None) != request.user.profile.governorate_id:
+                    return Response(
+                        {'success': False, 'error': 'ليس لديك صلاحية على هذه الإدارة'},
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
+
         try:
             from systems.services.export_service import export_template_for_department
-            
             file_output, filename = export_template_for_department(
                 department_id=int(dept_id),
                 service_month=month,
                 user=request.user,
+                mode=mode,
             )
-            
-            response = FileResponse(
+            resp = FileResponse(
                 file_output,
                 content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             )
-            response['Content-Disposition'] = f'attachment; filename="{filename}"'
-            return response
-            
+            # تشفير اسم الملف (RFC 5987)
+            encoded = filename.encode('utf-8').decode('latin-1', errors='replace')
+            resp['Content-Disposition'] = f"attachment; filename*=UTF-8''{filename.encode('utf-8').hex()}"
+            resp['X-Export-Filename'] = filename
+            return resp
         except Exception as e:
-            return Response(
-                {'success': False, 'error': str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response({'success': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # ============================================================================
-# Import View (المهمة 4.3.2) — مع دعم Celery غير متزامن
+# Batch Export View — تصدير كل الإدارات دفعة واحدة (ZIP)
+# ============================================================================
+
+class BatchExportView(BaseViewSet):
+    """
+    POST /api/services/export/batch/
+    Body: {"month": "YYYY-MM", "mode": "multi|single"}
+    يعيد: ملف ZIP يحتوي على كشف Excel لكل إدارة.
+    """
+    permission_classes = [permissions.IsAuthenticated, ABACPermission]
+    required_permission = 'export_sheet'
+
+    @extend_schema(
+        summary='تصدير كشوفات جميع الإدارات دفعة واحدة (ZIP)',
+        tags=['service-cycle'],
+        request={'application/json': {'type': 'object', 'properties': {
+            'month': {'type': 'string', 'example': '2025-07'},
+            'mode':  {'type': 'string', 'enum': ['multi', 'single'], 'default': 'multi'},
+        }}},
+    )
+    def create(self, request):
+        month = request.data.get('month') or request.query_params.get('month')
+        mode  = request.data.get('mode', 'multi')
+
+        if not month:
+            return Response({'success': False, 'error': 'month مطلوب'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            from systems.services.export_service import BatchExcelExportService
+            svc = BatchExcelExportService(
+                exported_by=request.user,
+                service_month=month,
+                mode=mode,
+            )
+            zip_buffer, zip_filename, count, errors = svc.export_all()
+
+            resp = FileResponse(zip_buffer, content_type='application/zip')
+            resp['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
+            resp['X-Exported-Count'] = str(count)
+            resp['X-Export-Errors']  = str(len(errors))
+            return resp
+        except Exception as e:
+            return Response({'success': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ============================================================================
+# Import View — استيراد الكشوف المعدلة مع التحقق الكامل
 # ============================================================================
 
 class ImportView(IdempotencyMixin, BaseViewSet):
-    """استيراد كشوفات Excel (متزامن/غير متزامن)"""
+    """
+    POST /api/services/import/
+    Form-data: file (Excel), export_id (UUID), month (YYYY-MM)
+    سلسلة التحقق: اسم الملف → ExportLog → ماكروز → بنية → عدد → UUID → تلاعب → تغييرات
+    """
     permission_classes = [permissions.IsAuthenticated, ABACPermission]
     required_permission = 'import_sheet'
     parser_classes = [MultiPartParser, FormParser]
     idempotent_actions = ['create']
-    
+
     @extend_schema(
-        summary='رفع كشوفة للاستيراد',
+        summary='رفع كشوف معدلة للمراجعة',
         tags=['service-cycle'],
         request={'multipart/form-data': {'type': 'object', 'properties': {
-            'file': {'type': 'string', 'format': 'binary'},
+            'file':      {'type': 'string', 'format': 'binary'},
+            'export_id': {'type': 'string', 'description': 'UUID سجل التصدير'},
+            'month':     {'type': 'string', 'description': 'YYYY-MM'},
         }}},
     )
     def create(self, request):
-        """استيراد ملف Excel — غير متزامن إذا كان الملف كبيراً"""
-        file = request.FILES.get('file')
+        file      = request.FILES.get('file')
+        export_id = request.data.get('export_id', '').strip()
+        month     = request.data.get('month', '').strip()
+
         if not file:
-            return Response(
-                {'success': False, 'error': 'لم يتم رفع ملف'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
+            return Response({'success': False, 'error': 'الملف مطلوب'}, status=status.HTTP_400_BAD_REQUEST)
+        if not export_id:
+            return Response({'success': False, 'error': 'export_id مطلوب'}, status=status.HTTP_400_BAD_REQUEST)
+
+        from systems.services.application.services.import_service import (
+            ExcelImportService, ImportValidationError
+        )
+
         try:
-            # ملف كبير (> 500KB) → Celery
-            if file.size > 500 * 1024:
+            file_content = file.read()
+
+            # ملفات كبيرة (> 2MB) → Celery
+            if len(file_content) > 2 * 1024 * 1024:
+                import os
                 temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_imports')
                 os.makedirs(temp_dir, exist_ok=True)
-                temp_path = os.path.join(temp_dir, f'import_{file.name}')
-                with open(temp_path, 'wb') as f:
-                    for chunk in file.chunks():
-                        f.write(chunk)
-                
-                from systems.services.tasks import import_file_task
-                task = import_file_task.delay(temp_path, request.user.id)
-                
-                return Response({
-                    'success': True,
-                    'async': True,
-                    'task_id': task.id,
-                    'message': 'تم بدء الاستيراد في الخلفية. استخدم task_id لمتابعة الحالة.',
-                }, status=status.HTTP_202_ACCEPTED)
-            
-            # ملف صغير → متزامن
-            from systems.services.import_service import ExcelImportService
-            service = ExcelImportService()
-            result = service.import_file(file=file, user=request.user)
-            
-            return Response({'success': True, 'data': result})
-        
-        except Exception as e:
-            return Response(
-                {'success': False, 'error': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
+                temp_path = os.path.join(temp_dir, f'{export_id}_{file.name}')
+                with open(temp_path, 'wb') as fp:
+                    fp.write(file_content)
+                try:
+                    from systems.services.tasks import import_file_task
+                    task = import_file_task.delay(
+                        temp_path, request.user.id, export_id, month, file.name
+                    )
+                    return Response({
+                        'success': True, 'async': True,
+                        'task_id': task.id,
+                        'message': 'الملف كبير — يتم المعالجة في الخلفية.',
+                    }, status=status.HTTP_202_ACCEPTED)
+                except Exception:
+                    pass  # إذا فشل Celery نكمل متزامناً
+
+            svc = ExcelImportService(
+                file_content=file_content,
+                export_id=export_id,
+                imported_by=request.user,
+                original_filename=file.name,
+                service_month=month,
             )
+            result = svc.process()
+            http_status = status.HTTP_200_OK if not result['errors'] else status.HTTP_207_MULTI_STATUS
+            return Response({'success': True, 'data': result}, status=http_status)
+
+        except ImportValidationError as e:
+            return Response({'success': False, 'error': str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        except Exception as e:
+            return Response({'success': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ── API لخريطة الحالات المتتالية (للفرونت اند) ──
+class StatusCascadeView(BaseViewSet):
+    """
+    GET /api/services/status-cascade/
+    يعيد: {"قوة عاملة فعلية": ["تعمل في الميدان", ...], ...}
+    للفرونت اند لبناء القوائم الشرطية في شاشة المراجعة.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def list(self, request):
+        from systems.services.export_service import get_status_cascade, get_required_attachments
+        cascade = get_status_cascade()
+        # إضافة المرفقات المطلوبة لكل حالة
+        attachments = {}
+        for statuses in cascade.values():
+            for s in statuses:
+                atts = get_required_attachments(s)
+                if atts:
+                    attachments[s] = atts
+        return Response({'success': True, 'data': {'cascade': cascade, 'required_attachments': attachments}})
 
 
 # ============================================================================

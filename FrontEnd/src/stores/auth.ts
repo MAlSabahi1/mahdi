@@ -42,6 +42,7 @@ export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref<string | null>(null)
   const refreshToken = ref<string | null>(null)
   const sessionId = ref<string | null>(null)
+  const permissions = ref<string[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -50,16 +51,36 @@ export const useAuthStore = defineStore('auth', () => {
   const isAdmin = computed(() => user.value?.is_staff || user.value?.is_superuser || false)
   const displayName = computed(() => user.value?.display_name || user.value?.full_name || user.value?.username || '')
 
+  // Permission helper — الدالة الرئيسية لفحص الصلاحيات في الـ UI
+  function hasPermission(permCode: string): boolean {
+    if (user.value?.is_superuser) return true
+    return permissions.value.includes(permCode)
+  }
+
+  // Check any of multiple permissions
+  function hasAnyPermission(...codes: string[]): boolean {
+    if (user.value?.is_superuser) return true
+    return codes.some(c => permissions.value.includes(c))
+  }
+
   // Initialize from localStorage
   function initFromStorage() {
     const storedToken = localStorage.getItem('access_token')
     const storedRefresh = localStorage.getItem('refresh_token')
     const storedSession = localStorage.getItem('session_id')
     const storedUser = localStorage.getItem('user')
+    const storedPerms = localStorage.getItem('permissions')
 
     if (storedToken) accessToken.value = storedToken
     if (storedRefresh) refreshToken.value = storedRefresh
     if (storedSession) sessionId.value = storedSession
+    if (storedPerms) {
+      try {
+        permissions.value = JSON.parse(storedPerms)
+      } catch {
+        permissions.value = []
+      }
+    }
     if (storedUser) {
       try {
         user.value = JSON.parse(storedUser)
@@ -82,11 +103,13 @@ export const useAuthStore = defineStore('auth', () => {
       refreshToken.value = data.refresh_token
       sessionId.value = data.session_id
       user.value = data.user
+      permissions.value = data.permissions || []
 
       localStorage.setItem('access_token', data.access_token)
       localStorage.setItem('refresh_token', data.refresh_token)
       localStorage.setItem('session_id', data.session_id)
       localStorage.setItem('user', JSON.stringify(data.user))
+      localStorage.setItem('permissions', JSON.stringify(data.permissions || []))
 
       return { success: true, isSuspicious: data.is_suspicious }
     } catch (err: any) {
@@ -141,10 +164,12 @@ export const useAuthStore = defineStore('auth', () => {
     accessToken.value = null
     refreshToken.value = null
     sessionId.value = null
+    permissions.value = []
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
     localStorage.removeItem('session_id')
     localStorage.removeItem('user')
+    localStorage.removeItem('permissions')
   }
 
   return {
@@ -152,11 +177,14 @@ export const useAuthStore = defineStore('auth', () => {
     accessToken,
     refreshToken,
     sessionId,
+    permissions,
     loading,
     error,
     isAuthenticated,
     isAdmin,
     displayName,
+    hasPermission,
+    hasAnyPermission,
     initFromStorage,
     login,
     logout,

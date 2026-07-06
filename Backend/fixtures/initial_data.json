@@ -1,0 +1,189 @@
+[
+  {
+    "model": "core.rank",
+    "pk": 1,
+    "fields": {
+      "name": "لواء",
+      "order": 1,
+      "is_officer": true,
+      "created_at": "2026-04-02T12:00:00Z",
+      "updated_at": "2026-04-02T12:00:00Z"
+    }
+  },
+  {
+    "model": "core.rank",
+    "pk": 2,
+    "fields": {
+      "name": "عميد",
+      "order": 2,
+      "is_officer": true,
+      "created_at": "2026-04-02T12:00:00Z",
+      "updated_at": "2026-04-02T12:00:00Z"
+    }
+  },
+  {
+    "model": "core.rank",
+    "pk": 3,
+    "fields": {
+      "name": "عقيد",
+      "order": 3,
+      "is_officer": true,
+      "created_at": "2026-04-02T12:00:00Z",
+      "updated_at": "2026-04-02T12:00:00Z"
+    }
+  },
+  {
+    "model": "core.rank",
+    "pk": 4,
+    "fields": {
+      "name": "مقدم",
+      "order": 4,
+      "is_officer": true,
+      "created_at": "2026-04-02T12:00:00Z",
+      "updated_at": "2026-04-02T12:00:00Z"
+    }
+  },
+  {
+    "model": "core.rank",
+    "pk": 5,
+    "fields": {
+      "name": "رائد",
+      "order": 5,
+      "is_officer": true,
+      "created_at": "2026-04-02T12:00:00Z",
+      "updated_at": "2026-04-02T12:00:00Z"
+    }
+  },
+  {
+    "model": "core.rank",
+    "pk": 6,
+    "fields": {
+      "name": "نقيب",
+      "order": 6,
+      "is_officer": true,
+      "created_at": "2026-04-02T12:00:00Z",
+      "updated_at": "2026-04-02T12:00:00Z"
+    }
+  },
+  {
+    "model": "core.rank",
+    "pk": 7,
+    "fields": {
+      "name": "ملازم أول",
+      "order": 7,
+      "is_officer": true,
+      "created_at": "2026-04-02T12:00:00Z",
+      "updated_at": "2026-04-02T12:00:00Z"
+    }
+  },
+  {
+    "model": "core.rank",
+    "pk": 8,
+    "fields": {
+      "name": "ملازم ثاني",
+      "order": 8,
+      "is_officer": true,
+      "created_at": "2026-04-02T12:00:00Z",
+      "updated_at": "2026-04-02T12:00:00Z"
+    }
+  },
+  {
+    "model": "core.rank",
+    "pk": 9,
+    "fields": {
+      "name": "مساعد 1",
+      "order": 9,
+      "is_officer": false,
+      "created_at": "2026-04-02T12:00:00Z",
+      "updated_at": "2026-04-02T12:00:00Z"
+    }
+  },
+  {
+    "model": "core.rank",
+    "pk": 10,
+    "fields": {
+      "name": "مساعد 2",
+      "order": 10,
+      "is_officer": false,
+      "created_at": "2026-04-02T12:00:00Z",
+      "updated_at": "2026-04-02T12:00:00Z"
+    }
+  },
+  {
+    "model": "core.rank",
+    "pk": 11,
+    "fields": {
+      "name": "رقيب 1",
+      "order": 11,
+      "is_officer": false,
+      "created_at": "2026-04-02T12:00:00Z",
+      "updated_at": "2026-04-02T12:00:00Z"
+    }
+  },
+  {
+    "model": "core.rank",
+    "pk": 12,
+    "fields": {
+      "name": "رقيب 2",
+      "order": 12,
+      "is_officer": false,
+      "created_at": "2026-04-02T12:00:00Z",
+      "updated_at": "2026-04-02T12:00:00Z"
+    }
+  },
+  {
+    "model": "core.rank",
+    "pk": 13,
+    "fields": {
+      "name": "عريف",
+      "order": 13,
+      "is_officer": false,
+      "created_at": "2026-04-02T12:00:00Z",
+      "updated_at": "2026-04-02T12:00:00Z"
+    }
+  },
+  {
+    "model": "core.rank",
+    "pk": 14,
+    "fields": {
+      "name": "جندي",
+      "order": 14,
+      "is_officer": false,
+      "created_at": "2026-04-02T12:00:00Z",
+      "updated_at": "2026-04-02T12:00:00Z"
+    }
+  },
+  {
+    "model": "core.rank",
+    "pk": 15,
+    "fields": {
+      "name": "حارس",
+      "order": 15,
+      "is_officer": false,
+      "created_at": "2026-04-02T12:00:00Z",
+      "updated_at": "2026-04-02T12:00:00Z"
+    }
+  },
+  {
+    "model": "core.rank",
+    "pk": 16,
+    "fields": {
+      "name": "مدني",
+      "order": 16,
+      "is_officer": false,
+      "created_at": "2026-04-02T12:00:00Z",
+      "updated_at": "2026-04-02T12:00:00Z"
+    }
+  },
+  {
+    "model": "core.rank",
+    "pk": 17,
+    "fields": {
+      "name": "متعاقد",
+      "order": 17,
+      "is_officer": false,
+      "created_at": "2026-04-02T12:00:00Z",
+      "updated_at": "2026-04-02T12:00:00Z"
+    }
+  }
+]

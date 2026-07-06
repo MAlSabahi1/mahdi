@@ -556,8 +556,16 @@ class Migration(migrations.Migration):
                     """
                 ),
                 migrations.RunSQL(
-                    sql="ALTER TABLE IF EXISTS core_role RENAME TO authorization_role;",
-                    reverse_sql="ALTER TABLE IF EXISTS authorization_role RENAME TO core_role;"
+                    sql="""
+                    ALTER TABLE IF EXISTS core_role RENAME TO authorization_role;
+                    ALTER TABLE IF EXISTS authorization_role DROP COLUMN IF EXISTS permissions;
+                    ALTER TABLE IF EXISTS authorization_role DROP COLUMN IF EXISTS visible_pages;
+                    """,
+                    reverse_sql="""
+                    ALTER TABLE IF EXISTS authorization_role ADD COLUMN IF NOT EXISTS permissions JSONB DEFAULT '[]'::jsonb NOT NULL;
+                    ALTER TABLE IF EXISTS authorization_role ADD COLUMN IF NOT EXISTS visible_pages JSONB DEFAULT '[]'::jsonb NOT NULL;
+                    ALTER TABLE IF EXISTS authorization_role RENAME TO core_role;
+                    """
                 ),
                 migrations.RunSQL(
                     sql="ALTER TABLE IF EXISTS core_role_permission RENAME TO authorization_role_permission;",

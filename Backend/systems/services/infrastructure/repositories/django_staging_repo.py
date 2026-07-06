@@ -12,16 +12,24 @@ from ..models.staging import StagingRecord
 class DjangoStagingRecordRepository(IStagingRecordRepository):
     
     def _to_entity(self, model: StagingRecord) -> StagingRecordEntity:
+        # Convert proposed_change (JSON) to changes dict
+        changes_dict = {}
+        if isinstance(model.proposed_change, dict):
+            changes_dict = {'status': {'new': model.proposed_change.get('status', '')}}
+            # Also map the monthly variable
+            if 'monthly_variable' in model.proposed_change:
+                changes_dict['monthly_variable'] = model.proposed_change['monthly_variable']
+
         return StagingRecordEntity(
-            import_batch_id=str(model.import_batch_id),
-            row_index=model.row_index,
-            military_number=model.military_number,
-            action_type=model.action_type,
+            import_batch_id=str(model.upload_batch_id),
+            row_index=0,  # Not tracked in DB
+            military_number=model.personnel.military_number if model.personnel else '',
+            action_type='update',
             status=model.status,
-            changes=model.changes,
-            validation_errors=model.validation_errors,
+            changes=changes_dict,
+            validation_errors=[],
             security_admin_id=model.security_admin_id,
-            central_department_id=model.central_department_id,
+            central_department_id=model.personnel.central_department_id if model.personnel else None,
             rejection_reason=model.rejection_reason,
             reviewed_by_id=model.reviewed_by_id,
             reviewed_at=model.reviewed_at
@@ -31,15 +39,12 @@ class DjangoStagingRecordRepository(IStagingRecordRepository):
         if model is None:
             model = StagingRecord()
             
-        model.import_batch_id = entity.import_batch_id
-        model.row_index = entity.row_index
-        model.military_number = entity.military_number
-        model.action_type = entity.action_type
+        # upload_batch_id is mapped from import_batch_id
+        model.upload_batch_id = entity.import_batch_id
         model.status = entity.status
-        model.changes = entity.changes
-        model.validation_errors = entity.validation_errors
+        # proposed_change mapped back if needed (usually we don't overwrite it here)
+        
         model.security_admin_id = entity.security_admin_id
-        model.central_department_id = entity.central_department_id
         model.rejection_reason = entity.rejection_reason
         model.reviewed_by_id = entity.reviewed_by_id
         model.reviewed_at = entity.reviewed_at

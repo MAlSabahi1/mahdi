@@ -208,6 +208,63 @@ class Perms:
     SERVICES_REJECT = "services.reject.all"
     SERVICES_ESCALATE = "services.escalate.all"
 
+    # ══════════════════════════════════════════════════════════════
+    # التفويض (delegation)
+    # ══════════════════════════════════════════════════════════════
+    DELEGATION_VIEW = "delegation.view.all"
+    DELEGATION_CREATE = "delegation.create.all"
+    DELEGATION_REVOKE = "delegation.revoke.all"
+
+    # ══════════════════════════════════════════════════════════════
+    # الوصول الطارئ (emergency)
+    # ══════════════════════════════════════════════════════════════
+    EMERGENCY_VIEW = "emergency.view.all"
+    EMERGENCY_GRANT = "emergency.grant.all"
+    EMERGENCY_REVOKE = "emergency.revoke.all"
+    EMERGENCY_REVIEW = "emergency.review.all"
+
+    # ══════════════════════════════════════════════════════════════
+    # السياسات (policies)
+    # ══════════════════════════════════════════════════════════════
+    POLICY_VIEW = "policy.view.all"
+    POLICY_CREATE = "policy.create.all"
+    POLICY_EDIT = "policy.edit.all"
+    POLICY_DELETE = "policy.delete.all"
+
+    # ══════════════════════════════════════════════════════════════
+    # قيود السجلات (record_acl)
+    # ══════════════════════════════════════════════════════════════
+    RECORD_ACL_VIEW = "record_acl.view.all"
+    RECORD_ACL_CREATE = "record_acl.create.all"
+    RECORD_ACL_DELETE = "record_acl.delete.all"
+
+    # ══════════════════════════════════════════════════════════════
+    # السكرتارية (secretariat)
+    # ══════════════════════════════════════════════════════════════
+    SECRETARIAT_VIEW         = "secretariat.view.all"           # عرض كل المراسلات
+    SECRETARIAT_VIEW_OWN     = "secretariat.view.own"           # عرض المراسلات المتعلقة بالمستخدم/قسمه
+    SECRETARIAT_VIEW_CONFIDENTIAL = "secretariat.view.confidential" # عرض المراسلات السرية والسرية للغاية
+    SECRETARIAT_CREATE       = "secretariat.create.all"         # إنشاء مراسلة
+    SECRETARIAT_EDIT         = "secretariat.edit.all"           # تعديل مراسلة
+    SECRETARIAT_DELETE       = "secretariat.delete.all"         # حذف مراسلة
+    SECRETARIAT_TASK_MANAGE  = "secretariat.task.manage"        # إنشاء وإدارة التكليفات (السكرتارية)
+    SECRETARIAT_TASK_EXECUTE = "secretariat.task.execute"       # استلام وإكمال التكليفات (الموظف المكلف)
+    SECRETARIAT_COVER_LETTER = "secretariat.covering_letter.create"  # توليد خطاب تغطية الرد
+
+    # ══════════════════════════════════════════════════════════════
+    # الجزاءات والانضباط (disciplinary)
+    # ══════════════════════════════════════════════════════════════
+    DISCIPLINARY_VIEW = "disciplinary.view.all"
+    DISCIPLINARY_CREATE = "disciplinary.create.all"
+    DISCIPLINARY_EDIT = "disciplinary.edit.all"
+    DISCIPLINARY_NOTIFY_MINISTRY = "disciplinary.notify_ministry.all"
+    ABSENCE_VIEW = "absence.view.all"
+    ABSENCE_CREATE = "absence.create.all"
+    ABSENCE_CLOSE = "absence.close.all"
+    VERDICT_VIEW = "verdict.view.all"
+    VERDICT_CREATE = "verdict.create.all"
+    VERDICT_EXECUTE = "verdict.execute.all"
+
     @classmethod
     def all_permissions(cls) -> list:
         """جميع الصلاحيات المُسجّلة."""
@@ -223,6 +280,55 @@ class Perms:
             v for v in cls.all_permissions()
             if v.startswith(f"{module}.")
         ]
+
+
+# ══════════════════════════════════════════════════════════════
+# مجموعات الصلاحيات — لتنظيم العرض في Admin UI
+# ══════════════════════════════════════════════════════════════
+PERMISSION_GROUPS = {
+    # code: (name, icon, display_order)
+    'users': ('المستخدمين', 'users', 10),
+    'roles': ('الأدوار والصلاحيات', 'shield', 20),
+    'personnel': ('شؤون الأفراد', 'user-check', 30),
+    'rank_settlement': ('التسويات', 'award', 40),
+    'corrections': ('التصحيحات', 'edit-3', 50),
+    'services': ('الخدمات', 'briefcase', 60),
+    'sheets': ('الكشوفات', 'file-spreadsheet', 70),
+    'staging': ('المراجعة والاعتماد', 'check-square', 80),
+    'reconciliation': ('المطابقة', 'git-merge', 90),
+    'months': ('إقفال الشهور', 'calendar', 100),
+    'reports': ('التقارير', 'bar-chart-2', 110),
+    'audit': ('التدقيق', 'eye', 120),
+    'organization': ('الهيكل التنظيمي', 'git-branch', 130),
+    'dictionaries': ('القواميس', 'book-open', 140),
+    'storage': ('الملفات', 'hard-drive', 150),
+    'security': ('الأمن', 'lock', 160),
+    'dual_auth': ('التفويض المزدوج', 'user-plus', 170),
+    'delegation': ('التفويض', 'repeat', 180),
+    'emergency': ('الطوارئ', 'alert-triangle', 190),
+    'policy': ('السياسات', 'sliders', 200),
+    'record_acl': ('قيود السجلات', 'shield-off', 210),
+    'dashboard': ('لوحة المعلومات', 'layout', 220),
+    'system': ('النظام', 'settings', 230),
+    'compliance': ('الالتزام', 'check-circle', 240),
+    'raw_data': ('البيانات الخام', 'database', 250),
+    'secretariat': ('السكرتارية', 'mail', 260),
+    'disciplinary': ('الجزاءات والانضباط', 'alert-octagon', 270),
+}
+
+
+# ══════════════════════════════════════════════════════════════
+# الحقول الحساسة — Field-Level Security
+# ══════════════════════════════════════════════════════════════
+FIELD_PERMISSIONS = {
+    # (module, field_name): (label, view_permission, edit_permission, is_sensitive)
+    ('personnel', 'salary'): (
+        'الراتب', Perms.PERSONNEL_VIEW_SALARY, Perms.PERSONNEL_EDIT_SALARY, True,
+    ),
+    ('personnel', 'military_number'): (
+        'الرقم العسكري', Perms.PERSONNEL_VIEW_MILITARY_NUM, Perms.PERSONNEL_EDIT_MILITARY_NUM, True,
+    ),
+}
 
 
 # ══════════════════════════════════════════════════════════════
@@ -290,6 +396,12 @@ SCREEN_LABELS = {
     'compliance': 'الالتزام',
     'webhooks': 'الـ Webhooks',
     'services': 'الخدمات',
+    'secretariat': 'السكرتارية',
+    'disciplinary': 'الجزاءات والانضباط',
+    'delegation': 'التفويض',
+    'emergency': 'الوصول الطارئ',
+    'policy': 'السياسات',
+    'record_acl': 'قيود السجلات',
 }
 
 # ══════════════════════════════════════════════════════════════
@@ -457,4 +569,14 @@ PERMISSION_LABELS = {
     'services.approve.all': ('اعتماد خدمة', 'action'),
     'services.reject.all': ('رفض خدمة', 'action'),
     'services.escalate.all': ('تصعيد خدمة', 'action'),
+    # secretariat
+    'secretariat.view.all': ('عرض جميع المراسلات', 'page'),
+    'secretariat.view.own': ('عرض المراسلات المُكلَّف بها فقط', 'data'),
+    'secretariat.view.confidential': ('عرض المراسلات السرية والسرية للغاية', 'data'),
+    'secretariat.create.all': ('إنشاء مراسلة جديدة', 'action'),
+    'secretariat.edit.all': ('تعديل بيانات مراسلة', 'action'),
+    'secretariat.delete.all': ('حذف مراسلة', 'action'),
+    'secretariat.task.manage': ('إنشاء وإدارة التكليفات', 'action'),
+    'secretariat.task.execute': ('استلام وإكمال التكليفات', 'action'),
+    'secretariat.covering_letter.create': ('توليد خطاب تغطية الرد الصادر', 'action'),
 }
