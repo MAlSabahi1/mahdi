@@ -5,7 +5,13 @@
       @click="toggleDropdown"
     >
       <span
-        :class="{ hidden: !notifying, flex: notifying }"
+        v-if="unreadCount > 0"
+        class="absolute -top-1 -end-1 z-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-gray-900"
+      >
+        {{ unreadCount }}
+      </span>
+      <span
+        v-else-if="notifying"
         class="absolute end-0 top-0.5 z-1 h-2 w-2 rounded-full bg-orange-400"
       >
         <span
@@ -37,7 +43,7 @@
       <div
         class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100 dark:border-gray-800"
       >
-        <h5 class="text-lg font-semibold text-gray-800 dark:text-white/90">Notification</h5>
+        <h5 class="text-lg font-semibold text-gray-800 dark:text-white/90">الإشعارات</h5>
 
         <button @click="closeDropdown" class="text-gray-500 dark:text-gray-400">
           <svg
@@ -58,179 +64,143 @@
         </button>
       </div>
 
-      <ul class="flex flex-col h-auto overflow-y-auto custom-scrollbar">
-        <li v-for="notification in notifications" :key="notification.id" @click="handleItemClick">
+      <ul class="flex flex-col h-[320px] overflow-y-auto custom-scrollbar divide-y divide-gray-100 dark:divide-gray-800">
+        <li v-if="notifications.length === 0" class="p-6 text-center text-gray-400 text-sm">
+          لا توجد إشعارات جديدة
+        </li>
+        <li v-for="notification in notifications" :key="notification.id" @click="handleItemClick(notification)">
           <a
-            class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
-            href="#"
+            class="flex gap-3 p-3 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition duration-150 rounded-lg"
+            :class="{ 'bg-blue-50/40 dark:bg-blue-900/10': !notification.is_read }"
           >
-            <span class="relative block w-full h-10 rounded-full z-1 max-w-10">
-              <img :src="notification.userImage" alt="User" class="overflow-hidden rounded-full" />
-              <span
-                :class="notification.status === 'online' ? 'bg-success-500' : 'bg-error-500'"
-                class="absolute bottom-0 end-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
-              ></span>
+            <!-- Priority Icon Indicator -->
+            <span class="flex items-center justify-center w-8 h-8 rounded-full z-1 max-w-8"
+              :class="{
+                'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400': notification.priority === 'high' || notification.priority === 'urgent',
+                'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400': notification.priority === 'normal',
+                'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400': notification.priority === 'low'
+              }"
+            >
+              <svg v-if="notification.priority === 'high' || notification.priority === 'urgent'" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
             </span>
 
-            <span class="block">
-              <span class="mb-1.5 block text-theme-sm text-gray-500 dark:text-gray-400">
-                <span class="font-medium text-gray-800 dark:text-white/90">
-                  {{ notification.userName }}
-                </span>
-                {{ notification.action }}
-                <span class="font-medium text-gray-800 dark:text-white/90">
-                  {{ notification.project }}
-                </span>
+            <span class="block flex-1 min-w-0 text-right">
+              <span class="block text-sm font-semibold text-gray-800 dark:text-white/90 truncate">
+                {{ notification.title }}
               </span>
-
-              <span class="flex items-center gap-2 text-gray-500 text-theme-xs dark:text-gray-400">
-                <span>{{ notification.type }}</span>
-                <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
-                <span>{{ notification.time }}</span>
+              <span class="block text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">
+                {{ notification.message }}
+              </span>
+              <span class="flex items-center justify-start gap-1.5 text-[10px] text-gray-400 mt-1">
+                <span>بواسطة: {{ notification.triggered_by_name || 'النظام' }}</span>
+                <span>•</span>
+                <span>{{ formatDate(notification.created_at) }}</span>
               </span>
             </span>
           </a>
         </li>
       </ul>
 
-      <router-link
-        to="#"
+      <button
         class="mt-3 flex justify-center rounded-lg border border-gray-300 bg-white p-3 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
         @click="handleViewAllClick"
       >
-        View All Notification
-      </router-link>
+        إخفاء النافذة
+      </button>
     </div>
     <!-- Dropdown End -->
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { useRouter } from 'vue-router'
+import api from '@/lib/api'
 
+const router = useRouter()
 const dropdownOpen = ref(false)
-const notifying = ref(true)
+const notifying = ref(false)
 const dropdownRef = ref(null)
 
-const notifications = ref([
-  {
-    id: 1,
-    userName: 'Terry Franci',
-    userImage: '/images/user/user-02.jpg',
-    action: 'requests permission to change',
-    project: 'Project - Nganter App',
-    type: 'Project',
-    time: '5 min ago',
-    status: 'online',
-  },
-  {
-    id: 2,
-    userName: 'Terry Franci',
-    userImage: '/images/user/user-03.jpg',
-    action: 'requests permission to change',
-    project: 'Project - Nganter App',
-    type: 'Project',
-    time: '5 min ago',
-    status: 'offline',
-  },
-  {
-    id: 3,
-    userName: 'Terry Franci',
-    userImage: '/images/user/user-04.jpg',
-    action: 'requests permission to change',
-    project: 'Project - Nganter App',
-    type: 'Project',
-    time: '5 min ago',
-    status: 'online',
-  },
-  {
-    id: 4,
-    userName: 'Terry Franci',
-    userImage: '/images/user/user-05.jpg',
-    action: 'requests permission to change',
-    project: 'Project - Nganter App',
-    type: 'Project',
-    time: '5 min ago',
-    status: 'online',
-  },
-  {
-    id: 5,
-    userName: 'Terry Franci',
-    userImage: '/images/user/user-06.jpg',
-    action: 'requests permission to change',
-    project: 'Project - Nganter App',
-    type: 'Project',
-    time: '5 min ago',
-    status: 'offline',
-  },
-  {
-    id: 6,
-    userName: 'Terry Franci',
-    userImage: '/images/user/user-07.jpg',
-    action: 'requests permission to change',
-    project: 'Project - Nganter App',
-    type: 'Project',
-    time: '5 min ago',
-    status: 'online',
-  },
-  {
-    id: 7,
-    userName: 'Terry Franci',
-    userImage: '/images/user/user-08.jpg',
-    action: 'requests permission to change',
-    project: 'Project - Nganter App',
-    type: 'Project',
-    time: '5 min ago',
-    status: 'online',
-  },
-  {
-    id: 7,
-    userName: 'Terry Franci',
-    userImage: '/images/user/user-09.jpg',
-    action: 'requests permission to change',
-    project: 'Project - Nganter App',
-    type: 'Project',
-    time: '5 min ago',
-    status: 'online',
-  },
-  // Add more notifications here...
-])
+const notifications = ref<any[]>([])
+const unreadCount = ref(0)
+let pollInterval: any = null
+
+async function fetchNotifications() {
+  try {
+    const res = await api.get('/dictionaries/notifications/')
+    notifications.value = res.data.results || res.data || []
+    
+    const countRes = await api.get('/dictionaries/notifications/unread-count/')
+    unreadCount.value = countRes.data.unread_count || 0
+    notifying.value = unreadCount.value > 0
+  } catch (err) {
+    console.error('Failed to fetch notifications:', err)
+  }
+}
 
 const toggleDropdown = () => {
   dropdownOpen.value = !dropdownOpen.value
-  notifying.value = false
+  if (dropdownOpen.value) {
+    fetchNotifications()
+  }
 }
 
 const closeDropdown = () => {
   dropdownOpen.value = false
 }
 
-const handleClickOutside = (event) => {
-  if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
+const handleClickOutside = (event: any) => {
+  if (dropdownRef.value && !(dropdownRef.value as any).contains(event.target)) {
     closeDropdown()
   }
 }
 
-const handleItemClick = (event) => {
+const handleItemClick = async (notification: any) => {
+  try {
+    if (!notification.is_read) {
+      await api.post(`/dictionaries/notifications/${notification.id}/mark-read/`)
+    }
+    closeDropdown()
+    fetchNotifications()
+    
+    if (notification.action_url) {
+      router.push(notification.action_url)
+    }
+  } catch (err) {
+    console.error('Error handling notification click:', err)
+  }
+}
+
+const handleViewAllClick = (event: any) => {
   event.preventDefault()
-  // Handle the item click action here
-  console.log('Notification item clicked')
   closeDropdown()
 }
 
-const handleViewAllClick = (event) => {
-  event.preventDefault()
-  // Handle the "View All Notification" action here
-  console.log('View All Notifications clicked')
-  closeDropdown()
+function formatDate(dateStr: string) {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('ar-YE', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+  fetchNotifications()
+  pollInterval = setInterval(fetchNotifications, 30000) // Poll every 30s
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  if (pollInterval) clearInterval(pollInterval)
 })
 </script>

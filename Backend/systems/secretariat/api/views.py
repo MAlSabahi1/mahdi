@@ -43,6 +43,33 @@ class CorrespondenceViewSet(BaseSecretariatViewSet):
     search_fields = ['reference_number', 'subject', 'sender', 'receiver']
     ordering_fields = ['date', 'created_at']
 
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser:
+            return self.queryset
+
+        from infra.security.permissions import has_permission
+        from infra.authorization.registry.permissions import Perms
+
+        # مدراء السكرتارية يرون الكل (مقيّد بنطاق الإدارة الأمنية)
+        if has_permission(user, Perms.SECRETARIAT_VIEW):
+            return filter_by_department_scope(user, self.queryset, 'security_admin')
+
+        # الموظف المكلف يرى فقط المراسلات المرتبطة بمهامه
+        if has_permission(user, Perms.SECRETARIAT_VIEW_OWN):
+            from systems.personnel.models import PersonnelMaster
+            try:
+                personnel = PersonnelMaster.objects.get(military_number=user.username)
+                linked_corr_ids = Task.objects.filter(
+                    assigned_to=personnel
+                ).values_list('related_correspondence_id', flat=True).distinct()
+                return self.queryset.filter(id__in=linked_corr_ids)
+            except PersonnelMaster.DoesNotExist:
+                return self.queryset.none()
+
+        return self.queryset.none()
+
+
 class CorrespondenceAttachmentViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, ABACPermission]
     queryset = CorrespondenceAttachment.objects.all()
@@ -65,6 +92,105 @@ class TaskViewSet(BaseSecretariatViewSet):
     filterset_fields = ['status', 'priority', 'due_date', 'assigned_to', 'related_correspondence']
     search_fields = ['title', 'description']
     ordering_fields = ['due_date', 'created_at', 'priority']
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser:
+            return self.queryset
+
+        from infra.security.permissions import has_permission
+        from infra.authorization.registry.permissions import Perms
+
+        # السكرتارية ومدراء التكليفات يرون الكل
+        if has_permission(user, Perms.SECRETARIAT_TASK_MANAGE):
+            return filter_by_department_scope(user, self.queryset, 'security_admin')
+
+        # الموظف المكلف يرى فقط مهامه الخاصة
+        if has_permission(user, Perms.SECRETARIAT_TASK_EXECUTE):
+            # البحث عن military_number الخاص بالمستخدم
+            from systems.personnel.models import PersonnelMaster
+            try:
+                personnel = PersonnelMaster.objects.get(military_number=user.username)
+                return self.queryset.filter(assigned_to=personnel)
+            except PersonnelMaster.DoesNotExist:
+                return self.queryset.none()
+
+        return self.queryset.none()
+
+    def perform_update(self, serializer):
+        user = self.request.user
+        task_instance = serializer.instance
+        old_status = task_instance.status
+
+        from infra.security.permissions import has_permission
+        from infra.authorization.registry.permissions import Perms
+        from rest_framework.exceptions import PermissionDenied
+
+        # الموظف المكلف — يستطيع فقط تغيير الحالة (in_progress / completed)
+        if not has_permission(user, Perms.SECRETARIAT_TASK_MANAGE):
+            allowed_changes = {'status'}
+            requested_changes = set(serializer.validated_data.keys())
+            if not requested_changes.issubset(allowed_changes):
+                raise PermissionDenied('يمكنك فقط تحديث حالة المهمة المسندة إليك')
+
+            new_status = serializer.validated_data.get('status', old_status)
+            if old_status == 'pending' and new_status not in ('in_progress',):
+                raise PermissionDenied('يمكنك فقط تغيير الحالة من "قيد الانتظار" إلى "جاري العمل"')
+            if old_status == 'in_progress' and new_status not in ('completed',):
+                raise PermissionDenied('يمكنك فقط تغيير الحالة من "جاري العمل" إلى "مكتملة"')
+
+        instance = serializer.save()
+        new_status = instance.status
+
+        # إشعار منشئ التكليف عند تغيير الحالة
+        if old_status != new_status and new_status in ('in_progress', 'completed'):
+            try:
+                from core.models.notification import NotificationRecord
+                creator = instance.created_by
+                if creator:
+                    assignee_name = (
+                        instance.assigned_to.full_name
+                        if instance.assigned_to else 'الموظف'
+                    )
+                    corr_ref = (
+                        instance.related_correspondence.reference_number
+                        if instance.related_correspondence else ''
+                    )
+                    action_url = (
+                        f"/secretariat/correspondences/{instance.related_correspondence.id}"
+                        if instance.related_correspondence else "/secretariat/tasks"
+                    )
+                    if new_status == 'in_progress':
+                        title = f"استلام المهمة: {instance.title}"
+                        message = (
+                            f"قام الموظف {assignee_name} باستلام التكليف «{instance.title}» "
+                            f"المرتبط بالمراسلة ({corr_ref}) وبدأ العمل عليه."
+                        )
+                        priority = 'normal'
+                    else:
+                        title = f"✅ إنجاز المهمة: {instance.title}"
+                        message = (
+                            f"أنهى الموظف {assignee_name} تنفيذ التكليف «{instance.title}» "
+                            f"المرتبط بالمراسلة ({corr_ref}). يرجى مراجعة النتائج وتوليد خطاب الرد."
+                        )
+                        priority = 'high'
+
+                    NotificationRecord.objects.create(
+                        notification_type='SYSTEM',
+                        title=title,
+                        message=message,
+                        priority=priority,
+                        target_user=creator,
+                        triggered_by=self.request.user,
+                        action_url=action_url,
+                        related_object_type='Task',
+                        related_object_id=str(instance.pk),
+                    )
+            except Exception as e:
+                import logging
+                logging.getLogger('django').error(
+                    f"Failed to create task status notification: {e}"
+                )
 
 class CircularViewSet(BaseSecretariatViewSet):
     queryset = Circular.objects.all()

@@ -26,6 +26,7 @@ from .serializers import (
     DistrictPoliceSerializer,
     DivisionSerializer, UnitSerializer,
     StateTransitionRuleSerializer,
+    NotificationRecordSerializer,
 )
 from infra.security.permissions import ABACPermission, IsAdminPermission
 from core.base_views import BaseModelViewSet
@@ -307,3 +308,29 @@ class DocumentDictionaryViewSet(APIView):
                 'action_rules': action_rules
             }
         })
+
+
+from rest_framework import viewsets
+
+@extend_schema_view(
+    list=extend_schema(summary='قائمة الإشعارات للمستخدم الحالي', tags=['notifications']),
+    retrieve=extend_schema(summary='تفاصيل إشعار محدد', tags=['notifications']),
+)
+class NotificationRecordViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = NotificationRecordSerializer
+
+    def get_queryset(self):
+        from core.models.notification import NotificationRecord
+        return NotificationRecord.objects.filter(target_user=self.request.user).order_by('-created_at')
+
+    @action(detail=True, methods=['post'], url_path='mark-read')
+    def mark_read(self, request, pk=None):
+        notification = self.get_object()
+        notification.mark_as_read()
+        return Response({'success': True, 'message': 'تم تعليم الإشعار كمقروء'})
+
+    @action(detail=False, methods=['get'], url_path='unread-count')
+    def unread_count(self, request):
+        count = self.get_queryset().filter(is_read=False).count()
+        return Response({'success': True, 'unread_count': count})

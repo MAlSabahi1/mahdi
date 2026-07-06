@@ -1,53 +1,212 @@
 <template>
   <admin-layout>
-    <div class="mb-4">
-      <router-link
-        to="/secretariat/correspondences"
-        class="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-brand-500 transition dark:text-gray-400 dark:hover:text-brand-400"
-      >
-        <span>&larr;</span> العودة لقائمة المراسلات
+    <!-- Breadcrumbs Navigation -->
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+      <ol class="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-550 dark:text-slate-400">
+        <li class="inline-flex items-center">
+          <router-link to="/" class="hover:text-brand-500 dark:hover:text-brand-400 transition flex items-center gap-1.5">
+            <Inbox class="w-3.5 h-3.5" />
+            الرئيسية
+          </router-link>
+        </li>
+        <li class="flex items-center gap-2">
+          <ChevronRight class="w-3 h-3 text-slate-400 rtl:rotate-180" />
+          <router-link to="/secretariat/correspondences" class="hover:text-brand-500 dark:hover:text-brand-400 transition">نظام السكرتارية</router-link>
+        </li>
+        <li class="flex items-center gap-2" v-if="correspondence">
+          <ChevronRight class="w-3 h-3 text-slate-400 rtl:rotate-180" />
+          <router-link 
+            :to="{ path: '/secretariat/correspondences', query: { type: correspondence.type } }"
+            class="hover:text-brand-500 dark:hover:text-brand-400 transition text-brand-600 dark:text-brand-400 font-extrabold"
+          >
+            المراسلات {{ correspondence.type === 'incoming' ? 'الواردة' : 'الصادرة' }}
+          </router-link>
+        </li>
+        <li class="flex items-center gap-2" aria-current="page">
+          <ChevronRight class="w-3 h-3 text-slate-400 rtl:rotate-180" />
+          <span class="text-slate-800 dark:text-slate-200">تفاصيل المعاملة</span>
+        </li>
+      </ol>
+    </nav>
+
+    <!-- Loading State -->
+    <div v-if="loading" class="flex flex-col items-center justify-center py-32 space-y-4">
+      <div class="relative w-16 h-16">
+        <div class="absolute inset-0 rounded-full border-4 border-brand-500/20"></div>
+        <div class="absolute inset-0 rounded-full border-4 border-t-brand-600 animate-spin"></div>
+      </div>
+      <div class="text-slate-500 dark:text-slate-400 font-bold text-sm">جاري تحميل بيانات المعاملة...</div>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="!correspondence" class="text-center py-20 bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-850 rounded-3xl p-8 shadow-theme-md max-w-xl mx-auto">
+      <div class="w-20 h-20 bg-red-50 dark:bg-red-950/20 text-red-500 flex items-center justify-center rounded-full mx-auto mb-5 shadow-theme-xs">
+        <ShieldAlert class="w-10 h-10" />
+      </div>
+      <h3 class="text-xl font-black text-slate-900 dark:text-white">فشل العثور على المراسلة</h3>
+      <p class="text-slate-500 dark:text-slate-400 text-sm mt-2">المراسلة غير موجودة أو تم نقلها لمستودع أرشيف آخر.</p>
+      <router-link to="/secretariat/correspondences" class="mt-6 inline-flex items-center gap-2 px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-xs font-black rounded-xl transition shadow-theme-xs">
+        العودة للمراسلات
       </router-link>
     </div>
 
-    <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="text-gray-500 dark:text-gray-400">{{ $t('common.loading') }}</div>
-    </div>
-
-    <div v-else-if="!correspondence" class="text-center py-12">
-      <div class="text-red-500 font-bold">المراسلة غير موجودة أو تم حذفها.</div>
-    </div>
-
-    <div v-else class="space-y-6">
-      <!-- Header Card -->
-      <div class="relative overflow-hidden bg-gradient-to-r from-brand-600 to-indigo-600 dark:from-brand-800 dark:to-indigo-800 rounded-3xl p-6 md:p-8 text-white shadow-lg">
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.15),transparent)] pointer-events-none"></div>
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative z-10">
-          <div>
-            <div class="flex items-center gap-3 mb-2">
+    <!-- Main Content Redesign -->
+    <div v-else class="space-y-6 animate-fade-in">
+      <!-- Premium Theme-Integrated Header Panel (Light/Dark Cohesive) -->
+      <div class="relative overflow-hidden bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 text-slate-800 dark:text-white shadow-sm border border-slate-200/80 dark:border-slate-800 transition-all duration-300">
+        <!-- Subtle Premium Gradient Glow -->
+        <div class="absolute inset-0 bg-gradient-to-r from-slate-50/50 via-white to-slate-50/30 dark:from-slate-900 dark:via-slate-950/40 dark:to-slate-900 pointer-events-none"></div>
+        <div class="absolute -left-24 -bottom-24 w-96 h-96 bg-brand-500/5 dark:bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 relative z-10">
+          <div class="space-y-4">
+            <div class="flex flex-wrap items-center gap-2.5">
+              <!-- Type Badge -->
               <span
                 :class="[
-                  'px-3 py-1 rounded-full text-xs font-bold border border-white/20 uppercase tracking-wider',
-                  correspondence.type === 'incoming' ? 'bg-blue-500/30' : 'bg-emerald-500/30'
+                  'px-3.5 py-1.5 rounded-xl text-xxs font-black tracking-wide uppercase shadow-sm border flex items-center gap-1.5',
+                  correspondence.type === 'incoming' 
+                    ? 'bg-blue-50 text-blue-700 border-blue-200/60 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800/40' 
+                    : 'bg-emerald-50 text-emerald-700 border-emerald-200/60 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-800/40'
                 ]"
               >
-                {{ correspondence.type_display }}
+                <component :is="correspondence.type === 'incoming' ? Inbox : Send" class="w-3.5 h-3.5" />
+                {{ correspondence.type === 'incoming' ? 'وارد رقمي' : 'صادر رسمي' }}
               </span>
-              <span class="text-white/80 text-sm font-medium">المرجع: {{ correspondence.reference_number }}</span>
+
+              <!-- Reference Badge -->
+              <span class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/65 text-slate-750 dark:text-slate-300 px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                <FileText class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+                المرجع: <span class="text-slate-900 dark:text-white font-mono font-black">{{ correspondence.reference_number }}</span>
+              </span>
+
+              <!-- Priority Badge -->
+              <span class="bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-900/30 text-amber-700 dark:text-amber-300 px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                <AlertTriangle class="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+                الأهمية: عاجل وهام
+              </span>
             </div>
-            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">{{ correspondence.subject }}</h1>
-            <p class="text-white/70 text-sm mt-2">تاريخ القيد: {{ correspondence.date }}</p>
+
+            <!-- Subject Text -->
+            <div class="space-y-1.5">
+              <span class="text-slate-400 dark:text-slate-500 text-xxs font-black uppercase tracking-wider block">موضوع المعاملة الرسمية</span>
+              <h1 class="text-2xl md:text-3.5xl font-black tracking-tight text-slate-900 dark:text-white font-serif leading-tight">
+                {{ correspondence.subject }}
+              </h1>
+            </div>
+
+            <!-- Date Metadata -->
+            <div class="flex flex-wrap items-center gap-4 text-slate-500 dark:text-slate-400 text-xs font-bold">
+              <span class="flex items-center gap-1.5">
+                <Calendar class="w-4 h-4 text-slate-450 dark:text-slate-550" />
+                تاريخ تسجيل المعاملة بالمنظومة: <span class="text-slate-800 dark:text-slate-200">{{ correspondence.date }}</span>
+              </span>
+            </div>
           </div>
-          <div class="flex items-center gap-3">
-            <span class="text-white/80 text-sm font-semibold">حالة المراسلة:</span>
-            <select
-              v-model="correspondence.status"
-              @change="updateStatus"
-              class="bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-xl px-4 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer"
+          
+          <!-- Status Dropdown Switcher -->
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 p-4 rounded-2xl self-start lg:self-auto shadow-sm">
+              <span class="text-slate-650 dark:text-slate-300 text-xs font-black pr-1 flex items-center gap-1.5">
+                <Clock class="w-4 h-4 text-amber-555 dark:text-amber-400" />
+                حالة القيد والمتابعة:
+              </span>
+              <select
+                v-model="correspondence.status"
+                @change="updateStatus"
+                class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-white rounded-xl px-4 py-2 text-xs font-black focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer shadow-sm transition-all duration-300"
+              >
+                <option value="new">جديدة (غير مستلمة)</option>
+                <option value="in_progress">قيد الفرز والمتابعة</option>
+                <option value="completed">مكتملة ومؤرشفة</option>
+              </select>
+            </div>
+
+            <!-- Outgoing covering letter generator button -->
+            <button
+              type="button"
+              @click="generateCoveringLetter"
+              class="flex items-center gap-1.5 px-4 py-3 bg-gradient-to-r from-brand-500 to-indigo-650 hover:from-brand-600 hover:to-indigo-750 text-white rounded-2xl text-xs font-black cursor-pointer transition shadow-md hover:shadow-lg duration-300"
             >
-              <option value="new" class="text-gray-900">جديد</option>
-              <option value="in_progress" class="text-gray-900">قيد المتابعة</option>
-              <option value="completed" class="text-gray-900">مكتمل/مؤرشف</option>
-            </select>
+              <Send class="w-4 h-4" />
+              توليد خطاب تغطية الرد (صادر)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- High-End Interactive Journey Steps Dashboard -->
+      <div class="bg-white dark:bg-gray-900 border border-slate-200/80 dark:border-gray-850 rounded-3xl p-6 shadow-theme-sm">
+        <div class="flex items-center gap-2 mb-6 border-b border-gray-100 dark:border-gray-800/60 pb-3">
+          <TrendingUp class="w-5 h-5 text-brand-500" />
+          <h3 class="text-sm font-black text-slate-800 dark:text-white">مخطط سير المعاملة الرقمية</h3>
+        </div>
+
+        <div class="max-w-4xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6 md:gap-4 relative">
+          <!-- Step 1: Registered -->
+          <div class="flex items-center gap-4 relative z-10 w-full md:w-auto p-3.5 rounded-2xl bg-brand-50/50 dark:bg-brand-950/20 border border-brand-100/60 dark:border-brand-900/40">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-brand-500 text-white shadow-md shadow-brand-500/20">
+              <Check class="w-5 h-5" />
+            </div>
+            <div class="text-right">
+              <p class="text-xs font-black text-slate-800 dark:text-white">قيد وتسجيل المعاملة</p>
+              <p class="text-[10px] text-slate-400 dark:text-slate-500 font-bold mt-0.5">تم التحقق وإسناد المرجع</p>
+            </div>
+          </div>
+
+          <div class="hidden md:block flex-grow h-1 mx-2 bg-gradient-to-r from-brand-500 to-brand-500"></div>
+
+          <!-- Step 2: In progress -->
+          <div 
+            :class="[
+              'flex items-center gap-4 relative z-10 w-full md:w-auto p-3.5 rounded-2xl border transition-all duration-300',
+              correspondence.status !== 'new'
+                ? 'bg-brand-50/50 dark:bg-brand-950/20 border-brand-100/60 dark:border-brand-900/40'
+                : 'bg-slate-50 dark:bg-slate-850 border-slate-200 dark:border-slate-800 opacity-60'
+            ]"
+          >
+            <div 
+              :class="[
+                'w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-md transition-all duration-300',
+                correspondence.status !== 'new' ? 'bg-brand-500 text-white shadow-brand-500/20' : 'bg-slate-200 dark:bg-slate-800 text-slate-550 dark:text-slate-405'
+              ]"
+            >
+              <component :is="correspondence.status !== 'new' ? Check : Clock" class="w-5 h-5" />
+            </div>
+            <div class="text-right">
+              <p class="text-xs font-black text-slate-800 dark:text-white">قيد المتابعة والإحالة</p>
+              <p class="text-[10px] text-slate-400 dark:text-slate-500 font-bold mt-0.5">تكليف المتابعين والمهام</p>
+            </div>
+          </div>
+
+          <div 
+            :class="[
+              'hidden md:block flex-grow h-1 mx-2 transition-all duration-300',
+              correspondence.status === 'completed' ? 'bg-brand-500' : 'bg-slate-200 dark:bg-slate-800'
+            ]"
+          ></div>
+
+          <!-- Step 3: Completed -->
+          <div 
+            :class="[
+              'flex items-center gap-4 relative z-10 w-full md:w-auto p-3.5 rounded-2xl border transition-all duration-300',
+              correspondence.status === 'completed'
+                ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-100/60 dark:border-emerald-900/40 animate-pulse-subtle'
+                : 'bg-slate-50 dark:bg-slate-850 border-slate-200 dark:border-slate-800 opacity-60'
+            ]"
+          >
+            <div 
+              :class="[
+                'w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-md transition-all duration-300',
+                correspondence.status === 'completed' ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-slate-200 dark:bg-slate-800 text-slate-550 dark:text-slate-400'
+              ]"
+            >
+              <component :is="correspondence.status === 'completed' ? Check : Archive" class="w-5 h-5" />
+            </div>
+            <div class="text-right">
+              <p class="text-xs font-black text-slate-800 dark:text-white">الأرشفة والإغلاق النهائي</p>
+              <p class="text-[10px] text-slate-400 dark:text-slate-500 font-bold mt-0.5">الحفظ النهائي في الأرشيف</p>
+            </div>
           </div>
         </div>
       </div>
@@ -56,117 +215,192 @@
         <!-- Details Card -->
         <div class="lg:col-span-2 space-y-6">
           <!-- Information Card -->
-          <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 shadow-theme-sm">
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5 border-b border-gray-100 dark:border-gray-850 pb-3">تفاصيل المراسلة</h3>
+          <div class="bg-white dark:bg-gray-900 border border-slate-200/80 dark:border-slate-850 rounded-3xl p-6 shadow-theme-sm">
+            <div class="flex items-center gap-2 mb-6 border-b border-gray-100 dark:border-gray-800/60 pb-3.5">
+              <div class="p-2.5 bg-brand-50 dark:bg-brand-950/40 text-brand-500 dark:text-brand-400 rounded-xl shadow-theme-xs">
+                <FileText class="w-5 h-5" />
+              </div>
+              <h3 class="text-lg font-bold text-slate-850 dark:text-white">بيانات المعاملة الأساسية</h3>
+            </div>
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div v-if="correspondence.type === 'incoming'">
-                <span class="block text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">الجهة المرسلة</span>
-                <span class="text-gray-900 dark:text-white font-semibold text-base">{{ correspondence.sender || 'غير محدد' }}</span>
+              <!-- Sender / Receiver Info -->
+              <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 shadow-theme-xs">
+                <span class="block text-xxs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                  {{ correspondence.type === 'incoming' ? 'جهة الإرسال المصدرة' : 'جهة الاستلام المستهدفة' }}
+                </span>
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-550 flex items-center justify-center shadow-inner flex-shrink-0">
+                    <Building class="w-5 h-5" />
+                  </div>
+                  <span class="text-slate-900 dark:text-white font-extrabold text-[15px]">
+                    {{ correspondence.type === 'incoming' ? correspondence.sender || 'غير محدد' : correspondence.receiver || 'غير محدد' }}
+                  </span>
+                </div>
               </div>
-              <div v-else>
-                <span class="block text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">الجهة المستقبلة</span>
-                <span class="text-gray-900 dark:text-white font-semibold text-base">{{ correspondence.receiver || 'غير محدد' }}</span>
+              
+              <!-- Date Card -->
+              <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 shadow-theme-xs">
+                <span class="block text-xxs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">تاريخ تسجيل المعاملة</span>
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-550 flex items-center justify-center shadow-inner flex-shrink-0">
+                    <Calendar class="w-5 h-5" />
+                  </div>
+                  <span class="text-slate-900 dark:text-white font-extrabold text-[15px]">{{ correspondence.date }}</span>
+                </div>
               </div>
-              <div>
-                <span class="block text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">تاريخ المراسلة</span>
-                <span class="text-gray-900 dark:text-white font-semibold text-base">{{ correspondence.date }}</span>
-              </div>
+              
+              <!-- Directives / Notes Panel -->
               <div class="md:col-span-2">
-                <span class="block text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">ملاحظات وشروحات</span>
-                <p class="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-line leading-relaxed bg-gray-50 dark:bg-gray-800/40 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
-                  {{ correspondence.notes || 'لا توجد ملاحظات مدونة لهذه المراسلة.' }}
-                </p>
+                <span class="block text-xs font-black text-slate-455 dark:text-slate-550 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Bookmark class="w-4 h-4 text-brand-500" />
+                  توجيهات وشروحات القيادة العليا
+                </span>
+                <div class="relative p-5 rounded-2xl bg-amber-50/40 dark:bg-amber-950/10 border border-amber-500/20 leading-relaxed font-semibold shadow-theme-xs">
+                  <div class="absolute top-4 right-4 text-amber-500/10 select-none font-serif text-6xl leading-none">“</div>
+                  <p class="text-slate-750 dark:text-slate-350 text-[14.5px] whitespace-pre-line pr-6 relative z-10 leading-relaxed font-medium">
+                    {{ correspondence.notes || 'لا توجد ملاحظات أو توجيهات مدونة لهذه المراسلة.' }}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Attachments Section (Archiving) -->
-          <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 shadow-theme-sm">
-            <div class="flex justify-between items-center mb-5 border-b border-gray-100 dark:border-gray-850 pb-3">
-              <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ $t('secretariat.correspondences.attachments') }}</h3>
+          <!-- Digital Archive Vault (Attachments Section) -->
+          <div class="bg-white dark:bg-gray-900 border border-slate-200/85 dark:border-slate-850 rounded-3xl p-6 shadow-theme-sm">
+            <div class="flex justify-between items-center mb-6 border-b border-gray-100 dark:border-gray-800/60 pb-3.5">
+              <div class="flex items-center gap-2">
+                <div class="p-2.5 bg-brand-50 dark:bg-brand-950/40 text-brand-500 dark:text-brand-400 rounded-xl shadow-theme-xs">
+                  <FolderOpen class="w-5 h-5" />
+                </div>
+                <h3 class="text-lg font-bold text-slate-850 dark:text-white">مستودع الأرشيف الرقمي المرفق</h3>
+              </div>
               <button
                 @click="showUploadForm = !showUploadForm"
-                class="text-xs font-bold text-brand-500 hover:text-brand-600 dark:text-brand-400 flex items-center gap-1 cursor-pointer"
+                class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 text-slate-700 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-750 text-xs font-black transition-all duration-300 cursor-pointer shadow-theme-xs border border-slate-200 dark:border-slate-700"
               >
-                <span>{{ showUploadForm ? 'إلغاء' : '+ إرفاق مستند' }}</span>
+                <Plus class="w-4 h-4" />
+                <span>{{ showUploadForm ? 'إلغاء الإرفاق' : 'إرفاق وثيقة جديدة' }}</span>
               </button>
             </div>
 
-            <!-- Upload attachment form -->
-            <div v-if="showUploadForm" class="mb-6 p-5 bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-800 rounded-2xl animate-fade-in">
+            <!-- Upload attachment form (Advanced Dropzone Style) -->
+            <div v-if="showUploadForm" class="mb-6 p-5 bg-slate-50/50 dark:bg-slate-850/40 border border-slate-200 dark:border-slate-800 rounded-2xl animate-fade-in">
               <form @submit.prevent="handleUpload" class="space-y-4">
                 <div>
-                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{{ $t('secretariat.correspondences.attachment_title') }} *</label>
+                  <label class="block text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">عنوان المستند المرفق *</label>
                   <input
                     v-model="attachmentForm.title"
                     type="text"
                     required
-                    placeholder="مثال: صورة المذكرة الرسمية، الرد الرسمي، إلخ"
-                    class="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                    placeholder="مثال: صورة المذكرة الرسمية، الرد الرسمي المعمد، إلخ"
+                    class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition duration-300 font-bold"
                   />
                 </div>
+                
+                <!-- Dropzone Style File Upload -->
                 <div>
-                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">الملف *</label>
-                  <input
-                    type="file"
-                    required
-                    @change="onFileSelected"
-                    class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer"
-                  />
+                  <label class="block text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">اختر الملف المؤرشف *</label>
+                  <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-6 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-all duration-300 flex flex-col items-center justify-center text-center cursor-pointer">
+                    <input
+                      type="file"
+                      required
+                      @change="onFileSelected"
+                      class="absolute inset-0 w-full h-full opacity-0 cursor-pointer animate-none"
+                    />
+                    
+                    <div v-if="selectedFilePreview" class="flex flex-col items-center">
+                      <img :src="selectedFilePreview" class="w-32 h-20 object-cover rounded-lg mb-2 shadow-sm border border-slate-200" />
+                      <p class="text-xs font-bold text-brand-600 dark:text-brand-400">تم اختيار الصورة بنجاح</p>
+                      <p class="text-[10px] text-slate-400 mt-0.5">{{ attachmentForm.file?.name }}</p>
+                    </div>
+                    <div v-else-if="attachmentForm.file" class="flex flex-col items-center">
+                      <FileText class="w-10 h-10 text-brand-500 mb-2" />
+                      <p class="text-xs font-bold text-brand-600 dark:text-brand-400">تم اختيار المستند بنجاح</p>
+                      <p class="text-[10px] text-slate-400 mt-0.5">{{ attachmentForm.file.name }}</p>
+                    </div>
+                    <div v-else class="flex flex-col items-center">
+                      <Paperclip class="w-10 h-10 text-slate-400 dark:text-slate-650 mb-2" />
+                      <p class="text-sm font-bold text-slate-700 dark:text-slate-300">
+                        اضغط لتصفح الملف من جهازك
+                      </p>
+                      <p class="text-xxs text-slate-400 dark:text-slate-500 mt-1">يُقبل جميع أنواع الملفات المعتمدة (PDF، صور، مستندات)</p>
+                    </div>
+                  </div>
                 </div>
+
                 <div class="flex justify-end gap-2 pt-2">
                   <button
                     type="submit"
                     :disabled="uploading"
-                    class="px-4 py-2 text-xs font-semibold text-white bg-brand-500 hover:bg-brand-600 rounded-lg shadow-theme-xs disabled:opacity-50 transition cursor-pointer"
+                    class="px-5 py-2.5 text-xs font-black text-white bg-brand-500 hover:bg-brand-600 rounded-xl shadow-theme-xs disabled:opacity-50 transition cursor-pointer"
                   >
-                    {{ uploading ? 'جاري الرفع...' : 'رفع وحفظ' }}
+                    {{ uploading ? 'جاري رفع الملف...' : 'حفظ المستند بالأرشيف' }}
                   </button>
                 </div>
               </form>
             </div>
 
-            <!-- Attachments list -->
-            <div v-if="!correspondence.attachments || correspondence.attachments.length === 0" class="text-center py-6 text-sm text-gray-500">
-              {{ $t('secretariat.correspondences.no_attachments') }}
+            <!-- Attachments grid list -->
+            <div v-if="!correspondence.attachments || correspondence.attachments.length === 0" class="text-center py-12 bg-slate-50/50 dark:bg-slate-850/10 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-sm text-slate-500">
+              <FolderOpen class="w-12 h-12 mx-auto text-slate-300 dark:text-slate-700 mb-3" />
+              لا توجد مستندات مرفقة مؤرشفة حالياً لهذه المعاملة.
             </div>
+            
             <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
               <div
                 v-for="file in correspondence.attachments"
                 :key="file.id"
-                class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/30 border border-gray-150 dark:border-gray-800 rounded-2xl hover:shadow-theme-xs transition"
+                class="flex flex-col p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 shadow-theme-xs"
               >
-                <div class="flex items-center gap-3 overflow-hidden">
-                  <div class="p-2.5 bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 rounded-xl">
-                    <!-- File icon representation -->
-                    <span class="font-bold text-xs">PDF</span>
+                <!-- Thumbnail Preview (Image or File Icon Banner) -->
+                <div v-if="isImage(file.file)" class="relative w-full h-36 rounded-xl overflow-hidden mb-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center group/img">
+                  <img :src="file.file" alt="Attachment Preview" class="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-110" />
+                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
+                    <a :href="file.file" target="_blank" class="p-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full text-white transition-all duration-350 transform translate-y-2 group-hover/img:translate-y-0">
+                      <Eye class="w-5 h-5" />
+                    </a>
                   </div>
+                </div>
+                <div v-else class="relative w-full h-36 rounded-xl bg-slate-100/50 dark:bg-slate-850/50 border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center mb-3">
+                  <FileText class="w-10 h-10 text-slate-400 dark:text-slate-600 mb-1" />
+                  <span class="text-[10px] font-black text-slate-450 dark:text-slate-500 uppercase">{{ getFileExtension(file.file) }}</span>
+                </div>
+
+                <div class="flex items-center gap-3 overflow-hidden mb-4">
                   <div class="overflow-hidden">
-                    <span class="block text-sm font-semibold text-gray-800 dark:text-white truncate" :title="file.title">
+                    <span class="block text-sm font-black text-slate-850 dark:text-white truncate" :title="file.title">
                       {{ file.title }}
                     </span>
-                    <span class="block text-xxs text-gray-400 dark:text-gray-500 mt-0.5">
-                      تم الرفع: {{ new Date(file.uploaded_at).toLocaleString('ar-YE') }}
+                    <span class="block text-[10px] text-slate-450 dark:text-slate-500 mt-0.5 font-bold">
+                      تاريخ الأرشفة: {{ new Date(file.uploaded_at).toLocaleDateString('ar-YE', { year: 'numeric', month: 'long', day: 'numeric' }) }}
                     </span>
                   </div>
                 </div>
-                <div class="flex items-center gap-2">
-                  <a
-                    :href="file.file"
-                    target="_blank"
-                    download
-                    class="p-2 text-gray-500 hover:text-brand-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
-                    title="تحميل"
-                  >
-                    &darr;
-                  </a>
-                  <button
-                    @click="deleteFile(file.id)"
-                    class="p-2 text-gray-500 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition cursor-pointer"
-                    title="حذف"
-                  >
-                    &times;
-                  </button>
+                
+                <div class="flex items-center justify-between mt-auto pt-3.5 border-t border-slate-100 dark:border-slate-800/60">
+                  <span class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2.5 py-0.5 rounded font-black uppercase">
+                    وثيقة معمدة
+                  </span>
+                  
+                  <div class="flex items-center gap-2">
+                    <a
+                      :href="file.file"
+                      target="_blank"
+                      class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-350 text-xs font-black transition-all duration-300 shadow-theme-xs border border-slate-200 dark:border-slate-700"
+                      title="تحميل"
+                    >
+                      <Download class="w-3.5 h-3.5" />
+                      تحميل
+                    </a>
+                    <button
+                      @click="deleteFile(file.id)"
+                      class="p-2 text-slate-450 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-all duration-300 cursor-pointer"
+                      title="حذف"
+                    >
+                      <Trash2 class="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -175,79 +409,87 @@
 
         <!-- Sidebar Actions & Linked Tasks -->
         <div class="space-y-6">
-          <!-- Quick actions / stats -->
-          <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 shadow-theme-sm">
-            <h3 class="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">مسؤول المراسلة</h3>
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center font-bold text-gray-700 dark:text-gray-300">
-                U
+          <!-- Officer in Charge Card -->
+          <div class="bg-white dark:bg-gray-900 border border-slate-200/80 dark:border-slate-850 rounded-3xl p-6 shadow-theme-sm">
+            <h3 class="text-xs font-black text-slate-455 dark:text-slate-500 uppercase tracking-wider mb-4">مسؤول المراسلة وقيد التسجيل</h3>
+            <div class="flex items-center gap-3 p-3.5 bg-slate-50 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800/60 rounded-2xl shadow-theme-xs">
+              <div class="w-11 h-11 rounded-full bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 flex items-center justify-center font-black shadow-inner flex-shrink-0 text-base">
+                {{ (correspondence.created_by_name || 'U').charAt(0).toUpperCase() }}
               </div>
-              <div>
-                <span class="block text-sm font-semibold text-gray-900 dark:text-white">بواسطة: {{ correspondence.created_by_name || 'مسؤول السكرتارية' }}</span>
-                <span class="block text-xs text-gray-400 dark:text-gray-500">جهة الاختصاص: {{ correspondence.security_admin_name || 'إدارة الأمن' }}</span>
+              <div class="overflow-hidden">
+                <span class="block text-sm font-black text-slate-850 dark:text-white truncate">بواسطة: {{ correspondence.created_by_name || 'مسؤول السكرتارية' }}</span>
+                <span class="block text-xs text-slate-450 dark:text-slate-500 truncate mt-0.5">جهة الاختصاص: {{ correspondence.security_admin_name || 'إدارة الأمن' }}</span>
               </div>
             </div>
           </div>
 
           <!-- Tasks list and Add Task linked to correspondence -->
-          <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 shadow-theme-sm">
-            <div class="flex justify-between items-center mb-4 border-b border-gray-100 dark:border-gray-850 pb-3">
-              <h3 class="text-lg font-bold text-gray-900 dark:text-white">مهام المتابعة المرتبطة</h3>
+          <div class="bg-white dark:bg-gray-900 border border-slate-200/80 dark:border-slate-850 rounded-3xl p-6 shadow-theme-sm">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-100 dark:border-gray-855 pb-3">
+              <div class="flex items-center gap-2">
+                <div class="p-2 bg-brand-50 dark:bg-brand-950/40 text-brand-500 dark:text-brand-400 rounded-xl">
+                  <Briefcase class="w-4 h-4" />
+                </div>
+                <h3 class="text-base font-black text-slate-850 dark:text-white">مهام المتابعة والتكليف</h3>
+              </div>
               <button
                 @click="showTaskForm = !showTaskForm"
-                class="text-xs font-bold text-brand-500 hover:text-brand-600 dark:text-brand-400 cursor-pointer"
+                class="inline-flex items-center gap-1 text-xs font-black text-brand-600 hover:text-brand-700 dark:text-brand-400 cursor-pointer transition-all duration-300"
               >
-                {{ showTaskForm ? 'إلغاء' : '+ مهمة جديدة' }}
+                <Plus class="w-3.5 h-3.5" />
+                {{ showTaskForm ? 'إلغاء' : 'تكليف جديد' }}
               </button>
             </div>
 
             <!-- Task Form -->
-            <div v-if="showTaskForm" class="mb-5 p-4 bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-800 rounded-2xl animate-fade-in space-y-3">
+            <div v-if="showTaskForm" class="mb-5 p-4 bg-slate-50 dark:bg-slate-850/40 border border-slate-200 dark:border-slate-800 rounded-2xl animate-fade-in space-y-4">
               <div>
-                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">عنوان التكليف *</label>
+                <label class="block text-xs font-black text-slate-450 dark:text-slate-500 uppercase tracking-wider mb-1">عنوان التكليف أو الأمر *</label>
                 <input
                   v-model="taskForm.title"
                   type="text"
                   required
-                  class="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  placeholder="مثال: مراجعة المستند والتأكد من الصلاحيات"
+                  class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition duration-300"
                 />
               </div>
               <div>
-                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">تفاصيل ومبررات المهمة</label>
+                <label class="block text-xs font-black text-slate-455 dark:text-slate-500 uppercase tracking-wider mb-1">تفاصيل ومبررات المهمة</label>
                 <textarea
                   v-model="taskForm.description"
                   rows="2"
-                  class="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  placeholder="اكتب التوجيهات أو الملاحظات التفصيلية هنا..."
+                  class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition duration-300"
                 ></textarea>
               </div>
               <div>
-                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">الموظف المسؤول *</label>
+                <label class="block text-xs font-black text-slate-455 dark:text-slate-500 uppercase tracking-wider mb-1">الموظف المسؤول *</label>
                 <select
                   v-model="taskForm.assigned_to"
                   required
-                  class="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-slate-800 dark:text-white cursor-pointer focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition duration-300"
                 >
                   <option value="" disabled>اختر الموظف...</option>
-                  <option v-for="emp in employees" :key="emp.id" :value="emp.id">
+                  <option v-for="emp in employees" :key="emp.military_number" :value="emp.military_number">
                     {{ emp.full_name }} ({{ emp.military_number }})
                   </option>
                 </select>
               </div>
               <div class="grid grid-cols-2 gap-2">
                 <div>
-                  <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">تاريخ الاستحقاق *</label>
+                  <label class="block text-xs font-black text-slate-455 dark:text-slate-500 uppercase tracking-wider mb-1">تاريخ الاستحقاق *</label>
                   <input
                     v-model="taskForm.due_date"
                     type="date"
                     required
-                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                    class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-slate-800 dark:text-white cursor-pointer focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition duration-300"
                   />
                 </div>
                 <div>
-                  <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">الأولوية</label>
+                  <label class="block text-xs font-black text-slate-455 dark:text-slate-500 uppercase tracking-wider mb-1">الأولوية</label>
                   <select
                     v-model="taskForm.priority"
-                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                    class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-slate-800 dark:text-white cursor-pointer focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition duration-300"
                   >
                     <option value="low">منخفضة</option>
                     <option value="medium">متوسطة</option>
@@ -259,49 +501,77 @@
                 <button
                   type="button"
                   @click="handleAddTask"
-                  class="px-4 py-1.5 text-xs font-semibold text-white bg-brand-500 hover:bg-brand-600 rounded-lg cursor-pointer"
+                  class="px-5 py-2 text-xs font-black text-white bg-brand-500 hover:bg-brand-600 rounded-xl cursor-pointer transition shadow-theme-xs"
                 >
-                  حفظ المهمة
+                  حفظ وتكليف
                 </button>
               </div>
             </div>
 
             <!-- Linked Tasks list -->
-            <div v-if="linkedTasks.length === 0" class="text-center py-4 text-xs text-gray-500">
-              لا توجد مهام متابعة مرتبطة بهذه المراسلة حالياً.
+            <div v-if="linkedTasks.length === 0" class="text-center py-8 text-xs text-slate-500">
+              <Briefcase class="w-10 h-10 mx-auto text-slate-350 dark:text-slate-700 mb-2" />
+              لا توجد مهام متابعة نشطة لهذه المراسلة.
             </div>
             <div v-else class="space-y-3">
               <div
                 v-for="task in linkedTasks"
                 :key="task.id"
-                class="p-3 border border-gray-150 dark:border-gray-800 rounded-2xl bg-gray-50/50 dark:bg-gray-800/10"
+                :class="[
+                  'p-4 border rounded-2xl bg-slate-50 dark:bg-slate-900/20 hover:shadow-md transition-all duration-300 shadow-theme-xs',
+                  task.priority === 'high' ? 'border-red-500/20' : 'border-slate-205 dark:border-slate-800'
+                ]"
               >
                 <div class="flex justify-between items-start gap-2">
-                  <span class="text-sm font-semibold text-gray-800 dark:text-white">{{ task.title }}</span>
+                  <span class="text-sm font-black text-slate-850 dark:text-white leading-snug">{{ task.title }}</span>
                   <span
                     :class="[
-                      'text-xxs px-2 py-0.5 rounded-full font-semibold',
-                      task.status === 'completed' ? 'bg-green-50 text-green-700 dark:bg-green-900/30' :
-                      task.status === 'in_progress' ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/30' :
-                      'bg-gray-100 text-gray-700 dark:bg-gray-850'
+                      'text-xxs px-2.5 py-0.5 rounded-full font-black',
+                      task.status === 'completed' ? 'bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400' :
+                      task.status === 'in_progress' ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400' :
+                      'bg-slate-100 text-slate-700 dark:bg-gray-800 dark:text-gray-400'
                     ]"
                   >
                     {{ task.status_display }}
                   </span>
                 </div>
-                <div class="mt-2 flex flex-col gap-1 text-xxs text-gray-400 dark:text-gray-500 font-medium">
-                  <div>مكلف إلى: <span class="text-gray-600 dark:text-gray-300">{{ task.assigned_to_name }}</span></div>
-                  <div class="flex justify-between">
-                    <span>الاستحقاق: {{ task.due_date }}</span>
+                <div class="mt-3 flex flex-col gap-1.5 text-xxs text-slate-450 dark:text-slate-500 font-bold">
+                  <div class="flex items-center gap-1">
+                    <UserCheck class="w-3.5 h-3.5 text-brand-500" />
+                    <span class="text-slate-400">المكلف:</span>
+                    <span class="text-slate-800 dark:text-slate-300 font-extrabold">{{ task.assigned_to_name || 'غير محدد' }}</span>
+                  </div>
+                  <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-150 dark:border-slate-800/40">
+                    <span class="flex items-center gap-0.5">الاستحقاق: {{ task.due_date }}</span>
                     <span
                       :class="[
-                        'font-bold uppercase',
-                        task.priority === 'high' ? 'text-red-500' :
-                        task.priority === 'medium' ? 'text-amber-500' : 'text-gray-400'
+                        'font-black uppercase text-[9px] px-2 py-0.5 rounded-md',
+                        task.priority === 'high' ? 'bg-red-50 text-red-650 dark:bg-red-950/30' :
+                        task.priority === 'medium' ? 'bg-amber-50 text-amber-650 dark:bg-amber-950/30' : 'bg-slate-100 text-slate-650 dark:bg-slate-850'
                       ]"
                     >
                       أولوية: {{ task.priority_display }}
                     </span>
+                  </div>
+
+                  <!-- Task Actions for Assignee -->
+                  <div v-if="authStore.user?.username === task.assigned_to" class="mt-3 pt-2 border-t border-dashed border-slate-200 dark:border-slate-800 flex gap-2">
+                    <button
+                      v-if="task.status === 'pending'"
+                      type="button"
+                      @click="handleAcceptTask(task)"
+                      class="flex-1 py-1.5 px-3 text-center text-[10px] font-black text-white bg-amber-500 hover:bg-amber-600 rounded-lg cursor-pointer transition"
+                    >
+                      استلام المهمة وبدء العمل
+                    </button>
+                    <button
+                      v-if="task.status === 'in_progress'"
+                      type="button"
+                      @click="handleCompleteTask(task)"
+                      class="flex-1 py-1.5 px-3 text-center text-[10px] font-black text-white bg-green-600 hover:bg-green-750 rounded-lg cursor-pointer transition"
+                    >
+                      تأكيد إنجاز المهمة وتسليم الكشف
+                    </button>
                   </div>
                 </div>
               </div>
@@ -315,16 +585,28 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import { useSecretariatStore } from '@/stores/secretariat'
 import { usePersonnelStore } from '@/stores/personnel'
+import { useAuthStore } from '@/stores/auth'
+import Swal from 'sweetalert2'
+
+// Lucide Icons Import
+import { 
+  FileText, Calendar, ArrowRight, User, CheckCircle2, Clock, 
+  ShieldAlert, Paperclip, Plus, Trash2, Download, ExternalLink, 
+  Check, AlertCircle, Briefcase, ChevronRight, File, Archive, Send, Inbox,
+  UserCheck, Building, Bookmark, TrendingUp, AlertTriangle, FolderOpen, Eye
+} from 'lucide-vue-next'
 
 const { t } = useI18n()
 const store = useSecretariatStore()
 const personnelStore = usePersonnelStore()
+const authStore = useAuthStore()
 const route = useRoute()
+const router = useRouter()
 
 const loading = ref(true)
 const uploading = ref(false)
@@ -340,6 +622,8 @@ const attachmentForm = ref({
   file: null as File | null
 })
 
+const selectedFilePreview = ref<string | null>(null)
+
 const taskForm = ref({
   title: '',
   description: '',
@@ -348,6 +632,17 @@ const taskForm = ref({
   due_date: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0], // 3 days in future
   related_correspondence: ''
 })
+
+function isImage(url: string) {
+  if (!url) return false
+  const ext = url.split('.').pop()?.toLowerCase()
+  return ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(ext || '')
+}
+
+function getFileExtension(url: string) {
+  if (!url) return 'FILE'
+  return url.split('.').pop()?.toUpperCase() || 'FILE'
+}
 
 async function fetchDetails() {
   loading.value = true
@@ -387,7 +682,13 @@ async function updateStatus() {
 function onFileSelected(e: Event) {
   const target = e.target as HTMLInputElement
   if (target.files && target.files.length > 0) {
-    attachmentForm.value.file = target.files[0]
+    const file = target.files[0]
+    attachmentForm.value.file = file
+    if (file.type.startsWith('image/')) {
+      selectedFilePreview.value = URL.createObjectURL(file)
+    } else {
+      selectedFilePreview.value = null
+    }
   }
 }
 
@@ -404,6 +705,7 @@ async function handleUpload() {
     await store.uploadAttachment(formData)
     showUploadForm.value = false
     attachmentForm.value = { title: '', file: null }
+    selectedFilePreview.value = null
     
     // Refresh
     const res = await store.fetchCorrespondenceById(id)
@@ -428,11 +730,20 @@ async function deleteFile(fileId: number) {
 }
 
 async function handleAddTask() {
-  if (!taskForm.value.title || !taskForm.value.assigned_to) return
+  if (!taskForm.value.title) {
+    Swal.fire({ icon: 'warning', title: 'الرجاء إدخال عنوان التكليف' })
+    return
+  }
+  if (!taskForm.value.assigned_to) {
+    Swal.fire({ icon: 'warning', title: 'الرجاء اختيار الموظف المكلف' })
+    return
+  }
   try {
     const id = route.params.id as string
     taskForm.value.related_correspondence = id
     await store.createTask(taskForm.value)
+    
+    Swal.fire({ icon: 'success', title: 'تم حفظ وإسناد التكليف بنجاح', timer: 1500, showConfirmButton: false })
     
     // reset task form
     taskForm.value = {
@@ -448,9 +759,98 @@ async function handleAddTask() {
     // Refresh tasks list
     const tasksRes = await store.fetchTasks({ related_correspondence: id })
     linkedTasks.value = tasksRes.results || []
-  } catch (err) {
+  } catch (err: any) {
     console.error(err)
+    const errMsg = err.response?.data?.error || err.response?.data?.detail || 'حدث خطأ أثناء حفظ التكليف'
+    Swal.fire({ icon: 'error', title: 'فشل حفظ التكليف', text: JSON.stringify(errMsg) })
   }
+}
+
+async function handleAcceptTask(task: any) {
+  try {
+    await store.updateTask(task.id, { status: 'in_progress' })
+    Swal.fire({
+      icon: 'success',
+      title: 'تم استلام المهمة بنجاح وبدء العمل',
+      timer: 1500,
+      showConfirmButton: false
+    })
+    // Refresh tasks list
+    const id = route.params.id as string
+    const tasksRes = await store.fetchTasks({ related_correspondence: id })
+    linkedTasks.value = tasksRes.results || []
+  } catch (err: any) {
+    console.error(err)
+    Swal.fire({
+      icon: 'error',
+      title: 'حدث خطأ أثناء استلام المهمة',
+      text: err.response?.data?.error || ''
+    })
+  }
+}
+
+async function handleCompleteTask(task: any) {
+  const { value: notes } = await Swal.fire({
+    title: 'إكمال التكليف/المهمة',
+    input: 'textarea',
+    inputLabel: 'ملاحظات الإنجاز ونتائج العمل',
+    inputPlaceholder: 'اكتب هنا ما تم إنجازه أو أي ملاحظات...',
+    inputAttributes: {
+      'aria-label': 'اكتب هنا ما تم إنجازه أو أي ملاحظات'
+    },
+    showCancelButton: true,
+    confirmButtonText: 'تأكيد الإكمال وتوقيع الكشف',
+    cancelButtonText: 'إلغاء',
+    inputValidator: (value) => {
+      if (!value) {
+        return 'يجب كتابة ملاحظات الإنجاز لتأكيد اكتمال المهمة!'
+      }
+    }
+  })
+
+  if (notes) {
+    try {
+      const updatedDescription = `${task.description || ''}\n\n[ملاحظات الإنجاز بواسطة الموظف]: ${notes}`
+      await store.updateTask(task.id, {
+        status: 'completed',
+        description: updatedDescription
+      })
+      Swal.fire({
+        icon: 'success',
+        title: 'تم تأكيد إكمال المهمة بنجاح',
+        timer: 1500,
+        showConfirmButton: false
+      })
+      // Refresh tasks list
+      const id = route.params.id as string
+      const tasksRes = await store.fetchTasks({ related_correspondence: id })
+      linkedTasks.value = tasksRes.results || []
+    } catch (err: any) {
+      console.error(err)
+      Swal.fire({
+        icon: 'error',
+        title: 'حدث خطأ أثناء تحديث حالة المهمة',
+        text: err.response?.data?.error || ''
+      })
+    }
+  }
+}
+
+function generateCoveringLetter() {
+  if (!correspondence.value) return
+  
+  const todayStr = new Date().toLocaleDateString('ar-YE', { day: 'numeric', month: 'long', year: 'numeric' }) + "م"
+  const bodyText = `إشارة إلى مذكرتكم ذات الرقم (${correspondence.value.reference_number}) والتاريخ ${correspondence.value.date}م بشأن موضوع (${correspondence.value.subject})، وعطفاً على ذلك نرفق لكم الكشوفات والتقارير المطلوبة لإنجاز الخدمة لشهر ${new Date().toLocaleString('ar-YE', { month: 'long' })}...`
+
+  router.push({
+    path: '/secretariat/document-requests',
+    query: {
+      subject: `الرد على: ${correspondence.value.subject}`,
+      recipient: correspondence.value.sender,
+      refNo: `رقم الرد/${correspondence.value.reference_number}`,
+      body: bodyText
+    }
+  })
 }
 
 onMounted(() => {

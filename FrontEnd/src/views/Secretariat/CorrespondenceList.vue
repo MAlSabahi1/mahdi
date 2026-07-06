@@ -110,17 +110,21 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                   {{ item.date }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                  <span
+                <td class="px-6 py-4 whitespace-nowrap text-sm" @click.stop>
+                  <select
+                    v-model="item.status"
+                    @change="updateItemStatus(item.id, item.status)"
                     :class="[
-                      'px-2.5 py-1 rounded-full text-xs font-medium',
+                      'px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer focus:outline-none focus:ring-0 border-0 appearance-none text-center inline-block',
                       item.status === 'new' ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
                       item.status === 'in_progress' ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' :
                       'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
                     ]"
                   >
-                    {{ item.status_display }}
-                  </span>
+                    <option value="new" class="bg-white dark:bg-slate-900 text-green-700">جديد</option>
+                    <option value="in_progress" class="bg-white dark:bg-slate-900 text-amber-750">قيد المتابعة</option>
+                    <option value="completed" class="bg-white dark:bg-slate-900 text-gray-750">مكتمل/مؤرشف</option>
+                  </select>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" @click.stop>
                   <router-link
@@ -320,6 +324,15 @@ function onSearch() {
 
 function goToDetail(id: number) {
   router.push(`/secretariat/correspondences/${id}`)
+}
+
+async function updateItemStatus(id: number, status: string) {
+  try {
+    await store.updateCorrespondence(id.toString(), { status })
+    await fetchData()
+  } catch (err) {
+    console.error(err)
+  }
 }
 
 async function submitForm() {

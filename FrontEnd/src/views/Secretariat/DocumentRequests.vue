@@ -117,27 +117,27 @@
           <!-- A4 Sheet Container -->
           <div class="print-preview-container mx-auto bg-white text-black p-6 border border-gray-300 shadow-lg rounded-md font-serif text-sm max-w-[800px] min-h-[1050px] flex flex-col justify-between" style="font-family: 'Amiri', 'Times New Roman', serif;">
             <!-- Inner Letterhead Border Wrapper -->
-            <div class="border-2 border-double border-black p-6 flex flex-col justify-between flex-grow h-full">
+            <div class="border-2 border-double border-black pt-9 pb-7 px-8 flex flex-col justify-between flex-grow h-full">
               <!-- Header Section -->
               <div>
                 <div class="flex justify-between items-end pb-2" dir="rtl" style="width: 100%; display: flex;">
-                  <!-- Right Header: Calligraphy image followed by official titles (Symmetrically Centered & Elegant) -->
-                  <div class="flex flex-col items-center justify-end text-center" style="width: 30%; min-width: 30%; font-family: 'Amiri', serif;">
-                    <img :src="yemenCalligraphy" class="w-[130px] h-8 object-contain mb-2 mx-auto" alt="الجمهورية اليمنية" />
+                  <!-- Right Header: Calligraphy image followed by official titles (Aligned to the Right Edge) -->
+                  <div class="flex flex-col items-start justify-end text-right" style="width: 30%; min-width: 30%; align-items: flex-start; font-family: 'Amiri', serif;">
+                    <img :src="yemenCalligraphy" class="w-[145px] h-9 object-contain mb-1.5" alt="الجمهورية اليمنية" />
                     <p class="text-[13px] font-bold text-gray-900 leading-tight">وزارة الداخلية</p>
-                    <p class="text-[13px] font-bold text-gray-900 leading-tight mt-0.5">شرطة م/ {{ userSecurityAdminName }}</p>
-                    <p class="text-[11.5px] font-semibold text-gray-800 leading-tight mt-0.5">إدارة القوى البشرية</p>
+                    <p class="text-[13px] font-bold text-gray-900 leading-tight mt-1">شرطة م/ {{ userSecurityAdminName }}</p>
+                    <p class="text-[11.5px] font-semibold text-gray-800 leading-tight mt-1">إدارة القوى البشرية</p>
                   </div>
 
-                  <!-- Center: Basmala (Thin Elegant Calligraphy) & High Resolution Republican Eagle -->
-                  <div class="flex flex-col items-center justify-center space-y-3 mt-1" style="width: 40%; min-width: 40%; text-align: center; align-self: center;">
-                    <p class="text-[1.45rem] tracking-wide text-gray-950 basmala-text leading-none text-center w-full">بسم الله الرحمن الرحيم</p>
-                    <img :src="yemenLogo" class="w-[90px] h-auto object-contain mx-auto" alt="شعار الجمهورية اليمنية" />
+                  <!-- Center: Basmala (Classical Naskh) & Colored Republican Eagle -->
+                  <div class="flex flex-col items-center justify-center space-y-2 mt-1" style="width: 40%; min-width: 40%; text-align: center; align-self: center; align-items: center;">
+                    <p class="basmala-text leading-none text-center w-full">بسم الله الرحمن الرحيم</p>
+                    <img :src="yemenLogo" class="w-[110px] h-auto object-contain mx-auto mt-1" alt="شعار الجمهورية اليمنية" />
                   </div>
 
-                  <!-- Left Header: Symmetrically aligned metadata container (forced left) -->
-                  <div class="text-xs pb-1 flex flex-col items-start justify-end" style="width: 30%; min-width: 30%; font-family: 'Amiri', serif;">
-                    <div style="width: 145px; display: flex; flex-direction: column; gap: 5px; margin-left: 0; margin-right: auto;">
+                  <!-- Left Header: Symmetrically aligned metadata container (Aligned to the Left Edge) -->
+                  <div class="text-xs pb-1 flex flex-col items-end justify-end" style="width: 30%; min-width: 30%; align-items: flex-end; font-family: 'Amiri', serif;">
+                    <div style="width: 145px; display: flex; flex-direction: column; gap: 5px;">
                       <div class="flex justify-between items-center w-full text-[12.5px] font-bold text-gray-900" style="display: flex; justify-content: space-between; align-items: center;">
                         <span>الرقــم:</span>
                         <span class="font-sans font-semibold text-[11.5px] text-left">{{ memo.refNo || '............' }}</span>
@@ -159,31 +159,31 @@
                 </div>
 
                 <!-- Thin solid divider -->
-                <div class="border-b border-black my-4 opacity-70"></div>
+                <div class="border-b border-black mt-6 mb-7 opacity-85"></div>
 
-                <!-- Document Title inside elegant box -->
+                <!-- Document Title inside elegant centered layout -->
                 <div class="text-center my-6">
-                  <h2 class="text-[20px] font-bold tracking-wider text-gray-900 border-b-2 border-black pb-1 px-4 inline-block bg-gray-50/10">
+                  <h2 class="text-[22px] font-bold tracking-wider text-gray-950 pb-1.5 px-6 inline-block" style="font-family: 'Amiri', serif; border-bottom: 2px solid black;">
                     {{ memo.templateType === 'memo' ? 'مـذكـــــرة رسميـــــة' : memo.templateType === 'circular' ? 'تـعـمـيـم إداري' : 'قــرار إداري' }}
                   </h2>
                 </div>
 
                 <!-- Recipient Line -->
-                <div class="text-right text-[15px] font-bold my-5 space-y-2">
+                <div class="text-right text-[15.5px] font-bold my-5 space-y-2 pr-1" style="font-family: 'Amiri', serif;">
                   <p class="text-gray-950">
                     الأخ / 
-                    <span class="px-2 pb-0.5 inline-block text-center" :style="memo.recipient ? 'border-bottom: 1.5px dotted black; min-width: 250px;' : 'min-width: 250px;'">
+                    <span class="px-2 pb-0.5 inline-block text-center" :style="memo.recipient ? 'border-bottom: 1.5px dotted black; min-width: 280px;' : 'min-width: 280px;'">
                       {{ memo.recipient || '..................................................' }}
                     </span> 
                     المحترم
                   </p>
-                  <p class="pr-8 text-gray-800">تحية طيبة وبعد،،،</p>
+                  <p class="pr-8 text-gray-900">تحية طيبة وبعد،،،</p>
                 </div>
 
-                <!-- Subject Line in border block -->
-                <div class="text-right text-[15px] font-bold my-4 bg-gray-50/50 border border-gray-300 p-3 rounded-md leading-relaxed" style="display: flex; align-items: center; justify-content: start; gap: 8px;">
-                  <span class="text-gray-700">الموضوع:</span>
-                  <span class="font-bold text-gray-950" :style="memo.subject ? 'border-bottom: 1.5px solid black; min-width: 320px; padding-bottom: 2px;' : 'min-width: 320px;'">
+                <!-- Subject Line (Simple & Elegant Print-Compliant Style) -->
+                <div class="text-right text-[15.5px] font-bold my-5 pr-1" style="font-family: 'Amiri', serif;">
+                  <span class="text-gray-900 pr-1">الموضوع:</span>
+                  <span class="font-bold text-gray-950 px-2 pb-0.5 inline-block text-center" :style="memo.subject ? 'border-bottom: 1.5px solid black; min-width: 350px;' : 'min-width: 350px;'">
                     {{ memo.subject || '.......................................................................' }}
                   </span>
                 </div>
@@ -196,29 +196,28 @@
 
               <!-- Bottom Section (Signatures & Copy lists) -->
               <div>
-                <div class="grid grid-cols-2 mt-8 pb-4">
+                <div class="grid grid-cols-2 mt-8 pb-4" dir="rtl">
                   <div></div>
-                  <!-- Signature Area -->
-                  <div class="text-center space-y-2 flex flex-col items-center">
-                    <p class="font-bold text-[16px] text-gray-950 leading-tight">
-                      {{ memo.signatoryName || '.....................................' }}
-                    </p>
-                    <p class="text-[13px] font-semibold text-gray-700 leading-tight">
+                  <!-- Signature Area (Title first, signature space, then name) -->
+                  <div class="text-center space-y-1 flex flex-col items-center" style="font-family: 'Amiri', serif;">
+                    <p class="font-bold text-[15.5px] text-gray-950 leading-tight">
                       {{ memo.signatoryTitle || 'مدير إدارة القوى البشرية' }}
                     </p>
-                    <div class="h-16 flex items-center justify-center">
-                      <span class="text-[11px] text-gray-400 italic font-sans">(التوقيع والختم الرسمي)</span>
-                    </div>
+                    <div class="h-14"></div> <!-- Space for signing & stamping -->
+                    <p class="font-bold text-[15px] text-gray-900 border-t border-dotted border-black/40 pt-1.5 px-4 inline-block min-w-[200px]">
+                      {{ memo.signatoryName || '.....................................' }}
+                    </p>
+                    <p class="text-[11px] text-gray-400 italic mt-1 font-sans">(التوقيع والختم الرسمي)</p>
                   </div>
                 </div>
 
-              <!-- Circular template CC list (نسخة مع التحية) -->
-              <div class="text-right text-[11px] text-gray-600 border-t border-gray-250 pt-3 space-y-1">
-                <p class="font-bold">نسخة مع التحية لـ:</p>
-                <p>- أرشيف السكرتارية العام</p>
-                <p>- ملف المتابعة والرقابة</p>
+                <!-- Circular template CC list (نسخة مع التحية) -->
+                <div class="text-right text-[11.5px] text-gray-700 border-t border-gray-300 pt-3 mt-6 space-y-0.5" style="font-family: 'Amiri', serif;">
+                  <p class="font-bold text-gray-900">نسخة مع التحية لـ:</p>
+                  <p class="pr-2">- أرشيف السكرتارية العام</p>
+                  <p class="pr-2">- ملف المتابعة والرقابة</p>
+                </div>
               </div>
-            </div>
           </div>
           </div>
         </div>
@@ -310,7 +309,7 @@
             <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">الموظف طالب الخدمة *</label>
             <select v-model="form.requested_by" required class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm">
               <option value="" disabled>اختر الموظف...</option>
-              <option v-for="emp in employees" :key="emp.id" :value="emp.id">
+              <option v-for="emp in employees" :key="emp.military_number" :value="emp.military_number">
                 {{ emp.full_name }} ({{ emp.military_number }})
               </option>
             </select>
@@ -354,6 +353,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import { useSecretariatStore } from '@/stores/secretariat'
@@ -366,6 +366,7 @@ import Swal from 'sweetalert2'
 import yemenLogo from '@/assets/yemen_logo.jpg'
 import yemenCalligraphy from '@/assets/yemen_calligraphy.svg'
 
+const route = useRoute()
 const store = useSecretariatStore()
 const personnelStore = usePersonnelStore()
 const authStore = useAuthStore()
@@ -500,6 +501,15 @@ onMounted(async () => {
   const today = new Date()
   memo.value.gregorianDate = today.toLocaleDateString('ar-YE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
   memo.value.date = today.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' }) + 'هـ'
+
+  // Pre-fill from query parameters (for generating covering letter replies)
+  if (route.query.subject || route.query.recipient || route.query.refNo) {
+    activeTab.value = 'writer'
+    if (route.query.subject) memo.value.subject = route.query.subject as string
+    if (route.query.recipient) memo.value.recipient = route.query.recipient as string
+    if (route.query.refNo) memo.value.refNo = route.query.refNo as string
+    if (route.query.body) memo.value.body = route.query.body as string
+  }
 })
 </script>
 

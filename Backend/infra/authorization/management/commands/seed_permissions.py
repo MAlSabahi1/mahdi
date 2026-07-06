@@ -73,6 +73,11 @@ ROLE_PERMISSIONS = {
         Perms.RAW_DATA_VIEW, Perms.RAW_DATA_IMPORT,
         # التفويض المزدوج
         Perms.DUAL_AUTH_VIEW, Perms.DUAL_AUTH_APPROVE,
+        # ══ السكرتارية — صلاحيات كاملة ══
+        Perms.SECRETARIAT_VIEW, Perms.SECRETARIAT_CREATE,
+        Perms.SECRETARIAT_EDIT, Perms.SECRETARIAT_DELETE,
+        Perms.SECRETARIAT_TASK_MANAGE,
+        Perms.SECRETARIAT_COVER_LETTER,
     ],
 
     'services_chief': [
@@ -95,6 +100,12 @@ ROLE_PERMISSIONS = {
         Perms.STORAGE_VIEW, Perms.STORAGE_UPLOAD,
         Perms.RANK_SETTLEMENT_VIEW,
         Perms.ORG_VIEW,
+        # ══ السكرتارية — إدارة التكليفات ══
+        Perms.SECRETARIAT_VIEW, Perms.SECRETARIAT_CREATE,
+        Perms.SECRETARIAT_EDIT,
+        Perms.SECRETARIAT_TASK_MANAGE,
+        Perms.SECRETARIAT_TASK_EXECUTE,
+        Perms.SECRETARIAT_COVER_LETTER,
     ],
 
     'data_entry': [
@@ -106,6 +117,23 @@ ROLE_PERMISSIONS = {
         Perms.STORAGE_VIEW, Perms.STORAGE_UPLOAD,
         Perms.RAW_DATA_VIEW,
         Perms.RANK_SETTLEMENT_VIEW,
+        # ══ السكرتارية — تنفيذ المهام المسندة فقط ══
+        Perms.SECRETARIAT_VIEW_OWN,
+        Perms.SECRETARIAT_TASK_EXECUTE,
+    ],
+
+    'inspector': [
+        Perms.AUDIT_EXPORT,
+        Perms.AUDIT_VERIFY,
+        Perms.AUDIT_VIEW,
+        Perms.DUAL_AUTH_VIEW,
+        Perms.PERSONNEL_VIEW,
+        Perms.REPORTS_EXPORT,
+        Perms.REPORTS_PRINT,
+        Perms.REPORTS_VIEW,
+        Perms.REPORTS_GENERATE,
+        # ══ السكرتارية — عرض للمراجعة فقط ══
+        Perms.SECRETARIAT_VIEW,
     ],
 
     'inquiry': [
@@ -116,6 +144,7 @@ ROLE_PERMISSIONS = {
         Perms.DICT_VIEW,
         Perms.COMPLIANCE_VIEW,
         Perms.STORAGE_VIEW,
+        # لا دخول للسكرتارية
     ],
 
     'viewer': [
@@ -123,6 +152,20 @@ ROLE_PERMISSIONS = {
         Perms.PERSONNEL_VIEW_OWN_DEPT,
         Perms.REPORTS_VIEW_OWN_DEPT,
         Perms.ORG_VIEW,
+        # ══ السكرتارية — تنفيذ مهامه فقط ══
+        Perms.SECRETARIAT_VIEW_OWN,
+        Perms.SECRETARIAT_TASK_EXECUTE,
+    ],
+
+    'dept_coordinator': [
+        Perms.PERSONNEL_VIEW,
+        Perms.REPORTS_PRINT,
+        Perms.REPORTS_VIEW,
+        Perms.SHEETS_IMPORT,
+        # ══ السكرتارية — عرض وإدارة تكليفات ══
+        Perms.SECRETARIAT_VIEW,
+        Perms.SECRETARIAT_TASK_MANAGE,
+        Perms.SECRETARIAT_TASK_EXECUTE,
     ],
 }
 

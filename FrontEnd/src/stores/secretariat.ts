@@ -164,6 +164,19 @@ export const useSecretariatStore = defineStore('secretariat', () => {
     }
   }
 
+  async function deleteTask(id: string | number) {
+    loading.value = true
+    error.value = null
+    try {
+      await api.delete(`/secretariat/tasks/${id}/`)
+    } catch (err: any) {
+      error.value = err.response?.data?.error || 'فشل حذف المهمة'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   // Fetch Circulars
   async function fetchCirculars(params: any = {}) {
     loading.value = true
@@ -514,6 +527,7 @@ export const useSecretariatStore = defineStore('secretariat', () => {
     fetchTasks,
     createTask,
     updateTask,
+    deleteTask,
     fetchCirculars,
     createCircular,
     fetchMeetings,

@@ -241,10 +241,14 @@ class Perms:
     # ══════════════════════════════════════════════════════════════
     # السكرتارية (secretariat)
     # ══════════════════════════════════════════════════════════════
-    SECRETARIAT_VIEW = "secretariat.view.all"
-    SECRETARIAT_CREATE = "secretariat.create.all"
-    SECRETARIAT_EDIT = "secretariat.edit.all"
-    SECRETARIAT_DELETE = "secretariat.delete.all"
+    SECRETARIAT_VIEW         = "secretariat.view.all"           # عرض كل المراسلات
+    SECRETARIAT_VIEW_OWN     = "secretariat.view.own"           # عرض المراسلات المتعلقة بالمستخدم/قسمه
+    SECRETARIAT_CREATE       = "secretariat.create.all"         # إنشاء مراسلة
+    SECRETARIAT_EDIT         = "secretariat.edit.all"           # تعديل مراسلة
+    SECRETARIAT_DELETE       = "secretariat.delete.all"         # حذف مراسلة
+    SECRETARIAT_TASK_MANAGE  = "secretariat.task.manage"        # إنشاء وإدارة التكليفات (السكرتارية)
+    SECRETARIAT_TASK_EXECUTE = "secretariat.task.execute"       # استلام وإكمال التكليفات (الموظف المكلف)
+    SECRETARIAT_COVER_LETTER = "secretariat.covering_letter.create"  # توليد خطاب تغطية الرد
 
     # ══════════════════════════════════════════════════════════════
     # الجزاءات والانضباط (disciplinary)
@@ -564,4 +568,13 @@ PERMISSION_LABELS = {
     'services.approve.all': ('اعتماد خدمة', 'action'),
     'services.reject.all': ('رفض خدمة', 'action'),
     'services.escalate.all': ('تصعيد خدمة', 'action'),
+    # secretariat
+    'secretariat.view.all': ('عرض جميع المراسلات', 'page'),
+    'secretariat.view.own': ('عرض المراسلات المُكلَّف بها فقط', 'data'),
+    'secretariat.create.all': ('إنشاء مراسلة جديدة', 'action'),
+    'secretariat.edit.all': ('تعديل بيانات مراسلة', 'action'),
+    'secretariat.delete.all': ('حذف مراسلة', 'action'),
+    'secretariat.task.manage': ('إنشاء وإدارة التكليفات', 'action'),
+    'secretariat.task.execute': ('استلام وإكمال التكليفات', 'action'),
+    'secretariat.covering_letter.create': ('توليد خطاب تغطية الرد الصادر', 'action'),
 }

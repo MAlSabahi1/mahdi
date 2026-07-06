@@ -78,6 +78,42 @@ class Task(SoftDeletableModel):
     def __str__(self):
         return self.title
 
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        old_assigned_to = None
+        if not is_new:
+            try:
+                old_instance = Task.objects.get(pk=self.pk)
+                old_assigned_to = old_instance.assigned_to
+            except Task.DoesNotExist:
+                pass
+
+        super().save(*args, **kwargs)
+
+        # Notify if newly created or if assignee has changed
+        if self.assigned_to and (is_new or old_assigned_to != self.assigned_to):
+            try:
+                from django.contrib.auth import get_user_model
+                User = get_user_model()
+                target_user = User.objects.filter(username=self.assigned_to.military_number).first()
+                if target_user:
+                    from core.models.notification import NotificationRecord
+                    prio_map = {'high': 'high', 'medium': 'normal', 'low': 'low'}
+                    priority = prio_map.get(self.priority, 'normal')
+                    
+                    NotificationRecord.objects.create(
+                        notification_type='SYSTEM',
+                        title=f"تكليف بمهمة جديدة: {self.title}",
+                        message=f"تم تكليفك بمهمة جديدة: {self.description or ''} (الاستحقاق: {self.due_date})",
+                        priority=priority,
+                        target_user=target_user,
+                        triggered_by=self.created_by,
+                        action_url=f"/secretariat/correspondences/{self.related_correspondence.id}" if self.related_correspondence else ""
+                    )
+            except Exception as e:
+                import logging
+                logging.getLogger('django').error(f"Failed to create task notification: {e}")
+
 
 class Circular(SoftDeletableModel):
     title = models.CharField(max_length=255, verbose_name=_('عنوان التعميم'))

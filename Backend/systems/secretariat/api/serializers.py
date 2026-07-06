@@ -30,6 +30,8 @@ class TaskSerializer(serializers.ModelSerializer):
     security_admin_name = serializers.CharField(source='security_admin.name', read_only=True)
     priority_display = serializers.CharField(source='get_priority_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    related_correspondence_subject = serializers.CharField(source='related_correspondence.subject', read_only=True)
+    related_correspondence_reference = serializers.CharField(source='related_correspondence.reference_number', read_only=True)
 
     class Meta:
         model = Task
