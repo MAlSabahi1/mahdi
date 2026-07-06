@@ -396,3 +396,16 @@ class StateTransitionRuleSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['created_at', 'updated_at']
 
+
+@extend_schema_serializer(component_name='NotificationRecord')
+class NotificationRecordSerializer(serializers.ModelSerializer):
+    triggered_by_name = serializers.CharField(source='triggered_by.get_full_name', read_only=True)
+    notification_type_display = serializers.CharField(source='get_notification_type_display', read_only=True)
+    priority_display = serializers.CharField(source='get_priority_display', read_only=True)
+
+    class Meta:
+        from core.models.notification import NotificationRecord
+        model = NotificationRecord
+        fields = '__all__'
+        read_only_fields = ('created_at', 'updated_at', 'read_at', 'is_read', 'target_user')
+

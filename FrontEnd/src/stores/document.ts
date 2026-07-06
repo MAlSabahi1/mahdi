@@ -17,22 +17,22 @@ export const useDocumentStore = defineStore('document', () => {
   // Upload document
   async function uploadDocument(personnelId: string, file: File, type: string, typeDisplay: string): Promise<DocumentRecord> {
     loading.value = true
-    
+
     try {
       const formData = new FormData()
       formData.append('file', file)
       formData.append('document_type', type)
       formData.append('personnel', personnelId)
       formData.append('status', 'committed')
-      
+
       const response = await api.post('/storage/upload/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       })
-      
+
       const newDoc = response.data.data
-      
+
       return {
         id: newDoc.id,
         document_type: newDoc.document_type,

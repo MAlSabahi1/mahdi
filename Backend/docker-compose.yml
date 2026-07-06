@@ -12,7 +12,7 @@ services:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
     ports:
-      - "5433:5432"
+      - "5434:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
       interval: 10s
@@ -26,7 +26,7 @@ services:
     image: redis:7-alpine
     container_name: hrms_redis
     ports:
-      - "6379:6379"
+      - "6381:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -38,12 +38,12 @@ services:
   # Django Backend
   backend:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
     container_name: hrms_backend
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - ./backend:/app
+      - .:/app
       - static_volume:/app/staticfiles
       - media_volume:/app/media
     ports:
@@ -62,12 +62,12 @@ services:
   # Celery Worker (المرحلة 4: مهام غير متزامنة)
   celery_worker:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
     container_name: hrms_celery
     command: celery -A hrms worker --loglevel=info --concurrency=2
     volumes:
-      - ./backend:/app
+      - .:/app
       - media_volume:/app/media
     env_file:
       - .env

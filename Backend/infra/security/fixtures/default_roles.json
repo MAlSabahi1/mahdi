@@ -1,0 +1,144 @@
+[
+  {
+    "model": "authorization.role",
+    "pk": 1,
+    "fields": {
+      "name": "مدير النظام",
+      "code": "super_admin",
+      "description": "المبرمج ومدير المشروع — تحكم كامل بالنظام والمحافظات والقواميس والمستخدمين والأدوار",
+      "is_active": true,
+      "is_system_role": true,
+      "permissions": [
+        "view_personnel", "edit_personnel_basic", "edit_personnel_status", "delete_personnel",
+        "export_sheet", "import_sheet",
+        "review_staging", "approve_change", "reject_change",
+        "create_reconciliation", "resolve_reconciliation",
+        "close_month", "override_lock",
+        "view_audit_log", "verify_audit_signatures", "view_reports", "print_reports", "export_reports",
+        "manage_users", "manage_roles", "manage_dictionaries", "manage_settings", "manage_backups",
+        "manage_governorates", "manage_directorates",
+        "approve_dual_auth", "view_dual_auth",
+        "view_security_dashboard", "view_shadow_tables",
+        "request_correction", "approve_correction",
+        "add_custom_roles"
+      ],
+      "visible_pages": ["*"],
+      "priority": 100,
+      "created_by": null,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "authorization.role",
+    "pk": 2,
+    "fields": {
+      "name": "مدير المحافظة",
+      "code": "governorate_admin",
+      "description": "المدير العام للمحافظة — يشرف على العمليات ويعتمد القرارات الحساسة (لا يتدخل في إعدادات النظام)",
+      "is_active": true,
+      "is_system_role": true,
+      "permissions": [
+        "view_personnel", "edit_personnel_status",
+        "export_sheet",
+        "approve_change", "reject_change",
+        "view_audit_log", "view_reports", "print_reports", "export_reports",
+        "approve_dual_auth", "view_dual_auth",
+        "approve_correction"
+      ],
+      "visible_pages": ["/dashboard", "/personnel", "/reports", "/corrections", "/approvals"],
+      "priority": 80,
+      "created_by": null,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "authorization.role",
+    "pk": 3,
+    "fields": {
+      "name": "رئيس قسم الخدمات",
+      "code": "services_chief",
+      "description": "رئيس قسم الخدمات في إدارة القوى البشرية — يدير الكشوفات ويعتمد التغييرات اليومية",
+      "is_active": true,
+      "is_system_role": true,
+      "permissions": [
+        "view_personnel", "edit_personnel_basic", "edit_personnel_status",
+        "export_sheet", "import_sheet",
+        "review_staging", "approve_change", "reject_change",
+        "create_reconciliation", "resolve_reconciliation",
+        "close_month",
+        "view_audit_log", "view_reports", "print_reports", "export_reports",
+        "view_dual_auth",
+        "request_correction", "approve_correction"
+      ],
+      "visible_pages": ["/dashboard", "/personnel", "/sheets", "/reconciliation", "/reports", "/staging", "/corrections"],
+      "priority": 50,
+      "created_by": null,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "authorization.role",
+    "pk": 4,
+    "fields": {
+      "name": "مدخل بيانات",
+      "code": "data_entry",
+      "description": "إدخال وتعديل بيانات الأفراد الأساسية — لا يملك صلاحية الاعتماد",
+      "is_active": true,
+      "is_system_role": true,
+      "permissions": [
+        "view_personnel", "edit_personnel_basic",
+        "import_sheet",
+        "request_correction",
+        "view_reports"
+      ],
+      "visible_pages": ["/dashboard", "/personnel", "/sheets", "/corrections"],
+      "priority": 20,
+      "created_by": null,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "authorization.role",
+    "pk": 5,
+    "fields": {
+      "name": "استعلامات",
+      "code": "inquiry",
+      "description": "البحث والاستعلام عن بيانات الأفراد والتقارير — بدون تعديل",
+      "is_active": true,
+      "is_system_role": true,
+      "permissions": [
+        "view_personnel",
+        "view_reports", "print_reports", "export_reports"
+      ],
+      "visible_pages": ["/dashboard", "/personnel", "/reports"],
+      "priority": 10,
+      "created_by": null,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "authorization.role",
+    "pk": 6,
+    "fields": {
+      "name": "مستعرض",
+      "code": "viewer",
+      "description": "عرض البيانات فقط بدون أي تعديل أو طباعة",
+      "is_active": true,
+      "is_system_role": true,
+      "permissions": [
+        "view_personnel",
+        "view_reports"
+      ],
+      "visible_pages": ["/dashboard", "/personnel", "/reports"],
+      "priority": 0,
+      "created_by": null,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]

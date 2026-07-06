@@ -74,6 +74,9 @@ class AuthViewSet(ViewSet):
                 status=e.status_code,
             )
 
+        from infra.authorization.services.permission_service import PermissionService
+        user_permissions = PermissionService.get_user_permissions_list(result.user)
+
         return Response({
             'success': True,
             'data': {
@@ -82,6 +85,7 @@ class AuthViewSet(ViewSet):
                 'session_id': result.session_id,
                 'expires_in': result.expires_in,
                 'is_suspicious': result.is_suspicious,
+                'permissions': user_permissions,
                 'user': UserMeSerializer(result.user, context={'request': request}).data,
             },
         })

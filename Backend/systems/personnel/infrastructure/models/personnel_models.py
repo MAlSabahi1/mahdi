@@ -323,7 +323,7 @@ class PersonnelMaster(SoftDeletableModel):
         ServiceStatus,
         on_delete=models.PROTECT,
         related_name='current_personnel',
-        verbose_name=_('الحالة الخدمية الحالية')
+        verbose_name=_('نوع الحالة الخدمية (التفصيلي)')
     )
 
     

@@ -148,31 +148,132 @@
   },
   "secretariat": {
     "dashboard": {
-      "title": "Secretariat Dashboard",
-      "subtitle": "Overview of correspondences, tasks, and circulars"
+      "title": "Secretariat & Follow-up Dashboard",
+      "subtitle": "Overview of correspondences, tasks, custody, attendance, and finance"
+    },
+    "units": {
+      "secretariat": "Secretariat Unit",
+      "followup": "Follow-up Unit"
     },
     "stats": {
       "new_incoming": "New Incoming",
       "requires_reply": "Requires Reply",
       "pending_tasks": "Pending Tasks",
-      "active_circulars": "Active Circulars"
+      "active_circulars": "Active Circulars",
+      "total_meetings": "Meeting Minutes",
+      "office_requests": "Pending Office Work",
+      "inventory_items": "Items in Stock",
+      "custodies_count": "Active Custodies",
+      "allocated_budget": "Monthly Allocation",
+      "spent_budget": "Actual Spent"
     },
     "correspondences": {
       "title": "Incoming & Outgoing",
-      "subtitle": "Manage all incoming and outgoing correspondences",
-      "add": "Add Correspondence",
+      "subtitle": "Manage and archive all incoming/outgoing correspondences",
+      "add": "Add New Correspondence",
+      "edit": "Edit Correspondence",
+      "details": "Correspondence Details & Archiving",
       "reference": "Ref. No.",
       "subject": "Subject",
-      "type": "Type"
+      "type": "Type",
+      "sender": "Sender",
+      "receiver": "Receiver",
+      "date": "Correspondence Date",
+      "status": "Status",
+      "notes": "Notes",
+      "attachments": "Archived Files & Attachments",
+      "upload_attachment": "Upload Attachment",
+      "attachment_title": "Attachment Title",
+      "no_attachments": "No archived files for this correspondence.",
+      "confidentiality": "Confidentiality Level",
+      "urgency": "Urgency Level",
+      "tracking_token": "Tracking Token",
+      "barcode_data": "Paper Barcode",
+      "confidentiality_normal": "Normal",
+      "confidentiality_confidential": "Confidential",
+      "confidentiality_very_confidential": "Very Confidential",
+      "confidentiality_top_secret": "Top Secret",
+      "urgency_normal": "Normal",
+      "urgency_urgent": "Urgent",
+      "urgency_very_urgent": "Very Urgent",
+      "urgency_immediate": "Immediate",
+      "referrals": "Sequential Referrals & Directives",
+      "add_referral": "Add New Referral"
     },
     "tasks": {
-      "title": "Tasks Management",
-      "subtitle": "Assign and track tasks",
-      "add": "Create Task",
+      "title": "Tasks & Follow-up",
+      "subtitle": "Assign and track follow-up tasks",
+      "add": "Create New Task",
       "task_title": "Task Title",
+      "description": "Task Details",
       "assigned_to": "Assigned To",
       "status": "Status",
-      "due_date": "Due Date"
+      "due_date": "Due Date",
+      "priority": "Priority",
+      "related_correspondence": "Related Correspondence"
+    },
+    "meetings": {
+      "title": "Meeting Minutes",
+      "subtitle": "Document and save meeting minutes and decisions",
+      "add": "Record New Meeting Minutes",
+      "meeting_title": "Meeting Subject/Title",
+      "date": "Meeting Date",
+      "attendees": "Staff Attendees",
+      "external_attendees": "External Attendees",
+      "content": "Meeting Minutes Content",
+      "decisions": "Decisions & Action Items"
+    },
+    "office_work": {
+      "title": "Printing & Photocopying",
+      "subtitle": "Manage printing, photocopying, and document scanning requests",
+      "add": "Submit Office Work Request",
+      "type": "Work Type",
+      "copies": "Copies",
+      "pages": "Pages",
+      "requested_by": "Requested By",
+      "status": "Status",
+      "completed_at": "Completed At"
+    },
+    "inventory": {
+      "title": "Stationery & Store",
+      "subtitle": "Manage office materials, process requests, and track custodies",
+      "add_item": "Add New Stock Item",
+      "item_name": "Item Name",
+      "item_code": "Item Code",
+      "stock": "Quantity in Stock",
+      "unit": "Unit",
+      "requests": "Stationery Requests",
+      "add_request": "Submit Stationery Request",
+      "requested_qty": "Requested Qty",
+      "custodies": "Employee Custody Log",
+      "add_custody": "Assign Custody to Employee",
+      "assigned_qty": "Assigned Qty",
+      "date_assigned": "Date Assigned",
+      "date_returned": "Date Returned",
+      "custody_status": "Custody Status"
+    },
+    "attendance": {
+      "title": "Attendance Monitoring",
+      "subtitle": "Track check-in, check-out, and daily presence of department staff",
+      "add_log": "Record Daily Attendance",
+      "employee": "Employee",
+      "date": "Date",
+      "check_in": "Check In Time",
+      "check_out": "Check Out Time",
+      "status": "Status",
+      "notes": "Notes & Excuses"
+    },
+    "finance": {
+      "title": "Financial Allocation & Expenses",
+      "subtitle": "Track monthly budget allocations and expenditures",
+      "add_allocation": "Record Monthly Allocation",
+      "month": "Month",
+      "amount": "Allocated Budget",
+      "expenses": "Expenses & Vouchers",
+      "add_expense": "Record Expense Voucher",
+      "category": "Expense Category",
+      "receipt_number": "Receipt/Voucher No.",
+      "description": "Expense Details"
     }
   },
   "users": {
