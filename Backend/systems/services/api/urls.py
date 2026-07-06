@@ -23,6 +23,14 @@ from systems.services.api.views.disciplinary_views import (
     AbsenceRecordViewSet,
     DisciplinaryCouncilVerdictViewSet,
 )
+from systems.services.api.views.form_actions_views import FormActionsViewSet, ChecklistViewSet
+from systems.services.api.views.catalog_views import (
+    ServiceCatalogViewSet, 
+    PrerequisitesValidationViewSet,
+    WorkflowStageViewSet,
+    ServiceWorkflowStepViewSet,
+    ServicePrerequisiteViewSet
+)
 
 router = DefaultRouter()
 router.register(r'staging', views.StagingViewSet, basename='staging')
@@ -45,6 +53,16 @@ import_router.register(r'import', ImportAPIViewSet, basename='import-api')
 admin_router = DefaultRouter()
 admin_router.register(r'forms', CustomFormTemplateViewSet, basename='admin-forms')
 admin_router.register(r'reports', CustomReportTemplateViewSet, basename='admin-reports')
+
+# Service Cycle Extended Router
+extended_router = DefaultRouter()
+extended_router.register(r'form-actions', FormActionsViewSet, basename='form-actions')
+extended_router.register(r'checklist', ChecklistViewSet, basename='checklist-actions')
+extended_router.register(r'catalog', ServiceCatalogViewSet, basename='service-catalog')
+extended_router.register(r'catalog-validation', PrerequisitesValidationViewSet, basename='catalog-validation')
+extended_router.register(r'workflow-stages', WorkflowStageViewSet, basename='workflow-stages')
+extended_router.register(r'workflow-steps', ServiceWorkflowStepViewSet, basename='workflow-steps')
+extended_router.register(r'prerequisites', ServicePrerequisiteViewSet, basename='prerequisites')
 
 urlpatterns = [
 
@@ -93,4 +111,7 @@ urlpatterns = [
 
     # Router URLs (staging, rejections, compliance, snapshots, webhooks)
     path('', include(router.urls)),
+    
+    # Extended Services (Catalog, Notes, Timeline, etc)
+    path('', include(extended_router.urls)),
 ]

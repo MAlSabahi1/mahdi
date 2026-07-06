@@ -45,7 +45,7 @@
         </div>
 
         <!-- Workflow Visual Timeline -->
-        <div class="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-theme-xs lg:col-span-2 space-y-5">
+        <div v-if="selectedWorkflow" class="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-theme-xs lg:col-span-2 space-y-5">
           <div class="flex justify-between items-center border-b border-gray-150 dark:border-gray-800 pb-3">
             <div>
               <h3 class="text-xs font-black text-gray-900 dark:text-white">تفاصيل مسار الموافقات التتابعي</h3>
@@ -104,6 +104,9 @@
             </div>
           </div>
         </div>
+        <div v-else class="lg:col-span-2 flex justify-center items-center h-64 text-gray-400 font-bold bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+          لا توجد معاملات نشطة للتتبع.
+        </div>
       </div>
 
     </div>
@@ -111,9 +114,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
+import { useServicesStore } from '@/stores/services'
+
+const servicesStore = useServicesStore()
 
 interface WorkflowStep {
   title: string
@@ -131,34 +137,71 @@ interface Workflow {
   steps: WorkflowStep[]
 }
 
-const activeWorkflows = ref<Workflow[]>([
-  {
-    id: 1,
-    txNumber: 'TX-2026-0089',
-    title: 'طلب تسوية رتبة عسكرية (كرت 01)',
-    governorate: 'عدن',
-    lastAction: 'اعتماد شؤون الأفراد بالفرع',
-    steps: [
-      { title: 'إنشاء الطلب ورفع المرفقات', desc: 'تم إنشاء المعاملة ورفع شهادات تسوية الرتب العسكرية للباك اند.', status: 'completed', timestamp: '2026-07-01 09:12' },
-      { title: 'تدقيق شؤون الأفراد والضباط بالمديرية', desc: 'مراجعة ومطابقة الملف المرفوع وتأكيد التوزيع الوظيفي.', status: 'completed', timestamp: '2026-07-02 11:30' },
-      { title: 'اعتماد الإدارة العامة لشؤون الموظفين (ديوان الوزارة)', desc: 'يجري التحقق من السجل العسكري الموحد وقواعد البيانات المتقاطعة.', status: 'current' },
-      { title: 'المصادقة المالية والمطابقة النهائية', desc: 'تحديث الراتب الأساسي والبدلات في كشوفات الصرف وإقفال الكرت.', status: 'pending' }
-    ]
-  },
-  {
-    id: 2,
-    txNumber: 'TX-2026-0092',
-    title: 'طلب علاوة رتبة جديدة (كرت 02)',
-    governorate: 'تعز',
-    lastAction: 'رفع الاستمارات والمرفقات',
-    steps: [
-      { title: 'إنشاء الطلب ورفع المرفقات', desc: 'تم إدراج طلب علاوة الرتبة الجديدة بالملف المالي.', status: 'completed', timestamp: '2026-07-02 14:00' },
-      { title: 'تدقيق شؤون الأفراد والضباط بالمديرية', desc: 'مراجعة المرفقات المالية وتحديد الراتب الأساسي والبدلة الحالية.', status: 'current' },
-      { title: 'اعتماد الإدارة العامة لشؤون الموظفين (ديوان الوزارة)', desc: 'مراجعة الأثر الرجعي المالي والتسويات.', status: 'pending' },
-      { title: 'المصادقة المالية والمطابقة النهائية', desc: 'صرف الفروق المالية وإدراجها بكشف الشهر القادم.', status: 'pending' }
-    ]
-  }
-])
+const activeWorkflows = ref<Workflow[]>([])
+const selectedWorkflow = ref<Workflow | null>(null)
 
-const selectedWorkflow = ref<Workflow>(activeWorkflows.value[0])
+onMounted(async () => {
+  await servicesStore.fetchForms()
+  
+  // Filter out drafts and maybe rejected?
+  const forms = servicesStore.forms.filter((f: any) => f.status !== 'draft')
+  
+  activeWorkflows.value = forms.map((form: any) => {
+    // Determine steps based on status and timestamps
+    
+    // Step 1: Submission
+    const s1: WorkflowStep = {
+      title: 'إنشاء الطلب',
+      desc: 'تم إنشاء المعاملة ورفع المرفقات.',
+      status: form.submitted_at ? 'completed' : 'pending',
+      timestamp: form.submitted_at ? new Date(form.submitted_at).toLocaleString('en-GB') : undefined
+    }
+
+    // Step 2: Services Approval
+    const s2: WorkflowStep = {
+      title: 'تدقيق قسم الخدمات',
+      desc: 'مراجعة أولية ومطابقة المرفقات للطلب.',
+      status: form.services_approved_at ? 'completed' : (form.status === 'pending_services' ? 'current' : 'pending'),
+      timestamp: form.services_approved_at ? new Date(form.services_approved_at).toLocaleString('en-GB') : undefined
+    }
+
+    // Step 3: HR Approval
+    const s3: WorkflowStep = {
+      title: 'اعتماد الموارد البشرية',
+      desc: 'تدقيق الأثر الوظيفي والمالي للمنتسب.',
+      status: form.hr_approved_at ? 'completed' : (form.status === 'pending_hr' ? 'current' : 'pending'),
+      timestamp: form.hr_approved_at ? new Date(form.hr_approved_at).toLocaleString('en-GB') : undefined
+    }
+
+    // Step 4: Director Approval
+    const s4: WorkflowStep = {
+      title: 'الاعتماد النهائي',
+      desc: 'مصادقة المدير العام وتطبيق الأثر على السجل.',
+      status: form.status === 'approved' ? 'completed' : (form.status === 'pending_director' ? 'current' : 'pending'),
+      timestamp: form.director_approved_at ? new Date(form.director_approved_at).toLocaleString('en-GB') : undefined
+    }
+    
+    // Last action mapping
+    const actionMap: any = {
+      'pending_services': 'انتظار مراجعة الخدمات',
+      'pending_hr': 'انتظار الموارد البشرية',
+      'pending_director': 'انتظار الاعتماد النهائي',
+      'approved': 'تم الاعتماد النهائي',
+      'rejected': 'مرفوض'
+    }
+
+    return {
+      id: form.id,
+      txNumber: `TX-${form.id.toString().padStart(6, '0')}`,
+      title: form.form_type,
+      governorate: form.personnel_details?.full_name || form.personnel,
+      lastAction: actionMap[form.status] || form.status,
+      steps: [s1, s2, s3, s4]
+    }
+  })
+
+  if (activeWorkflows.value.length > 0) {
+    selectedWorkflow.value = activeWorkflows.value[0]
+  }
+})
 </script>

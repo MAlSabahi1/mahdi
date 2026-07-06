@@ -18,6 +18,9 @@ from .templates    import ReportTemplate, CustomFormTemplate, CustomReportTempla
 from .status_change import StatusChangeForm
 from .disciplinary import DisciplinaryAction, AbsenceRecord, DisciplinaryCouncilVerdict
 
+from .form_notes import FormNote, FormEventLog, FormReturnLog, FormChecklist
+from .service_catalog import ServiceCatalog, ServicePrerequisite, ChecklistTemplate
+from .workflow import WorkflowStage, ServiceWorkflowStep
 
 __all__ = [
     # Event
@@ -44,5 +47,14 @@ __all__ = [
     'DisciplinaryAction',
     'AbsenceRecord',
     'DisciplinaryCouncilVerdict',
+    # Services Catalog
+    'FormNote', 
+    'FormEventLog', 
+    'FormReturnLog', 
+    'FormChecklist',
+    'ServiceCatalog', 
+    'ServicePrerequisite', 
+    'ChecklistTemplate',
+    'WorkflowStage',
+    'ServiceWorkflowStep',
 ]
-

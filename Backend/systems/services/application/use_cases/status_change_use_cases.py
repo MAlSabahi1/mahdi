@@ -48,17 +48,18 @@ class IEventPublisher(Protocol):
 
 @dataclass(frozen=True)
 class SubmitFormCommand:
-    form_id:      UUID
-    submitted_by: int
-    submitted_at: datetime
+    form_id:       UUID
+    submitted_by:  int
+    submitted_at:  datetime
+    first_step_id: int
 
 
 @dataclass(frozen=True)
 class ApproveFormCommand:
-    form_id:     UUID
-    level:       ApprovalLevel
-    approved_by: int
-    approved_at: datetime
+    form_id:      UUID
+    approved_by:  int
+    approved_at:  datetime
+    next_step_id: Optional[int]
 
 
 @dataclass(frozen=True)
@@ -86,10 +87,10 @@ class SubmitStatusFormUseCase:
             raise ValueError(f"الاستمارة {cmd.form_id} غير موجودة")
 
         # قاعدة الأعمال في الـ Entity
-        form.submit(submitted_at=cmd.submitted_at)
+        form.submit(submitted_at=cmd.submitted_at, first_step_id=cmd.first_step_id)
 
-        # حفظ الحقول المعدّلة فقط (مطابق لـ update_fields في الـ View)
-        self._repo.save_fields(form, ['status', 'submitted_at'])
+        # حفظ الحقول المعدّلة فقط
+        self._repo.save_fields(form, ['status', 'submitted_at', 'current_step_id', 'workflow_log'])
         logger.info(f"Form {form.id} submitted by user {cmd.submitted_by}")
         return form
 
@@ -127,18 +128,17 @@ class ApproveStatusFormUseCase:
             raise ValueError(f"الاستمارة {cmd.form_id} غير موجودة")
 
         # قاعدة الأعمال في الـ Entity
-        form.approve(
-            level=cmd.level,
+        form.approve_current_step(
             approved_by_id=cmd.approved_by,
             approved_at=cmd.approved_at,
+            next_step_id=cmd.next_step_id,
         )
 
-        # تحديد الحقول للـ update_fields
-        update_fields = form.get_fields_to_update_on_approve(cmd.level)
-        self._repo.save_fields(form, update_fields)
+        # تحديث قاعدة البيانات
+        self._repo.save_fields(form, ['status', 'current_step_id', 'workflow_log'])
 
-        # المستوى 3 فقط — اعتماد المدير النهائي
-        if cmd.level == ApprovalLevel.DIRECTOR and form.to_status_id:
+        # المستوى النهائي
+        if form.is_approved() and form.to_status_id:
             # تحديث حالة الفرد
             self._personnel_updater.update_status(
                 personnel_id=form.personnel_id,
@@ -147,11 +147,11 @@ class ApproveStatusFormUseCase:
             # تثبيت المرفقات
             self._attachment_committer.commit_form_attachments(form.id)
             
-            # نشر الأحداث (AuditLog + Notification + ServiceEvent)
+            # نشر الأحداث
             self._event_publisher.publish_approved(form, cmd.approved_by)
 
         logger.info(
-            f"Form {form.id} approved at level {cmd.level.name} "
+            f"Form {form.id} approved "
             f"by user {cmd.approved_by} → new status: {form.status.value}"
         )
         return form

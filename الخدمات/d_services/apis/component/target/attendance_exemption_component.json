@@ -1,0 +1,17 @@
+{
+    "label_ar": "سحب ملف",
+    "label_en": "Student Withdrawal",
+    "attrs": "{fk_section: {param: data.external_id}}",
+    "fields": [
+        {
+            "name": "external_id",
+            "type": "ForeignKey",
+            "null": false,
+            "name_list": "GradeDetailProgram",
+            "default": null,
+            "model": "GradeDetailProgram",
+            "is_main": true,
+            "cols": 3
+        }
+    ]
+}

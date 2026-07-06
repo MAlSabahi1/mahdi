@@ -26,7 +26,6 @@ class DjangoStatusChangeFormRepository(IStatusChangeFormRepository):
                 'personnel', 'security_admin',
                 'from_status', 'to_status',
                 'submitted_by', 'rejected_by',
-                'services_approved_by', 'hr_approved_by', 'director_approved_by',
             ).get(id=form_id)
             return self._to_entity(model)
         except StatusChangeForm.DoesNotExist:
@@ -50,11 +49,9 @@ class DjangoStatusChangeFormRepository(IStatusChangeFormRepository):
 
         # أسماء الحقول في الـ Entity تنتهي بـ _id لكن في الـ Model بدونها أحياناً
         field_map = {
-            'services_approved_by': 'services_approved_by_id',
-            'hr_approved_by':       'hr_approved_by_id',
-            'director_approved_by': 'director_approved_by_id',
             'rejected_by':          'rejected_by_id',
             'submitted_by':         'submitted_by_id',
+            'current_step':         'current_step_id',
         }
         data = self._to_model_data(entity)
         db_fields = [field_map.get(f, f) for f in fields]
@@ -92,7 +89,7 @@ class DjangoStatusChangeFormRepository(IStatusChangeFormRepository):
             id=m.id,
             personnel_id=m.personnel_id,
             security_admin_id=m.security_admin_id,
-            form_type=FormType(m.form_type),
+            form_type=m.form_type,
             submitted_by_id=m.submitted_by_id,
             from_status_id=m.from_status_id,
             to_status_id=m.to_status_id,
@@ -101,12 +98,8 @@ class DjangoStatusChangeFormRepository(IStatusChangeFormRepository):
             notes=m.notes or "",
             status=FormStatus(m.status),
             submitted_at=m.submitted_at,
-            services_approved_by_id=m.services_approved_by_id,
-            services_approved_at=m.services_approved_at,
-            hr_approved_by_id=m.hr_approved_by_id,
-            hr_approved_at=m.hr_approved_at,
-            director_approved_by_id=m.director_approved_by_id,
-            director_approved_at=m.director_approved_at,
+            current_step_id=m.current_step_id,
+            workflow_log=m.workflow_log or [],
             rejection_reason=m.rejection_reason or "",
             rejected_by_id=m.rejected_by_id,
             required_attachments=m.required_attachments or [],
@@ -117,7 +110,7 @@ class DjangoStatusChangeFormRepository(IStatusChangeFormRepository):
         return {
             'personnel_id':           entity.personnel_id,
             'security_admin_id':      entity.security_admin_id,
-            'form_type':              entity.form_type.value,
+            'form_type':              entity.form_type,
             'submitted_by_id':        entity.submitted_by_id,
             'from_status_id':         entity.from_status_id,
             'to_status_id':           entity.to_status_id,
@@ -126,12 +119,8 @@ class DjangoStatusChangeFormRepository(IStatusChangeFormRepository):
             'notes':                  entity.notes,
             'status':                 entity.status.value,
             'submitted_at':           entity.submitted_at,
-            'services_approved_by_id': entity.services_approved_by_id,
-            'services_approved_at':   entity.services_approved_at,
-            'hr_approved_by_id':      entity.hr_approved_by_id,
-            'hr_approved_at':         entity.hr_approved_at,
-            'director_approved_by_id': entity.director_approved_by_id,
-            'director_approved_at':   entity.director_approved_at,
+            'current_step_id':        entity.current_step_id,
+            'workflow_log':           entity.workflow_log,
             'rejection_reason':       entity.rejection_reason,
             'rejected_by_id':         entity.rejected_by_id,
             'attachments_complete':   entity.attachments_complete,

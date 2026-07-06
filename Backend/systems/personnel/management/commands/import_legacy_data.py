@@ -146,6 +146,9 @@ class Command(BaseCommand):
         
         is_temporary = military_number.startswith('TEMP_')
         
+        default_rank = Rank.objects.first()
+        default_status = ServiceStatus.objects.first()
+
         # البحث عن الفرد أو إنشاؤه
         personnel, created = PersonnelMaster.objects.get_or_create(
             military_number=military_number,
@@ -154,9 +157,10 @@ class Command(BaseCommand):
                 'national_id': row_data.get('الرقم الوطني', '00000000000'),
                 'birth_date': self.parse_date(row_data.get('تاريخ الميلاد')),
                 'join_date': self.parse_date(row_data.get('تاريخ الالتحاق')),
-                'is_temporary': is_temporary,
                 'is_data_clean': False,
-                'data_quality_score': 0
+                'data_quality_score': 0,
+                'current_rank': default_rank,
+                'current_status': default_status
             }
         ) if not dry_run else (None, True)
         
@@ -200,6 +204,13 @@ class Command(BaseCommand):
         
         if isinstance(date_value, datetime):
             return date_value.date()
+            
+        if isinstance(date_value, str):
+            try:
+                # Try parsing standard YYYY-MM-DD
+                return datetime.strptime(date_value.strip(), '%Y-%m-%d').date()
+            except ValueError:
+                pass
         
         return timezone.now().date()
     
@@ -239,7 +250,7 @@ class Command(BaseCommand):
         ).count()
         
         temporary_military_numbers = PersonnelMaster.objects.filter(
-            is_temporary=True
+            military_number__startswith='TEMP_'
         ).count()
         
         self.stdout.write(f'\n=== تقرير الفجوات ===')
