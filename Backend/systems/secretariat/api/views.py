@@ -42,6 +42,12 @@ class CorrespondenceViewSet(BaseSecretariatViewSet):
     filterset_fields = ['type', 'status', 'date', 'confidentiality_level', 'urgency_level']
     search_fields = ['reference_number', 'subject', 'sender', 'receiver']
     ordering_fields = ['date', 'created_at']
+    required_permission = {
+        'create': 'secretariat.create.all',
+        'update': 'secretariat.edit.all',
+        'partial_update': 'secretariat.edit.all',
+        'destroy': 'secretariat.delete.all',
+    }
 
     def get_queryset(self):
         user = self.request.user
@@ -87,6 +93,10 @@ class CorrespondenceAttachmentViewSet(viewsets.ModelViewSet):
     serializer_class = CorrespondenceAttachmentSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['correspondence']
+    required_permission = {
+        'create': 'secretariat.create.all',
+        'destroy': 'secretariat.delete.all',
+    }
 
     def get_queryset(self):
         if self.request.user.is_superuser:
@@ -103,6 +113,10 @@ class TaskViewSet(BaseSecretariatViewSet):
     filterset_fields = ['status', 'priority', 'due_date', 'assigned_to', 'related_correspondence']
     search_fields = ['title', 'description']
     ordering_fields = ['due_date', 'created_at', 'priority']
+    required_permission = {
+        'create': 'secretariat.task.manage',
+        'destroy': 'secretariat.task.manage',
+    }
 
     def get_queryset(self):
         user = self.request.user
@@ -179,7 +193,7 @@ class TaskViewSet(BaseSecretariatViewSet):
                         )
                         priority = 'normal'
                     else:
-                        title = f"✅ إنجاز المهمة: {instance.title}"
+                        title = f" إنجاز المهمة: {instance.title}"
                         message = (
                             f"أنهى الموظف {assignee_name} تنفيذ التكليف «{instance.title}» "
                             f"المرتبط بالمراسلة ({corr_ref}).\n"
@@ -210,6 +224,7 @@ class CircularViewSet(BaseSecretariatViewSet):
     filterset_fields = ['is_active', 'date_issued']
     search_fields = ['title', 'content']
     ordering_fields = ['date_issued', 'created_at']
+    required_permission = 'secretariat.view.all'
 
 class MeetingMinutesViewSet(BaseSecretariatViewSet):
     queryset = MeetingMinutes.objects.prefetch_related('attendees').all()
@@ -217,6 +232,7 @@ class MeetingMinutesViewSet(BaseSecretariatViewSet):
     filterset_fields = ['date']
     search_fields = ['title', 'content', 'decisions', 'external_attendees']
     ordering_fields = ['date', 'created_at']
+    required_permission = 'secretariat.view.all'
 
 class DocumentWorkRequestViewSet(BaseSecretariatViewSet):
     queryset = DocumentWorkRequest.objects.select_related('requested_by').all()
@@ -224,6 +240,12 @@ class DocumentWorkRequestViewSet(BaseSecretariatViewSet):
     filterset_fields = ['type', 'status', 'requested_by']
     search_fields = ['title', 'description']
     ordering_fields = ['created_at', 'completed_at']
+    required_permission = {
+        'create': 'secretariat.task.execute',
+        'update': 'secretariat.view.all',
+        'partial_update': 'secretariat.view.all',
+        'destroy': 'secretariat.view.all',
+    }
 
 class InventoryItemViewSet(BaseSecretariatViewSet):
     queryset = InventoryItem.objects.all()
@@ -231,6 +253,7 @@ class InventoryItemViewSet(BaseSecretariatViewSet):
     filterset_fields = ['type']
     search_fields = ['name', 'code']
     ordering_fields = ['name', 'quantity_in_stock']
+    required_permission = 'secretariat.view.all'
 
     def perform_create(self, serializer):
         # override since it does not have created_by
@@ -247,6 +270,12 @@ class InventoryRequestViewSet(BaseSecretariatViewSet):
     filterset_fields = ['status', 'item', 'requested_by']
     search_fields = ['notes']
     ordering_fields = ['created_at']
+    required_permission = {
+        'create': 'secretariat.task.execute',
+        'update': 'secretariat.view.all',
+        'partial_update': 'secretariat.view.all',
+        'destroy': 'secretariat.view.all',
+    }
 
 class CustodyViewSet(BaseSecretariatViewSet):
     queryset = Custody.objects.select_related('item', 'assigned_to').all()
@@ -254,6 +283,7 @@ class CustodyViewSet(BaseSecretariatViewSet):
     filterset_fields = ['status', 'item', 'assigned_to']
     search_fields = ['notes']
     ordering_fields = ['date_assigned', 'date_returned']
+    required_permission = 'secretariat.view.all'
 
 class AttendanceLogViewSet(BaseSecretariatViewSet):
     queryset = AttendanceLog.objects.select_related('employee').all()
@@ -261,12 +291,14 @@ class AttendanceLogViewSet(BaseSecretariatViewSet):
     filterset_fields = ['date', 'status', 'employee']
     search_fields = ['notes', 'employee__full_name', 'employee__military_number']
     ordering_fields = ['date']
+    required_permission = 'secretariat.view.all'
 
 class FinancialAllocationViewSet(BaseSecretariatViewSet):
     queryset = FinancialAllocation.objects.all()
     serializer_class = FinancialAllocationSerializer
     filterset_fields = ['month']
     ordering_fields = ['month']
+    required_permission = 'secretariat.view.all'
 
 class ExpenseViewSet(BaseSecretariatViewSet):
     queryset = Expense.objects.select_related('allocation').all()
@@ -274,6 +306,7 @@ class ExpenseViewSet(BaseSecretariatViewSet):
     filterset_fields = ['allocation', 'date', 'category']
     search_fields = ['description', 'receipt_number', 'category']
     ordering_fields = ['date', 'amount']
+    required_permission = 'secretariat.view.all'
 
 
 class CorrespondenceReferralViewSet(BaseSecretariatViewSet):
@@ -282,6 +315,10 @@ class CorrespondenceReferralViewSet(BaseSecretariatViewSet):
     filterset_fields = ['status', 'correspondence', 'referred_to']
     search_fields = ['instructions', 'notes']
     ordering_fields = ['date']
+    required_permission = {
+        'create': 'secretariat.task.manage',
+        'destroy': 'secretariat.task.manage',
+    }
 
     def get_queryset(self):
         user = self.request.user

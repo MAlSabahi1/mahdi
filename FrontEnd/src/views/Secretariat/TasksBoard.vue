@@ -309,6 +309,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import Swal from 'sweetalert2'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import { useSecretariatStore } from '@/stores/secretariat'
 import { usePersonnelStore } from '@/stores/personnel'
@@ -416,11 +417,62 @@ async function submitTaskForm() {
 }
 
 async function updateTaskStatus(id: number, status: string) {
-  try {
-    await store.updateTask(id, { status })
-    await fetchData()
-  } catch (err) {
-    console.error(err)
+  if (status === 'completed') {
+    const { value: notes } = await Swal.fire({
+      title: 'إكمال التكليف/المهمة',
+      input: 'textarea',
+      inputLabel: 'ملاحظات الإنجاز ونتائج العمل',
+      inputPlaceholder: 'اكتب هنا ما تم إنجازه أو أي ملاحظات...',
+      inputAttributes: {
+        'aria-label': 'اكتب هنا ما تم إنجازه أو أي ملاحظات'
+      },
+      showCancelButton: true,
+      confirmButtonText: 'تأكيد الإكمال وتوقيع الكشف',
+      cancelButtonText: 'إلغاء',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'يجب كتابة ملاحظات الإنجاز لتأكيد اكتمال المهمة!'
+        }
+      }
+    })
+
+    if (!notes) {
+      // Revert status in UI/data
+      await fetchData()
+      return
+    }
+
+    try {
+      await store.updateTask(id, { status, notes })
+      Swal.fire({
+        icon: 'success',
+        title: 'تم تأكيد إكمال المهمة بنجاح',
+        timer: 1500,
+        showConfirmButton: false
+      })
+      await fetchData()
+    } catch (err: any) {
+      console.error(err)
+      Swal.fire({
+        icon: 'error',
+        title: 'حدث خطأ أثناء تحديث المهمة',
+        text: err.response?.data?.error || ''
+      })
+      await fetchData()
+    }
+  } else {
+    try {
+      await store.updateTask(id, { status })
+      await fetchData()
+    } catch (err: any) {
+      console.error(err)
+      Swal.fire({
+        icon: 'error',
+        title: 'حدث خطأ أثناء تحديث المهمة',
+        text: err.response?.data?.error || ''
+      })
+      await fetchData()
+    }
   }
 }
 

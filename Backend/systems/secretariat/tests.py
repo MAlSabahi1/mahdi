@@ -241,3 +241,43 @@ class SecretariatSystemTestCase(TestCase):
         self.assertEqual(c_out.parent_correspondence, c_in)
         self.assertEqual(c_in.replies.first(), c_out)
         self.assertIsNotNone(c_out.tracking_token)
+
+    def test_correspondence_completion_guards(self):
+        """التحقق من منع أرشفة المعاملة إذا كان لديها تكليفات أو إحالات معلقة"""
+        c_in = Correspondence.objects.create(
+            type='incoming',
+            reference_number='REF-GUARD-1',
+            subject='معاملة هامة للتجربة',
+            date='2026-07-06',
+            sender='الوزارة',
+            receiver='الإدارة',
+            security_admin=self.sec_admin,
+            created_by=self.admin_user
+        )
+
+        from systems.secretariat.models import Task
+        # إنشاء تكليف معلق
+        task = Task.objects.create(
+            title="دراسة موضوع المعاملة",
+            description="يرجى المتابعة والرد",
+            assigned_to=self.personnel,
+            related_correspondence=c_in,
+            status="pending",
+            due_date="2026-07-10",
+            security_admin=self.sec_admin,
+            created_by=self.admin_user
+        )
+
+        # محاولة تعيين حالة المعاملة كمكتملة عبر السيريالايزر
+        from systems.secretariat.api.serializers import CorrespondenceSerializer
+        serializer = CorrespondenceSerializer(instance=c_in, data={"status": "completed"}, partial=True)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("status", serializer.errors)
+        
+        # إكمال المهمة
+        task.status = "completed"
+        task.save()
+        
+        # المحاولة مرة أخرى بعد إكمال التكليف
+        serializer2 = CorrespondenceSerializer(instance=c_in, data={"status": "completed"}, partial=True)
+        self.assertTrue(serializer2.is_valid())

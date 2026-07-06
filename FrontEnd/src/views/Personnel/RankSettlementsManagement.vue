@@ -106,7 +106,7 @@
             :currentPage="store.currentPage"
             :totalPages="store.totalPages"
             :totalCount="store.totalCount"
-            :pageSize="store.pageSize || 15"
+            :pageSize="10"
             :visiblePages="computedVisiblePages"
             @change-page="changePage"
           />

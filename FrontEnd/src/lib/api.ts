@@ -23,7 +23,7 @@ api.interceptors.request.use(
     } catch (e) {
       // Pinia might not be ready yet
     }
-    
+
     const token = localStorage.getItem('access_token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
@@ -108,7 +108,7 @@ api.interceptors.response.use(
         localStorage.removeItem('session_id')
         localStorage.removeItem('user')
         window.location.href = '/signin'
-        
+
         Swal.fire({
           icon: 'error',
           title: 'انتهت الجلسة',
@@ -116,7 +116,7 @@ api.interceptors.response.use(
           confirmButtonText: 'حسناً',
           confirmButtonColor: '#3085d6',
         })
-        
+
         return Promise.reject(refreshError)
       } finally {
         isRefreshing = false
@@ -128,7 +128,7 @@ api.interceptors.response.use(
     if (error.response) {
       const status = error.response.status;
       const data = error.response.data;
-      
+
       if (status === 403) {
         errorMessage = 'ليس لديك صلاحية للقيام بهذا الإجراء.'
       } else if (status === 404) {
@@ -145,10 +145,10 @@ api.interceptors.response.use(
             // Pinia not ready
           }
         }
-        
+
         // Advanced formatting for 400 or other validation errors
         let messages: string[] = [];
-        
+
         // Helper to extract messages from nested objects/arrays
         const extractMessages = (obj: any) => {
           if (typeof obj === 'string') {
@@ -179,18 +179,18 @@ api.interceptors.response.use(
             }
           }
         }
-        
+
         extractMessages(data);
-        
+
         if (messages.length > 0) {
           // Remove duplicates
           const uniqueMessages = [...new Set(messages)];
           if (uniqueMessages.length === 1) {
             errorMessage = uniqueMessages[0];
           } else {
-            errorMessage = `<ul style="text-align: right; list-style-type: disc; padding-right: 20px;">` + 
-                           uniqueMessages.map(m => `<li>${m}</li>`).join('') + 
-                           `</ul>`;
+            errorMessage = `<ul style="text-align: right; list-style-type: disc; padding-right: 20px;">` +
+              uniqueMessages.map(m => `<li>${m}</li>`).join('') +
+              `</ul>`;
           }
         }
       }

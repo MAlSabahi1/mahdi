@@ -46,6 +46,26 @@ class CorrespondenceSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('created_by', 'security_admin')
 
+    def validate(self, attrs):
+        status = attrs.get('status')
+        if status == 'completed':
+            if self.instance:
+                from systems.secretariat.models import Task, CorrespondenceReferral
+                pending_tasks = Task.objects.filter(
+                    related_correspondence=self.instance, 
+                    status__in=['pending', 'in_progress']
+                ).exists()
+                pending_referrals = CorrespondenceReferral.objects.filter(
+                    correspondence=self.instance, 
+                    status__in=['pending', 'read']
+                ).exists()
+                
+                if pending_tasks or pending_referrals:
+                    raise serializers.ValidationError({
+                        "status": "لا يمكن إكمال وأرشفة هذه المعاملة لوجود تكليفات أو إحالات معلقة غير منجزة مرتبطة بها."
+                    })
+        return attrs
+
     def get_qr_code_url(self, obj):
         request = self.context.get('request')
         if request:
