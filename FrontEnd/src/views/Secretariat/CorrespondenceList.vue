@@ -40,9 +40,39 @@
               <option value="completed">مكتمل/مؤرشف</option>
             </select>
           </div>
+          <!-- Confidentiality Filter -->
+          <div class="w-full sm:w-40">
+            <select
+              v-model="confidentialityFilter"
+              class="w-full rounded-lg border border-gray-300 bg-gray-50 py-2.5 px-3 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+              @change="fetchData"
+            >
+              <option value="">السرية: الكل</option>
+              <option value="normal">عادي</option>
+              <option value="confidential">سري</option>
+              <option value="very_confidential">سري للغاية</option>
+              <option value="top_secret">سري جداً</option>
+            </select>
+          </div>
+          <!-- Urgency Filter -->
+          <div class="w-full sm:w-40">
+            <select
+              v-model="urgencyFilter"
+              class="w-full rounded-lg border border-gray-300 bg-gray-50 py-2.5 px-3 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+              @change="fetchData"
+            >
+              <option value="">الاستعجال: الكل</option>
+              <option value="normal">عادي</option>
+              <option value="urgent">عاجل</option>
+              <option value="very_urgent">عاجل جداً</option>
+              <option value="immediate">فوري</option>
+            </select>
+          </div>
         </div>
         <div class="flex justify-end">
+          <!-- Only secretariat staff can create new correspondences -->
           <button
+            v-if="authStore.hasPermission('secretariat.create.all')"
             @click="showAddModal = true"
             class="flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-600 shadow-theme-xs cursor-pointer transition"
           >
@@ -61,6 +91,7 @@
                 <th class="px-6 py-4 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">{{ $t('secretariat.correspondences.reference') }}</th>
                 <th class="px-6 py-4 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">{{ $t('secretariat.correspondences.subject') }}</th>
                 <th class="px-6 py-4 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">{{ $t('secretariat.correspondences.type') }}</th>
+                <th class="px-6 py-4 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">السرية / الاستعجال</th>
                 <th class="px-6 py-4 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">المرسل / المستقبل</th>
                 <th class="px-6 py-4 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">التاريخ</th>
                 <th class="px-6 py-4 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">{{ $t('secretariat.correspondences.status') }}</th>
@@ -98,6 +129,40 @@
                   >
                     {{ item.type_display }}
                   </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-xs font-bold">
+                  <div class="flex flex-col gap-1">
+                    <span
+                      :class="[
+                        'px-2 py-0.5 rounded text-[10px] w-max text-center',
+                        item.confidentiality_level === 'normal' ? 'bg-slate-100 text-slate-700 dark:bg-slate-800/80 dark:text-slate-350' :
+                        item.confidentiality_level === 'confidential' ? 'bg-blue-50 text-blue-700 dark:bg-blue-955/30 dark:text-blue-350' :
+                        item.confidentiality_level === 'very_confidential' ? 'bg-amber-50 text-amber-700 dark:bg-amber-955/30 dark:text-amber-350' :
+                        'bg-red-50 text-red-700 dark:bg-red-955/30 dark:text-red-350'
+                      ]"
+                    >
+                      {{ 
+                        item.confidentiality_level === 'normal' ? 'عادي' :
+                        item.confidentiality_level === 'confidential' ? 'سري' :
+                        item.confidentiality_level === 'very_confidential' ? 'سري للغاية' : 'سري جداً'
+                      }}
+                    </span>
+                    <span
+                      :class="[
+                        'px-2 py-0.5 rounded text-[10px] w-max text-center',
+                        item.urgency_level === 'normal' ? 'bg-slate-100 text-slate-700 dark:bg-slate-800/80 dark:text-slate-350' :
+                        item.urgency_level === 'urgent' ? 'bg-orange-50 text-orange-700 dark:bg-orange-955/30 dark:text-orange-350' :
+                        item.urgency_level === 'very_urgent' ? 'bg-amber-50 text-amber-700 dark:bg-amber-955/30 dark:text-amber-350' :
+                        'bg-red-50 text-red-750 dark:bg-red-955/30 dark:text-red-350'
+                      ]"
+                    >
+                      {{ 
+                        item.urgency_level === 'normal' ? 'عادي' :
+                        item.urgency_level === 'urgent' ? 'عاجل' :
+                        item.urgency_level === 'very_urgent' ? 'عاجل جداً' : 'فوري'
+                      }}
+                    </span>
+                  </div>
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                   <div v-if="item.type === 'incoming'">
@@ -216,6 +281,53 @@
                 <option value="completed">مكتمل/مؤرشف</option>
               </select>
             </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">درجة السرية *</label>
+              <select
+                v-model="form.confidentiality_level"
+                required
+                class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3.5 py-2 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+              >
+                <option value="normal">عادي</option>
+                <option value="confidential">سري</option>
+                <option value="very_confidential">سري للغاية</option>
+                <option value="top_secret">سري جداً</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">درجة الاستعجال *</label>
+              <select
+                v-model="form.urgency_level"
+                required
+                class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3.5 py-2 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+              >
+                <option value="normal">عادي</option>
+                <option value="urgent">عاجل</option>
+                <option value="very_urgent">عاجل جداً</option>
+                <option value="immediate">فوري</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">الباركود الورقي (اختياري)</label>
+              <input
+                v-model="form.barcode_data"
+                type="text"
+                placeholder="أدخل رقم الباركود الملصق على المعاملة"
+                class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3.5 py-2 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+              />
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">رد على مراسلة سابقة (المعاملة الأصلية الأب)</label>
+              <select
+                v-model="form.parent_correspondence"
+                class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3.5 py-2 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-pointer"
+              >
+                <option value="">-- ليست رداً على معاملة سابقة --</option>
+                <option v-for="c in correspondences" :key="c.id" :value="c.id">
+                  {{ c.reference_number }} - {{ c.subject }} (الجهة: {{ c.sender || c.receiver }})
+                </option>
+              </select>
+            </div>
             <div class="md:col-span-2">
               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{{ $t('secretariat.correspondences.notes') }}</label>
               <textarea
@@ -263,9 +375,11 @@ import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import { useSecretariatStore } from '@/stores/secretariat'
+import { useAuthStore } from '@/stores/auth'
 
 const { t } = useI18n()
 const store = useSecretariatStore()
+const authStore = useAuthStore()
 const router = useRouter()
 
 const loading = ref(true)
@@ -275,6 +389,8 @@ const correspondences = ref<any[]>([])
 const searchQuery = ref('')
 const typeFilter = ref('')
 const statusFilter = ref('')
+const confidentialityFilter = ref('')
+const urgencyFilter = ref('')
 
 const showAddModal = ref(false)
 const selectedFile = ref<File | null>(null)
@@ -294,7 +410,11 @@ const form = ref({
   receiver: '',
   date: new Date().toISOString().split('T')[0],
   status: 'new',
-  notes: ''
+  notes: '',
+  confidentiality_level: 'normal',
+  urgency_level: 'normal',
+  barcode_data: '',
+  parent_correspondence: ''
 })
 
 async function fetchData() {
@@ -304,6 +424,8 @@ async function fetchData() {
     if (searchQuery.value) params.search = searchQuery.value
     if (typeFilter.value) params.type = typeFilter.value
     if (statusFilter.value) params.status = statusFilter.value
+    if (confidentialityFilter.value) params.confidentiality_level = confidentialityFilter.value
+    if (urgencyFilter.value) params.urgency_level = urgencyFilter.value
     
     const res = await store.fetchCorrespondences(params)
     correspondences.value = res.results || []
@@ -361,7 +483,11 @@ async function submitForm() {
       receiver: '',
       date: new Date().toISOString().split('T')[0],
       status: 'new',
-      notes: ''
+      notes: '',
+      confidentiality_level: 'normal',
+      urgency_level: 'normal',
+      barcode_data: '',
+      parent_correspondence: ''
     }
     fetchData()
   } catch (err) {

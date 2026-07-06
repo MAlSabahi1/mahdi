@@ -75,6 +75,7 @@ ROLE_PERMISSIONS = {
         Perms.DUAL_AUTH_VIEW, Perms.DUAL_AUTH_APPROVE,
         # ══ السكرتارية — صلاحيات كاملة ══
         Perms.SECRETARIAT_VIEW, Perms.SECRETARIAT_CREATE,
+        Perms.SECRETARIAT_VIEW_CONFIDENTIAL,
         Perms.SECRETARIAT_EDIT, Perms.SECRETARIAT_DELETE,
         Perms.SECRETARIAT_TASK_MANAGE,
         Perms.SECRETARIAT_COVER_LETTER,
@@ -102,6 +103,7 @@ ROLE_PERMISSIONS = {
         Perms.ORG_VIEW,
         # ══ السكرتارية — إدارة التكليفات ══
         Perms.SECRETARIAT_VIEW, Perms.SECRETARIAT_CREATE,
+        Perms.SECRETARIAT_VIEW_CONFIDENTIAL,
         Perms.SECRETARIAT_EDIT,
         Perms.SECRETARIAT_TASK_MANAGE,
         Perms.SECRETARIAT_TASK_EXECUTE,

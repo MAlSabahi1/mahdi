@@ -5,7 +5,7 @@ from .views import (
     CorrespondenceAttachmentViewSet, MeetingMinutesViewSet,
     DocumentWorkRequestViewSet, InventoryItemViewSet,
     InventoryRequestViewSet, CustodyViewSet, AttendanceLogViewSet,
-    FinancialAllocationViewSet, ExpenseViewSet
+    FinancialAllocationViewSet, ExpenseViewSet, CorrespondenceReferralViewSet
 )
 
 router = DefaultRouter()
@@ -21,6 +21,7 @@ router.register(r'custodies', CustodyViewSet, basename='custody')
 router.register(r'attendance-logs', AttendanceLogViewSet, basename='attendance-log')
 router.register(r'financial-allocations', FinancialAllocationViewSet, basename='financial-allocation')
 router.register(r'expenses', ExpenseViewSet, basename='expense')
+router.register(r'referrals', CorrespondenceReferralViewSet, basename='referral')
 
 app_name = 'secretariat'
 

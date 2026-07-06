@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import get_user_model
@@ -18,6 +19,18 @@ class Correspondence(SoftDeletableModel):
         COMPLETED = 'completed', _('مكتمل')
         REQUIRES_REPLY = 'requires_reply', _('يتطلب رد')
 
+    class ConfidentialityLevel(models.TextChoices):
+        NORMAL = 'normal', _('عادي')
+        CONFIDENTIAL = 'confidential', _('سري')
+        VERY_CONFIDENTIAL = 'very_confidential', _('سري للغاية')
+        TOP_SECRET = 'top_secret', _('سري جداً')
+
+    class UrgencyLevel(models.TextChoices):
+        NORMAL = 'normal', _('عادي')
+        URGENT = 'urgent', _('عاجل')
+        VERY_URGENT = 'very_urgent', _('عاجل جداً')
+        IMMEDIATE = 'immediate', _('فوري')
+
     type = models.CharField(max_length=20, choices=Type.choices, verbose_name=_('النوع'))
     reference_number = models.CharField(max_length=100, unique=True, verbose_name=_('رقم المرجع'))
     subject = models.CharField(max_length=255, verbose_name=_('الموضوع'))
@@ -28,11 +41,42 @@ class Correspondence(SoftDeletableModel):
     
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.NEW, verbose_name=_('الحالة'))
     notes = models.TextField(blank=True, null=True, verbose_name=_('ملاحظات'))
+
+    confidentiality_level = models.CharField(
+        max_length=30,
+        choices=ConfidentialityLevel.choices,
+        default=ConfidentialityLevel.NORMAL,
+        verbose_name=_('درجة السرية')
+    )
+    urgency_level = models.CharField(
+        max_length=30,
+        choices=UrgencyLevel.choices,
+        default=UrgencyLevel.NORMAL,
+        verbose_name=_('درجة الاستعجال')
+    )
+    parent_correspondence = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='replies',
+        verbose_name=_('رد على المراسلة')
+    )
+    tracking_token = models.UUIDField(default=uuid.uuid4, editable=False, null=True, verbose_name=_('رمز التتبع'))
+    barcode_data = models.CharField(max_length=100, blank=True, null=True, unique=True, verbose_name=_('رمز الباركود الورقي'))
     
     security_admin = models.ForeignKey(SecurityAdministration, on_delete=models.PROTECT, related_name='correspondences', verbose_name=_('إدارة الأمن'))
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_correspondences', verbose_name=_('مدخل البيانات'))
     
     history = HistoricalRecords()
+
+    def save(self, *args, **kwargs):
+        if not self.tracking_token:
+            self.tracking_token = uuid.uuid4()
+        super().save(*args, **kwargs)
+        if self.parent_correspondence and self.parent_correspondence.status != 'completed':
+            self.parent_correspondence.status = 'completed'
+            self.parent_correspondence.save()
 
     class Meta:
         verbose_name = _('مراسلة')
@@ -64,6 +108,7 @@ class Task(SoftDeletableModel):
     due_date = models.DateField(verbose_name=_('تاريخ الاستحقاق'))
     priority = models.CharField(max_length=20, choices=Priority.choices, default=Priority.MEDIUM, verbose_name=_('الأولوية'))
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING, verbose_name=_('الحالة'))
+    notes = models.TextField(blank=True, null=True, verbose_name=_('رد الموظف/ملاحظات العمل'))
     
     security_admin = models.ForeignKey(SecurityAdministration, on_delete=models.PROTECT, related_name='tasks', verbose_name=_('إدارة الأمن'))
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_tasks', verbose_name=_('منشئ المهمة'))
@@ -152,6 +197,83 @@ class CorrespondenceAttachment(SoftDeletableModel):
         return self.title
 
 
+class CorrespondenceReferral(SoftDeletableModel):
+    class Status(models.TextChoices):
+        PENDING = 'pending', _('قيد المراجعة')
+        READ = 'read', _('مقروءة')
+        COMPLETED = 'completed', _('تم الإجراء')
+
+    correspondence = models.ForeignKey(Correspondence, on_delete=models.CASCADE, related_name='referrals', verbose_name=_('المراسلة'))
+    referred_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='sent_referrals', verbose_name=_('المُحيل'))
+    referred_to = models.ForeignKey(PersonnelMaster, on_delete=models.PROTECT, related_name='received_referrals', verbose_name=_('المُحال إليه'))
+    instructions = models.TextField(verbose_name=_('التوجيه / الشرح المكتوب'))
+    date = models.DateTimeField(auto_now_add=True, verbose_name=_('تاريخ الإحالة'))
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING, verbose_name=_('الحالة'))
+    notes = models.TextField(blank=True, null=True, verbose_name=_('رد الموظف/ملاحظات العمل'))
+    security_admin = models.ForeignKey(SecurityAdministration, on_delete=models.PROTECT, verbose_name=_('إدارة الأمن'))
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_referrals')
+    
+    history = HistoricalRecords()
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        old_status = None
+        if not is_new:
+            try:
+                old_instance = CorrespondenceReferral.objects.get(pk=self.pk)
+                old_status = old_instance.status
+            except CorrespondenceReferral.DoesNotExist:
+                pass
+
+        super().save(*args, **kwargs)
+        
+        # إشعار عند إحالة جديدة للموظف المحال إليه
+        if is_new and self.referred_to:
+            try:
+                from django.contrib.auth import get_user_model
+                User = get_user_model()
+                target_user = User.objects.filter(username=self.referred_to.military_number).first()
+                if target_user:
+                    from core.models.notification import NotificationRecord
+                    NotificationRecord.objects.create(
+                        notification_type='SYSTEM',
+                        title=f"إحالة جديدة: {self.correspondence.subject}",
+                        message=f"تم إحالة معاملة جديدة إليك: {self.instructions or ''}",
+                        priority='normal',
+                        target_user=target_user,
+                        triggered_by=self.referred_by,
+                        action_url=f"/secretariat/correspondences/{self.correspondence.id}"
+                    )
+            except Exception as e:
+                import logging
+                logging.getLogger('django').error(f"Failed to create referral notification: {e}")
+
+        # إشعار للمدير/المحيل عند إنجاز الإحالة والرد عليها
+        if not is_new and old_status != 'completed' and self.status == 'completed' and self.referred_by:
+            try:
+                from core.models.notification import NotificationRecord
+                NotificationRecord.objects.create(
+                    notification_type='SYSTEM',
+                    title=f"✅ إنجاز إحالة: {self.correspondence.subject}",
+                    message=f"قام الموظف {self.referred_to.full_name} بإنجاز الإحالة والرد بـ: {self.notes or ''}",
+                    priority='high',
+                    target_user=self.referred_by,
+                    triggered_by=None,
+                    action_url=f"/secretariat/correspondences/{self.correspondence.id}"
+                )
+            except Exception as e:
+                import logging
+                logging.getLogger('django').error(f"Failed to create referral completion notification: {e}")
+
+    class Meta:
+        verbose_name = _('إحالة مراسلة')
+        verbose_name_plural = _('إحالات المراسلات')
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.correspondence} -> {self.referred_to}"
+
+
 class MeetingMinutes(SoftDeletableModel):
     title = models.CharField(max_length=255, verbose_name=_('عنوان الاجتماع'))
     date = models.DateField(verbose_name=_('تاريخ الاجتماع'))
@@ -222,6 +344,7 @@ class InventoryItem(SoftDeletableModel):
     name = models.CharField(max_length=255, verbose_name=_('اسم المادة'))
     code = models.CharField(max_length=100, unique=True, verbose_name=_('كود المادة/الباركود'))
     quantity_in_stock = models.PositiveIntegerField(default=0, verbose_name=_('الكمية في المخزن'))
+    minimum_stock_level = models.PositiveIntegerField(default=5, verbose_name=_('حد الطلب الأدنى'))
     unit = models.CharField(max_length=50, default=_('حبة'), verbose_name=_('الوحدة'))
     
     security_admin = models.ForeignKey(SecurityAdministration, on_delete=models.PROTECT, related_name='inventory_items', verbose_name=_('إدارة الأمن'))
@@ -261,6 +384,50 @@ class InventoryRequest(SoftDeletableModel):
 
     def __str__(self):
         return f"{self.requested_by} - {self.item.name} ({self.quantity})"
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        old_status = None
+        if not is_new:
+            try:
+                old_instance = InventoryRequest.objects.get(pk=self.pk)
+                old_status = old_instance.status
+            except InventoryRequest.DoesNotExist:
+                pass
+        
+        super().save(*args, **kwargs)
+
+        if self.status == 'approved' and old_status != 'approved':
+            item = self.item
+            if item.quantity_in_stock >= self.quantity:
+                item.quantity_in_stock -= self.quantity
+                item.save()
+            
+            # تنبيه بنفاد المخزون إذا انخفض عن الحد الأدنى
+            if item.quantity_in_stock <= item.minimum_stock_level:
+                try:
+                    from core.models.notification import NotificationRecord
+                    from django.contrib.auth import get_user_model
+                    User = get_user_model()
+                    
+                    recipients = User.objects.filter(is_superuser=True) | User.objects.filter(groups__name__icontains='secretariat')
+                    target_users = list(recipients.distinct()[:5])
+                    if self.created_by and self.created_by not in target_users:
+                        target_users.append(self.created_by)
+                        
+                    for target_user in target_users:
+                        NotificationRecord.objects.create(
+                            notification_type='SYSTEM',
+                            title=f"⚠️ تنبيه نفاد كمية مخزنية: {item.name}",
+                            message=f"الكمية الحالية للمادة «{item.name}» في المخزن هي ({item.quantity_in_stock} {item.unit}) وهي أقل من حد الطلب الأدنى ({item.minimum_stock_level}). يرجى توفير كميات إضافية.",
+                            priority='high',
+                            target_user=target_user,
+                            triggered_by=self.created_by or target_user,
+                            action_url="/secretariat/inventory"
+                        )
+                except Exception as e:
+                    import logging
+                    logging.getLogger('django').error(f"Failed to create inventory low stock notification: {e}")
 
 
 class Custody(SoftDeletableModel):
@@ -360,3 +527,21 @@ class Expense(SoftDeletableModel):
 
     def __str__(self):
         return f"{self.category} - {self.amount} ({self.date})"
+
+    def clean(self):
+        super().clean()
+        if self.allocation and self.amount:
+            from django.db.models import Sum
+            from django.core.exceptions import ValidationError
+            query = Expense.objects.filter(allocation=self.allocation)
+            if self.pk:
+                query = query.exclude(pk=self.pk)
+            total_spent = query.aggregate(total=Sum('amount'))['total'] or 0
+            if total_spent + self.amount > self.allocation.allocated_amount:
+                raise ValidationError({
+                    'amount': _('لا يمكن حفظ المصروف. إجمالي المصروفات يتجاوز الاعتماد المالي المرصود لهذا الشهر.')
+                })
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)

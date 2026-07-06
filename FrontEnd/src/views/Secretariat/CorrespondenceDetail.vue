@@ -80,10 +80,40 @@
                 المرجع: <span class="text-slate-900 dark:text-white font-mono font-black">{{ correspondence.reference_number }}</span>
               </span>
 
-              <!-- Priority Badge -->
-              <span class="bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-900/30 text-amber-700 dark:text-amber-300 px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm">
-                <AlertTriangle class="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-                الأهمية: عاجل وهام
+              <!-- Confidentiality Badge -->
+              <span 
+                :class="[
+                  'px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm border',
+                  correspondence.confidentiality_level === 'normal' ? 'bg-slate-50 border-slate-200 text-slate-750 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-350' :
+                  correspondence.confidentiality_level === 'confidential' ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-955/50 dark:border-blue-900/40 dark:text-blue-350' :
+                  correspondence.confidentiality_level === 'very_confidential' ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-955/50 dark:border-amber-900/40 dark:text-amber-350' :
+                  'bg-red-50 border-red-200 text-red-700 dark:bg-red-955/50 dark:border-red-900/45 dark:text-red-300'
+                ]"
+              >
+                <ShieldAlert class="w-3.5 h-3.5" />
+                السرية: {{ 
+                  correspondence.confidentiality_level === 'normal' ? 'عادي' :
+                  correspondence.confidentiality_level === 'confidential' ? 'سري' :
+                  correspondence.confidentiality_level === 'very_confidential' ? 'سري للغاية' : 'سري جداً'
+                }}
+              </span>
+
+              <!-- Urgency Badge -->
+              <span 
+                :class="[
+                  'px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm border',
+                  correspondence.urgency_level === 'normal' ? 'bg-slate-50 border-slate-200 text-slate-750 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-350' :
+                  correspondence.urgency_level === 'urgent' ? 'bg-orange-50 border-orange-200 text-orange-700 dark:bg-orange-955/50 dark:border-orange-900/40 dark:text-orange-300' :
+                  correspondence.urgency_level === 'very_urgent' ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-955/50 dark:border-amber-900/40 dark:text-amber-350' :
+                  'bg-red-50 border-red-200 text-red-700 dark:bg-red-955/50 dark:border-red-900/45 dark:text-red-300'
+                ]"
+              >
+                <AlertTriangle class="w-3.5 h-3.5" />
+                الاستعجال: {{ 
+                  correspondence.urgency_level === 'normal' ? 'عادي' :
+                  correspondence.urgency_level === 'urgent' ? 'عاجل' :
+                  correspondence.urgency_level === 'very_urgent' ? 'عاجل جداً' : 'فوري'
+                }}
               </span>
             </div>
 
@@ -122,8 +152,9 @@
               </select>
             </div>
 
-            <!-- Outgoing covering letter generator button -->
+            <!-- Outgoing covering letter generator button — only for secretariat managers -->
             <button
+              v-if="authStore.hasPermission('secretariat.covering_letter.create')"
               type="button"
               @click="generateCoveringLetter"
               class="flex items-center gap-1.5 px-4 py-3 bg-gradient-to-r from-brand-500 to-indigo-650 hover:from-brand-600 hover:to-indigo-750 text-white rounded-2xl text-xs font-black cursor-pointer transition shadow-md hover:shadow-lg duration-300"
@@ -249,6 +280,34 @@
                   <span class="text-slate-900 dark:text-white font-extrabold text-[15px]">{{ correspondence.date }}</span>
                 </div>
               </div>
+
+              <!-- Paper Barcode Card -->
+              <div v-if="correspondence.barcode_data" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 shadow-theme-xs">
+                <span class="block text-xxs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">الباركود الورقي للملف الورقي</span>
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800/40 text-slate-500 flex items-center justify-center shadow-inner flex-shrink-0">
+                    <Barcode class="w-5 h-5" />
+                  </div>
+                  <span class="text-slate-900 dark:text-white font-mono font-black text-[15px]">{{ correspondence.barcode_data }}</span>
+                </div>
+              </div>
+              
+              <!-- Tracking UUID & QR Code Card -->
+              <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 shadow-theme-xs md:col-span-2 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                  <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-550 flex items-center justify-center shadow-inner flex-shrink-0">
+                    <QrCode class="w-5 h-5" />
+                  </div>
+                  <div class="overflow-hidden">
+                    <span class="block text-xxs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">رمز التتبع الرقمي الفريد (QR)</span>
+                    <span class="text-slate-900 dark:text-white font-mono text-xs block truncate select-all">{{ correspondence.tracking_token }}</span>
+                  </div>
+                </div>
+                <!-- QR Code Image -->
+                <div class="flex-shrink-0 flex items-center gap-2 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
+                  <img :src="`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(getTrackingUrl())}`" alt="Tracking QR Code" class="w-16 h-16" />
+                </div>
+              </div>
               
               <!-- Directives / Notes Panel -->
               <div class="md:col-span-2">
@@ -261,6 +320,194 @@
                   <p class="text-slate-750 dark:text-slate-350 text-[14.5px] whitespace-pre-line pr-6 relative z-10 leading-relaxed font-medium">
                     {{ correspondence.notes || 'لا توجد ملاحظات أو توجيهات مدونة لهذه المراسلة.' }}
                   </p>
+                </div>
+              </div>
+
+              <!-- Linked/Related Correspondences Section -->
+              <div class="md:col-span-2 border-t border-slate-100 dark:border-slate-800/60 pt-4 mt-2">
+                <span class="block text-xs font-black text-slate-455 dark:text-slate-550 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Link2 class="w-4 h-4 text-indigo-500" />
+                  المعاملات المرتبطة والردود
+                </span>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <!-- Parent Correspondence -->
+                  <div v-if="correspondence.parent_correspondence" class="p-4 rounded-xl bg-indigo-50/30 dark:bg-indigo-950/10 border border-indigo-500/10 shadow-theme-xs flex items-center justify-between">
+                    <div>
+                      <span class="block text-[10px] text-indigo-500 font-black mb-1">رد على الخطاب الوارد:</span>
+                      <router-link :to="`/secretariat/correspondences/${correspondence.parent_correspondence}`" class="text-xs font-bold text-slate-850 dark:text-slate-200 hover:text-brand-500 transition duration-300">
+                        عرض المراسلة الأصلية 🔗
+                      </router-link>
+                    </div>
+                  </div>
+                  
+                  <!-- Replies (Child correspondences) -->
+                  <div v-if="correspondence.replies && correspondence.replies.length > 0" class="p-4 rounded-xl bg-green-50/30 dark:bg-green-950/10 border border-green-500/10 shadow-theme-xs md:col-span-2">
+                    <span class="block text-[10px] text-green-555 font-black mb-1.5">الردود الصادرة المرتبطة:</span>
+                    <div class="space-y-1.5">
+                      <div v-for="reply in correspondence.replies" :key="reply.id" class="flex items-center justify-between text-xs border-b border-dashed border-slate-100 dark:border-slate-800 pb-1.5 last:border-0 last:pb-0">
+                        <router-link :to="`/secretariat/correspondences/${reply.id}`" class="font-bold text-slate-700 dark:text-slate-300 hover:text-brand-500 transition">
+                          {{ reply.reference_number }} - {{ reply.subject }}
+                        </router-link>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-green-105 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded font-bold">مكتملة</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- If neither -->
+                  <div v-if="!correspondence.parent_correspondence && (!correspondence.replies || correspondence.replies.length === 0)" class="text-xs text-slate-400 font-medium py-1">
+                    لا توجد مراسلات مرتبطة أو ردود مقيدة لهذه المعاملة بعد.
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Sequential Referrals & Directives Card -->
+          <div class="bg-white dark:bg-gray-900 border border-slate-200/80 dark:border-slate-850 rounded-3xl p-6 shadow-theme-sm">
+            <div class="flex justify-between items-center mb-6 border-b border-gray-100 dark:border-gray-800/60 pb-3.5">
+              <div class="flex items-center gap-2">
+                <div class="p-2.5 bg-brand-50 dark:bg-brand-950/40 text-brand-500 dark:text-brand-400 rounded-xl shadow-theme-xs">
+                  <TrendingUp class="w-5 h-5" />
+                </div>
+                <h3 class="text-lg font-bold text-slate-855 dark:text-white">الإحالات والتوجيهات المتسلسلة (دورة حياة المعاملة)</h3>
+              </div>
+              <!-- Only show 'Add Referral' button to task managers (secretariat) -->
+              <button
+                v-if="authStore.hasPermission('secretariat.task.manage')"
+                @click="showReferralForm = !showReferralForm"
+                class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 text-slate-700 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-750 text-xs font-black transition-all duration-300 cursor-pointer shadow-theme-xs border border-slate-200 dark:border-slate-700"
+              >
+                <Plus class="w-4 h-4" />
+                <span>{{ showReferralForm ? 'إلغاء' : 'إحالة وتوجيه جديدة' }}</span>
+              </button>
+            </div>
+
+            <!-- Add Referral Form -->
+            <div v-if="showReferralForm" class="mb-6 p-5 bg-slate-50/50 dark:bg-slate-855/40 border border-slate-200 dark:border-slate-800 rounded-2xl animate-fade-in">
+              <form @submit.prevent="submitReferral" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">الموظف المحال إليه (المكلف بالتنفيذ) *</label>
+                    <select
+                      v-model="referralForm.referred_to"
+                      required
+                      class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm text-slate-800 dark:text-white cursor-pointer focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition duration-300 font-bold"
+                    >
+                      <option value="" disabled>اختر الموظف...</option>
+                      <option v-for="emp in employees" :key="emp.military_number" :value="emp.military_number">
+                        {{ emp.full_name }} ({{ emp.military_number }})
+                      </option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-black text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-1.5">تاريخ الإنجاز المطلوب *</label>
+                    <input
+                      v-model="referralForm.due_date"
+                      type="date"
+                      required
+                      class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm text-slate-800 dark:text-white cursor-pointer focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition duration-300 font-bold"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-black text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-1.5">شرح وتوجيهات المدير العام أو رئيس القسم *</label>
+                  <textarea
+                    v-model="referralForm.instructions"
+                    required
+                    rows="3"
+                    placeholder="اكتب التوجيهات الرسمية الواجب اتباعها عند استلام المعاملة..."
+                    class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition duration-300 font-bold"
+                  ></textarea>
+                </div>
+
+                <div class="flex justify-end gap-2">
+                  <button
+                    type="submit"
+                    :disabled="submittingReferral"
+                    class="px-5 py-2.5 text-xs font-black text-white bg-brand-500 hover:bg-brand-600 rounded-xl shadow-theme-xs disabled:opacity-50 transition cursor-pointer"
+                  >
+                    {{ submittingReferral ? 'جاري تسجيل الإحالة...' : 'تأكيد إحالة المعاملة' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Referrals Timeline / List -->
+            <div v-if="!referralsList || referralsList.length === 0" class="text-center py-12 bg-slate-50/50 dark:bg-slate-850/10 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-sm text-slate-500">
+              <TrendingUp class="w-12 h-12 mx-auto text-slate-300 dark:text-slate-700 mb-3" />
+              لم يتم إجراء أي إحالات متسلسلة لهذه المعاملة بعد.
+            </div>
+
+            <div v-else class="space-y-6 relative border-r-2 border-slate-200 dark:border-slate-800 mr-4 pr-6 py-2">
+              <div
+                v-for="(refItem, index) in referralsList"
+                :key="refItem.id"
+                class="relative space-y-2 animate-fade-in"
+              >
+                <!-- Dot icon indicator -->
+                <div class="absolute -right-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-brand-500 bg-white dark:bg-slate-900 flex items-center justify-center">
+                  <div class="w-1.5 h-1.5 rounded-full bg-brand-500"></div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-black text-brand-600 dark:text-brand-400">الإحالة #{{ referralsList.length - index }}</span>
+                    <span class="text-slate-400 text-[10px]">|</span>
+                    <span class="text-slate-500 dark:text-slate-400 text-xxs font-bold">
+                      تمت في: {{ new Date(refItem.created_at).toLocaleDateString('ar-YE', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) }}
+                    </span>
+                  </div>
+                  
+                  <span
+                    :class="[
+                      'px-2 py-0.5 rounded text-[10px] font-bold w-max text-center',
+                      refItem.status === 'pending' ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400' :
+                      refItem.status === 'completed' ? 'bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400' :
+                      'bg-slate-100 text-slate-650 dark:bg-slate-855'
+                    ]"
+                  >
+                    {{ 
+                      refItem.status === 'pending' ? 'قيد المتابعة' :
+                      refItem.status === 'completed' ? 'تم الإنجاز' : 'أخرى'
+                    }}
+                  </span>
+                </div>
+
+                <div class="p-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-205 dark:border-slate-800 rounded-2xl shadow-theme-xs">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-bold text-slate-705 dark:text-slate-350 mb-3 border-b border-slate-200/50 dark:border-slate-850 pb-2">
+                    <div>
+                      <span class="text-slate-400 font-medium">المحيل (الموجه):</span> {{ refItem.referred_by_name || 'المدير العام' }}
+                    </div>
+                    <div>
+                      <span class="text-slate-400 font-medium">المحال إليه (المكلف):</span> {{ refItem.referred_to_name || 'موظف مختص' }}
+                    </div>
+                  </div>
+
+                  <div class="text-xs text-slate-650 dark:text-slate-400 leading-relaxed">
+                    <span class="block text-xxs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">التوجيهات والشرح:</span>
+                    <p class="whitespace-pre-line font-medium pr-1">{{ refItem.instructions }}</p>
+                  </div>
+
+                  <!-- Employee Response Notes -->
+                  <div v-if="refItem.notes" class="mt-3 pt-2.5 border-t border-dashed border-slate-200 dark:border-slate-800 text-xs leading-relaxed bg-green-50/20 dark:bg-green-950/5 p-3 rounded-xl">
+                    <span class="block text-xxs font-black text-green-600 dark:text-green-400 uppercase tracking-wider mb-1">رد الموظف وملاحظات الإنجاز:</span>
+                    <p class="whitespace-pre-line font-bold pr-1 text-slate-800 dark:text-slate-200">{{ refItem.notes }}</p>
+                  </div>
+
+                  <!-- Completion Actions for Assigned Personnel -->
+                  <div v-if="authStore.user?.username === refItem.referred_to && refItem.status === 'pending'" class="mt-4 pt-3 border-t border-dashed border-slate-200 dark:border-slate-800 flex justify-end">
+                    <button
+                      type="button"
+                      @click="completeReferralTask(refItem.id)"
+                      class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-black rounded-xl cursor-pointer transition shadow-theme-xs flex items-center gap-1.5"
+                    >
+                      <Check class="w-3.5 h-3.5" />
+                      تأكيد إنجاز التوجيه والمعاملة
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -432,7 +679,9 @@
                 </div>
                 <h3 class="text-base font-black text-slate-850 dark:text-white">مهام المتابعة والتكليف</h3>
               </div>
+              <!-- Only show 'Add Task' button to users with task management permission -->
               <button
+                v-if="authStore.hasPermission('secretariat.task.manage')"
                 @click="showTaskForm = !showTaskForm"
                 class="inline-flex items-center gap-1 text-xs font-black text-brand-600 hover:text-brand-700 dark:text-brand-400 cursor-pointer transition-all duration-300"
               >
@@ -535,6 +784,11 @@
                     {{ task.status_display }}
                   </span>
                 </div>
+                <p class="mt-2 text-xs text-slate-650 dark:text-slate-400 font-medium whitespace-pre-line">{{ task.description }}</p>
+                <div v-if="task.notes" class="mt-2.5 p-3 rounded-xl bg-green-50/20 dark:bg-green-950/5 border border-dashed border-green-500/20 text-xs">
+                  <span class="block text-xxs font-black text-green-600 dark:text-green-400 uppercase tracking-wider mb-1">رد الموظف وملاحظات الإنجاز:</span>
+                  <p class="font-bold text-slate-800 dark:text-slate-200 whitespace-pre-line">{{ task.notes }}</p>
+                </div>
                 <div class="mt-3 flex flex-col gap-1.5 text-xxs text-slate-450 dark:text-slate-500 font-bold">
                   <div class="flex items-center gap-1">
                     <UserCheck class="w-3.5 h-3.5 text-brand-500" />
@@ -587,6 +841,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import api from '@/lib/api'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import { useSecretariatStore } from '@/stores/secretariat'
 import { usePersonnelStore } from '@/stores/personnel'
@@ -598,7 +853,8 @@ import {
   FileText, Calendar, ArrowRight, User, CheckCircle2, Clock, 
   ShieldAlert, Paperclip, Plus, Trash2, Download, ExternalLink, 
   Check, AlertCircle, Briefcase, ChevronRight, File, Archive, Send, Inbox,
-  UserCheck, Building, Bookmark, TrendingUp, AlertTriangle, FolderOpen, Eye
+  UserCheck, Building, Bookmark, TrendingUp, AlertTriangle, FolderOpen, Eye,
+  Barcode, QrCode, Link2
 } from 'lucide-vue-next'
 
 const { t } = useI18n()
@@ -654,6 +910,9 @@ async function fetchDetails() {
     // Fetch linked tasks
     const tasksRes = await store.fetchTasks({ related_correspondence: id })
     linkedTasks.value = tasksRes.results || []
+
+    // Fetch referrals
+    await fetchReferralsList()
 
     // Fetch personnel for task assignment
     if (employees.value.length === 0) {
@@ -810,10 +1069,9 @@ async function handleCompleteTask(task: any) {
 
   if (notes) {
     try {
-      const updatedDescription = `${task.description || ''}\n\n[ملاحظات الإنجاز بواسطة الموظف]: ${notes}`
       await store.updateTask(task.id, {
         status: 'completed',
-        description: updatedDescription
+        notes: notes
       })
       Swal.fire({
         icon: 'success',
@@ -829,8 +1087,8 @@ async function handleCompleteTask(task: any) {
       console.error(err)
       Swal.fire({
         icon: 'error',
-        title: 'حدث خطأ أثناء تحديث حالة المهمة',
-        text: err.response?.data?.error || ''
+        title: 'حدث خطأ أثناء إكمال المهمة',
+        text: err.response?.data?.detail || err.response?.data?.error || 'ليس لديك الصلاحية الكافية لإتمام الإجراء'
       })
     }
   }
@@ -851,6 +1109,100 @@ function generateCoveringLetter() {
       body: bodyText
     }
   })
+}
+
+const showReferralForm = ref(false)
+const submittingReferral = ref(false)
+const referralsList = ref<any[]>([])
+
+const referralForm = ref({
+  referred_to: '',
+  instructions: '',
+  due_date: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0] // 3 days in future
+})
+
+function getTrackingUrl() {
+  if (!correspondence.value) return ''
+  return `${window.location.origin}/secretariat/correspondences/${correspondence.value.id}?token=${correspondence.value.tracking_token}`
+}
+
+async function fetchReferralsList() {
+  try {
+    const id = route.params.id as string
+    const res = await store.fetchReferrals({ correspondence: id })
+    referralsList.value = res.results || []
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+async function submitReferral() {
+  if (!referralForm.value.referred_to || !referralForm.value.instructions) {
+    Swal.fire({ icon: 'warning', title: 'الرجاء إدخال الحقول المطلوبة' })
+    return
+  }
+  submittingReferral.value = true
+  try {
+    const id = route.params.id as string
+    const data = {
+      correspondence: id,
+      referred_to: referralForm.value.referred_to,
+      instructions: referralForm.value.instructions,
+      due_date: referralForm.value.due_date
+    }
+    await store.createReferral(data)
+    Swal.fire({ icon: 'success', title: 'تم تسجيل إحالة المعاملة بنجاح', timer: 1500, showConfirmButton: false })
+    
+    // Reset Form
+    referralForm.value = {
+      referred_to: '',
+      instructions: '',
+      due_date: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0]
+    }
+    showReferralForm.value = false
+    
+    // Refresh Referrals List
+    await fetchReferralsList()
+  } catch (err: any) {
+    console.error(err)
+    const errMsg = err.response?.data?.error || err.response?.data?.detail || 'فشل إحالة المعاملة'
+    Swal.fire({ icon: 'error', title: 'فشل إحالة المعاملة', text: JSON.stringify(errMsg) })
+  } finally {
+    submittingReferral.value = false
+  }
+}
+
+async function completeReferralTask(referralId: number) {
+  try {
+    const { value: responseNotes, isConfirmed } = await Swal.fire({
+      title: 'تأكيد إنجاز التوجيه والعمل',
+      text: 'يرجى كتابة شرح أو ملاحظات الإنجاز أدناه (مثال: تم حصر الموقوفين وتجهيز الكشف وإرساله لقسم الرواتب):',
+      input: 'textarea',
+      inputPlaceholder: 'اكتب تفاصيل الإنجاز هنا...',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'تأكيد وإرسال الرد',
+      cancelButtonText: 'إلغاء',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'يجب كتابة ملاحظات الإنجاز لتوضيح ما تم عمله!'
+        }
+      }
+    })
+    
+    if (!isConfirmed) return
+    
+    await api.patch(`/secretariat/referrals/${referralId}/`, { 
+      status: 'completed',
+      notes: responseNotes
+    })
+    Swal.fire({ icon: 'success', title: 'تم تأكيد الإنجاز بنجاح', timer: 1500, showConfirmButton: false })
+    
+    await fetchReferralsList()
+  } catch (err) {
+    console.error(err)
+    Swal.fire({ icon: 'error', title: 'فشل تحديث حالة التوجيه' })
+  }
 }
 
 onMounted(() => {

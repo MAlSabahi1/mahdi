@@ -255,6 +255,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import { useSecretariatStore } from '@/stores/secretariat'
+import Swal from 'sweetalert2'
 
 const store = useSecretariatStore()
 
@@ -344,8 +345,29 @@ async function submitAllocation() {
     showAllocationModal.value = false
     allocForm.value = { month: new Date().getMonth() + 1, year: new Date().getFullYear(), total_amount: 0, notes: '' }
     fetchAllocations()
-  } catch (err) {
+    Swal.fire({
+      icon: 'success',
+      title: 'تم تسجيل الاعتماد بنجاح',
+      timer: 1500,
+      showConfirmButton: false
+    })
+  } catch (err: any) {
     console.error(err)
+    let errorMsg = 'حدث خطأ غير متوقع أثناء تسجيل الاعتماد.'
+    if (err.response?.data) {
+      const data = err.response.data
+      if (typeof data === 'object') {
+        errorMsg = Object.values(data).flat().join('\n')
+      } else if (typeof data === 'string') {
+        errorMsg = data
+      }
+    }
+    Swal.fire({
+      icon: 'error',
+      title: 'فشل حفظ الاعتماد',
+      text: errorMsg,
+      confirmButtonText: 'حسناً'
+    })
   }
 }
 
@@ -365,8 +387,29 @@ async function submitExpense() {
     // refresh both because spent amount updates
     fetchExpenses()
     fetchAllocations()
-  } catch (err) {
+    Swal.fire({
+      icon: 'success',
+      title: 'تم تسجيل المصروف بنجاح',
+      timer: 1500,
+      showConfirmButton: false
+    })
+  } catch (err: any) {
     console.error(err)
+    let errorMsg = 'حدث خطأ غير متوقع أثناء تسجيل المصروف.'
+    if (err.response?.data) {
+      const data = err.response.data
+      if (typeof data === 'object') {
+        errorMsg = Object.values(data).flat().join('\n')
+      } else if (typeof data === 'string') {
+        errorMsg = data
+      }
+    }
+    Swal.fire({
+      icon: 'error',
+      title: 'فشل تسجيل المصروف',
+      text: errorMsg,
+      confirmButtonText: 'حسناً'
+    })
   }
 }
 

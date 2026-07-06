@@ -243,6 +243,7 @@ class Perms:
     # ══════════════════════════════════════════════════════════════
     SECRETARIAT_VIEW         = "secretariat.view.all"           # عرض كل المراسلات
     SECRETARIAT_VIEW_OWN     = "secretariat.view.own"           # عرض المراسلات المتعلقة بالمستخدم/قسمه
+    SECRETARIAT_VIEW_CONFIDENTIAL = "secretariat.view.confidential" # عرض المراسلات السرية والسرية للغاية
     SECRETARIAT_CREATE       = "secretariat.create.all"         # إنشاء مراسلة
     SECRETARIAT_EDIT         = "secretariat.edit.all"           # تعديل مراسلة
     SECRETARIAT_DELETE       = "secretariat.delete.all"         # حذف مراسلة
@@ -571,6 +572,7 @@ PERMISSION_LABELS = {
     # secretariat
     'secretariat.view.all': ('عرض جميع المراسلات', 'page'),
     'secretariat.view.own': ('عرض المراسلات المُكلَّف بها فقط', 'data'),
+    'secretariat.view.confidential': ('عرض المراسلات السرية والسرية للغاية', 'data'),
     'secretariat.create.all': ('إنشاء مراسلة جديدة', 'action'),
     'secretariat.edit.all': ('تعديل بيانات مراسلة', 'action'),
     'secretariat.delete.all': ('حذف مراسلة', 'action'),

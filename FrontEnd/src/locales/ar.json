@@ -110,7 +110,21 @@
       "attachments": "الملفات المؤرشفة والمرفقات",
       "upload_attachment": "إرفاق مستند/ملف",
       "attachment_title": "عنوان المرفق",
-      "no_attachments": "لا توجد ملفات مؤرشفة لهذه المراسلة حالياً."
+      "no_attachments": "لا توجد ملفات مؤرشفة لهذه المراسلة حالياً.",
+      "confidentiality": "درجة السرية",
+      "urgency": "درجة الاستعجال",
+      "tracking_token": "رمز التتبع",
+      "barcode_data": "الباركود الورقي",
+      "confidentiality_normal": "عادي",
+      "confidentiality_confidential": "سري",
+      "confidentiality_very_confidential": "سري للغاية",
+      "confidentiality_top_secret": "سري جداً",
+      "urgency_normal": "عادي",
+      "urgency_urgent": "عاجل",
+      "urgency_very_urgent": "عاجل جداً",
+      "urgency_immediate": "فوري",
+      "referrals": "الإحالات والتوجيهات المتسلسلة",
+      "add_referral": "إضافة إحالة جديدة"
     },
     "tasks": {
       "title": "إدارة المهام والمتابعة",

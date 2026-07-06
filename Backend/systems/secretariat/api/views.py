@@ -3,14 +3,14 @@ from django_filters.rest_framework import DjangoFilterBackend
 from ..models import (
     Correspondence, Task, Circular, CorrespondenceAttachment,
     MeetingMinutes, DocumentWorkRequest, InventoryItem, InventoryRequest,
-    Custody, AttendanceLog, FinancialAllocation, Expense
+    Custody, AttendanceLog, FinancialAllocation, Expense, CorrespondenceReferral
 )
 from .serializers import (
     CorrespondenceSerializer, TaskSerializer, CircularSerializer,
     CorrespondenceAttachmentSerializer, MeetingMinutesSerializer,
     DocumentWorkRequestSerializer, InventoryItemSerializer,
     InventoryRequestSerializer, CustodySerializer, AttendanceLogSerializer,
-    FinancialAllocationSerializer, ExpenseSerializer
+    FinancialAllocationSerializer, ExpenseSerializer, CorrespondenceReferralSerializer
 )
 from infra.security.permissions import ABACPermission, filter_by_department_scope, get_user_profile
 
@@ -39,7 +39,7 @@ class BaseSecretariatViewSet(viewsets.ModelViewSet):
 class CorrespondenceViewSet(BaseSecretariatViewSet):
     queryset = Correspondence.objects.all()
     serializer_class = CorrespondenceSerializer
-    filterset_fields = ['type', 'status', 'date']
+    filterset_fields = ['type', 'status', 'date', 'confidentiality_level', 'urgency_level']
     search_fields = ['reference_number', 'subject', 'sender', 'receiver']
     ordering_fields = ['date', 'created_at']
 
@@ -51,23 +51,34 @@ class CorrespondenceViewSet(BaseSecretariatViewSet):
         from infra.security.permissions import has_permission
         from infra.authorization.registry.permissions import Perms
 
+        has_confidential_access = has_permission(user, Perms.SECRETARIAT_VIEW_CONFIDENTIAL)
+        base_qs = self.queryset
+        if not has_confidential_access:
+            base_qs = base_qs.filter(confidentiality_level='normal')
+
         # مدراء السكرتارية يرون الكل (مقيّد بنطاق الإدارة الأمنية)
         if has_permission(user, Perms.SECRETARIAT_VIEW):
-            return filter_by_department_scope(user, self.queryset, 'security_admin')
+            return filter_by_department_scope(user, base_qs, 'security_admin')
 
-        # الموظف المكلف يرى فقط المراسلات المرتبطة بمهامه
-        if has_permission(user, Perms.SECRETARIAT_VIEW_OWN):
+        # الموظف المكلف يرى فقط المراسلات المرتبطة بمهامه أو المحالة إليه
+        if has_permission(user, Perms.SECRETARIAT_VIEW_OWN) or has_permission(user, Perms.SECRETARIAT_TASK_EXECUTE):
             from systems.personnel.models import PersonnelMaster
             try:
                 personnel = PersonnelMaster.objects.get(military_number=user.username)
-                linked_corr_ids = Task.objects.filter(
+                task_corr_ids = Task.objects.filter(
                     assigned_to=personnel
                 ).values_list('related_correspondence_id', flat=True).distinct()
-                return self.queryset.filter(id__in=linked_corr_ids)
+                
+                referral_corr_ids = CorrespondenceReferral.objects.filter(
+                    referred_to=personnel
+                ).values_list('correspondence_id', flat=True).distinct()
+                
+                linked_corr_ids = set(task_corr_ids) | set(referral_corr_ids)
+                return base_qs.filter(id__in=linked_corr_ids)
             except PersonnelMaster.DoesNotExist:
-                return self.queryset.none()
+                return base_qs.none()
 
-        return self.queryset.none()
+        return base_qs.none()
 
 
 class CorrespondenceAttachmentViewSet(viewsets.ModelViewSet):
@@ -126,12 +137,12 @@ class TaskViewSet(BaseSecretariatViewSet):
         from infra.authorization.registry.permissions import Perms
         from rest_framework.exceptions import PermissionDenied
 
-        # الموظف المكلف — يستطيع فقط تغيير الحالة (in_progress / completed)
+        # الموظف المكلف — يستطيع فقط تغيير الحالة وملاحظات الإنجاز (status / notes)
         if not has_permission(user, Perms.SECRETARIAT_TASK_MANAGE):
-            allowed_changes = {'status'}
+            allowed_changes = {'status', 'notes'}
             requested_changes = set(serializer.validated_data.keys())
             if not requested_changes.issubset(allowed_changes):
-                raise PermissionDenied('يمكنك فقط تحديث حالة المهمة المسندة إليك')
+                raise PermissionDenied('يمكنك فقط تحديث حالة المهمة وملاحظات الإنجاز المسندة إليك')
 
             new_status = serializer.validated_data.get('status', old_status)
             if old_status == 'pending' and new_status not in ('in_progress',):
@@ -171,7 +182,8 @@ class TaskViewSet(BaseSecretariatViewSet):
                         title = f"✅ إنجاز المهمة: {instance.title}"
                         message = (
                             f"أنهى الموظف {assignee_name} تنفيذ التكليف «{instance.title}» "
-                            f"المرتبط بالمراسلة ({corr_ref}). يرجى مراجعة النتائج وتوليد خطاب الرد."
+                            f"المرتبط بالمراسلة ({corr_ref}).\n"
+                            f"رد الموظف/ملاحظات العمل: {instance.notes or ''}"
                         )
                         priority = 'high'
 
@@ -262,3 +274,43 @@ class ExpenseViewSet(BaseSecretariatViewSet):
     filterset_fields = ['allocation', 'date', 'category']
     search_fields = ['description', 'receipt_number', 'category']
     ordering_fields = ['date', 'amount']
+
+
+class CorrespondenceReferralViewSet(BaseSecretariatViewSet):
+    queryset = CorrespondenceReferral.objects.select_related('correspondence', 'referred_by', 'referred_to').all()
+    serializer_class = CorrespondenceReferralSerializer
+    filterset_fields = ['status', 'correspondence', 'referred_to']
+    search_fields = ['instructions', 'notes']
+    ordering_fields = ['date']
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser:
+            return self.queryset
+
+        from infra.security.permissions import has_permission
+        from infra.authorization.registry.permissions import Perms
+
+        # السكرتارية ومدراء الإدارة يرون كل الإحالات الموجهة ضمن النطاق
+        if has_permission(user, Perms.SECRETARIAT_VIEW):
+            return filter_by_department_scope(user, self.queryset, 'security_admin')
+
+        # الموظف المكلف يرى فقط الإحالات الموجهة إليه
+        from systems.personnel.models import PersonnelMaster
+        try:
+            personnel = PersonnelMaster.objects.get(military_number=user.username)
+            return self.queryset.filter(referred_to=personnel)
+        except PersonnelMaster.DoesNotExist:
+            return self.queryset.none()
+
+    def perform_create(self, serializer):
+        profile = get_user_profile(self.request.user)
+        security_admin = getattr(profile, 'security_admin', None) if profile else None
+        if not security_admin:
+            from core.models.organization import SecurityAdministration
+            security_admin = SecurityAdministration.objects.first()
+        serializer.save(
+            created_by=self.request.user,
+            referred_by=self.request.user,
+            security_admin=security_admin
+        )

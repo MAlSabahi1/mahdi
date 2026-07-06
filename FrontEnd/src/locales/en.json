@@ -167,7 +167,21 @@
       "attachments": "Archived Files & Attachments",
       "upload_attachment": "Upload Attachment",
       "attachment_title": "Attachment Title",
-      "no_attachments": "No archived files for this correspondence."
+      "no_attachments": "No archived files for this correspondence.",
+      "confidentiality": "Confidentiality Level",
+      "urgency": "Urgency Level",
+      "tracking_token": "Tracking Token",
+      "barcode_data": "Paper Barcode",
+      "confidentiality_normal": "Normal",
+      "confidentiality_confidential": "Confidential",
+      "confidentiality_very_confidential": "Very Confidential",
+      "confidentiality_top_secret": "Top Secret",
+      "urgency_normal": "Normal",
+      "urgency_urgent": "Urgent",
+      "urgency_very_urgent": "Very Urgent",
+      "urgency_immediate": "Immediate",
+      "referrals": "Sequential Referrals & Directives",
+      "add_referral": "Add New Referral"
     },
     "tasks": {
       "title": "Tasks & Follow-up",

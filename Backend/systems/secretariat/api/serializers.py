@@ -2,7 +2,7 @@ from rest_framework import serializers
 from ..models import (
     Correspondence, Task, Circular, CorrespondenceAttachment,
     MeetingMinutes, DocumentWorkRequest, InventoryItem, InventoryRequest,
-    Custody, AttendanceLog, FinancialAllocation, Expense
+    Custody, AttendanceLog, FinancialAllocation, Expense, CorrespondenceReferral
 )
 from systems.personnel.models import PersonnelMaster
 from core.models import SecurityAdministration
@@ -12,17 +12,45 @@ class CorrespondenceAttachmentSerializer(serializers.ModelSerializer):
         model = CorrespondenceAttachment
         fields = '__all__'
 
+class CorrespondenceReferralSerializer(serializers.ModelSerializer):
+    created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
+    referred_by_name = serializers.CharField(source='referred_by.get_full_name', read_only=True)
+    referred_to_name = serializers.CharField(source='referred_to.full_name', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    correspondence_subject = serializers.CharField(source='correspondence.subject', read_only=True)
+
+    class Meta:
+        model = CorrespondenceReferral
+        fields = '__all__'
+        read_only_fields = ('created_by', 'security_admin', 'referred_by')
+
+class CorrespondenceReplySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Correspondence
+        fields = ('id', 'reference_number', 'subject', 'date', 'status')
+
 class CorrespondenceSerializer(serializers.ModelSerializer):
     created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
     security_admin_name = serializers.CharField(source='security_admin.name', read_only=True)
     type_display = serializers.CharField(source='get_type_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    confidentiality_level_display = serializers.CharField(source='get_confidentiality_level_display', read_only=True)
+    urgency_level_display = serializers.CharField(source='get_urgency_level_display', read_only=True)
     attachments = CorrespondenceAttachmentSerializer(many=True, read_only=True)
+    referrals = CorrespondenceReferralSerializer(many=True, read_only=True)
+    replies = CorrespondenceReplySerializer(many=True, read_only=True)
+    qr_code_url = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Correspondence
         fields = '__all__'
         read_only_fields = ('created_by', 'security_admin')
+
+    def get_qr_code_url(self, obj):
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(f"/secretariat/correspondences/track/{obj.tracking_token}/")
+        return f"/secretariat/correspondences/track/{obj.tracking_token}/"
 
 class TaskSerializer(serializers.ModelSerializer):
     created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)

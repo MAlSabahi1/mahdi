@@ -62,6 +62,7 @@
                 <th class="px-6 py-4 text-start text-xs font-semibold text-gray-500 dark:text-gray-400">اسم المادة</th>
                 <th class="px-6 py-4 text-start text-xs font-semibold text-gray-500 dark:text-gray-400">التصنيف</th>
                 <th class="px-6 py-4 text-start text-xs font-semibold text-gray-500 dark:text-gray-400">الكمية المتوفرة</th>
+                <th class="px-6 py-4 text-start text-xs font-semibold text-gray-500 dark:text-gray-400">حد الطلب الأدنى</th>
                 <th class="px-6 py-4 text-start text-xs font-semibold text-gray-500 dark:text-gray-400">الوحدة</th>
               </tr>
             </thead>
@@ -76,12 +77,14 @@
                   <span
                     :class="[
                       'font-bold',
-                      item.quantity_in_stock <= 5 ? 'text-red-500' : 'text-gray-900 dark:text-white'
+                      item.quantity_in_stock <= item.minimum_stock_level ? 'text-red-500 flex items-center gap-1.5' : 'text-gray-900 dark:text-white'
                     ]"
                   >
                     {{ item.quantity_in_stock }}
+                    <span v-if="item.quantity_in_stock <= item.minimum_stock_level" class="text-[10px] px-1.5 py-0.5 bg-red-50 text-red-650 rounded-md dark:bg-red-950/40 dark:text-red-400 font-black">منخفض</span>
                   </span>
                 </td>
+                <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 font-mono">{{ item.minimum_stock_level }}</td>
                 <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ item.unit }}</td>
               </tr>
             </tbody>
@@ -246,14 +249,18 @@
               <option value="other">أخرى</option>
             </select>
           </div>
-          <div class="grid grid-cols-2 gap-2">
+          <div class="grid grid-cols-3 gap-2">
             <div>
               <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">الكمية الابتدائية *</label>
               <input v-model.number="itemForm.quantity_in_stock" type="number" required min="0" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm" />
             </div>
             <div>
+              <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">حد الطلب الأدنى *</label>
+              <input v-model.number="itemForm.minimum_stock_level" type="number" required min="0" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm" />
+            </div>
+            <div>
               <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">الوحدة *</label>
-              <input v-model="itemForm.unit" type="text" required placeholder="مثال: حبة، كرتون، بند" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm" />
+              <input v-model="itemForm.unit" type="text" required placeholder="مثال: حبة، كرتون" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm" />
             </div>
           </div>
           <div class="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-gray-800">
@@ -397,6 +404,7 @@ const itemForm = ref({
   name: '',
   type: 'stationery',
   quantity_in_stock: 0,
+  minimum_stock_level: 5,
   unit: 'حبة'
 })
 
@@ -491,7 +499,7 @@ async function submitAddItem() {
   try {
     await store.createInventoryItem(itemForm.value)
     showAddItemModal.value = false
-    itemForm.value = { code: '', name: '', type: 'stationery', quantity_in_stock: 0, unit: 'حبة' }
+    itemForm.value = { code: '', name: '', type: 'stationery', quantity_in_stock: 0, minimum_stock_level: 5, unit: 'حبة' }
     fetchStock()
   } catch (err) {
     console.error(err)

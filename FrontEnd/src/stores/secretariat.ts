@@ -17,6 +17,7 @@ export const useSecretariatStore = defineStore('secretariat', () => {
   const attendanceLogs = ref([])
   const financialAllocations = ref([])
   const expenses = ref([])
+  const referrals = ref([])
   
   const totalCorrespondencesCount = ref(0)
   const totalTasksCount = ref(0)
@@ -27,6 +28,7 @@ export const useSecretariatStore = defineStore('secretariat', () => {
   const totalInventoryRequestsCount = ref(0)
   const totalCustodiesCount = ref(0)
   const totalAttendanceCount = ref(0)
+  const totalReferralsCount = ref(0)
 
   // Fetch Correspondences
   async function fetchCorrespondences(params: any = {}) {
@@ -495,6 +497,37 @@ export const useSecretariatStore = defineStore('secretariat', () => {
     }
   }
 
+  // Fetch Referrals
+  async function fetchReferrals(params: any = {}) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await api.get('/secretariat/referrals/', { params })
+      referrals.value = response.data.results
+      totalReferralsCount.value = response.data.count
+      return response.data
+    } catch (err: any) {
+      error.value = err.response?.data?.error || 'فشل جلب الإحالات'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function createReferral(data: any) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await api.post('/secretariat/referrals/', data)
+      return response.data
+    } catch (err: any) {
+      error.value = err.response?.data?.error || 'فشل تسجيل الإحالة والتوجيه'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     loading,
     error,
@@ -548,6 +581,10 @@ export const useSecretariatStore = defineStore('secretariat', () => {
     fetchFinancialAllocations,
     createFinancialAllocation,
     fetchExpenses,
-    createExpense
+    createExpense,
+    referrals,
+    totalReferralsCount,
+    fetchReferrals,
+    createReferral
   }
 })

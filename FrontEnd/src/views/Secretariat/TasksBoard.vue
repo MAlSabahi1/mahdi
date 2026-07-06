@@ -58,9 +58,10 @@
           </div>
         </div>
         
-        <!-- Add Task Action Button -->
+        <!-- Add Task Action Button — only for task managers (secretariat) -->
         <div class="flex justify-end">
           <button
+            v-if="authStore.hasPermission('secretariat.task.manage')"
             @click="openAddModal"
             class="flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-600 shadow-theme-xs cursor-pointer transition duration-300"
           >
@@ -180,9 +181,10 @@
                   </select>
                 </td>
 
-                <!-- Actions (Delete) -->
+                <!-- Actions (Delete) — only for task managers -->
                 <td class="px-6 py-4 whitespace-nowrap text-xs" @click.stop>
                   <button
+                    v-if="authStore.hasPermission('secretariat.task.manage')"
                     @click="deleteTaskItem(task.id)"
                     class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition cursor-pointer"
                     title="حذف التكليف"
@@ -310,6 +312,7 @@ import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import { useSecretariatStore } from '@/stores/secretariat'
 import { usePersonnelStore } from '@/stores/personnel'
+import { useAuthStore } from '@/stores/auth'
 
 // Icons
 import { 
@@ -319,6 +322,7 @@ import {
 const { t } = useI18n()
 const store = useSecretariatStore()
 const personnelStore = usePersonnelStore()
+const authStore = useAuthStore()
 
 const loading = ref(true)
 const saving = ref(false)
