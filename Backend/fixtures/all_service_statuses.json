@@ -1,0 +1,379 @@
+[
+  {
+    "model": "core.servicestatus",
+    "pk": 1,
+    "fields": {
+      "name": "عاملين",
+      "classification": "active_full",
+      "receives_salary": true,
+      "requires_document": false,
+      "is_permanent_deactivation": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 2,
+    "fields": {
+      "name": "قوة احتياطية",
+      "classification": "active_part",
+      "receives_salary": true,
+      "requires_document": false,
+      "is_permanent_deactivation": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 3,
+    "fields": {
+      "name": "بدون عمل",
+      "classification": "active_part",
+      "receives_salary": true,
+      "requires_document": false,
+      "is_permanent_deactivation": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 4,
+    "fields": {
+      "name": "دارسين",
+      "classification": "inactive_temp",
+      "receives_salary": true,
+      "requires_document": true,
+      "is_permanent_deactivation": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 5,
+    "fields": {
+      "name": "منتدبين لدى جهات",
+      "classification": "inactive_temp",
+      "receives_salary": true,
+      "requires_document": true,
+      "is_permanent_deactivation": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 6,
+    "fields": {
+      "name": "معارين",
+      "classification": "inactive_temp",
+      "receives_salary": true,
+      "requires_document": true,
+      "is_permanent_deactivation": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 7,
+    "fields": {
+      "name": "بعثات",
+      "classification": "inactive_temp",
+      "receives_salary": true,
+      "requires_document": true,
+      "is_permanent_deactivation": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 8,
+    "fields": {
+      "name": "غياب",
+      "classification": "inactive_temp",
+      "receives_salary": false,
+      "requires_document": false,
+      "is_permanent_deactivation": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 9,
+    "fields": {
+      "name": "كبار سن",
+      "classification": "inactive_temp",
+      "receives_salary": true,
+      "requires_document": true,
+      "is_permanent_deactivation": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 10,
+    "fields": {
+      "name": "أمراض ومصابين",
+      "classification": "inactive_temp",
+      "receives_salary": true,
+      "requires_document": true,
+      "is_permanent_deactivation": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 11,
+    "fields": {
+      "name": "مرابطين",
+      "classification": "inactive_temp",
+      "receives_salary": true,
+      "requires_document": true,
+      "is_permanent_deactivation": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 12,
+    "fields": {
+      "name": "أسرى",
+      "classification": "inactive_temp",
+      "receives_salary": true,
+      "requires_document": true,
+      "is_permanent_deactivation": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 13,
+    "fields": {
+      "name": "جرحى",
+      "classification": "inactive_temp",
+      "receives_salary": true,
+      "requires_document": true,
+      "is_permanent_deactivation": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 14,
+    "fields": {
+      "name": "مفقودين",
+      "classification": "inactive_temp",
+      "receives_salary": true,
+      "requires_document": true,
+      "is_permanent_deactivation": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 15,
+    "fields": {
+      "name": "سجناء",
+      "classification": "inactive_temp",
+      "receives_salary": false,
+      "requires_document": true,
+      "is_permanent_deactivation": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 16,
+    "fields": {
+      "name": "إجازات",
+      "classification": "inactive_temp",
+      "receives_salary": true,
+      "requires_document": true,
+      "is_permanent_deactivation": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 17,
+    "fields": {
+      "name": "مفرغين للمرافقة",
+      "classification": "inactive_temp",
+      "receives_salary": true,
+      "requires_document": true,
+      "is_permanent_deactivation": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 18,
+    "fields": {
+      "name": "مفرغين للدراسة",
+      "classification": "inactive_temp",
+      "receives_salary": true,
+      "requires_document": true,
+      "is_permanent_deactivation": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 19,
+    "fields": {
+      "name": "مفرغين في الجبهات",
+      "classification": "inactive_temp",
+      "receives_salary": true,
+      "requires_document": true,
+      "is_permanent_deactivation": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 20,
+    "fields": {
+      "name": "شهداء",
+      "classification": "inactive_perm",
+      "receives_salary": false,
+      "requires_document": true,
+      "is_permanent_deactivation": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 21,
+    "fields": {
+      "name": "وفيات",
+      "classification": "inactive_perm",
+      "receives_salary": false,
+      "requires_document": true,
+      "is_permanent_deactivation": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 22,
+    "fields": {
+      "name": "متقاعدين",
+      "classification": "inactive_perm",
+      "receives_salary": false,
+      "requires_document": true,
+      "is_permanent_deactivation": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 23,
+    "fields": {
+      "name": "إنهاء مدة",
+      "classification": "inactive_perm",
+      "receives_salary": false,
+      "requires_document": true,
+      "is_permanent_deactivation": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 24,
+    "fields": {
+      "name": "عدم لياقة",
+      "classification": "inactive_perm",
+      "receives_salary": false,
+      "requires_document": true,
+      "is_permanent_deactivation": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 25,
+    "fields": {
+      "name": "مفصولين",
+      "classification": "inactive_perm",
+      "receives_salary": false,
+      "requires_document": true,
+      "is_permanent_deactivation": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 26,
+    "fields": {
+      "name": "مفقودين بصك شرعي",
+      "classification": "inactive_perm",
+      "receives_salary": false,
+      "requires_document": true,
+      "is_permanent_deactivation": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 27,
+    "fields": {
+      "name": "منقطعين - فرار",
+      "classification": "inactive_perm",
+      "receives_salary": false,
+      "requires_document": true,
+      "is_permanent_deactivation": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 28,
+    "fields": {
+      "name": "ملتحقين بالعدوان",
+      "classification": "inactive_perm",
+      "receives_salary": false,
+      "requires_document": true,
+      "is_permanent_deactivation": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "core.servicestatus",
+    "pk": 29,
+    "fields": {
+      "name": "مصدرين إلى الوزارة",
+      "classification": "inactive_perm",
+      "receives_salary": false,
+      "requires_document": true,
+      "is_permanent_deactivation": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]

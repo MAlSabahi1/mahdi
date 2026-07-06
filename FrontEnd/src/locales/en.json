@@ -18,7 +18,11 @@
     "of": "of",
     "entries": "entries",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "filter": "Filter",
+    "export_csv": "Export CSV",
+    "print_table": "Print Table",
+    "select_columns": "Select Columns"
   },
   "services": {
     "staging": "Staging Review",

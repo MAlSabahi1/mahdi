@@ -41,7 +41,11 @@
     "showing": "عرض",
     "to": "إلى",
     "of": "من أصل",
-    "entries": "سجل"
+    "entries": "سجل",
+    "filter": "تصفية",
+    "export_csv": "تصدير CSV",
+    "print_table": "طباعة الجدول",
+    "select_columns": "تحديد الأعمدة"
   },
   "nav": {
     "home": "الرئيسية",

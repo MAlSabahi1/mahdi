@@ -17,19 +17,19 @@ from core.models import CentralDepartment, Branch, DistrictPolice
 class PersonnelMasterAdmin(admin.ModelAdmin):
     list_display = [
         'military_number', 'full_name', 'current_rank',
-        'security_admin', 'central_department', 'current_status', 'is_complete',
+        'security_admin', 'central_department', 'is_complete',
         'is_data_clean', 'data_quality_score'
     ]
     search_fields = ['military_number', 'full_name', 'national_id']
     list_filter = [
         'security_admin', 'central_department',
-        'current_status', 'current_rank',
+        'current_rank',
         'is_complete', 'is_data_clean'
     ]
     # security_admin = select عادي (22 خيار فقط — لا يحتاج autocomplete)
     # central_department / branch / district_police = select عادي (يُفلتر بـ JS)
     autocomplete_fields = [
-        'current_rank', 'current_status',
+        'current_rank',
         'qualification', 'pending_rank',
     ]
     raw_id_fields = ['division', 'unit']
