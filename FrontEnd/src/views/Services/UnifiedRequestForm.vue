@@ -228,14 +228,24 @@
           <div v-else v-for="(section, sIdx) in schema.sections.filter((s:any) => s.source === 'user_input')" :key="sIdx">
             <h3 class="text-md font-bold text-brand-600 mb-4">{{ section.title }}</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div v-for="field in section.fields" :key="field.key" class="space-y-1.5">
-                <label class="text-xs font-bold text-gray-700 dark:text-gray-300">
-                  {{ field.label }} <span v-if="field.required" class="text-red-500">*</span>
-                </label>
+              <template v-for="field in section.fields" :key="field.key">
+                <!-- Current Rank injected right before to_rank for Rank Settlements -->
+                <div v-if="field.key === 'to_rank' && category === 'rank_settlement'" class="bg-gray-50/50 dark:bg-gray-800/20 p-4 rounded-xl border border-gray-100 dark:border-gray-800/60 flex flex-col justify-center">
+                  <label class="mb-1 block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">الرتبة الحالية</label>
+                  <div class="text-sm font-bold text-gray-900 dark:text-white">
+                    {{ selectedPersonnelList[0]?.rank_name || selectedPersonnelList[0]?.current_rank?.name || selectedPersonnelList[0]?.rank?.name || 'غير متوفر' }}
+                  </div>
+                </div>
+
+                <div v-show="field.key !== 'new_military_number' || formData.settlement_type === 'personnel_to_officer'" 
+                     class="space-y-1.5">
+                  <label class="text-xs font-bold text-gray-700 dark:text-gray-300">
+                    {{ field.label }} <span v-if="field.required || (field.key === 'new_military_number' && formData.settlement_type === 'personnel_to_officer')" class="text-red-500">*</span>
+                  </label>
                 
                 <select v-if="field.type === 'select'" v-model="formData[field.key]" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-shadow">
                   <option value="" disabled>اختر...</option>
-                  <option v-for="opt in field.options" :key="opt && typeof opt === 'object' ? opt.value : opt" :value="opt && typeof opt === 'object' ? opt.value : opt">
+                  <option v-for="opt in getFilteredOptions(field)" :key="opt && typeof opt === 'object' ? opt.value : opt" :value="opt && typeof opt === 'object' ? opt.value : opt">
                     {{ opt && typeof opt === 'object' ? opt.label : opt }}
                   </option>
                 </select>
@@ -292,10 +302,16 @@
                 <textarea v-else-if="field.type === 'textarea'" v-model="formData[field.key]" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none h-24 transition-shadow"></textarea>
                 <input v-else :type="field.type" v-model="formData[field.key]" 
                         :readonly="field.key === 'old_value'"
+                        :maxlength="field.key === 'new_military_number' ? 7 : (field.key === 'new_value' && (formData.correction_type === 'national_id_correction' || formData.field_name === 'national_id') ? 11 : undefined)"
                         :class="['w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-shadow', field.type === 'date' ? 'text-left' : '', field.key === 'old_value' ? 'opacity-70 cursor-not-allowed font-bold text-gray-600' : '']"
                         :dir="field.type === 'date' ? 'ltr' : 'rtl'" />
+                <p v-if="field.key === 'new_military_number'" class="mt-1 text-xs text-brand-600 dark:text-brand-400 flex items-center gap-1">
+                  <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  الرقم العسكري للضابط يبدأ بـ 60 ويتكون من 7 خانات
+                </p>
                 <p v-if="field.help_text" class="text-[10px] text-gray-400 mt-1">{{ field.help_text }}</p>
-              </div>
+                </div>
+              </template>
             </div>
           </div>
         </div>
@@ -374,7 +390,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Swal from 'sweetalert2'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
@@ -431,6 +447,56 @@ async function loadGovernorates() {
     governorates.value = res.data?.results || res.data || []
   } catch { governorates.value = [] }
 }
+
+function getFilteredOptions(field: any) {
+  if (!field.options) return []
+  if (field.key === 'to_rank') {
+    const person = selectedPersonnelList.value[0]
+    if (!person) return field.options
+
+    const currentRankId = person.current_rank?.id || person.current_rank_id || person.current_rank
+    if (!currentRankId) return field.options
+
+    const currentRank = field.options.find((o: any) => String(o.value) === String(currentRankId))
+    const currentRankOrder = currentRank ? currentRank.order : 999
+    const currentRankIsOfficer = currentRank ? currentRank.is_officer : false
+
+    const settlementType = formData.value.settlement_type
+
+    if (settlementType === 'personnel_to_officer') {
+      const officerRanks = field.options.filter((o: any) => o.is_officer)
+      if (officerRanks.length === 0) return []
+      const lowestOfficerRankOrder = Math.max(...officerRanks.map((r: any) => r.order))
+      return officerRanks.filter((o: any) => o.order === lowestOfficerRankOrder)
+    } else if (settlementType === 'same_class_promotion') {
+      const sameClassRanks = field.options.filter((o: any) => o.is_officer === currentRankIsOfficer && o.order < currentRankOrder)
+      if (sameClassRanks.length === 0) return []
+      const immediateNextRankOrder = Math.max(...sameClassRanks.map((r: any) => r.order))
+      return sameClassRanks.filter((o: any) => o.order === immediateNextRankOrder)
+    } else if (settlementType === 'demotion') {
+      const sameClassRanks = field.options.filter((o: any) => o.is_officer === currentRankIsOfficer && o.order > currentRankOrder)
+      if (sameClassRanks.length === 0) return []
+      const immediateLowerRankOrder = Math.min(...sameClassRanks.map((r: any) => r.order))
+      return sameClassRanks.filter((o: any) => o.order === immediateLowerRankOrder)
+    }
+  }
+  return field.options
+}
+
+watch(() => formData.value.settlement_type, () => {
+  formData.value.to_rank = ''
+  
+  // Auto-select if there is exactly 1 valid option based on intelligent filtering
+  setTimeout(() => {
+    const toRankField = schema.value?.sections?.find((s:any) => s.source === 'user_input')?.fields?.find((f:any) => f.key === 'to_rank')
+    if (toRankField) {
+      const filtered = getFilteredOptions(toRankField)
+      if (filtered.length === 1) {
+        formData.value.to_rank = filtered[0].value
+      }
+    }
+  }, 50)
+})
 
 function getDistricts(fieldKey: string): any[] {
   const govId = locationState[fieldKey + '_gov']
@@ -581,7 +647,9 @@ onMounted(async () => {
             const ranks = ranksRes.data?.results || ranksRes.data || []
             rankField.options = ranks.map((r: any) => ({
               value: r.id,
-              label: r.name
+              label: r.name,
+              order: r.order,
+              is_officer: r.is_officer
             }))
           } catch (e) {
             console.error('Failed to load ranks:', e)
@@ -686,7 +754,7 @@ async function goToStep2() {
 }
 
 // === Step 2 Logic ===
-function validateAndGoToStep3() {
+async function validateAndGoToStep3() {
   if (type === 'name_correction') {
     if (hasPendingNameCorrection.value) {
       Swal.fire({
@@ -736,7 +804,12 @@ function validateAndGoToStep3() {
     // Check required fields in the user_input section
     const userSection = schema.value.sections?.find((s: any) => s.source === 'user_input')
     if (userSection) {
-      const missing = userSection.fields.filter((f: any) => f.required && !formData.value[f.key])
+      const missing = userSection.fields.filter((f: any) => {
+        if (f.key === 'new_military_number') {
+          return formData.value.settlement_type === 'personnel_to_officer' && !formData.value[f.key]
+        }
+        return f.required && !formData.value[f.key]
+      })
       if (missing.length > 0) {
         Swal.fire({
           icon: 'warning',
@@ -744,6 +817,90 @@ function validateAndGoToStep3() {
           text: `الرجاء تعبئة الحقول الإلزامية: ${missing.map((f:any) => f.label).join('، ')}`
         })
         return
+      }
+
+      // Rank Settlement validations
+      if (formData.value.settlement_type === 'personnel_to_officer' && formData.value.new_military_number) {
+        const milNum = formData.value.new_military_number
+        if (!milNum.startsWith('60') || milNum.length !== 7 || isNaN(Number(milNum))) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'رقم عسكري غير صالح',
+            text: 'الرقم العسكري الجديد للضابط يجب أن يبدأ بـ 60 ويتكون من 7 أرقام.'
+          })
+          return
+        }
+
+        // Live check military number
+        try {
+          const checkRes = await api.get('/personnel/check-military-number/', { params: { value: milNum } })
+          if (checkRes.data?.exists) {
+            Swal.fire({
+              icon: 'error',
+              title: 'الرقم العسكري مستخدم',
+              text: 'هذا الرقم العسكري مستخدم بالفعل في النظام.'
+            })
+            return
+          }
+        } catch (e) {
+          console.error(e)
+        }
+      }
+
+      // National ID and Military Number validations in Correction forms
+      const currentField = formData.value.field_name || formData.value.correction_type || type
+      if (currentField === 'national_id' || currentField === 'national_id_correction') {
+        const val = formData.value.new_value
+        if (!val || val.length !== 11 || !/^\d+$/.test(val)) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'رقم وطني غير صالح',
+            text: 'الرقم الوطني الجديد يجب أن يتكون من 11 رقماً.'
+          })
+          return
+        }
+
+        // Live check national ID
+        try {
+          const checkRes = await api.get('/personnel/check-national-id/', { params: { value: val } })
+          if (checkRes.data?.exists) {
+            Swal.fire({
+              icon: 'error',
+              title: 'الرقم الوطني مسجل مسبقاً',
+              text: 'هذا الرقم الوطني مسجل بالفعل في النظام.'
+            })
+            return
+          }
+        } catch (e) {
+          console.error(e)
+        }
+      }
+
+      if (currentField === 'military_number' || currentField === 'military_number_correction') {
+        const val = formData.value.new_value
+        if (!val || val.length < 4 || isNaN(Number(val))) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'رقم عسكري غير صالح',
+            text: 'الرجاء إدخال رقم عسكري صالح.'
+          })
+          return
+        }
+
+        // Live check military number
+        try {
+          const checkRes = await api.get('/personnel/check-military-number/', { params: { value: val } })
+          if (checkRes.data?.exists) {
+            Swal.fire({
+              icon: 'error',
+              title: 'الرقم العسكري مستخدم',
+              text: 'هذا الرقم العسكري مستخدم بالفعل في النظام.'
+            })
+            return
+          }
+        } catch (e) {
+          console.error(e)
+        }
       }
     }
   }
