@@ -66,6 +66,7 @@ class StatusChangeForm(TimeStampedModel):
     )
     form_type = models.CharField(
         max_length=100,
+        choices=FORM_TYPE_CHOICES,
         verbose_name=_('نوع الاستمارة')
     )
     form_data = models.JSONField(

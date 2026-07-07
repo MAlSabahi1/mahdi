@@ -88,7 +88,9 @@ class DjangoRankSettlementRepository(IRankSettlementRepository):
             due_date=model.due_date,
             decision_date=model.decision_date,
             decision_number=model.decision_number,
+            settlement_type=model.settlement_type,
             status=model.status,
+            new_military_number=model.new_military_number,
             supporting_document_id=model.supporting_document_id,
             approval_document_id=model.approval_document_id,
             requested_by_id=model.requested_by_id,
@@ -108,7 +110,9 @@ class DjangoRankSettlementRepository(IRankSettlementRepository):
         model.due_date = entity.due_date
         model.decision_date = entity.decision_date
         model.decision_number = entity.decision_number
+        model.settlement_type = entity.settlement_type
         model.status = entity.status
+        model.new_military_number = entity.new_military_number
         model.supporting_document_id = entity.supporting_document_id
         model.approval_document_id = entity.approval_document_id
         model.requested_by_id = entity.requested_by_id

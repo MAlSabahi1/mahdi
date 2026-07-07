@@ -64,8 +64,11 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
         approval_type = params.get('approval_type')
         if approval_type:
             from systems.services.models import ServiceCatalog
-            catalog_form_types = ServiceCatalog.objects.filter(approval_type=approval_type).values_list('code', flat=True)
-            qs = qs.filter(form_type__in=list(catalog_form_types))
+            catalog_items = ServiceCatalog.objects.filter(approval_type=approval_type)
+            codes = list(catalog_items.values_list('code', flat=True))
+            form_types = list(catalog_items.exclude(form_type__isnull=True).values_list('form_type', flat=True))
+            valid_types = list(set(codes + form_types))
+            qs = qs.filter(form_type__in=valid_types)
 
         if params.get('type'):
             qs = qs.filter(form_type=params['type'])
@@ -197,6 +200,16 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
         to_id = d.get('to_status_id')
         if to_id:
             to_status_obj = ServiceStatus.objects.filter(pk=to_id).first()
+        elif not is_dynamic:
+            defn = FormRegistry.get(form_type)
+            if defn and defn.target_status:
+                target_name = defn.target_status
+                to_status_obj = ServiceStatus.objects.filter(name__icontains=target_name).first()
+                if not to_status_obj:
+                    for word in target_name.split():
+                        to_status_obj = ServiceStatus.objects.filter(name__icontains=word).first()
+                        if to_status_obj:
+                            break
 
         # ── الإنشاء ──
         if is_dynamic:
@@ -305,6 +318,19 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
                 form.attachments.add(doc)
                 form.save(update_fields=['ministry_approval_doc'])
             
+            # Determine next workflow step dynamically
+            next_step_id = None
+            if catalog:
+                ordered_steps = list(catalog.workflow_steps.order_by('order'))
+                if form.current_step:
+                    current_idx = next((i for i, s in enumerate(ordered_steps) if s.id == form.current_step_id), -1)
+                    if current_idx >= 0 and current_idx < len(ordered_steps) - 1:
+                        next_step_id = ordered_steps[current_idx + 1].id
+                    # else: last step → next_step_id stays None → triggers final approval
+                elif ordered_steps:
+                    # No current step but has steps — start from first
+                    next_step_id = ordered_steps[0].id if len(ordered_steps) > 1 else None
+
             uc = ApproveStatusFormUseCase(
                 self.repo,
                 self.personnel_updater,
@@ -315,11 +341,13 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
                 form_id=form.id,
                 approved_by=request.user.id,
                 approved_at=timezone.now(),
-                next_step_id=None
+                next_step_id=next_step_id
             )
             uc.execute(cmd)
             
-            return Response({'success': True, 'message': 'تم الاعتماد النهائي للطلب بنجاح.'})
+            is_final = next_step_id is None
+            msg = 'تم الاعتماد النهائي للطلب بنجاح. تم تحديث حالة الفرد.' if is_final else 'تم الاعتماد وتمرير المعاملة للمرحلة التالية.'
+            return Response({'success': True, 'message': msg, 'is_final': is_final})
         except ValueError as e:
             return Response({'success': False, 'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -344,16 +372,18 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
         """GET /forms/schema/?type=martyr أو بدون type للكل"""
         ft = request.query_params.get('type')
         if ft:
+            # 1. Prioritize official Forms defined in FormRegistry
+            if FormRegistry.exists(ft):
+                return Response({'success': True, 'data': FormRegistry.schema(ft)})
+            
+            # 2. Otherwise query database ServiceCatalog
             from systems.services.models import ServiceCatalog
             service = ServiceCatalog.objects.filter(code=ft).first() or ServiceCatalog.objects.filter(form_type=ft).first()
             if service and service.fields_schema:
                 return Response({'success': True, 'data': service.fields_schema})
             
-            # Fallback to FormRegistry if not in DB (for backward compatibility)
-            if not FormRegistry.exists(ft):
-                return Response({'success': False, 'error': f'نوع غير صالح: {ft}'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            return Response({'success': True, 'data': FormRegistry.schema(ft)})
+            return Response({'success': False, 'error': f'نوع غير صالح: {ft}'},
+                            status=status.HTTP_400_BAD_REQUEST)
         return Response({'success': True, 'data': FormRegistry.all_schemas()})
 
     @action(detail=False, methods=['get'])

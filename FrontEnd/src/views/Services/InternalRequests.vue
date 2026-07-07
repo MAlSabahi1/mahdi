@@ -63,6 +63,7 @@
         <select v-model="filterServiceType"
           class="text-xs border border-gray-200 dark:border-gray-800 rounded-lg p-2 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 min-w-[140px]">
           <option value="">جميع الأنواع</option>
+          <option value="form">الاستمارات (إثبات حالة)</option>
           <option value="correction">تصحيحات البيانات</option>
           <option value="rank_settlement">الترقيات والتسويات</option>
           <option value="disciplinary">الجزاءات والانضباط</option>
@@ -87,19 +88,20 @@
                 <th class="px-4 py-3">نوع الخدمة</th>
                 <th class="px-4 py-3">الفرد</th>
                 <th class="px-4 py-3">الرقم العسكري</th>
+                <th class="px-4 py-3">المرفقات</th>
                 <th class="px-4 py-3">المرحلة الحالية</th>
                 <th class="px-4 py-3">تاريخ التقديم</th>
-                <th class="px-4 py-3 text-center w-[180px]">الإجراءات</th>
+                <th class="px-4 py-3 text-center w-[200px]">الإجراءات</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60">
               <tr v-if="loading">
-                <td colspan="7" class="px-4 py-12 text-center text-gray-400">
+                <td colspan="8" class="px-4 py-12 text-center text-gray-400">
                   <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                 </td>
               </tr>
               <tr v-else-if="filteredRequests.length === 0">
-                <td colspan="7" class="px-4 py-12 text-center">
+                <td colspan="8" class="px-4 py-12 text-center">
                   <div class="flex flex-col items-center gap-3 text-gray-400">
                     <FileX class="h-10 w-10 opacity-30" />
                     <p class="text-sm font-bold">لا توجد طلبات داخلية بهذه المعايير</p>
@@ -129,6 +131,14 @@
                 </td>
                 <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ req.personnel_name || '—' }}</td>
                 <td class="px-4 py-3 font-mono text-gray-500 text-[11px]">{{ req.personnel_military_number || '—' }}</td>
+                <td class="px-4 py-3">
+                  <button v-if="req.attachments_count > 0" @click="showAttachments(req)"
+                    class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg bg-brand-50 text-brand-600 hover:bg-brand-100 dark:bg-brand-900/20 dark:text-brand-400 border border-brand-200 dark:border-brand-800 transition-colors cursor-pointer">
+                    <Paperclip class="w-3 h-3" />
+                    {{ req.attachments_count }}
+                  </button>
+                  <span v-else class="text-[10px] text-gray-400">—</span>
+                </td>
                 <td class="px-4 py-3">
                   <span :class="stageColor(req.status)"
                     class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold border">
@@ -184,7 +194,7 @@
 import { ref, computed, onMounted } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
-import { UserCheck, Search, FileX } from 'lucide-vue-next'
+import { UserCheck, Search, FileX, Paperclip } from 'lucide-vue-next'
 import { useServicesStore } from '@/stores/services'
 import { useAuthStore } from '@/stores/auth'
 import Swal from 'sweetalert2'
@@ -287,6 +297,7 @@ function stageDot(status: string) {
 
 function serviceTypeColor(type: string) {
   const m: Record<string, string> = {
+    form:            'bg-blue-500',
     correction:      'bg-sky-500',
     rank_settlement: 'bg-indigo-500',
     disciplinary:    'bg-red-500',
@@ -315,19 +326,23 @@ onMounted(async () => {
     const formsList = (res?.results || res || []).map((f: any) => ({
       ...f,
       personnel_name: f.personnel?.full_name || f.personnel_name || '',
-      personnel_military_number: f.personnel?.military_number || f.personnel_military_number || ''
+      personnel_military_number: f.personnel?.military_number || f.personnel_military_number || '',
+      service_type: f.service_type || 'form',
+      attachments_count: f.attachments?.length || 0,
+      attachments_list: f.attachments || [],
     }))
 
     const correctionsRes = await api.get('/personnel/corrections/')
     const correctionsList = (correctionsRes.data?.results || correctionsRes.data || [])
-      .filter((c: any) => c.correction_type === 'national_id_correction' || c.correction_type === 'military_number_correction')
       .map((c: any) => ({
         id: `corr-${c.id}`,
         rawId: c.id,
         isCorrection: true,
         service_type: 'correction',
         form_type: c.correction_type,
-        form_type_display: c.correction_type === 'national_id_correction' ? 'طلب تصحيح الرقم الوطني' : 'طلب تصحيح الرقم العسكري',
+        form_type_display: c.correction_type === 'national_id_correction' ? 'طلب تصحيح الرقم الوطني'
+          : c.correction_type === 'military_number_correction' ? 'طلب تصحيح الرقم العسكري'
+          : c.correction_type === 'name_correction' ? 'طلب تصحيح الاسم' : c.correction_type,
         personnel_name: c.personnel_name,
         personnel_military_number: c.personnel_military_number,
         status: c.status === 'pending' ? 'pending_services' : c.status,
@@ -335,7 +350,9 @@ onMounted(async () => {
         submitted_at: c.requested_at,
         notes: c.notes,
         old_value: c.old_value,
-        new_value: c.new_value
+        new_value: c.new_value,
+        attachments_count: c.documents?.length || 0,
+        attachments_list: c.documents || [],
       }))
 
     allRequests.value = [...formsList, ...correctionsList]
@@ -412,6 +429,36 @@ async function rejectReq(req: any) {
       Swal.fire({ icon: 'error', title: 'خطأ', text: e?.response?.data?.error || 'حدث خطأ أثناء الرفض' })
     }
   }
+}
+
+function showAttachments(req: any) {
+  const attachments = req.attachments_list || []
+  if (attachments.length === 0) return
+
+  const rows = attachments.map((att: any, idx: number) => {
+    const docType = att.document_type || att.doc_type || 'مستند'
+    const fileUrl = att.file || att.url || '#'
+    return `
+      <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-xl mb-2">
+        <div class="flex items-center gap-3">
+          <span class="bg-brand-50 text-brand-600 font-bold text-[10px] w-7 h-7 rounded-lg flex items-center justify-center">${idx + 1}</span>
+          <div>
+            <p class="text-sm font-bold text-gray-800">${docType}</p>
+            <p class="text-[10px] text-gray-400">ID: ${att.id || '—'}</p>
+          </div>
+        </div>
+        <a href="${fileUrl}" target="_blank" class="text-[10px] font-bold text-brand-600 bg-brand-50 px-3 py-1.5 rounded-lg hover:bg-brand-100">معاينة</a>
+      </div>
+    `
+  }).join('')
+
+  Swal.fire({
+    title: `المرفقات (${attachments.length})`,
+    html: `<div class="text-right space-y-1 max-h-[400px] overflow-y-auto" dir="rtl">${rows}</div>`,
+    width: 500,
+    confirmButtonText: 'إغلاق',
+    confirmButtonColor: '#3b82f6',
+  })
 }
 
 function showCorrectionDetails(req: any) {

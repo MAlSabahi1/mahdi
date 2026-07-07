@@ -20,7 +20,7 @@ class DjangoPersonnelUpdater:
     def update_status(self, personnel_id: int, to_status_id: int) -> None:
         from systems.personnel.models import PersonnelMaster
         with transaction.atomic():
-            PersonnelMaster.objects.filter(id=personnel_id).update(
+            PersonnelMaster.objects.filter(pk=personnel_id).update(
                 current_status_id=to_status_id,
                 updated_at=timezone.now(),
             )
@@ -38,21 +38,24 @@ class DjangoEventPublisher:
 
         def _execute():
             try:
-                from systems.services.application.services.atomic_service import (
-                    AuditService, NotificationService, ServiceEventService,
-                )
+                from infra.audit.services.audit_service import AuditService
+                from core.services.notification_service import NotificationService
+                from core.services.service_event_service import ServiceEventService
                 from systems.personnel.models import PersonnelMaster
                 from systems.services.infrastructure.models.status_change import StatusChangeForm
 
-                personnel = PersonnelMaster.objects.get(id=form.personnel_id)
+                personnel = PersonnelMaster.objects.get(pk=form.personnel_id)
                 db_form   = StatusChangeForm.objects.get(id=form.id)
 
+                from infra.accounts.models import User
+                approved_by_user = User.objects.filter(id=approved_by_id).first()
+
                 AuditService.log_status_change(
-                    personnel, db_form.from_status, db_form.to_status, approved_by_id, db_form
+                    personnel, db_form.from_status, db_form.to_status, approved_by_user, db_form
                 )
                 NotificationService.notify_status_change(personnel, db_form)
                 ServiceEventService.record_status_change(
-                    personnel, db_form.from_status, db_form.to_status, approved_by_id
+                    personnel, db_form.from_status, db_form.to_status, approved_by_user
                 )
             except Exception as exc:
                 import logging
@@ -67,9 +70,8 @@ class DjangoEventPublisher:
 
         def _execute():
             try:
-                from systems.services.application.services.atomic_service import (
-                    AuditService, NotificationService,
-                )
+                from infra.audit.services.audit_service import AuditService
+                from core.services.notification_service import NotificationService
                 from infra.accounts.models import User
                 from systems.services.infrastructure.models.status_change import StatusChangeForm
 

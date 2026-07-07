@@ -11,9 +11,22 @@ class Command(BaseCommand):
                     "title": "بيانات التصحيح",
                     "source": "user_input",
                     "fields": [
-                        {"key": "old_value", "label": "القيمة الحالية (إن وجدت)", "type": "text", "required": False},
+                        {"key": "correction_type", "label": "نوع التصحيح", "type": "select", "required": True, "options": [
+                            {"value": "name_correction", "label": "تصحيح الاسم"},
+                            {"value": "national_id_correction", "label": "تصحيح الرقم الوطني"},
+                            {"value": "military_number_correction", "label": "تصحيح الرقم العسكري"}
+                        ]},
+                        {"key": "field_name", "label": "اسم الحقل المراد تصحيحه", "type": "select", "required": True, "options": [
+                            {"value": "full_name", "label": "الاسم الكامل"},
+                            {"value": "national_id", "label": "الرقم الوطني"},
+                            {"value": "military_number", "label": "الرقم العسكري"},
+                            {"value": "birth_date", "label": "تاريخ الميلاد"},
+                            {"value": "join_date", "label": "تاريخ الانتساب"},
+                            {"value": "phone_number", "label": "رقم الهاتف"}
+                        ]},
+                        {"key": "old_value", "label": "القيمة الحالية (تُملأ تلقائياً)", "type": "text", "required": False, "disabled": True},
                         {"key": "new_value", "label": "القيمة الجديدة الصحيحة", "type": "text", "required": True},
-                        {"key": "reason", "label": "سبب التصحيح", "type": "textarea", "required": True}
+                        {"key": "notes", "label": "ملاحظات إضافية", "type": "textarea", "required": False}
                     ]
                 }
             ],
@@ -31,9 +44,15 @@ class Command(BaseCommand):
                     "title": "بيانات القرار",
                     "source": "user_input",
                     "fields": [
-                        {"key": "to_rank", "label": "الرتبة المستهدفة", "type": "text", "required": True},
-                        {"key": "decision_number", "label": "رقم القرار", "type": "text", "required": True},
+                        {"key": "settlement_type", "label": "نوع التسوية", "type": "select", "required": True, "options": [
+                            {"value": "same_class_promotion", "label": "ترقية ضمن نفس الصنف"},
+                            {"value": "personnel_to_officer", "label": "تسوية فرد إلى ضابط"},
+                            {"value": "demotion", "label": "تخفيض رتبة (عقوبة/قرار قرار قضائي)"}
+                        ]},
+                        {"key": "to_rank", "label": "الرتبة المستهدفة", "type": "select", "required": True},
+                        {"key": "decision_number", "label": "رقم القرار/المذكرة", "type": "text", "required": True},
                         {"key": "decision_date", "label": "تاريخ القرار", "type": "date", "required": True},
+                        {"key": "due_date", "label": "تاريخ الاستحقاق", "type": "date", "required": True},
                         {"key": "new_military_number", "label": "الرقم العسكري الجديد (في حال التسوية للضباط)", "type": "text", "required": False},
                         {"key": "notes", "label": "ملاحظات", "type": "textarea", "required": False}
                     ]

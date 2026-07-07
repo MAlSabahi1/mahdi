@@ -120,7 +120,8 @@ _FORMS = {
         fields=(
             FormField('death_date', 'تاريخ الوفاة', 'date'),
             FormField('death_cause', 'سبب الوفاة', 'textarea'),
-            FormField('death_location', 'مكان الوفاة', 'text'),
+            FormField('death_location', 'مكان الوفاة', 'location_cascade',
+                      help_text='محافظة → مديرية → عزلة/قرية — يمكن الكتابة يدوياً'),
             FormField('occurrence_context', 'حالة الوقوع', 'select',
                       options=('أثناء الواجب', 'طبيعية')),
         ),
@@ -143,7 +144,8 @@ _FORMS = {
         description='الدليل: ص 35 — نموذج 11 — المفقودين (مؤقتاً)',
         fields=(
             FormField('missing_date', 'تاريخ الفقدان', 'date'),
-            FormField('missing_location', 'مكان الفقدان', 'text'),
+            FormField('missing_location', 'مكان الفقدان', 'location_cascade',
+                      help_text='محافظة → مديرية → عزلة/قرية — يمكن الكتابة يدوياً'),
             FormField('court_ruling_date', 'تاريخ الحكم الشرعي', 'date', required=False),
             FormField('legal_status', 'حالة الإجراءات', 'select',
                       options=('مستكمل', 'غير مستكمل')),
@@ -277,7 +279,8 @@ _FORMS = {
         fields=(
             FormField('martyrdom_date', 'تاريخ الاستشهاد', 'date'),
             FormField('martyrdom_cause', 'سبب الاستشهاد', 'textarea'),
-            FormField('martyrdom_location', 'مكان الاستشهاد', 'text'),
+            FormField('martyrdom_location', 'مكان الاستشهاد', 'location_cascade',
+                      help_text='محافظة → مديرية → عزلة/قرية — يمكن الكتابة يدوياً'),
             FormField('occurrence_context', 'حالة الوقوع', 'select',
                       options=('أثناء الواجب',)),
         ),

@@ -43,7 +43,7 @@ class NotificationService:
                 'priority': priority,
             }
             if personnel is not None:
-                kwargs['personnel'] = personnel
+                kwargs['extra_data'] = {'personnel_id': getattr(personnel, 'military_number', str(personnel))}
 
             NotificationRecord.objects.create(**kwargs)
             logger.debug(

@@ -5,12 +5,12 @@ from systems.personnel.domain.entities.corrections import SuggestedCorrectionEnt
 
 
 def test_correction_validation():
-    # Test valid correction
+    # Test valid correction (quad name in Arabic)
     corr = SuggestedCorrectionEntity(
         personnel_id=1,
         field_name='full_name',
-        old_value='علي',
-        new_value='علي محمد',
+        old_value='علي صالح محمد عبده',
+        new_value='علي محمد حسين صالح',
         correction_type='name_correction',
         supporting_document_id=10
     )
@@ -31,8 +31,8 @@ def test_correction_validation():
     corr_no_doc = SuggestedCorrectionEntity(
         personnel_id=1,
         field_name='full_name',
-        old_value='علي',
-        new_value='علي محمد',
+        old_value='علي صالح محمد عبده',
+        new_value='علي محمد حسين صالح',
         correction_type='name_correction'
     )
     with pytest.raises(ValueError, match='يتطلب إرفاق مستند داعم'):
@@ -63,14 +63,15 @@ def test_correction_workflow():
 
 
 def test_rank_settlement_validation():
-    # Valid
+    # Valid promotion
     settlement = RankSettlementEntity(
         personnel_id=1,
         current_rank_id=2,
         new_rank_id=3,
         due_date=date(2025, 1, 1),
         decision_date=date(2025, 5, 1),
-        decision_number='123/2025'
+        decision_number='123/2025',
+        settlement_type='same_class_promotion'
     )
     settlement.validate_request() # Should not raise
     
@@ -81,9 +82,10 @@ def test_rank_settlement_validation():
         new_rank_id=2, # Same!
         due_date=date(2025, 1, 1),
         decision_date=date(2025, 5, 1),
-        decision_number='123/2025'
+        decision_number='123/2025',
+        settlement_type='same_class_promotion'
     )
-    with pytest.raises(ValueError, match='يجب أن تكون مختلفة عن الرتبة الحالية'):
+    with pytest.raises(ValueError, match='الرتبة الجديدة يجب أن تكون مختلفة عن الرتبة الحالية'):
         bad_rank.validate_request()
         
     # Invalid: No decision number
@@ -93,7 +95,21 @@ def test_rank_settlement_validation():
         new_rank_id=3,
         due_date=date(2025, 1, 1),
         decision_date=date(2025, 5, 1),
-        decision_number='   '
+        decision_number='   ',
+        settlement_type='same_class_promotion'
     )
     with pytest.raises(ValueError, match='يجب إدخال رقم القرار'):
         bad_dec.validate_request()
+        
+    # Invalid: Officer settlement missing new military number
+    bad_officer = RankSettlementEntity(
+        personnel_id=1,
+        current_rank_id=2,
+        new_rank_id=3,
+        due_date=date(2025, 1, 1),
+        decision_date=date(2025, 5, 1),
+        decision_number='123/2025',
+        settlement_type='personnel_to_officer'
+    )
+    with pytest.raises(ValueError, match='تسوية فرد إلى ضابط تتطلب إدخال الرقم العسكري الجديد'):
+        bad_officer.validate_request()

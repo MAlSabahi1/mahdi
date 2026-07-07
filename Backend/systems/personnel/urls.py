@@ -80,6 +80,7 @@ urlpatterns = [
     path('legacy-import/', views.LegacyImportView.as_view(), name='legacy-import'),
     path('rank-settlement/', views.RankSettlementView.as_view(), name='rank-settlement'),
     path('check-national-id/', views.CheckNationalIdView.as_view(), name='check-national-id'),
+    path('check-military-number/', views.CheckMilitaryNumberView.as_view(), name='check-military-number'),
     path('<str:military_number>/update-national-id/', views.UpdateNationalIdView.as_view(), name='update-national-id'),
     path('', include(router.urls)),
 ]

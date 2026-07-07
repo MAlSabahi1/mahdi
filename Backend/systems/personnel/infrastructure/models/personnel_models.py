@@ -792,6 +792,7 @@ class SuggestedCorrection(TimeStampedModel):
         1. المرفق إلزامي لتصحيح الاسم والرقم العسكري.
         2. لا يمكن تعديل طلب موافق عليه أو مرفوض.
         3. الفرد المحذوف لا يقبل طلبات جديدة.
+        4. تحقق من الصيغة والتوحيد والتكرار.
         """
         from django.core.exceptions import ValidationError
 
@@ -822,6 +823,77 @@ class SuggestedCorrection(TimeStampedModel):
                     'field_name': _(
                         'يوجد بالفعل طلب تصحيح معلق (قيد الانتظار) لنفس هذا الحقل (%(field)s) لهذا الفرد.'
                     ) % {'field': self.field_name}
+                })
+
+        # ── 4. تحقق من الصيغة والتوحيد والتكرار ──
+        if self.correction_type == 'national_id_correction' or self.field_name == 'national_id':
+            if not self.new_value or not self.new_value.isdigit() or len(self.new_value) != 11:
+                raise ValidationError({
+                    'new_value': _('الرقم الوطني يجب أن يتكون من 11 رقماً بالضبط ويحتوي على أرقام فقط.')
+                })
+            # تحقق من التفرد في PersonnelMaster
+            exists_other = PersonnelMaster.objects.filter(national_id=self.new_value, is_deleted=False).exclude(id=self.personnel_id).exists()
+            if exists_other:
+                owner = PersonnelMaster.objects.filter(national_id=self.new_value, is_deleted=False).exclude(id=self.personnel_id).first()
+                raise ValidationError({
+                    'new_value': _('الرقم الوطني مستخدم بالفعل ومرتبط بالفرد: %s') % owner.full_name
+                })
+            # تحقق من وجود طلب معلق آخر بنفس القيمة المقترحة
+            pending_other = SuggestedCorrection.objects.filter(
+                correction_type='national_id_correction',
+                new_value=self.new_value,
+                status='pending'
+            ).exclude(pk=self.pk).exists()
+            if pending_other:
+                raise ValidationError({
+                    'new_value': _('يوجد بالفعل طلب تصحيح معلق آخر يقترح نفس هذا الرقم الوطني.')
+                })
+
+        elif self.correction_type == 'military_number_correction' or self.field_name == 'military_number':
+            if not self.new_value or not self.new_value.isdigit() or len(self.new_value) != 7:
+                raise ValidationError({
+                    'new_value': _('الرقم العسكري يجب أن يتكون من 7 أرقام بالضبط ويحتوي على أرقام فقط.')
+                })
+            if self.new_value.startswith('0'):
+                raise ValidationError({
+                    'new_value': _('الرقم العسكري لا يمكن أن يبدأ بالرقم 0.')
+                })
+            # تحقق من التفرد في PersonnelMaster
+            exists_other = PersonnelMaster.objects.filter(military_number=self.new_value, is_deleted=False).exclude(id=self.personnel_id).exists()
+            if exists_other:
+                owner = PersonnelMaster.objects.filter(military_number=self.new_value, is_deleted=False).exclude(id=self.personnel_id).first()
+                raise ValidationError({
+                    'new_value': _('الرقم العسكري مستخدم بالفعل ومرتبط بالفرد: %s') % owner.full_name
+                })
+            # تحقق من وجود طلب معلق آخر بنفس القيمة المقترحة
+            pending_other = SuggestedCorrection.objects.filter(
+                correction_type='military_number_correction',
+                new_value=self.new_value,
+                status='pending'
+            ).exclude(pk=self.pk).exists()
+            if pending_other:
+                raise ValidationError({
+                    'new_value': _('يوجد بالفعل طلب تصحيح معلق آخر يقترح نفس هذا الرقم العسكري.')
+                })
+
+        elif self.correction_type == 'name_correction' or self.field_name == 'full_name':
+            import re
+            if not re.match(r'^[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿\s\-]+$', self.new_value.strip()):
+                raise ValidationError({
+                    'new_value': _('الاسم يجب أن يحتوي على أحرف عربية ومسافات فقط.')
+                })
+            parts = self.new_value.strip().split()
+            if len(parts) < 4:
+                raise ValidationError({
+                    'new_value': _('الاسم يجب أن يكون رباعياً على الأقل (الاسم + الأب + الجد + اللقب).')
+                })
+            if len(parts) > 7:
+                raise ValidationError({
+                    'new_value': _('الاسم يجب ألا يزيد عن 7 أجزاء.')
+                })
+            if self.new_value.strip() == self.old_value.strip():
+                raise ValidationError({
+                    'new_value': _('الاسم الجديد يجب أن يكون مختلفاً عن الاسم الحالي.')
                 })
 
         # ── 4. تجميد السجلات المكتملة ──
@@ -1192,4 +1264,29 @@ class RankSettlement(TimeStampedModel):
                     'ترقية ضمن نفس الصنف لا تتطلب رقماً عسكرياً جديداً.'
                 )
             })
+
+        # ============================================================
+        # 4. التحقق من تفرد الرقم العسكري الجديد للضابط
+        # ============================================================
+        if self.settlement_type == 'personnel_to_officer' and self.new_military_number:
+            # تفرد في PersonnelMaster
+            exists_other = PersonnelMaster.objects.filter(military_number=self.new_military_number, is_deleted=False).exclude(id=self.personnel_id).exists()
+            if exists_other:
+                owner = PersonnelMaster.objects.filter(military_number=self.new_military_number, is_deleted=False).exclude(id=self.personnel_id).first()
+                raise ValidationError({
+                    'new_military_number': _('الرقم العسكري الجديد مستخدم بالفعل للفرد: %s') % owner.full_name
+                })
+            # تفرد في طلبات التسوية المعلقة الأخرى
+            pending_other = RankSettlement.objects.filter(
+                new_military_number=self.new_military_number,
+                status='pending'
+            ).exclude(pk=self.pk).exists()
+            if pending_other:
+                raise ValidationError({
+                    'new_military_number': _('يوجد بالفعل طلب تسوية رتبة معلق آخر يقترح نفس هذا الرقم العسكري.')
+                })
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 

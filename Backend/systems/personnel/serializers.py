@@ -552,11 +552,15 @@ class RankSettlementSerializer(serializers.ModelSerializer):
     applied_by_name = serializers.CharField(
         source='applied_by.username', read_only=True, default=None
     )
+    personnel_military_number_input = serializers.CharField(
+        write_only=True, required=False, allow_null=True
+    )
     
     class Meta:
         model = RankSettlement
         fields = [
             'id', 'personnel', 'personnel_name', 'personnel_military_number',
+            'personnel_military_number_input',
             'settlement_type',
             'from_rank', 'from_rank_name',
             'to_rank', 'to_rank_name',
@@ -577,6 +581,20 @@ class RankSettlementSerializer(serializers.ModelSerializer):
     
     def validate(self, data):
         """تحقق شامل — يكمل clean() على المودل"""
+        military_input = data.pop('personnel_military_number_input', None)
+        if military_input:
+            try:
+                data['personnel'] = PersonnelMaster.objects.get(
+                    military_number=military_input, is_deleted=False
+                )
+            except PersonnelMaster.DoesNotExist:
+                raise serializers.ValidationError({
+                    'personnel_military_number_input': f'الفرد برقم {military_input} غير موجود.'
+                })
+
+        if not data.get('from_rank') and data.get('personnel'):
+            data['from_rank'] = data['personnel'].current_rank
+
         settlement_type = data.get('settlement_type')
         new_mil = data.get('new_military_number')
         from_rank = data.get('from_rank')
@@ -615,6 +633,17 @@ class RankSettlementSerializer(serializers.ModelSerializer):
             if PersonnelMaster.objects.filter(military_number=new_mil).exists():
                 raise serializers.ValidationError(
                     {'new_military_number': 'الرقم العسكري الجديد مستخدم بالفعل.'}
+                )
+            
+            pending_other = RankSettlement.objects.filter(
+                new_military_number=new_mil,
+                status='pending'
+            )
+            if self.instance:
+                pending_other = pending_other.exclude(pk=self.instance.pk)
+            if pending_other.exists():
+                raise serializers.ValidationError(
+                    {'new_military_number': 'يوجد بالفعل طلب تسوية رتبة معلق آخر يقترح نفس هذا الرقم العسكري.'}
                 )
         
         # ترقية ضمن نفس الصنف أو تخفيض — لا يتطلب رقم جديد

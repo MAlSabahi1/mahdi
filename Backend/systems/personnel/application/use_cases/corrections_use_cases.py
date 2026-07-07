@@ -169,7 +169,9 @@ class RequestRankSettlementCommand:
     due_date: date
     decision_date: date
     decision_number: str
+    settlement_type: str
     requested_by_id: int
+    new_military_number: Optional[str] = None
     supporting_document_id: Optional[int] = None
 
 
@@ -186,6 +188,8 @@ class RequestRankSettlementUseCase:
             due_date=cmd.due_date,
             decision_date=cmd.decision_date,
             decision_number=cmd.decision_number,
+            settlement_type=cmd.settlement_type,
+            new_military_number=cmd.new_military_number,
             requested_by_id=cmd.requested_by_id,
             supporting_document_id=cmd.supporting_document_id
         )
@@ -198,7 +202,12 @@ class RequestRankSettlementUseCase:
             action='CREATE',
             model_name='RankSettlement',
             object_id=str(saved_entity.id),
-            new_data={'new_rank_id': cmd.new_rank_id, 'decision_number': cmd.decision_number}
+            new_data={
+                'new_rank_id': cmd.new_rank_id,
+                'decision_number': cmd.decision_number,
+                'settlement_type': cmd.settlement_type,
+                'new_military_number': cmd.new_military_number
+            }
         )
         return saved_entity
 

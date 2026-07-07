@@ -623,6 +623,27 @@ class CheckNationalIdView(APIView):
         return Response(result)
 
 
+class CheckMilitaryNumberView(APIView):
+    """
+    فحص فوري للرقم العسكري — يُفوّض لـ PersonnelService.check_military_number
+    GET /api/v1/personnel/check-military-number/?value=6012345&exclude=7348799
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        from .services import PersonnelService
+        
+        value = request.query_params.get('value', '').strip()
+        exclude_mil = request.query_params.get('exclude', '')
+        
+        if not value:
+            return Response({'error': 'الرجاء إرسال الرقم العسكري في الباراميتر value'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        result = PersonnelService.check_military_number(value, exclude_mil or None)
+        return Response(result)
+
+
 class UpdateNationalIdView(APIView):
     """
     تحديث الرقم الوطني — يُفوّض لـ PersonnelService.

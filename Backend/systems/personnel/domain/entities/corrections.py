@@ -1,7 +1,6 @@
 """
 Domain Entities: Corrections & Rank Settlements
-═══════════════════════════════════════════════
-التصحيحات المقترحة وتسويات الرتب ككائنات بايثون نقية تدير قواعد الأعمال.
+Base class definitions for personal details suggestions and rank adjustments.
 """
 from dataclasses import dataclass, field
 from datetime import datetime, date
@@ -32,6 +31,7 @@ class SuggestedCorrectionEntity:
     ALLOWED_CORRECTION_FIELDS = [
         'full_name',
         'national_id',
+        'military_number',
         'birth_date',
         'join_date',
         'phone_number',
@@ -55,6 +55,30 @@ class SuggestedCorrectionEntity:
         requires_doc = self.DOCUMENT_REQUIREMENTS.get(self.correction_type, False)
         if requires_doc and not self.supporting_document_id:
             raise ValueError(f'نوع التصحيح "{self.correction_type}" يتطلب إرفاق مستند داعم.')
+
+        # التحقق من الصيغة حسب نوع التصحيح والحقل
+        if self.correction_type == 'national_id_correction' or self.field_name == 'national_id':
+            if not self.new_value or not self.new_value.isdigit() or len(self.new_value) != 11:
+                raise ValueError('الرقم الوطني يجب أن يتكون من 11 رقماً بالضبط ويحتوي على أرقام فقط.')
+                
+        elif self.correction_type == 'military_number_correction' or self.field_name == 'military_number':
+            if not self.new_value or not self.new_value.isdigit() or len(self.new_value) != 7:
+                raise ValueError('الرقم العسكري يجب أن يتكون من 7 أرقام بالضبط ويحتوي على أرقام فقط.')
+            if self.new_value.startswith('0'):
+                raise ValueError('الرقم العسكري لا يمكن أن يبدأ بالرقم 0.')
+
+        elif self.correction_type == 'name_correction' or self.field_name == 'full_name':
+            import re
+            # الاسم يجب أن يحتوي على أحرف عربية ومسافات فقط
+            if not re.match(r'^[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿\s\-]+$', self.new_value.strip()):
+                raise ValueError('الاسم يجب أن يحتوي على أحرف عربية ومسافات فقط.')
+            parts = self.new_value.strip().split()
+            if len(parts) < 4:
+                raise ValueError('الاسم يجب أن يكون رباعياً على الأقل (الاسم + الأب + الجد + اللقب).')
+            if len(parts) > 7:
+                raise ValueError('الاسم يجب ألا يزيد عن 7 أجزاء.')
+            if self.new_value.strip() == self.old_value.strip():
+                raise ValueError('الاسم الجديد يجب أن يكون مختلفاً عن الاسم الحالي.')
 
     def approve(self, reviewer_id: int) -> None:
         """اعتماد طلب التصحيح"""
@@ -88,7 +112,9 @@ class RankSettlementEntity:
     due_date: date
     decision_date: date
     decision_number: str
+    settlement_type: str
     status: str = 'pending'
+    new_military_number: Optional[str] = None
     
     supporting_document_id: Optional[int] = None
     approval_document_id: Optional[int] = None
@@ -110,6 +136,17 @@ class RankSettlementEntity:
 
         if not self.decision_number.strip():
             raise ValueError('يجب إدخال رقم القرار.')
+
+        if self.settlement_type == 'personnel_to_officer':
+            if not self.new_military_number:
+                raise ValueError('تسوية فرد إلى ضابط تتطلب إدخال الرقم العسكري الجديد.')
+            if not self.new_military_number.isdigit() or len(self.new_military_number) != 7:
+                raise ValueError('الرقم العسكري الجديد للضابط يجب أن يكون 7 أرقام.')
+            if not self.new_military_number.startswith('60'):
+                raise ValueError('الرقم العسكري الجديد للضابط يجب أن يبدأ بـ 60.')
+        elif self.settlement_type in ('same_class_promotion', 'demotion'):
+            if self.new_military_number:
+                raise ValueError('هذا النوع من التسوية لا يتطلب رقماً عسكرياً جديداً.')
 
     def approve(self, reviewer_id: int) -> None:
         """اعتماد تسوية الرتبة"""

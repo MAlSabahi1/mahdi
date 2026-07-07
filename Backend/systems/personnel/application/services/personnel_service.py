@@ -150,6 +150,67 @@ class PersonnelService:
         return result
 
     @staticmethod
+    def check_military_number(value, exclude_military_number=None):
+        """
+        فحص فوري: هل الرقم العسكري صالح ومتاح وغير مكرر؟
+        Returns: dict {valid_format, exists, owner?, pending_settlement?, pending_correction?}
+        """
+        result = {'valid_format': False, 'exists': False, 'owner': None, 'pending_settlement': False, 'pending_correction': False}
+
+        if not value or not value.strip():
+            return result
+
+        cleaned = value.strip()
+        if not cleaned.isdigit() or len(cleaned) != 7 or cleaned.startswith('0'):
+            return result
+
+        result['valid_format'] = True
+
+        # 1. Check in PersonnelMaster
+        qs = PersonnelMaster.objects.filter(military_number=cleaned)
+        if exclude_military_number:
+            qs = qs.exclude(military_number=exclude_military_number)
+
+        match = qs.select_related('current_rank').first()
+        if match:
+            result['exists'] = True
+            result['owner'] = {
+                'full_name': match.full_name,
+                'military_number': match.military_number,
+                'rank': match.current_rank.name if match.current_rank else None,
+            }
+            return result
+
+        # 2. Check pending rank settlements
+        pending_settlement = RankSettlement.objects.filter(
+            new_military_number=cleaned,
+            status='pending'
+        ).first()
+        if pending_settlement:
+            result['pending_settlement'] = True
+            result['owner'] = {
+                'full_name': pending_settlement.personnel.full_name if pending_settlement.personnel else '',
+                'military_number': pending_settlement.personnel.military_number if pending_settlement.personnel else '',
+            }
+            return result
+
+        # 3. Check pending corrections
+        pending_correction = SuggestedCorrection.objects.filter(
+            field_name='military_number',
+            new_value=cleaned,
+            status='pending'
+        ).first()
+        if pending_correction:
+            result['pending_correction'] = True
+            result['owner'] = {
+                'full_name': pending_correction.personnel.full_name if pending_correction.personnel else '',
+                'military_number': pending_correction.personnel.military_number if pending_correction.personnel else '',
+            }
+            return result
+
+        return result
+
+    @staticmethod
     @transaction.atomic
     def update_national_id(personnel, new_national_id, document_ids,
                            user=None, ip_address=None):

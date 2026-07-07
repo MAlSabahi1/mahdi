@@ -235,8 +235,60 @@
                 
                 <select v-if="field.type === 'select'" v-model="formData[field.key]" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-shadow">
                   <option value="" disabled>اختر...</option>
-                  <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
+                  <option v-for="opt in field.options" :key="opt && typeof opt === 'object' ? opt.value : opt" :value="opt && typeof opt === 'object' ? opt.value : opt">
+                    {{ opt && typeof opt === 'object' ? opt.label : opt }}
+                  </option>
                 </select>
+
+                <!-- Location Cascade: محافظة → مديرية → عزلة/قرية -->
+                <div v-else-if="field.type === 'location_cascade'" class="space-y-3">
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <!-- محافظة -->
+                    <div>
+                      <label class="text-[10px] font-bold text-gray-500 mb-1 block">المحافظة</label>
+                      <select v-model="locationState[field.key + '_gov']" @change="onGovernorateChange(field.key)"
+                        class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                        <option value="">اختر المحافظة...</option>
+                        <option v-for="g in governorates" :key="g.id" :value="g.id">{{ g.name_ar }}</option>
+                      </select>
+                    </div>
+                    <!-- مديرية -->
+                    <div>
+                      <label class="text-[10px] font-bold text-gray-500 mb-1 block">المديرية</label>
+                      <select v-model="locationState[field.key + '_dist']" @change="onDistrictChange(field.key)"
+                        :disabled="!locationState[field.key + '_gov']"
+                        class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-50">
+                        <option value="">اختر المديرية...</option>
+                        <option v-for="d in getDistricts(field.key)" :key="d.id" :value="d.id">{{ d.name_ar }}</option>
+                      </select>
+                    </div>
+                    <!-- عزلة / قرية -->
+                    <div>
+                      <label class="text-[10px] font-bold text-gray-500 mb-1 block">العزلة / القرية</label>
+                      <select v-model="locationState[field.key + '_sub']" @change="onSubDistrictChange(field.key)"
+                        :disabled="!locationState[field.key + '_dist']"
+                        class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-50">
+                        <option value="">اختر العزلة...</option>
+                        <option v-for="s in getSubDistricts(field.key)" :key="s.id" :value="s.id">{{ s.name_ar }}</option>
+                      </select>
+                    </div>
+                  </div>
+                  <!-- الكتابة اليدوية -->
+                  <div class="flex items-center gap-2">
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                      <input type="checkbox" v-model="locationState[field.key + '_manual']" class="w-3.5 h-3.5 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
+                      <span class="text-[10px] text-gray-500">كتابة يدوية</span>
+                    </label>
+                  </div>
+                  <input v-if="locationState[field.key + '_manual']"
+                    v-model="formData[field.key]" type="text" placeholder="اكتب المكان يدوياً..."
+                    class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
+                  <!-- المكان النهائي المُجمّع -->
+                  <div v-if="formData[field.key] && !locationState[field.key + '_manual']" class="text-[10px] text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950/20 px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                    📍 {{ formData[field.key] }}
+                  </div>
+                </div>
+
                 <textarea v-else-if="field.type === 'textarea'" v-model="formData[field.key]" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none h-24 transition-shadow"></textarea>
                 <input v-else :type="field.type" v-model="formData[field.key]" 
                         :readonly="field.key === 'old_value'"
@@ -367,6 +419,72 @@ const uploadingDoc = ref<string | null>(null)
 const isSubmitting = ref(false)
 const submittedCount = ref(0)
 
+// Location Cascade State
+const locationState = reactive<Record<string, any>>({})
+const governorates = ref<any[]>([])
+const districtsCache = ref<Record<number, any[]>>({})
+const subDistrictsCache = ref<Record<number, any[]>>({})
+
+async function loadGovernorates() {
+  try {
+    const res = await api.get('/core/geo/governorates/')
+    governorates.value = res.data?.results || res.data || []
+  } catch { governorates.value = [] }
+}
+
+function getDistricts(fieldKey: string): any[] {
+  const govId = locationState[fieldKey + '_gov']
+  return govId ? (districtsCache.value[govId] || []) : []
+}
+
+function getSubDistricts(fieldKey: string): any[] {
+  const distId = locationState[fieldKey + '_dist']
+  return distId ? (subDistrictsCache.value[distId] || []) : []
+}
+
+async function onGovernorateChange(fieldKey: string) {
+  locationState[fieldKey + '_dist'] = ''
+  locationState[fieldKey + '_sub'] = ''
+  formData.value[fieldKey] = ''
+  const govId = locationState[fieldKey + '_gov']
+  if (!govId) return
+  if (!districtsCache.value[govId]) {
+    try {
+      const res = await api.get(`/core/geo/districts/?governorate=${govId}`)
+      districtsCache.value[govId] = res.data?.results || res.data || []
+    } catch { districtsCache.value[govId] = [] }
+  }
+  // Set partial location
+  const gov = governorates.value.find((g: any) => g.id === govId)
+  if (gov) formData.value[fieldKey] = gov.name_ar
+}
+
+async function onDistrictChange(fieldKey: string) {
+  locationState[fieldKey + '_sub'] = ''
+  const distId = locationState[fieldKey + '_dist']
+  const govId = locationState[fieldKey + '_gov']
+  if (!distId) return
+  if (!subDistrictsCache.value[distId]) {
+    try {
+      const res = await api.get(`/core/geo/sub-districts/?district=${distId}`)
+      subDistrictsCache.value[distId] = res.data?.results || res.data || []
+    } catch { subDistrictsCache.value[distId] = [] }
+  }
+  const gov = governorates.value.find((g: any) => g.id === govId)
+  const dist = (districtsCache.value[govId] || []).find((d: any) => d.id === distId)
+  formData.value[fieldKey] = [gov?.name_ar, dist?.name_ar].filter(Boolean).join(' — ')
+}
+
+function onSubDistrictChange(fieldKey: string) {
+  const govId = locationState[fieldKey + '_gov']
+  const distId = locationState[fieldKey + '_dist']
+  const subId = locationState[fieldKey + '_sub']
+  const gov = governorates.value.find((g: any) => g.id === govId)
+  const dist = (districtsCache.value[govId] || []).find((d: any) => d.id === distId)
+  const sub = (subDistrictsCache.value[distId] || []).find((s: any) => s.id === subId)
+  formData.value[fieldKey] = [gov?.name_ar, dist?.name_ar, sub?.name_ar].filter(Boolean).join(' — ')
+}
+
 // Name Correction Special Fields
 const nameParts = reactive({
   first: '',
@@ -444,7 +562,31 @@ onMounted(async () => {
       if (userSection) {
         userSection.fields.forEach((f: any) => {
           formData.value[f.key] = ''
+          // Auto-select if only one option
+          if (f.type === 'select' && f.options?.length === 1) {
+            formData.value[f.key] = f.options[0]
+          }
         })
+        // Load governorates if any location_cascade field exists
+        const hasLocationField = userSection.fields.some((f: any) => f.type === 'location_cascade')
+        if (hasLocationField) {
+          loadGovernorates()
+        }
+
+        // Load ranks if any select field is to_rank
+        const rankField = userSection.fields.find((f: any) => f.key === 'to_rank')
+        if (rankField) {
+          try {
+            const ranksRes = await api.get('/dictionaries/ranks/?page_size=1000')
+            const ranks = ranksRes.data?.results || ranksRes.data || []
+            rankField.options = ranks.map((r: any) => ({
+              value: r.id,
+              label: r.name
+            }))
+          } catch (e) {
+            console.error('Failed to load ranks:', e)
+          }
+        }
       }
     } else {
       error.value = 'هذه الاستمارة غير متاحة حالياً.'
@@ -668,24 +810,26 @@ async function submitBulk() {
       if (category === 'correction') {
         const req = await correctionStore.submitCorrection({
           military_number: person.military_number,
-          field: formData.value.field || type,
+          field: formData.value.field_name || formData.value.field || type,
+          correction_type: formData.value.correction_type || null,
           old_value: formData.value.old_value || '',
           new_value: formData.value.new_value || '',
-          reason: formData.value.reason || formData.value.notes || '',
+          reason: formData.value.notes || formData.value.reason || '',
           document_ids: documentIds.value
         })
         if (req && req.id) lastCorrectionId = req.id
       } else if (category === 'rank_settlement') {
         await rankSettlementStore.createSettlement({
-          personnel: person.military_number,
+          personnel_military_number_input: person.military_number,
           settlement_type: formData.value.settlement_type || type,
           from_rank: person.current_rank,
           to_rank: formData.value.to_rank,
           new_military_number: formData.value.new_military_number || null,
           decision_number: formData.value.decision_number || '',
           decision_date: formData.value.decision_date || null,
+          due_date: formData.value.due_date || null,
           notes: formData.value.notes || '',
-          document_ids: documentIds.value
+          supporting_document: documentIds.value?.length > 0 ? documentIds.value[0] : null
         })
       } else if (category === 'disciplinary') {
         await disciplinaryStore.createAction({
