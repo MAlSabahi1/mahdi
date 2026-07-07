@@ -78,8 +78,8 @@ class StatusChangeFormEntity:
         """يمكن تقديم المسودات فقط"""
         return self.status == FormStatus.DRAFT
 
-    def submit(self, submitted_at: datetime, first_step_id: int) -> None:
-        """تقديم الاستمارة وبدء المسار في الخطوة الأولى"""
+    def submit(self, submitted_at: datetime, first_step_id: Optional[int] = None) -> None:
+        """تقديم الاستمارة وبدء المسار"""
         if not self.can_be_submitted():
             raise ValueError(f"يمكن تقديم المسودات فقط. الحالة الحالية: {self.status.value}")
 
@@ -92,7 +92,7 @@ class StatusChangeFormEntity:
             'at': submitted_at.isoformat()
         })
 
-    def approve_current_step(self, approved_by_id: int, approved_at: datetime, next_step_id: Optional[int]) -> None:
+    def approve_current_step(self, approved_by_id: int, approved_at: datetime, next_step_id: Optional[int] = None) -> None:
         """
         اعتماد المرحلة الحالية وتمريرها للمرحلة القادمة أو إنهاؤها
         """

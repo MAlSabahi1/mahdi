@@ -380,12 +380,19 @@ const menuGroups = computed(() => {
                 path: "/services/directory",
               },
               {
-                name: "nav.service_builder",
-                path: "/services/builder",
+                name: "nav.external_requests",
+                path: "/services/external-requests",
+                new: true,
               },
               {
-                name: "nav.workflow_builder",
-                path: "/services/workflow-builder",
+                name: "nav.internal_requests",
+                path: "/services/internal-requests",
+                new: true,
+              },
+              {
+                name: "nav.requests_list",
+                path: "/services/requests",
+                new: true,
               },
               {
                 name: "nav.unified_request",
@@ -398,6 +405,14 @@ const menuGroups = computed(() => {
               {
                 name: "nav.workflow_tracking",
                 path: "/services/workflows",
+              },
+              {
+                name: "nav.service_builder",
+                path: "/services/builder",
+              },
+              {
+                name: "nav.workflow_builder",
+                path: "/services/workflow-builder",
               }
             ]
           }

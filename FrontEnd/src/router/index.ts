@@ -578,6 +578,34 @@ const router = createRouter({
       },
     },
     {
+      path: '/services/requests',
+      name: 'RequestsList',
+      component: () => import('@/views/Services/RequestsList.vue'),
+      meta: {
+        title: 'قائمة الطلبات',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/external-requests',
+      name: 'ExternalRequests',
+      component: () => import('@/views/Services/ExternalRequests.vue'),
+      meta: {
+        title: 'الطلبات الخارجية',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/internal-requests',
+      name: 'InternalRequests',
+      component: () => import('@/views/Services/InternalRequests.vue'),
+      meta: {
+        title: 'الطلبات الداخلية',
+        requiresAuth: true,
+      },
+    },
+
+    {
       path: '/services/workflows',
       name: 'WorkflowTracking',
       component: () => import('@/views/Services/WorkflowTracking.vue'),
@@ -601,6 +629,15 @@ const router = createRouter({
       component: () => import('@/views/Services/VueGridEditor.vue'),
       meta: {
         title: 'تعديل الخدمات المطور (React)',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/print/model-23/:id',
+      name: 'model-23-print',
+      component: () => import('@/views/Services/PrintTemplates/Model23PrintView.vue'),
+      meta: {
+        title: 'طباعة نموذج 23',
         requiresAuth: true,
       },
     },

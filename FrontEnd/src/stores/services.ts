@@ -445,6 +445,7 @@ export const useServicesStore = defineStore('services', () => {
       if (params.type) queryParams.append('type', params.type)
       if (params.status) queryParams.append('status', params.status)
       if (params.personnel) queryParams.append('personnel', params.personnel)
+      if (params.approval_type) queryParams.append('approval_type', params.approval_type)
       if (params.page) queryParams.append('page', params.page.toString())
       
       const response = await api.get(`/service-cycle/forms/?${queryParams.toString()}`)
@@ -487,15 +488,29 @@ export const useServicesStore = defineStore('services', () => {
     }
   }
 
-  async function approveForm(id: number | string) {
+  async function approveForm(id: number | string, payload?: any) {
     loading.value = true
     error.value = null
     try {
-      const response = await api.post(`/service-cycle/forms/${id}/approve/`)
+      const response = await api.post(`/service-cycle/forms/${id}/approve/`, payload)
       return response.data
-    } catch (err: any) {
-      error.value = err.response?.data?.error || 'فشل اعتماد الاستمارة'
-      throw err
+    } catch (e: any) {
+      error.value = e.response?.data?.error || 'حدث خطأ أثناء الاعتماد'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function markFormPrinted(id: number | string) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await api.post(`/service-cycle/forms/${id}/mark_printed/`)
+      return response.data
+    } catch (e: any) {
+      error.value = e.response?.data?.error || 'حدث خطأ أثناء تحديث حالة الطباعة'
+      throw e
     } finally {
       loading.value = false
     }
@@ -663,6 +678,7 @@ export const useServicesStore = defineStore('services', () => {
     approveForm,
     rejectForm,
     fetchFormById,
+    markFormPrinted,
     
     // Extended Actions
     fetchFormTimeline,

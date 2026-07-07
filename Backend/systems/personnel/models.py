@@ -769,6 +769,10 @@ class SuggestedCorrection(TimeStampedModel):
         default='',
         verbose_name=_('ملاحظات داخلية')
     )
+    is_printed = models.BooleanField(
+        default=False,
+        verbose_name=_('تمت الطباعة')
+    )
     class Meta:
         db_table = 'personnel_suggested_correction'
         verbose_name = _('اقتراح تصحيح')

@@ -454,6 +454,20 @@ class SuggestedCorrectionSerializer(serializers.ModelSerializer):
                 'personnel': 'يجب تحديد الفرد (personnel أو personnel_military_number_input).'
             })
 
+        # منع تكرار الطلبات المعلقة لنفس الفرد ونفس الحقل
+        personnel = data.get('personnel')
+        field_name = data.get('field_name')
+        if personnel and field_name:
+            exists_pending = SuggestedCorrection.objects.filter(
+                personnel=personnel,
+                field_name=field_name,
+                status='pending'
+            ).exists()
+            if exists_pending:
+                raise serializers.ValidationError({
+                    'field_name': 'يوجد بالفعل طلب تصحيح معلق (قيد الانتظار) لنفس هذا الحقل لهذا الفرد. لا يمكن تقديم طلب آخر حتى يتم البت في الطلب الحالي.'
+                })
+
         return data
 
     def create(self, validated_data):

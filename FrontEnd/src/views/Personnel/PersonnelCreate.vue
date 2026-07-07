@@ -371,6 +371,7 @@ import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import { useCoreStore } from '@/stores/core'
 import { usePersonnelStore } from '@/stores/personnel'
 import { validateFormFields } from '@/stores/validation'
+import Swal from 'sweetalert2'
 
 const router = useRouter()
 const { t } = useI18n()

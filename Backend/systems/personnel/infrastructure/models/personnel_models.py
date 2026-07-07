@@ -768,6 +768,10 @@ class SuggestedCorrection(TimeStampedModel):
         default='',
         verbose_name=_('ملاحظات داخلية')
     )
+    is_printed = models.BooleanField(
+        default=False,
+        verbose_name=_('تمت الطباعة')
+    )
     class Meta:
         db_table = 'personnel_suggested_correction'
         verbose_name = _('اقتراح تصحيح')
@@ -806,7 +810,21 @@ class SuggestedCorrection(TimeStampedModel):
                 ) % {'desc': req.get('description', '')}
             })
 
-        # ── 3. تجميد السجلات المكتملة ──
+        # ── 3. منع تكرار الطلبات المعلقة لنفس الفرد ونفس الحقل ──
+        if not self.pk:  # فقط عند إنشاء طلب جديد
+            exists_pending = SuggestedCorrection.objects.filter(
+                personnel=self.personnel,
+                field_name=self.field_name,
+                status='pending'
+            ).exists()
+            if exists_pending:
+                raise ValidationError({
+                    'field_name': _(
+                        'يوجد بالفعل طلب تصحيح معلق (قيد الانتظار) لنفس هذا الحقل (%(field)s) لهذا الفرد.'
+                    ) % {'field': self.field_name}
+                })
+
+        # ── 4. تجميد السجلات المكتملة ──
         if self.pk:  # تعديل سجل موجود
             try:
                 original = SuggestedCorrection.objects.get(pk=self.pk)

@@ -85,13 +85,28 @@ export const useCorrectionStore = defineStore('correction', () => {
   async function submitCorrection(data: any) {
     loading.value = true
     try {
+      let correctionType = 'data_correction'
+      let fieldName = data.field
+
+      if (data.field === 'name_correction') {
+        correctionType = 'name_correction'
+        fieldName = 'full_name'
+      } else if (data.field === 'national_id_correction') {
+        correctionType = 'national_id_correction'
+        fieldName = 'national_id'
+      } else if (data.field === 'military_number_correction') {
+        correctionType = 'military_number_correction'
+        fieldName = 'military_number'
+      }
+
       const payload = {
         personnel_military_number_input: data.military_number,
-        correction_type: 'data_correction',
-        field_name: data.field,
+        correction_type: correctionType,
+        field_name: fieldName,
         old_value: data.old_value,
         new_value: data.new_value,
-        notes: data.reason
+        notes: data.reason,
+        supporting_document: data.document_ids?.length > 0 ? data.document_ids[0] : null
       }
       
       const response = await api.post('/personnel/corrections/', payload)

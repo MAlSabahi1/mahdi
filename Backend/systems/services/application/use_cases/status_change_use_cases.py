@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Protocol
+from typing import Protocol, Optional
 from uuid import UUID
 
 from ...domain.entities.status_change_form import StatusChangeFormEntity
@@ -51,7 +51,7 @@ class SubmitFormCommand:
     form_id:       UUID
     submitted_by:  int
     submitted_at:  datetime
-    first_step_id: int
+    first_step_id: Optional[int] = None
 
 
 @dataclass(frozen=True)
@@ -59,7 +59,7 @@ class ApproveFormCommand:
     form_id:      UUID
     approved_by:  int
     approved_at:  datetime
-    next_step_id: Optional[int]
+    next_step_id: Optional[int] = None
 
 
 @dataclass(frozen=True)

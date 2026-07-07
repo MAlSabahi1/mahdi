@@ -26,7 +26,7 @@
               :key="tx.id"
               @click="selectedWorkflow = tx"
               :class="[
-                selectedWorkflow.id === tx.id 
+                selectedWorkflow?.id === tx.id 
                   ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-950/20' 
                   : 'border-gray-150 dark:border-gray-800 hover:bg-gray-50/30'
               ]"

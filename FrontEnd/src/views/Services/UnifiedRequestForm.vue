@@ -13,9 +13,9 @@
       </div>
     </div>
 
-    <div v-else class="max-w-4xl mx-auto text-start" dir="rtl">
+    <div v-else class="max-w-5xl mx-auto text-start" dir="rtl">
       <!-- #8 Professional Stepper -->
-      <div class="mb-10">
+      <div class="mb-10 px-4">
         <div class="flex items-center justify-between relative">
           <!-- Progress bar background -->
           <div class="absolute left-0 right-0 top-6 h-1 bg-gray-200 dark:bg-gray-800 rounded-full -z-10"></div>
@@ -47,91 +47,272 @@
         </div>
       </div>
 
-      <!-- Step 1: Personnel Search -->
-      <div v-if="step === 1" class="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-2xl p-8 shadow-sm">
-        <h2 class="text-lg font-black mb-4">الخطوة 1: تحديد الفرد</h2>
-        <div class="flex gap-4 mb-6">
-          <input v-model="searchQuery" type="text" placeholder="أدخل الرقم العسكري..." class="flex-1 bg-gray-50 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 rounded-xl px-4 py-2 focus:ring-2 focus:ring-brand-500 outline-none" @keyup.enter="searchPersonnel" />
-          <button @click="searchPersonnel" :disabled="personnelStore.loading" class="bg-brand-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-brand-700 disabled:opacity-50">بحث</button>
+      <!-- Step 1: Personnel Search & Selection -->
+      <div v-if="step === 1" class="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-2xl p-6 shadow-sm">
+        <div class="flex justify-between items-center mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+          <h2 class="text-lg font-black text-gray-900 dark:text-white">الخطوة 1: تحديد الأفراد المشمولين بالخدمة</h2>
+          <span class="text-sm font-bold text-brand-600 bg-brand-50 dark:bg-brand-900/30 px-3 py-1 rounded-full">
+            المحدد: {{ selectedPersonnelList.length }}
+          </span>
         </div>
-
-        <div v-if="selectedPersonnel" class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-800 flex justify-between items-center">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Search Area -->
           <div>
-            <p class="font-bold text-gray-900 dark:text-white">{{ selectedPersonnel.full_name }}</p>
-            <p class="text-sm text-gray-500">{{ selectedPersonnel.rank_name }} - {{ selectedPersonnel.military_number }}</p>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">بحث عن طريق (الرقم العسكري، الاسم، الوحدة)</label>
+            <div class="flex gap-2 mb-4">
+              <input v-model="searchQuery" type="text" placeholder="مثال: محمد أحمد، أو 7348..." class="flex-1 bg-gray-50 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-brand-500 outline-none text-sm" @keyup.enter="searchPersonnel" />
+              <button @click="searchPersonnel" :disabled="personnelStore.loading" class="bg-gray-900 dark:bg-white dark:text-gray-900 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-gray-800 disabled:opacity-50 transition-colors">بحث</button>
+            </div>
+
+            <!-- Search Results -->
+            <div v-if="personnelStore.loading" class="py-8 flex justify-center">
+              <span class="animate-spin h-6 w-6 border-2 border-brand-500 border-t-transparent rounded-full"></span>
+            </div>
+            <div v-else-if="searchResults.length > 0" class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-900 max-h-64 overflow-y-auto">
+              <div class="bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <span class="text-xs font-bold text-gray-500">نتائج البحث ({{ searchResults.length }})</span>
+                <button @click="addAllSearchResults" class="text-xs font-bold text-brand-600 hover:text-brand-700">إضافة الكل</button>
+              </div>
+              <div v-for="person in searchResults" :key="person.military_number" class="p-3 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                <div>
+                  <p class="font-bold text-sm text-gray-900 dark:text-white">{{ person.full_name }}</p>
+                  <p class="text-xs text-gray-500">{{ person.rank_name || 'بدون رتبة' }} | {{ person.military_number }} | {{ person.unit_name || 'بدون جهة' }}</p>
+                </div>
+                <button 
+                  @click="addPersonnel(person)" 
+                  :disabled="isPersonnelSelected(person.military_number)"
+                  :class="isPersonnelSelected(person.military_number) ? 'bg-gray-100 text-gray-400 dark:bg-gray-800' : 'bg-brand-50 text-brand-600 hover:bg-brand-100 dark:bg-brand-900/30 dark:hover:bg-brand-900/50'"
+                  class="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                >
+                  {{ isPersonnelSelected(person.military_number) ? 'مضاف' : 'إضافة' }}
+                </button>
+              </div>
+            </div>
+            <div v-else-if="searchPerformed && searchResults.length === 0" class="text-center py-8 text-gray-500 text-sm">
+              لم يتم العثور على نتائج.
+            </div>
           </div>
-          <button @click="step = 2" class="bg-emerald-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-emerald-700">التالي</button>
+
+          <!-- Selected List -->
+          <div class="bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex flex-col h-[350px]">
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white mb-4">قائمة المشمولين بالخدمة</h3>
+            
+            <div v-if="selectedPersonnelList.length === 0" class="flex-1 flex flex-col items-center justify-center text-gray-400">
+              <svg class="w-12 h-12 mb-3 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+              <p class="text-sm">لم يتم تحديد أي فرد بعد.</p>
+              <p class="text-xs mt-1">ابحث وقم بإضافة الأفراد من القائمة.</p>
+            </div>
+
+            <div v-else class="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+              <div v-for="person in selectedPersonnelList" :key="person.military_number" class="bg-white dark:bg-gray-900 p-3 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm flex justify-between items-center group">
+                <div>
+                  <p class="font-bold text-sm text-gray-900 dark:text-white">{{ person.full_name }}</p>
+                  <p class="text-[11px] text-gray-500">{{ person.military_number }}</p>
+                </div>
+                <button @click="removePersonnel(person.military_number)" class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+              <button 
+                @click="goToStep2" 
+                :disabled="selectedPersonnelList.length === 0" 
+                class="bg-emerald-600 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md shadow-emerald-500/20"
+              >
+                التالي
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Step 2: Form Fields -->
       <div v-if="step === 2" class="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-2xl p-8 shadow-sm">
-        <h2 class="text-lg font-black mb-6">الخطوة 2: تعبئة البيانات ({{ schema.label }})</h2>
+        <div class="mb-6 pb-4 border-b border-gray-100 dark:border-gray-800">
+          <h2 class="text-lg font-black">الخطوة 2: تعبئة بيانات الطلب أو القرار</h2>
+          <p v-if="selectedPersonnelList.length > 1" class="text-sm text-gray-500 mt-1">
+            سيتم تطبيق هذه البيانات على جميع الأفراد المحددين (العدد: {{ selectedPersonnelList.length }}).
+          </p>
+          <p v-else-if="selectedPersonnelList.length === 1" class="text-sm text-gray-500 mt-1">
+            تقديم الطلب للفرد: <span class="font-bold text-brand-600">{{ selectedPersonnelList[0].full_name }}</span> ({{ selectedPersonnelList[0].military_number }})
+          </p>
+        </div>
         
-        <div class="space-y-6">
-          <div v-for="(section, sIdx) in schema.sections" :key="sIdx">
-            <h3 class="text-md font-bold text-brand-600 mb-4 pb-2 border-b border-gray-100 dark:border-gray-800">{{ section.title }}</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div v-for="field in section.fields" :key="field.key" class="space-y-1">
+        <div class="space-y-8">
+          <!-- Special Name Correction Layout -->
+          <div v-if="type === 'name_correction'" class="space-y-6">
+            <!-- Warning banner for pending name corrections -->
+            <div v-if="hasPendingNameCorrection" class="p-4 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 text-red-700 dark:text-red-400 space-y-2 text-xs">
+              <div class="flex items-center gap-2 font-bold">
+                <svg class="w-4.5 h-4.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                <span>تنبيه: يوجد طلب تصحيح اسم معلق قيد الانتظار لهذا الفرد</span>
+              </div>
+              <p class="font-normal text-[11px] text-gray-600 dark:text-gray-400 leading-relaxed pr-6">
+                لا يمكن تقديم طلب تصحيح اسم جديد لهذا الفرد لوجود طلب سابق قيد المراجعة حالياً بالاسم المقترح:
+                <strong class="text-red-800 dark:text-red-350 font-black">"{{ pendingNameCorrectionDetails?.new_value }}"</strong>
+                والذي تم تقديمه بتاريخ {{ pendingNameCorrectionDetails?.requested_at ? new Date(pendingNameCorrectionDetails.requested_at).toLocaleDateString('ar-EG') : '' }}.
+                يرجى الانتظار حتى يتم البت في الطلب الحالي (موافقة أو رفض) قبل تقديم طلب جديد.
+              </p>
+            </div>
+
+            <!-- Old Name Display -->
+            <div>
+              <label class="block text-xs font-bold text-gray-400 mb-1.5 font-sans">الاسم الحالي في قاعدة البيانات:</label>
+              <div class="p-3 bg-gray-100 dark:bg-gray-800 rounded-xl font-mono text-sm text-gray-600 dark:text-gray-400 border border-gray-205 dark:border-gray-700 line-through decoration-red-500/40">
+                {{ selectedPersonnelList[0]?.full_name }}
+              </div>
+            </div>
+
+            <!-- New Name Inputs -->
+            <div>
+              <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">الاسم الجديد الصحيح *</label>
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <input v-model="nameParts.first" @input="updateFullName" :disabled="hasPendingNameCorrection" type="text" placeholder="الاسم الأول"
+                    class="w-full text-xs rounded-xl border border-gray-300 dark:border-gray-700 bg-transparent py-2.5 px-3 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400 disabled:cursor-not-allowed" />
+                </div>
+                <div>
+                  <input v-model="nameParts.father" @input="updateFullName" :disabled="hasPendingNameCorrection" type="text" placeholder="اسم الأب"
+                    class="w-full text-xs rounded-xl border border-gray-300 dark:border-gray-700 bg-transparent py-2.5 px-3 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400 disabled:cursor-not-allowed" />
+                </div>
+                <div>
+                  <input v-model="nameParts.grandfather" @input="updateFullName" :disabled="hasPendingNameCorrection" type="text" placeholder="اسم الجد"
+                    class="w-full text-xs rounded-xl border border-gray-300 dark:border-gray-700 bg-transparent py-2.5 px-3 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400 disabled:cursor-not-allowed" />
+                </div>
+                <div>
+                  <input v-model="nameParts.family" @input="updateFullName" :disabled="hasPendingNameCorrection" type="text" placeholder="اللقب / العائلة"
+                    class="w-full text-xs rounded-xl border border-gray-300 dark:border-gray-700 bg-transparent py-2.5 px-3 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400 disabled:cursor-not-allowed" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Full Name preview and Validations -->
+            <div v-if="!hasPendingNameCorrection" class="p-4 rounded-xl bg-amber-50/40 dark:bg-gray-850 border border-amber-100 dark:border-gray-800 space-y-3">
+              <span class="text-[10px] font-bold text-amber-700 dark:text-amber-400 block uppercase tracking-wider">الاسم الجديد المقترح بالكامل:</span>
+              <div class="text-base font-black text-gray-900 dark:text-white min-h-[24px]">
+                {{ generatedFullName || '—' }}
+              </div>
+              
+              <!-- Checks -->
+              <div class="space-y-1.5 pt-2 border-t border-gray-150 dark:border-gray-800 text-[10px] font-bold">
+                <div class="flex items-center gap-2">
+                  <span v-if="isValidArabic" class="text-emerald-500 text-xs font-bold">✓</span>
+                  <span v-else class="text-red-500 text-xs font-bold">✗</span>
+                  <span :class="isValidArabic ? 'text-gray-600 dark:text-gray-300' : 'text-red-500'">الاسم يتكون من أحرف عربية ومسافات فقط بدون أرقام أو رموز.</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span v-if="hasFourParts" class="text-emerald-500 text-xs font-bold">✓</span>
+                  <span v-else class="text-red-500 text-xs font-bold">✗</span>
+                  <span :class="hasFourParts ? 'text-gray-600 dark:text-gray-300' : 'text-red-500'">يجب إدخال أربعة مقاطع كاملة للاسم (رباعي).</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span v-if="isDifferentName" class="text-emerald-500 text-xs font-bold">✓</span>
+                  <span v-else class="text-red-500 text-xs font-bold">✗</span>
+                  <span :class="isDifferentName ? 'text-gray-600 dark:text-gray-300' : 'text-red-500'">الاسم الجديد مختلف عن الاسم الحالي في قاعدة البيانات.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Notes / Reasons -->
+            <div>
+              <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">أسباب ومبررات طلب التصحيح بالتفصيل <span class="text-red-500">*</span></label>
+              <textarea v-model="notes" rows="3" :disabled="hasPendingNameCorrection" placeholder="أدخل أسباب ومبررات التصحيح استناداً للمستند الرسمي..."
+                class="w-full text-xs rounded-xl border border-gray-300 dark:border-gray-700 bg-transparent py-2.5 px-3 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400 disabled:cursor-not-allowed"></textarea>
+            </div>
+          </div>
+
+          <!-- General Dynamic Layout -->
+          <div v-else v-for="(section, sIdx) in schema.sections.filter((s:any) => s.source === 'user_input')" :key="sIdx">
+            <h3 class="text-md font-bold text-brand-600 mb-4">{{ section.title }}</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div v-for="field in section.fields" :key="field.key" class="space-y-1.5">
                 <label class="text-xs font-bold text-gray-700 dark:text-gray-300">
                   {{ field.label }} <span v-if="field.required" class="text-red-500">*</span>
                 </label>
                 
-                <input v-if="section.source === 'auto'" type="text" :value="getAutoValue(field.key)" disabled class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-xl px-4 py-2 text-sm text-gray-500 cursor-not-allowed" />
-                
-                <template v-else>
-                  <select v-if="field.type === 'select'" v-model="formData[field.key]" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                    <option value="" disabled>اختر...</option>
-                    <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
-                  </select>
-                  <textarea v-else-if="field.type === 'textarea'" v-model="formData[field.key]" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none h-24"></textarea>
-                  <input v-else :type="field.type" v-model="formData[field.key]" 
-                         :class="['w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none', field.type === 'date' ? 'text-left' : '']"
-                         :dir="field.type === 'date' ? 'ltr' : 'rtl'" />
-                </template>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-8 flex justify-between">
-          <button @click="step = 1" class="text-gray-500 font-bold hover:text-gray-700 px-4 py-2">السابق</button>
-          <button @click="step = 3" class="bg-brand-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-brand-700">التالي (المرفقات)</button>
-        </div>
-      </div>
-
-      <!-- Step 3: Attachments & Submit (#7 real upload) -->
-      <div v-if="step === 3" class="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-2xl p-8 shadow-sm">
-        <h2 class="text-lg font-black mb-6">الخطوة 3: المرفقات الإلزامية</h2>
-        
-        <div class="space-y-4 mb-8">
-          <div v-for="att in schema.attachments" :key="att.doc_type" class="p-4 border border-dashed rounded-xl transition-colors"
-            :class="uploadedFiles[att.doc_type] ? 'border-emerald-400 bg-emerald-50/30 dark:bg-emerald-950/10' : 'border-gray-300 dark:border-gray-700'"
-          >
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="font-bold text-sm flex items-center gap-2">
-                  {{ att.label }} <span v-if="att.required" class="text-red-500">*</span>
-                  <span v-if="uploadedFiles[att.doc_type]" class="text-emerald-600 text-[10px] bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded font-bold">✓ تم الرفع</span>
-                </p>
-                <p class="text-xs text-gray-500 mt-0.5">صيغ مدعومة: PDF, JPG, PNG</p>
-                <p v-if="uploadedFiles[att.doc_type]" class="text-xs text-emerald-600 mt-1 font-mono">{{ uploadedFiles[att.doc_type].name }}</p>
-              </div>
-              <div class="flex items-center gap-2">
-                <label :for="'file-' + att.doc_type" class="cursor-pointer bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors">
-                  {{ uploadedFiles[att.doc_type] ? 'تغيير' : 'اختيار ملف' }}
-                </label>
-                <input :id="'file-' + att.doc_type" type="file" @change="handleFileUpload(att.doc_type, $event)" class="hidden" accept=".pdf,.jpg,.jpeg,.png" />
-                <span v-if="uploadingDoc === att.doc_type" class="animate-spin h-4 w-4 border-2 border-brand-500 border-t-transparent rounded-full"></span>
+                <select v-if="field.type === 'select'" v-model="formData[field.key]" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-shadow">
+                  <option value="" disabled>اختر...</option>
+                  <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
+                </select>
+                <textarea v-else-if="field.type === 'textarea'" v-model="formData[field.key]" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none h-24 transition-shadow"></textarea>
+                <input v-else :type="field.type" v-model="formData[field.key]" 
+                        :readonly="field.key === 'old_value'"
+                        :class="['w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-shadow', field.type === 'date' ? 'text-left' : '', field.key === 'old_value' ? 'opacity-70 cursor-not-allowed font-bold text-gray-600' : '']"
+                        :dir="field.type === 'date' ? 'ltr' : 'rtl'" />
+                <p v-if="field.help_text" class="text-[10px] text-gray-400 mt-1">{{ field.help_text }}</p>
               </div>
             </div>
           </div>
         </div>
 
         <div class="mt-8 flex justify-between items-center pt-6 border-t border-gray-100 dark:border-gray-800">
-          <button @click="step = 2" class="text-gray-500 font-bold hover:text-gray-700 px-4 py-2" :disabled="servicesStore.loading">السابق</button>
-          <button @click="submitFinal" :disabled="servicesStore.loading" class="bg-emerald-600 text-white px-8 py-3 rounded-xl font-black hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2">
-            <span v-if="servicesStore.loading" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+          <button @click="step = 1" class="text-gray-500 font-bold hover:text-gray-800 dark:hover:text-white px-4 py-2 transition-colors">السابق</button>
+          <button @click="validateAndGoToStep3" class="bg-brand-600 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-brand-700 shadow-md shadow-brand-500/20 transition-all">التالي (المرفقات)</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Attachments & Submit -->
+      <div v-if="step === 3" class="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-2xl p-8 shadow-sm">
+        <div class="mb-6 pb-4 border-b border-gray-100 dark:border-gray-800">
+          <h2 class="text-lg font-black">الخطوة 3: المرفقات والمستندات الإلزامية</h2>
+          <p class="text-sm text-gray-500 mt-1">يجب إرفاق جميع المستندات المطلوبة لاعتماد الخدمة.</p>
+        </div>
+        
+        <div class="space-y-4 mb-8">
+          <div v-for="att in schema.attachments" :key="att.doc_type" class="p-4 border border-dashed rounded-xl transition-colors"
+            :class="uploadedFiles[att.doc_type] ? 'border-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/20' : 'border-gray-300 dark:border-gray-700'"
+          >
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <p class="font-bold text-sm flex items-center gap-2 text-gray-900 dark:text-white">
+                  {{ att.label }} <span v-if="att.required" class="text-red-500">*</span>
+                  <span v-if="uploadedFiles[att.doc_type]" class="text-emerald-600 text-[10px] bg-emerald-100 dark:bg-emerald-900/50 px-2 py-0.5 rounded font-bold border border-emerald-200 dark:border-emerald-800">✓ تم الرفع</span>
+                </p>
+                <p class="text-xs text-gray-400 mt-1">صيغ مدعومة: PDF, JPG, PNG (الحد الأقصى 5MB)</p>
+                <p v-if="uploadedFiles[att.doc_type]" class="text-xs text-emerald-600 mt-1.5 font-mono bg-white dark:bg-gray-900 inline-block px-2 py-1 rounded border border-emerald-100 dark:border-emerald-900/30">{{ uploadedFiles[att.doc_type].name }}</p>
+              </div>
+              <div class="flex items-center gap-3 self-end sm:self-auto">
+                <label :for="'file-' + att.doc_type" class="cursor-pointer bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold px-4 py-2.5 rounded-lg transition-colors shadow-sm">
+                  {{ uploadedFiles[att.doc_type] ? 'تغيير الملف' : 'اختيار ملف' }}
+                </label>
+                <input :id="'file-' + att.doc_type" type="file" @change="handleFileUpload(att.doc_type, $event)" class="hidden" accept=".pdf,.jpg,.jpeg,.png" />
+                <span v-if="uploadingDoc === att.doc_type" class="animate-spin h-5 w-5 border-2 border-brand-500 border-t-transparent rounded-full"></span>
+              </div>
+            </div>
+          </div>
+          <div v-if="schema.attachments?.length === 0" class="text-center py-6 text-gray-500 text-sm border border-dashed rounded-xl border-gray-200 dark:border-gray-800">
+            لا توجد مرفقات مطلوبة لهذه الخدمة.
+          </div>
+        </div>
+
+        <div class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800 mb-8">
+          <p class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            ملخص العملية
+          </p>
+          <p class="text-xs text-gray-600 dark:text-gray-400 mt-2">
+            سيتم إنشاء الطلب / القرار وتطبيقه على عدد (<span class="font-bold text-brand-600">{{ selectedPersonnelList.length }}</span>) من الأفراد. بعد الاعتماد سيتم حفظ السجلات وتوجيه الطلب حسب مسار الموافقة المعتمد.
+          </p>
+        </div>
+
+        <!-- Submission Progress overlay -->
+        <div v-if="isSubmitting" class="fixed inset-0 z-50 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center">
+          <div class="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border border-gray-100 dark:border-gray-800">
+            <div class="relative w-20 h-20 mx-auto mb-6">
+              <svg class="animate-spin text-gray-200 dark:text-gray-700 w-full h-full" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              <span class="absolute inset-0 flex items-center justify-center text-sm font-bold text-brand-600">{{ Math.round((submittedCount / selectedPersonnelList.length) * 100) }}%</span>
+            </div>
+            <h3 class="text-lg font-black text-gray-900 dark:text-white mb-2">جاري المعالجة...</h3>
+            <p class="text-sm text-gray-500">تم تقديم {{ submittedCount }} من أصل {{ selectedPersonnelList.length }} طلب.</p>
+          </div>
+        </div>
+
+        <div class="mt-8 flex justify-between items-center pt-6 border-t border-gray-100 dark:border-gray-800">
+          <button @click="step = 2" class="text-gray-500 font-bold hover:text-gray-800 dark:hover:text-white px-4 py-2 transition-colors" :disabled="isSubmitting">السابق</button>
+          <button @click="submitBulk" :disabled="isSubmitting" class="bg-emerald-600 text-white px-8 py-3 rounded-xl font-black hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2">
             اعتماد وتقديم الطلب
           </button>
         </div>
@@ -141,37 +322,115 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Swal from 'sweetalert2'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import { useServicesStore } from '@/stores/services'
 import { usePersonnelStore } from '@/stores/personnel'
+import { useCorrectionStore } from '@/stores/correction'
+import { useRankSettlementStore } from '@/stores/rankSettlement'
+import { useDisciplinaryStore } from '@/stores/disciplinary'
 import api from '@/lib/api'
 
 const route = useRoute()
 const router = useRouter()
 const servicesStore = useServicesStore()
 const personnelStore = usePersonnelStore()
+const correctionStore = useCorrectionStore()
+const rankSettlementStore = useRankSettlementStore()
+const disciplinaryStore = useDisciplinaryStore()
 
 const type = route.query.type as string
+const category = (route.query.category as string) || 'form'
 const schema = ref<any>(null)
 const loading = ref(true)
 const error = ref('')
 
 const step = ref(1)
-const stepLabels = ['تحديد الفرد', 'تعبئة البيانات', 'المرفقات والتقديم']
+const stepLabels = ['تحديد الأفراد', 'تعبئة البيانات', 'المرفقات والتقديم']
+
+// Step 1 State
 const searchQuery = ref('')
-const selectedPersonnel = ref<any>(null)
+const searchResults = ref<any[]>([])
+const searchPerformed = ref(false)
+const selectedPersonnelList = ref<any[]>([])
+
+// Step 2 & 3 State
 const formData = ref<any>({})
 const documentIds = ref<number[]>([])
 const uploadedFiles = ref<Record<string, File>>({})
 const uploadingDoc = ref<string | null>(null)
 
+// Submission State
+const isSubmitting = ref(false)
+const submittedCount = ref(0)
+
+// Name Correction Special Fields
+const nameParts = reactive({
+  first: '',
+  father: '',
+  grandfather: '',
+  family: ''
+})
+const notes = ref('')
+
+const generatedFullName = computed(() => {
+  const parts = [
+    nameParts.first.trim(),
+    nameParts.father.trim(),
+    nameParts.grandfather.trim(),
+    nameParts.family.trim()
+  ].filter(p => p !== '')
+  return parts.join(' ')
+})
+
+const isValidArabic = computed(() => {
+  if (!generatedFullName.value) return false
+  const arRegex = /^[\u0621-\u064A\s]+$/
+  return arRegex.test(generatedFullName.value)
+})
+
+const hasFourParts = computed(() => {
+  return (
+    nameParts.first.trim() !== '' &&
+    nameParts.father.trim() !== '' &&
+    nameParts.grandfather.trim() !== '' &&
+    nameParts.family.trim() !== ''
+  )
+})
+
+const isDifferentName = computed(() => {
+  if (selectedPersonnelList.value.length === 0 || !generatedFullName.value) return false
+  return selectedPersonnelList.value[0].full_name !== generatedFullName.value
+})
+
+const hasPendingNameCorrection = computed(() => {
+  if (selectedPersonnelList.value.length === 0) return false
+  const person = selectedPersonnelList.value[0]
+  if (!person.pending_corrections) return false
+  return person.pending_corrections.some(
+    (c: any) => c.field_name === 'full_name' && c.status === 'pending'
+  )
+})
+
+const pendingNameCorrectionDetails = computed(() => {
+  if (selectedPersonnelList.value.length === 0) return null
+  const person = selectedPersonnelList.value[0]
+  if (!person.pending_corrections) return null
+  return person.pending_corrections.find(
+    (c: any) => c.field_name === 'full_name' && c.status === 'pending'
+  )
+})
+
+function updateFullName() {
+  formData.value.new_value = generatedFullName.value
+}
+
 onMounted(async () => {
   if (!type) {
-    error.value = 'الرجاء اختيار نوع الاستمارة من الدليل.'
+    error.value = 'الرجاء اختيار نوع الخدمة من الدليل.'
     loading.value = false
     return
   }
@@ -181,7 +440,7 @@ onMounted(async () => {
     if (res) {
       schema.value = res
       // Initialize form data
-      const userSection = res.sections.find((s: any) => s.source === 'user_input')
+      const userSection = res.sections?.find((s: any) => s.source === 'user_input')
       if (userSection) {
         userSection.fields.forEach((f: any) => {
           formData.value[f.key] = ''
@@ -191,57 +450,165 @@ onMounted(async () => {
       error.value = 'هذه الاستمارة غير متاحة حالياً.'
     }
   } catch (err: any) {
-    error.value = 'فشل جلب الاستمارة'
+    error.value = 'فشل جلب هيكل وتفاصيل الخدمة من قاعدة البيانات.'
   } finally {
     loading.value = false
   }
 })
 
+// === Step 1 Logic ===
 async function searchPersonnel() {
   if (!searchQuery.value) return
-  await personnelStore.fetchPersonnel({ search: searchQuery.value })
-  if (personnelStore.records.length > 0) {
-    selectedPersonnel.value = personnelStore.records[0]
-    
-    // Auto-fill user input fields if they exist in personnel data
-    if (schema.value) {
-      const userSection = schema.value.sections.find((s: any) => s.source === 'user_input')
-      if (userSection) {
-        userSection.fields.forEach((f: any) => {
-          if (f.key === 'birth_date' && selectedPersonnel.value.birth_date) {
-            formData.value[f.key] = selectedPersonnel.value.birth_date
-            // Auto calculate age
-            const ageStr = new Date().getFullYear() - new Date(selectedPersonnel.value.birth_date).getFullYear()
-            formData.value['age'] = ageStr.toString()
-          }
-          if (f.key === 'join_date' && selectedPersonnel.value.join_date) {
-            formData.value[f.key] = selectedPersonnel.value.join_date
-          }
-          if (f.key === 'gender') {
-            formData.value[f.key] = 'ذكر' // Default for military
-          }
-        })
+  searchPerformed.value = true
+  await personnelStore.fetchPersonnel({ search: searchQuery.value, page: 1 })
+  searchResults.value = personnelStore.records
+}
+
+function isPersonnelSelected(militaryNumber: string) {
+  return selectedPersonnelList.value.some(p => p.military_number === militaryNumber)
+}
+
+async function addPersonnel(person: any) {
+  if (category === 'correction' && selectedPersonnelList.value.length >= 1) {
+    Swal.fire({
+      icon: 'info',
+      title: 'فرد واحد فقط',
+      text: 'خدمات تصحيح البيانات تتم لفرد واحد فقط في كل طلب. لا يمكنك تحديد أكثر من شخص.'
+    })
+    return
+  }
+  
+  if (!isPersonnelSelected(person.military_number)) {
+    if (category === 'correction') {
+      try {
+        const res = await api.get(`/personnel/${person.military_number}/`)
+        const detailedPerson = res.data?.data || res.data
+        selectedPersonnelList.value.push(detailedPerson)
+      } catch (err) {
+        console.error('Failed to fetch detailed personnel info', err)
+        selectedPersonnelList.value.push(person)
+      }
+    } else {
+      selectedPersonnelList.value.push(person)
+    }
+  }
+}
+
+function removePersonnel(militaryNumber: string) {
+  selectedPersonnelList.value = selectedPersonnelList.value.filter(p => p.military_number !== militaryNumber)
+}
+
+function addAllSearchResults() {
+  if (category === 'correction') {
+    Swal.fire({
+      icon: 'info',
+      title: 'غير مسموح',
+      text: 'لا يمكن تقديم طلب تصحيح بشكل جماعي.'
+    })
+    return
+  }
+  searchResults.value.forEach(p => {
+    addPersonnel(p)
+  })
+}
+
+async function goToStep2() {
+  if (selectedPersonnelList.value.length === 0) return
+  
+  if (selectedPersonnelList.value.length === 1 && category === 'correction') {
+    const person = selectedPersonnelList.value[0]
+    if (!person.pending_corrections) {
+      try {
+        const res = await api.get(`/personnel/${person.military_number}/`)
+        const detailedPerson = res.data?.data || res.data
+        selectedPersonnelList.value[0] = detailedPerson
+      } catch (err) {
+        console.error(err)
       }
     }
+    
+    const updatedPerson = selectedPersonnelList.value[0]
+    if (type === 'name_correction') {
+      formData.value.old_value = updatedPerson.full_name
+      nameParts.first = ''
+      nameParts.father = ''
+      nameParts.grandfather = ''
+      nameParts.family = ''
+      notes.value = ''
+    }
+    else if (type === 'national_id_correction') formData.value.old_value = updatedPerson.national_id
+    else if (type === 'military_number_correction') formData.value.old_value = updatedPerson.military_number
+  }
+  
+  step.value = 2
+}
+
+// === Step 2 Logic ===
+function validateAndGoToStep3() {
+  if (type === 'name_correction') {
+    if (hasPendingNameCorrection.value) {
+      Swal.fire({
+        icon: 'error',
+        title: 'طلب معلق موجود',
+        text: 'يوجد بالفعل طلب تصحيح اسم معلق لهذا الفرد.'
+      })
+      return
+    }
+    if (!hasFourParts.value) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'الاسم غير مكتمل',
+        text: 'الرجاء إدخال الاسم الرباعي الجديد بالكامل.'
+      })
+      return
+    }
+    if (!isValidArabic.value) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'صيغة غير صحيحة',
+        text: 'يجب أن يحتوي الاسم على أحرف عربية ومسافات فقط.'
+      })
+      return
+    }
+    if (!isDifferentName.value) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'تطابق الأسماء',
+        text: 'الاسم الجديد يجب أن يكون مختلفاً عن الاسم الحالي.'
+      })
+      return
+    }
+    if (!notes.value.trim()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'بيانات ناقصة',
+        text: 'الرجاء إدخال أسباب ومبررات التعديل.'
+      })
+      return
+    }
+    
+    formData.value.new_value = generatedFullName.value
+    formData.value.notes = notes.value
+    formData.value.reason = notes.value
   } else {
-    Swal.fire({ icon: 'error', title: 'غير موجود', text: 'لم يتم العثور على الفرد بهذا الرقم' })
-    selectedPersonnel.value = null
+    // Check required fields in the user_input section
+    const userSection = schema.value.sections?.find((s: any) => s.source === 'user_input')
+    if (userSection) {
+      const missing = userSection.fields.filter((f: any) => f.required && !formData.value[f.key])
+      if (missing.length > 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'بيانات ناقصة',
+          text: `الرجاء تعبئة الحقول الإلزامية: ${missing.map((f:any) => f.label).join('، ')}`
+        })
+        return
+      }
+    }
   }
+  step.value = 3
 }
 
-function getAutoValue(key: string) {
-  if (!selectedPersonnel.value) return ''
-  const map: Record<string, string> = {
-    'military_number': selectedPersonnel.value.military_number,
-    'full_name': selectedPersonnel.value.full_name,
-    'rank': selectedPersonnel.value.rank_name,
-    'unit': selectedPersonnel.value.directorate_name || selectedPersonnel.value.unit_name || '',
-    'national_id': selectedPersonnel.value.national_id || '',
-  }
-  return map[key] || ''
-}
-
-// #7 — Real file upload
+// === Step 3 Logic ===
 async function handleFileUpload(docType: string, event: Event) {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
@@ -255,51 +622,152 @@ async function handleFileUpload(docType: string, event: Event) {
     fd.append('file', file)
     fd.append('document_type', docType)
     
-    const res = await api.post('/documents/upload/', fd, {
+    const res = await api.post('/storage/upload/', fd, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     
-    if (res.data?.id) {
-      // Remove old ID for this doc type if re-uploading
-      documentIds.value = documentIds.value.filter(id => id !== res.data.id)
-      documentIds.value.push(res.data.id)
+    const docId = res.data?.data?.id || res.data?.id
+    if (docId) {
+      documentIds.value.push(docId)
     }
   } catch (err: any) {
-    // If upload API doesn't exist yet, still track the file locally
-    console.warn('Document upload API not available, tracking file locally:', err.message)
-    if (!documentIds.value.includes(1)) {
-      documentIds.value.push(1) // fallback mock ID
-    }
+    console.warn('Document API tracking file locally:', err.message)
+    if (!documentIds.value.includes(1)) documentIds.value.push(1) // fallback mock
   } finally {
     uploadingDoc.value = null
   }
 }
 
-async function submitFinal() {
-  if (!selectedPersonnel.value) return
+async function submitBulk() {
+  if (selectedPersonnelList.value.length === 0) return
+
+  // Validate required attachments
+  const requiredDocs = schema.value.attachments?.filter((a:any) => a.required) || []
+  const missingDocs = requiredDocs.filter((a:any) => !uploadedFiles.value[a.doc_type])
   
-  try {
-    const createRes = await servicesStore.createForm({
-      personnel: selectedPersonnel.value.military_number,
-      form_type: type,
-      form_data: formData.value,
-      document_ids: documentIds.value
+  if (missingDocs.length > 0) {
+    Swal.fire({
+      icon: 'error',
+      title: 'مرفقات ناقصة',
+      text: `الرجاء إرفاق المستندات الإلزامية: ${missingDocs.map((a:any) => a.label).join('، ')}`
     })
-    
-    if (createRes.success && createRes.data?.id) {
-      await servicesStore.submitForm(createRes.data.id)
-      
-      Swal.fire({
-        icon: 'success',
-        title: 'تم تقديم الطلب بنجاح',
-        text: 'تم رفع الطلب إلى صندوق المعاملات للمراجعة.',
-        confirmButtonText: 'انتقال للصندوق'
-      }).then(() => {
-        router.push('/services/inbox')
-      })
+    return
+  }
+
+  isSubmitting.value = true
+  submittedCount.value = 0
+  let successCount = 0
+  let errorCount = 0
+
+  let lastCorrectionId = null
+  let lastFormId = null
+
+  // Loop through all selected personnel and submit
+  for (const person of selectedPersonnelList.value) {
+    try {
+      if (category === 'correction') {
+        const req = await correctionStore.submitCorrection({
+          military_number: person.military_number,
+          field: formData.value.field || type,
+          old_value: formData.value.old_value || '',
+          new_value: formData.value.new_value || '',
+          reason: formData.value.reason || formData.value.notes || '',
+          document_ids: documentIds.value
+        })
+        if (req && req.id) lastCorrectionId = req.id
+      } else if (category === 'rank_settlement') {
+        await rankSettlementStore.createSettlement({
+          personnel: person.military_number,
+          settlement_type: formData.value.settlement_type || type,
+          from_rank: person.current_rank,
+          to_rank: formData.value.to_rank,
+          new_military_number: formData.value.new_military_number || null,
+          decision_number: formData.value.decision_number || '',
+          decision_date: formData.value.decision_date || null,
+          notes: formData.value.notes || '',
+          document_ids: documentIds.value
+        })
+      } else if (category === 'disciplinary') {
+        await disciplinaryStore.createAction({
+          personnel: person.military_number,
+          action_type: formData.value.action_type || type,
+          source_type: formData.value.source_type || 'direct_superior',
+          issued_by_name: formData.value.issued_by_name || '',
+          decision_ref: formData.value.decision_ref || '',
+          issued_date: formData.value.issued_date || new Date().toISOString().split('T')[0],
+          effective_date: formData.value.effective_date || new Date().toISOString().split('T')[0],
+          duration_days: formData.value.duration_days || null,
+          description: formData.value.description || formData.value.notes || '',
+          document_ids: documentIds.value
+        })
+      } else {
+        // Default: forms
+        const createRes = await servicesStore.createForm({
+          personnel: person.military_number,
+          form_type: type,
+          form_data: formData.value,
+          document_ids: documentIds.value
+        })
+        if (createRes.success && createRes.data?.id) {
+          await servicesStore.submitForm(createRes.data.id)
+          lastFormId = createRes.data.id
+        }
+      }
+      successCount++
+    } catch (err) {
+      console.error('Submission error for', person.military_number, err)
+      errorCount++
     }
-  } catch (err: any) {
-    // Handled by api interceptor/store
+    submittedCount.value++
+  }
+
+  isSubmitting.value = false
+
+  if (successCount > 0) {
+    const isModel23 = type === 'name_correction' && successCount === 1;
+    const isExternalForm = schema.value?.approval_type === 'external' && successCount === 1;
+    const showPrintButton = isModel23 || isExternalForm;
+    
+    Swal.fire({
+      icon: errorCount > 0 ? 'warning' : 'success',
+      title: errorCount > 0 ? 'تم الإنجاز جزئياً' : 'تم تقديم الطلبات بنجاح',
+      html: `تم رفع <b>${successCount}</b> طلب للمراجعة.<br/>${errorCount > 0 ? `تعذر معالجة <b>${errorCount}</b> طلب.` : ''}`,
+      confirmButtonText: 'انتقال لقائمة الطلبات',
+      showDenyButton: showPrintButton,
+      denyButtonText: '<i class="fas fa-print ml-2"></i> طباعة النموذج',
+      denyButtonColor: '#059669', // Emerald
+      customClass: {
+        denyButton: 'px-6 py-2.5 rounded-xl font-bold text-white',
+        confirmButton: 'px-6 py-2.5 rounded-xl font-bold bg-brand-600 text-white'
+      }
+    }).then(async (result) => {
+      if (result.isDenied) {
+        if (isModel23 && lastCorrectionId) {
+          const person = selectedPersonnelList.value[0]
+          const queryParams = new URLSearchParams({
+            personnelId: person.military_number,
+            old_value: formData.value.old_value || '',
+            new_value: formData.value.new_value || '',
+            reason: formData.value.reason || formData.value.notes || ''
+          }).toString()
+          router.push(`/services/print/model-23/${lastCorrectionId}?${queryParams}`)
+        } else if (isExternalForm && lastFormId) {
+          try {
+            await servicesStore.markFormPrinted(lastFormId)
+          } catch(e) {}
+          window.open(`/services/forms/${lastFormId}?print=true`, '_blank')
+          router.push(category === 'form' ? '/services/external-requests' : '/services/internal-requests')
+        }
+      } else {
+        router.push(category === 'form' ? '/services/external-requests' : '/services/internal-requests')
+      }
+    })
+  } else {
+    Swal.fire({
+      icon: 'error',
+      title: 'فشل العملية',
+      text: 'حدث خطأ أثناء محاولة تقديم الطلبات. يرجى مراجعة البيانات.'
+    })
   }
 }
 </script>

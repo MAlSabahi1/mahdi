@@ -16,9 +16,24 @@ class ServiceCatalog(TimeStampedModel):
         ('other', _('أخرى')),
     ]
 
+    APPROVAL_TYPE_CHOICES = [
+        ('internal', _('موافقة داخلية')),
+        ('external', _('موافقة خارجية')),
+        ('none', _('لا تتطلب موافقة')),
+    ]
+
+    SERVICE_TYPE_CHOICES = [
+        ('form', _('استمارة')),
+        ('correction', _('تصحيح بيانات')),
+        ('rank_settlement', _('ترقية / تسوية رتبة')),
+        ('disciplinary', _('جزاء تأديبي')),
+        ('security', _('أمان ومزامنة')),
+        ('other', _('أخرى')),
+    ]
+
     code = models.CharField(max_length=20, unique=True, verbose_name=_('كود الخدمة'))
     name_ar = models.CharField(max_length=255, verbose_name=_('اسم الخدمة'))
-    description = models.TextField(verbose_name=_('وصف الخدمة'))
+    description = models.TextField(blank=True, default='', verbose_name=_('وصف الخدمة'))
     category = models.CharField(
         max_length=50, 
         choices=CATEGORY_CHOICES,
@@ -28,10 +43,30 @@ class ServiceCatalog(TimeStampedModel):
     icon = models.CharField(max_length=50, verbose_name=_('أيقونة الخدمة (Lucide)'))
     form_type = models.CharField(max_length=50, unique=True, null=True, blank=True, verbose_name=_('نوع الاستمارة المرتبطة'))
     
+    # نوع الموافقة المطلوبة
+    approval_type = models.CharField(
+        max_length=20,
+        choices=APPROVAL_TYPE_CHOICES,
+        default='internal',
+        verbose_name=_('نوع الموافقة'),
+        help_text=_('هل الطلب يحتاج موافقة داخلية (مدير) أو خارجية (وزارة) أو لا يحتاج'),
+    )
+    
+    # تصنيف نوع الخدمة (لتبويبات دليل الخدمات)
+    service_type = models.CharField(
+        max_length=30,
+        choices=SERVICE_TYPE_CHOICES,
+        default='form',
+        verbose_name=_('تصنيف الخدمة'),
+        help_text=_('يحدد التبويب الذي تظهر فيه الخدمة في دليل الخدمات'),
+    )
+    
     # إعدادات
     is_active = models.BooleanField(default=True, verbose_name=_('مفعلة'))
     requires_approval = models.BooleanField(default=True, verbose_name=_('تتطلب موافقات'))
     is_repeatable = models.BooleanField(default=True, verbose_name=_('قابلة للتكرار'))
+    is_locked = models.BooleanField(default=False, verbose_name=_('مقفلة'))
+    lock_reason = models.TextField(blank=True, default='', verbose_name=_('سبب القفل'))
     
     # SLA 
     expected_duration_hours = models.IntegerField(default=48, verbose_name=_('المدة المتوقعة (ساعات)'))

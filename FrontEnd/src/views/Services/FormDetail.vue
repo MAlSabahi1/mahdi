@@ -1,12 +1,14 @@
 <template>
   <admin-layout>
-    <PageBreadcrumb :pageTitle="'تفاصيل المعاملة رقم ' + (form?.id || '')" />
+    <div class="print:hidden">
+      <PageBreadcrumb :pageTitle="'تفاصيل المعاملة رقم ' + (form?.id || '')" />
+    </div>
 
-    <div v-if="loading" class="flex justify-center items-center py-20">
+    <div v-if="loading" class="flex justify-center items-center py-20 print:hidden">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
     </div>
 
-    <div v-else-if="error || !form" class="bg-red-50 text-red-600 p-6 rounded-2xl text-center font-bold">
+    <div v-else-if="error || !form" class="bg-red-50 text-red-600 p-6 rounded-2xl text-center font-bold print:hidden">
       {{ error || 'لم يتم العثور على تفاصيل هذه المعاملة.' }}
       <div class="mt-4">
         <RouterLink to="/services/inbox" class="text-brand-600 underline">العودة لصندوق المعاملات</RouterLink>
@@ -15,7 +17,7 @@
 
     <div v-else class="space-y-6 text-start" dir="rtl">
       <!-- Header / Summary Card -->
-      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 print:border-none print:shadow-none print:p-0">
         <div class="flex items-center gap-5">
           <div class="h-16 w-16 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center justify-center border border-gray-100 dark:border-gray-700">
             <svg class="w-8 h-8 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -37,7 +39,7 @@
           </div>
         </div>
 
-        <div class="flex flex-wrap gap-2 w-full md:w-auto">
+        <div class="flex flex-wrap gap-2 w-full md:w-auto print:hidden">
           <button v-if="form.status === 'in_progress'" @click="approveForm" class="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-xl transition-all shadow-lg shadow-emerald-500/20 text-sm flex items-center justify-center gap-2">
             اعتماد الطلب
           </button>
@@ -51,9 +53,9 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 print:block print:w-full">
         <!-- Main Content (Left / Right side depending on dir) -->
-        <div class="lg:col-span-2 space-y-6">
+        <div class="lg:col-span-2 space-y-6 print:w-full print:block">
           <!-- Personnel Details -->
           <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm">
             <h2 class="text-sm font-black text-gray-900 dark:text-white mb-4 flex items-center gap-2">
@@ -88,7 +90,7 @@
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div v-for="(value, key) in form.form_data" :key="key" class="p-3 border border-gray-100 dark:border-gray-800 rounded-xl">
-                <p class="text-[10px] text-gray-500 mb-1 capitalize">{{ key.replace(/_/g, ' ') }}</p>
+                <p class="text-[10px] text-gray-500 mb-1 capitalize">{{ String(key).replace(/_/g, ' ') }}</p>
                 <p class="text-sm font-bold text-gray-900 dark:text-white">{{ value || '-' }}</p>
               </div>
             </div>
@@ -161,7 +163,7 @@
         </div>
 
         <!-- Sidebar Timeline -->
-        <div class="space-y-6">
+        <div class="space-y-6 print:hidden">
         
           <!-- Checklist Section -->
           <div v-if="checklist.length > 0" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm">
@@ -199,10 +201,27 @@
                   <p class="text-xs font-bold text-gray-900 dark:text-white">{{ event.action_display }}</p>
                   <p class="text-[10px] text-gray-500 mt-0.5">{{ event.performed_by_name || 'النظام' }}</p>
                   <p v-if="event.notes" class="text-[10px] text-gray-600 dark:text-gray-400 mt-1 bg-gray-50 dark:bg-gray-800 p-2 rounded-lg">{{ event.notes }}</p>
-                  <p class="text-[9px] text-gray-400 font-mono mt-1">{{ new Date(event.created_at).toLocaleString('en-GB') }}</p>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Print Only Attachments Section -->
+    <div class="hidden print:block w-full" v-if="form?.attachments?.length">
+      <div v-for="(att, idx) in form.attachments" :key="'print-att-'+att.id" style="page-break-before: always; padding-top: 2cm;">
+        <h3 class="text-xl font-bold text-center mb-6 text-gray-900 border-b-2 border-gray-800 pb-2 inline-block">
+          مرفق ({{ Number(idx) + 1 }}): {{ att.document_type || 'مستند' }}
+        </h3>
+        <div class="flex justify-center w-full">
+          <!-- Try to render as image. Note: If it's a PDF, browsers usually don't print the embedded object well, but this is standard for images -->
+          <img v-if="att.file && !att.file.endsWith('.pdf')" :src="att.file" class="max-w-full max-h-[25cm] border border-gray-400 p-2 shadow-sm" alt="Attachment">
+          <div v-else class="text-center p-10 border-2 border-dashed border-gray-400">
+            <p class="font-bold text-gray-800 text-lg">هذا المرفق بصيغة PDF</p>
+            <p class="text-sm text-gray-600">يرجى طباعته بشكل مستقل من النظام.</p>
+            <p class="text-xs mt-4">{{ att.file }}</p>
           </div>
         </div>
       </div>
@@ -254,6 +273,13 @@ async function fetchFormDetails() {
     timeline.value = t
     notes.value = n
     checklist.value = c
+    
+    // Auto-trigger print if requested via query string
+    if (route.query.print === 'true') {
+      setTimeout(() => {
+        window.print()
+      }, 500)
+    }
   } catch (err: any) {
     error.value = 'فشل جلب تفاصيل المعاملة.'
   } finally {

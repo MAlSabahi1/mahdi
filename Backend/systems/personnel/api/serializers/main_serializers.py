@@ -3,7 +3,7 @@ Personnel Serializers - مسلسلات إدارة الأفراد
 """
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_serializer
-from .models import PersonnelMaster, SuggestedCorrection, HistoricalMonthlyVariables, RankSettlement
+from systems.personnel.models import PersonnelMaster, SuggestedCorrection, HistoricalMonthlyVariables, RankSettlement
 from systems.services.models import ServiceEventLog
 from core.serializers import (
     RankSerializer, ServiceStatusSerializer,
@@ -372,7 +372,7 @@ class SuggestedCorrectionSerializer(serializers.ModelSerializer):
             'personnel_name', 'personnel_military_number',
             'personnel_rank', 'personnel_department',
             # الحالة
-            'status', 'status_display',
+            'status', 'status_display', 'is_printed',
             # المرفقات
             'supporting_document',       # وثيقة الطلب (بطاقة / نموذج 23)
             'approval_document',         # مذكرة الوزارة (تُملأ عند الموافقة)
@@ -442,6 +442,20 @@ class SuggestedCorrectionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 'personnel': 'يجب تحديد الفرد (personnel أو personnel_military_number_input).'
             })
+
+        # منع تكرار الطلبات المعلقة لنفس الفرد ونفس الحقل
+        personnel = data.get('personnel')
+        field_name = data.get('field_name')
+        if personnel and field_name:
+            exists_pending = SuggestedCorrection.objects.filter(
+                personnel=personnel,
+                field_name=field_name,
+                status='pending'
+            ).exists()
+            if exists_pending:
+                raise serializers.ValidationError({
+                    'field_name': 'يوجد بالفعل طلب تصحيح معلق (قيد الانتظار) لنفس هذا الحقل لهذا الفرد. لا يمكن تقديم طلب آخر حتى يتم البت في الطلب الحالي.'
+                })
 
         return data
 

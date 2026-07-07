@@ -142,6 +142,19 @@ class StatusChangeForm(TimeStampedModel):
         verbose_name=_('سجل الاعتمادات'),
         help_text=_('سجل ديناميكي لمن اعتمد الاستمارة في كل مرحلة ومتى')
     )
+    
+    is_printed = models.BooleanField(
+        default=False,
+        verbose_name=_('تمت الطباعة')
+    )
+    ministry_approval_doc = models.ForeignKey(
+        Document,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ministry_approvals',
+        verbose_name=_('مستند موافقة الوزارة')
+    )
 
     rejection_reason = models.TextField(blank=True, verbose_name=_('سبب الرفض'))
     rejected_by = models.ForeignKey(

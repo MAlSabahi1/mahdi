@@ -511,13 +511,9 @@ class SuggestedCorrectionViewSet(BaseModelViewSet):
     def create(self, request, *args, **kwargs):
         """
         إنشاء طلب تصحيح فردي — الـ Serializer يتولى كل التحقق والحفظ.
-
-        --- للمطور ---
-        POST /api/v1/personnel/corrections/
-        Body: { personnel_military_number_input, correction_type,
-                field_name, old_value, new_value,
-                supporting_document (UUID), notes, metadata }
         """
+        import logging
+        print(f"FRONTEND PAYLOAD: {request.data}")
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         correction = serializer.save()
@@ -580,6 +576,10 @@ class SuggestedCorrectionViewSet(BaseModelViewSet):
             except Exception as e:
                 return Response({'success': False, 'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
             
+        approval_doc_id = request.data.get('approval_document_id')
+        if approval_doc_id:
+            correction.approval_document_id = approval_doc_id
+            
         correction.status = 'approved'
         correction.reviewed_by = request.user
         correction.reviewed_at = timezone.now()
@@ -590,6 +590,19 @@ class SuggestedCorrectionViewSet(BaseModelViewSet):
             'message': 'تم قبول طلب التصحيح وتحديث السجلات بنجاح',
             'approved_by': request.user.username,
             'requested_by': correction.requested_by.username if correction.requested_by else None,
+        })
+
+    @action(detail=True, methods=['post'], url_path='mark_printed')
+    def mark_printed(self, request, pk=None):
+        """تسجيل طباعة النموذج رقم 23"""
+        correction = self.get_object()
+        correction.is_printed = True
+        correction.save(update_fields=['is_printed'])
+        return Response({
+            'success': True,
+            'message': 'تم تسجيل طباعة النموذج بنجاح',
+            'id': correction.id,
+            'is_printed': correction.is_printed
         })
 
     @action(detail=False, methods=['post'], url_path='approve_batch')
