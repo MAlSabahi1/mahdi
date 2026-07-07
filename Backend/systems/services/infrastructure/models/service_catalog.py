@@ -31,6 +31,13 @@ class ServiceCatalog(TimeStampedModel):
         ('other', _('أخرى')),
     ]
 
+    EXECUTION_ACTION_CHOICES = [
+        ('UPDATE_STATUS', _('تغيير الحالة (استمارات إثبات الحالة)')),
+        ('UPDATE_RANK', _('تحديث الرتبة (ترقيات)')),
+        ('SECURITY_RESTRICT', _('قيد أمني')),
+        ('NONE', _('للتوثيق فقط (لا يوجد تأثير)')),
+    ]
+
     code = models.CharField(max_length=20, unique=True, verbose_name=_('كود الخدمة'))
     name_ar = models.CharField(max_length=255, verbose_name=_('اسم الخدمة'))
     description = models.TextField(blank=True, default='', verbose_name=_('وصف الخدمة'))
@@ -61,6 +68,15 @@ class ServiceCatalog(TimeStampedModel):
         help_text=_('يحدد التبويب الذي تظهر فيه الخدمة في دليل الخدمات'),
     )
     
+    # الإجراء التنفيذي بعد الاعتماد النهائي
+    execution_action = models.CharField(
+        max_length=30,
+        choices=EXECUTION_ACTION_CHOICES,
+        default='UPDATE_STATUS',
+        verbose_name=_('الإجراء التنفيذي'),
+        help_text=_('ما هو الإجراء الفعلي الذي سيتم تطبيقه على قاعدة البيانات بعد الاعتماد؟')
+    )
+    
     # إعدادات
     is_active = models.BooleanField(default=True, verbose_name=_('مفعلة'))
     requires_approval = models.BooleanField(default=True, verbose_name=_('تتطلب موافقات'))
@@ -75,8 +91,9 @@ class ServiceCatalog(TimeStampedModel):
     attachments_count = models.IntegerField(default=0, verbose_name=_('عدد المرفقات المتوقعة'))
     target_audience = models.CharField(max_length=100, default='الكل', verbose_name=_('الفئة المستهدفة'))
     
-    # حقول الاستمارة
+    # حقول الاستمارة والمرفقات
     fields_schema = models.JSONField(default=dict, blank=True, verbose_name=_('مخطط الحقول (JSON)'))
+    attachments_schema = models.JSONField(default=list, blank=True, verbose_name=_('مخطط المرفقات الإلزامية (JSON)'))
     
     sort_order = models.IntegerField(default=0, verbose_name=_('الترتيب'))
 

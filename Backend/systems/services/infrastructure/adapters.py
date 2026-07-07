@@ -11,19 +11,31 @@ from django.utils import timezone
 from ..domain.entities.status_change_form import StatusChangeFormEntity
 
 
-class DjangoPersonnelUpdater:
+class DjangoExecutionActionEngine:
     """
-    تحديث الحالة الخدمية للفرد بعد الاعتماد النهائي.
-    مطابق لـ: personnel.current_status = form.to_status + personnel.save()
+    محرك الإجراءات التنفيذية للخدمات:
+    ينفذ تغييرات على قاعدة البيانات بناءً على نوع الإجراء (execution_action) المحدد في الخدمة.
     """
 
-    def update_status(self, personnel_id: int, to_status_id: int) -> None:
+    def execute_action(self, personnel_id: int, form_id: str, action_type: str, to_status_id: int = None) -> None:
         from systems.personnel.models import PersonnelMaster
+        from systems.services.infrastructure.models.status_change import StatusChangeForm
+        
         with transaction.atomic():
-            PersonnelMaster.objects.filter(pk=personnel_id).update(
-                current_status_id=to_status_id,
-                updated_at=timezone.now(),
-            )
+            if action_type == 'UPDATE_STATUS' and to_status_id:
+                PersonnelMaster.objects.filter(pk=personnel_id).update(
+                    current_status_id=to_status_id,
+                    updated_at=timezone.now(),
+                )
+            elif action_type == 'UPDATE_RANK':
+                # منطق تحديث الرتبة مستقبلاً (يتطلب بيانات الرتبة من الاستمارة)
+                pass
+            elif action_type == 'SECURITY_RESTRICT':
+                # منطق إضافة قيد أمني
+                pass
+            elif action_type == 'NONE':
+                # توثيق فقط
+                pass
 
 
 class DjangoEventPublisher:

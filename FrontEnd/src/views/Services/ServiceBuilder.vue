@@ -79,6 +79,10 @@
                       <ShieldCheck class="w-3.5 h-3.5" />
                       شروط الخدمة
                     </button>
+                    <button @click="openAttachmentsModal(svc)" class="px-3 py-1.5 text-[10px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/40 rounded-lg transition-colors border border-amber-200 dark:border-amber-800/50 flex items-center gap-1" title="المرفقات الإلزامية">
+                      <Paperclip class="w-3.5 h-3.5" />
+                      المرفقات
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -116,14 +120,66 @@
               <input type="text" v-model="activeService.icon" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="مثال: FileText" />
             </div>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الفئة</label>
-            <select v-model="activeService.category" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm outline-none">
-              <option value="military">عسكرية (حركات وتعيينات)</option>
-              <option value="financial">مالية (رواتب واستقطاعات)</option>
-              <option value="disciplinary">انضباطية</option>
-              <option value="other">أخرى</option>
-            </select>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الفئة</label>
+              <select v-model="activeService.category" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm outline-none">
+                <option value="military">عسكرية (حركات وتعيينات)</option>
+                <option value="financial">مالية (رواتب واستقطاعات)</option>
+                <option value="disciplinary">انضباطية</option>
+                <option value="other">أخرى</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الإجراء التنفيذي</label>
+              <select v-model="activeService.execution_action" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm outline-none">
+                <option value="UPDATE_STATUS">تغيير الحالة (استمارات إثبات الحالة)</option>
+                <option value="UPDATE_RANK">تحديث الرتبة (ترقيات)</option>
+                <option value="SECURITY_RESTRICT">قيد أمني</option>
+                <option value="NONE">للتوثيق فقط (لا يوجد تأثير)</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">نوع الموافقة</label>
+              <select v-model="activeService.approval_type" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm outline-none">
+                <option value="internal">موافقة داخلية</option>
+                <option value="external">موافقة خارجية</option>
+                <option value="none">لا تتطلب موافقة</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">تصنيف الخدمة</label>
+              <select v-model="activeService.service_type" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm outline-none">
+                <option value="form">استمارة</option>
+                <option value="correction">تصحيح بيانات</option>
+                <option value="rank_settlement">ترقية / تسوية رتبة</option>
+                <option value="disciplinary">جزاء تأديبي</option>
+                <option value="security">أمان ومزامنة</option>
+                <option value="other">أخرى</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الفئة المستهدفة</label>
+              <input type="text" v-model="activeService.target_audience" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="مثال: الكل، الضباط، الأفراد" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">المدة المتوقعة (بالساعات)</label>
+              <input type="number" v-model="activeService.expected_duration_hours" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="مثال: 24" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4 pt-2">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" v-model="activeService.requires_approval" class="w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500" />
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">تتطلب موافقات</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" v-model="activeService.is_repeatable" class="w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500" />
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">قابلة للتكرار (أكثر من مرة للفرد)</span>
+            </label>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">وصف الخدمة</label>
@@ -140,17 +196,17 @@
       </div>
     </div>
 
-    <!-- 2. Fields Builder Modal -->
+    <!-- 2. Fields Builder Modal (Dynamic Sections) -->
     <div v-if="modals.fields" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
-      <div class="bg-white dark:bg-gray-800 w-full max-w-4xl rounded-2xl shadow-xl overflow-hidden animate-fade-in-up flex flex-col max-h-[90vh]">
+      <div class="bg-white dark:bg-gray-800 w-full max-w-5xl rounded-2xl shadow-xl overflow-hidden animate-fade-in-up flex flex-col max-h-[90vh]">
         <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50">
           <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <LayoutTemplate class="w-5 h-5 text-brand-600" />
             إصدارات الحقول للخدمة: {{ activeService.name_ar }}
           </h3>
           <div class="flex gap-2">
-            <button @click="addField" class="px-3 py-1.5 text-xs font-bold text-brand-700 bg-brand-50 rounded-lg hover:bg-brand-100 flex items-center gap-1 border border-brand-200">
-              <Plus class="w-3.5 h-3.5" /> إضافة حقل
+            <button @click="addSection" class="px-3 py-1.5 text-xs font-bold text-brand-700 bg-brand-50 rounded-lg hover:bg-brand-100 flex items-center gap-1 border border-brand-200">
+              <Plus class="w-3.5 h-3.5" /> إضافة قسم جديد
             </button>
             <button @click="modals.fields = false" class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
               <X class="w-5 h-5" />
@@ -158,42 +214,88 @@
           </div>
         </div>
         
-        <div class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/30 dark:bg-gray-900/30">
-          <div v-if="fields.length === 0" class="text-center py-10 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
-            <p class="text-gray-500">لم يتم إضافة أي حقول إضافية لهذه الاستمارة.</p>
+        <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50/30 dark:bg-gray-900/30">
+          <div v-if="sections.length === 0" class="text-center py-10 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
+            <p class="text-gray-500">لم يتم إضافة أي أقسام لهذه الاستمارة.</p>
           </div>
           
-          <div v-for="(field, index) in fields" :key="index" class="p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 relative group shadow-sm">
-            <button @click="removeField(index)" class="absolute top-3 left-3 p-1.5 text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-              <Trash2 class="w-4 h-4" />
-            </button>
-            
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div class="col-span-1 md:col-span-2">
-                <label class="block text-xs font-medium text-gray-500 mb-1">اسم الحقل (يظهر للمستخدم)</label>
-                <input type="text" v-model="field.label" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm outline-none" />
-              </div>
-              
-              <div class="col-span-1">
-                <label class="block text-xs font-medium text-gray-500 mb-1">المفتاح (Key باللغة الإنجليزية)</label>
-                <input type="text" v-model="field.key" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm outline-none" />
-              </div>
-              
-              <div class="col-span-1">
-                <label class="block text-xs font-medium text-gray-500 mb-1">نوع الحقل</label>
-                <select v-model="field.type" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm outline-none">
-                  <option value="text">نص قصير</option>
-                  <option value="number">رقم</option>
-                  <option value="date">تاريخ</option>
-                  <option value="select">قائمة منسدلة (Select)</option>
-                  <option value="textarea">نص طويل (ملاحظات)</option>
+          <div v-for="(section, sIdx) in sections" :key="sIdx" class="border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 overflow-hidden shadow-sm">
+            <div class="bg-gray-100 dark:bg-gray-700/50 px-4 py-3 flex justify-between items-center border-b border-gray-300 dark:border-gray-600">
+              <div class="flex items-center gap-3 w-2/3">
+                <input type="text" v-model="section.title" placeholder="عنوان القسم (مثال: البيانات الشخصية)" class="w-1/2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 text-sm font-bold outline-none" />
+                <select v-model="section.source" class="w-1/3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 text-sm outline-none">
+                  <option value="personnel_master">قاعدة بيانات الأفراد (DB)</option>
+                  <option value="user_input">إدخال مستخدم (User Input)</option>
                 </select>
+              </div>
+              <div class="flex items-center gap-2">
+                <button @click="addFieldToSection(Number(sIdx))" class="px-2 py-1 text-xs font-bold text-brand-700 bg-brand-50 rounded-lg hover:bg-brand-100 border border-brand-200 flex items-center gap-1">
+                  <Plus class="w-3.5 h-3.5" /> إضافة حقل
+                </button>
+                <button @click="removeSection(Number(sIdx))" class="p-1 text-red-500 hover:bg-red-50 rounded-lg" title="حذف القسم">
+                  <Trash2 class="w-4 h-4" />
+                </button>
               </div>
             </div>
             
-            <div v-if="field.type === 'select'" class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-              <label class="block text-xs font-medium text-gray-500 mb-1">خيارات القائمة المنسدلة (مفصولة بفاصلة ،)</label>
-              <input type="text" v-model="field.optionsStr" placeholder="مثال: أعزب, متزوج, مطلق" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm outline-none" />
+            <div class="p-4 space-y-3">
+              <div v-if="section.fields.length === 0" class="text-center py-4 text-xs text-gray-400">لا توجد حقول في هذا القسم</div>
+              
+              <div v-for="(field, fIdx) in section.fields" :key="fIdx" class="p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/50 relative group">
+                <button @click="removeFieldFromSection(Number(sIdx), Number(fIdx))" class="absolute top-2 left-2 p-1 text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Trash2 class="w-3 h-3" />
+                </button>
+                
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                  <div class="col-span-1 md:col-span-2">
+                    <label class="block text-[10px] font-bold text-gray-500 mb-1">اسم الحقل (يظهر للمستخدم)</label>
+                    <input type="text" v-model="field.label" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 text-xs outline-none" />
+                  </div>
+                  
+                  <div class="col-span-1">
+                    <label class="block text-[10px] font-bold text-gray-500 mb-1">المفتاح (Key)</label>
+                    <select v-if="section.source === 'personnel_master'" v-model="field.key" @change="onDbFieldSelected(field)" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 text-xs outline-none">
+                      <option value="" disabled>اختر الحقل...</option>
+                      <option v-for="pf in personnelFields" :key="pf.key" :value="pf.key">{{ pf.label }}</option>
+                    </select>
+                    <input v-else type="text" v-model="field.key" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 text-xs outline-none" />
+                  </div>
+                  
+                  <div class="col-span-1">
+                    <label class="block text-[10px] font-bold text-gray-500 mb-1">نوع الحقل</label>
+                    <select v-model="field.type" :disabled="section.source === 'personnel_master'" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 text-xs outline-none disabled:opacity-50 disabled:cursor-not-allowed">
+                      <option value="text">نص</option>
+                      <option value="number">رقم</option>
+                      <option value="date">تاريخ</option>
+                      <option value="select">قائمة</option>
+                      <option value="location_cascade">تحديد موقع (محافظة، الخ)</option>
+                      <option value="auto">تلقائي (قراءة فقط)</option>
+                    </select>
+                  </div>
+                  
+                  <div class="col-span-1 flex items-center justify-around pt-4" :class="{'opacity-50 pointer-events-none': section.source === 'personnel_master'}">
+                     <label class="flex items-center gap-1 text-[10px] text-gray-600">
+                        <input type="checkbox" v-model="field.required" class="rounded text-brand-600" :disabled="section.source === 'personnel_master'" />
+                        إلزامي
+                     </label>
+                     <label class="flex items-center gap-1 text-[10px] text-gray-600">
+                        <input type="checkbox" v-model="field.disabled" class="rounded text-brand-600" :disabled="section.source === 'personnel_master'" />
+                        معطل (مخفي)
+                     </label>
+                  </div>
+                </div>
+                
+                <div v-if="field.type === 'select' || field.default !== undefined || true" class="mt-2 grid grid-cols-2 gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+                  <div v-if="field.type === 'select'">
+                    <label class="block text-[10px] font-bold text-gray-500 mb-1">الخيارات (مفصولة بفاصلة)</label>
+                    <input type="text" v-model="field.optionsStr" placeholder="ذكر, أنثى" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 text-xs outline-none" />
+                  </div>
+                  <div :class="field.type === 'select' ? '' : 'col-span-2'">
+                    <label class="block text-[10px] font-bold text-gray-500 mb-1">قيمة افتراضية (Default)</label>
+                    <input type="text" v-model="field.default" placeholder="مثال: منتدب" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 text-xs outline-none" />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -357,14 +459,73 @@
         </div>
       </div>
     </div>
+    <!-- 5. Attachments Modal -->
+    <div v-if="modals.attachments" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
+      <div class="bg-white dark:bg-gray-800 w-full max-w-3xl rounded-2xl shadow-xl overflow-hidden animate-fade-in-up flex flex-col max-h-[90vh]">
+        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-amber-50 dark:bg-amber-900/20">
+          <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <Paperclip class="w-5 h-5 text-amber-600" />
+            المرفقات الإلزامية للخدمة: {{ activeService.name_ar }}
+          </h3>
+          <div class="flex gap-2">
+            <button @click="addAttachment" class="px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-100 rounded-lg hover:bg-amber-200 flex items-center gap-1">
+              <Plus class="w-3.5 h-3.5" /> إضافة مرفق
+            </button>
+            <button @click="modals.attachments = false" class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+              <X class="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/30 dark:bg-gray-900/30">
+          <div v-if="attachments.length === 0" class="text-center py-10 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
+            <p class="text-gray-500 text-sm">لا توجد مرفقات مطلوبة لهذه الخدمة.</p>
+          </div>
+          
+          <div v-for="(att, idx) in attachments" :key="idx" class="p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 relative group shadow-sm">
+            <button @click="removeAttachment(idx)" class="absolute top-3 left-3 p-1.5 text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+              <Trash2 class="w-4 h-4" />
+            </button>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="col-span-1 md:col-span-2">
+                <label class="block text-xs font-medium text-gray-500 mb-1">اسم المرفق (مثال: صورة البطاقة)</label>
+                <input type="text" v-model="att.label" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm outline-none" />
+              </div>
+              
+              <div class="col-span-1">
+                <label class="block text-xs font-medium text-gray-500 mb-1">المفتاح (Key)</label>
+                <input type="text" v-model="att.key" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm outline-none" />
+              </div>
+            </div>
+            
+            <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex gap-4 items-center">
+              <input type="text" v-model="att.description" placeholder="وصف المرفق (اختياري)..." class="flex-1 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-xs outline-none" />
+              
+              <label class="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400 cursor-pointer">
+                <input type="checkbox" v-model="att.required" class="rounded text-amber-600 focus:ring-amber-500">
+                مرفق إلزامي
+              </label>
+            </div>
+          </div>
+        </div>
 
+        <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3 bg-gray-50 dark:bg-gray-900/50">
+          <button @click="modals.attachments = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50">إغلاق</button>
+          <button @click="saveAttachmentsSchema" :disabled="saving" class="px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-xl hover:bg-amber-700 disabled:opacity-50 flex items-center gap-2">
+            <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
+            <span v-else>حفظ المرفقات</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </admin-layout>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
-import { Settings, Save, Loader2, Plus, LayoutTemplate, Trash2, FileText, GitMerge, ShieldCheck, X, PlusCircle, ShieldAlert } from 'lucide-vue-next'
+import { Settings, Save, Loader2, Plus, LayoutTemplate, Trash2, FileText, GitMerge, ShieldCheck, X, PlusCircle, ShieldAlert, Paperclip } from 'lucide-vue-next'
 import Swal from 'sweetalert2'
 import api from '@/lib/api'
 
@@ -378,13 +539,16 @@ const modals = ref({
   create: false,
   fields: false,
   workflow: false,
-  prereqs: false
+  prereqs: false,
+  attachments: false
 })
 
 const activeService = ref<any>({})
-const fields = ref<any[]>([])
+const sections = ref<any[]>([])
 const workflowSteps = ref<any[]>([])
 const prerequisites = ref<any[]>([])
+const attachments = ref<any[]>([])
+const personnelFields = ref<any[]>([])
 
 // --- Initialization ---
 onMounted(async () => {
@@ -399,6 +563,13 @@ async function fetchData() {
 
     const wRes = await api.get('/service-cycle/workflow-stages/')
     availableStages.value = wRes.data.results || wRes.data
+
+    if (personnelFields.value.length === 0) {
+      const pfRes = await api.get('/personnel/schema/')
+      if (pfRes.data?.success) {
+        personnelFields.value = pfRes.data.data
+      }
+    }
   } catch (err) {
     console.error(err)
   } finally {
@@ -450,56 +621,85 @@ async function saveBasicService() {
 // --- 2. Fields Builder ---
 function openFieldsModal(svc: any) {
   activeService.value = { ...svc }
-  fields.value = []
+  sections.value = []
   
-  if (svc.fields_schema && svc.fields_schema.sections) {
-    const userSection = svc.fields_schema.sections.find((s: any) => s.source === 'user_input')
-    if (userSection && userSection.fields) {
-      fields.value = userSection.fields.map((f: any) => ({
+  if (svc.fields_schema && svc.fields_schema.sections && svc.fields_schema.sections.length > 0) {
+    sections.value = svc.fields_schema.sections.map((s: any) => ({
+      title: s.title || '',
+      source: s.source || 'user_input',
+      fields: (s.fields || []).map((f: any) => ({
         ...f,
         optionsStr: f.options ? f.options.join(', ') : ''
       }))
-    }
+    }))
+  } else {
+    // Default sections for a new form
+    sections.value = [
+      {
+        title: 'أولاً: البيانات الشخصية',
+        source: 'personnel_master',
+        fields: [
+          { key: 'military_number', label: 'الرقم العسكري', type: 'auto', required: true, disabled: false },
+          { key: 'full_name', label: 'الاسم الرباعي واللقب', type: 'auto', required: true, disabled: false },
+          { key: 'rank', label: 'الرتبة', type: 'auto', required: false, disabled: false },
+        ]
+      },
+      {
+        title: 'ثانياً: بيانات الطلب',
+        source: 'user_input',
+        fields: []
+      }
+    ]
   }
   
   modals.value.fields = true
 }
 
-function addField() {
-  fields.value.push({ key: `field_${fields.value.length + 1}`, label: 'حقل جديد', type: 'text', optionsStr: '' })
+function onDbFieldSelected(field: any) {
+  const pf = personnelFields.value.find(p => p.key === field.key)
+  if (pf) {
+    field.label = pf.label
+    field.type = 'auto' // Force DB fields to auto (read-only)
+    field.required = false
+    field.disabled = true
+  }
 }
 
-function removeField(idx: number) { fields.value.splice(idx, 1) }
+function addSection() {
+  sections.value.push({ title: 'قسم جديد', source: 'user_input', fields: [] })
+}
+
+function removeSection(idx: number) { sections.value.splice(idx, 1) }
+
+function addFieldToSection(sIdx: number) {
+  sections.value[sIdx].fields.push({ key: `field_${sections.value[sIdx].fields.length + 1}`, label: 'حقل جديد', type: 'text', required: false, disabled: false, optionsStr: '', default: '' })
+}
+
+function removeFieldFromSection(sIdx: number, fIdx: number) {
+  sections.value[sIdx].fields.splice(fIdx, 1)
+}
 
 async function saveFieldsSchema() {
   saving.value = true
   try {
-    const schemaFields = fields.value.map(f => {
-      const fieldData: any = { key: f.key, label: f.label, type: f.type }
-      if (f.type === 'select' && f.optionsStr) {
-        fieldData.options = f.optionsStr.split(',').map((s: string) => s.trim())
+    const finalSections = sections.value.map(s => {
+      return {
+        title: s.title,
+        source: s.source,
+        fields: s.fields.map((f: any) => {
+          const fieldData: any = { key: f.key, label: f.label, type: f.type, required: !!f.required, disabled: !!f.disabled }
+          if (f.default) fieldData.default = f.default
+          if (f.type === 'select' && f.optionsStr) {
+            fieldData.options = f.optionsStr.split(',').map((opt: string) => opt.trim()).filter(Boolean)
+          }
+          return fieldData
+        })
       }
-      return fieldData
     })
 
     const finalSchema = {
       label: `استمارة ${activeService.value.name_ar}`,
-      sections: [
-        {
-          title: 'بيانات الفرد الأساسية',
-          source: 'personnel_master',
-          fields: [
-            { key: 'military_number', label: 'الرقم العسكري', type: 'text' },
-            { key: 'full_name', label: 'الاسم الرباعي واللقب', type: 'text' },
-            { key: 'rank', label: 'الرتبة', type: 'text' }
-          ]
-        },
-        {
-          title: 'بيانات الطلب',
-          source: 'user_input',
-          fields: schemaFields
-        }
-      ]
+      sections: finalSections
     }
 
     await api.patch(`/service-cycle/catalog/${activeService.value.id}/`, { fields_schema: finalSchema })
@@ -697,6 +897,40 @@ async function savePrerequisites() {
   } catch (err) {
     console.error(err)
     Swal.fire('خطأ', 'يرجى تعبئة جميع الحقول وإدخال قيم صحيحة', 'error')
+  } finally {
+    saving.value = false
+  }
+}
+
+// --- 5. Attachments Builder ---
+function openAttachmentsModal(svc: any) {
+  activeService.value = { ...svc }
+  attachments.value = Array.isArray(svc.attachments_schema) ? [...svc.attachments_schema] : []
+  modals.value.attachments = true
+}
+
+function addAttachment() {
+  attachments.value.push({ key: `attach_${attachments.value.length + 1}`, label: 'مرفق جديد', required: true, description: '' })
+}
+
+function removeAttachment(idx: number) { attachments.value.splice(idx, 1) }
+
+async function saveAttachmentsSchema() {
+  saving.value = true
+  try {
+    const finalAttachments = attachments.value.map(a => ({
+      key: a.key,
+      label: a.label,
+      required: !!a.required,
+      description: a.description || ''
+    }))
+
+    await api.patch(`/service-cycle/catalog/${activeService.value.id}/`, { attachments_schema: finalAttachments, attachments_count: finalAttachments.length })
+    modals.value.attachments = false
+    await fetchData()
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم حفظ المرفقات', showConfirmButton: false, timer: 1500 })
+  } catch (err) {
+    console.error(err)
   } finally {
     saving.value = false
   }

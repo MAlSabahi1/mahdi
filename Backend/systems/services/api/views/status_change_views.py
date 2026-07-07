@@ -21,7 +21,7 @@ from core.services import AuditService, NotificationService, ServiceEventService
 
 # ── Clean Architecture Imports ──
 from systems.services.infrastructure.repositories.django_status_change_repo import DjangoStatusChangeFormRepository
-from systems.services.infrastructure.adapters import DjangoPersonnelUpdater, DjangoEventPublisher, DjangoAttachmentCommitter
+from systems.services.infrastructure.adapters import DjangoEventPublisher, DjangoAttachmentCommitter
 from systems.services.application.use_cases.status_change_use_cases import (
     SubmitStatusFormUseCase, SubmitFormCommand,
     ApproveStatusFormUseCase, ApproveFormCommand,
@@ -46,8 +46,9 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
         return DjangoEventPublisher()
 
     @property
-    def personnel_updater(self):
-        return DjangoPersonnelUpdater()
+    def execution_engine(self):
+        from systems.services.infrastructure.adapters import DjangoExecutionActionEngine
+        return DjangoExecutionActionEngine()
 
     @property
     def attachment_committer(self):
@@ -333,7 +334,7 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
 
             uc = ApproveStatusFormUseCase(
                 self.repo,
-                self.personnel_updater,
+                self.execution_engine,
                 self.attachment_committer,
                 self.event_publisher
             )
@@ -341,7 +342,8 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
                 form_id=form.id,
                 approved_by=request.user.id,
                 approved_at=timezone.now(),
-                next_step_id=next_step_id
+                next_step_id=next_step_id,
+                execution_action=catalog.execution_action if catalog else 'UPDATE_STATUS'
             )
             uc.execute(cmd)
             
@@ -380,8 +382,19 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
             from systems.services.models import ServiceCatalog
             service = ServiceCatalog.objects.filter(code=ft).first() or ServiceCatalog.objects.filter(form_type=ft).first()
             if service and service.fields_schema:
-                return Response({'success': True, 'data': service.fields_schema})
-            
+                schema_data = service.fields_schema.copy()
+                
+                attachments = []
+                for att in service.attachments_schema or []:
+                    attachments.append({
+                        'doc_type': att.get('key', att.get('doc_type', '')),
+                        'name': att.get('label', att.get('name', '')),
+                        'required': att.get('required', True),
+                        'description': att.get('description', '')
+                    })
+                schema_data['attachments'] = attachments
+                
+                return Response({'success': True, 'data': schema_data})
             return Response({'success': False, 'error': f'نوع غير صالح: {ft}'},
                             status=status.HTTP_400_BAD_REQUEST)
         return Response({'success': True, 'data': FormRegistry.all_schemas()})
