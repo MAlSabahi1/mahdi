@@ -379,45 +379,112 @@
             </div>
           </details>
 
-          <!-- Static System Sections (Read-Only) -->
-          <div v-if="activeService.service_type === 'form' && !hasCoreSections" class="border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-100 dark:bg-gray-800 opacity-75 overflow-hidden shadow-sm relative group">
-            <div class="absolute inset-0 bg-transparent cursor-not-allowed z-10" title="هذا القسم ثابت أمنياً ومبني في النظام أساساً لجميع الخدمات"></div>
+          <!-- Auto Sections from FormRegistry (Read-Only Reference) -->
+          <div v-for="(autoSec, aIdx) in registryAutoSections" :key="'auto-' + aIdx" class="border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-100 dark:bg-gray-800 opacity-75 overflow-hidden shadow-sm">
             <div class="bg-gray-200 dark:bg-gray-700/50 px-4 py-3 flex justify-between items-center border-b border-gray-300 dark:border-gray-600">
               <div class="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-bold text-sm">
                 <ShieldCheck class="w-4 h-4 text-emerald-600" />
-                أولاً: البيانات الشخصية والعسكرية (ثابت أمنياً)
+                {{ autoSec.title }} (تلقائي — للاستمارات فقط)
               </div>
-              <button @click.prevent="unlockCoreSections" class="relative z-20 flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-gray-700 hover:bg-gray-800 rounded-lg shadow-sm transition-colors opacity-0 group-hover:opacity-100 cursor-pointer">
-                <Settings class="w-3.5 h-3.5" /> تحرير
-              </button>
+              <span class="text-[10px] bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full">🔒 للقراءة فقط</span>
             </div>
-            <div class="p-3 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-center gap-2 bg-gray-50 dark:bg-gray-900/20">
-              <Lock class="w-3.5 h-3.5" /> يحتوي على: الرتبة، الرقم العسكري، الاسم الرباعي، الوحدة...
-            </div>
-          </div>
-
-          <div v-if="activeService.service_type === 'form' && !hasCoreSections" class="border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-100 dark:bg-gray-800 opacity-75 overflow-hidden shadow-sm relative group">
-            <div class="absolute inset-0 bg-transparent cursor-not-allowed z-10" title="هذا القسم ثابت أمنياً ومبني في النظام أساساً لجميع الخدمات"></div>
-            <div class="bg-gray-200 dark:bg-gray-700/50 px-4 py-3 flex justify-between items-center border-b border-gray-300 dark:border-gray-600">
-              <div class="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-bold text-sm">
-                <ShieldCheck class="w-4 h-4 text-emerald-600" />
-                ثانياً: بيانات الميلاد والإقامة (ثابت أمنياً)
-              </div>
-              <button @click.prevent="unlockCoreSections" class="relative z-20 flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-gray-700 hover:bg-gray-800 rounded-lg shadow-sm transition-colors opacity-0 group-hover:opacity-100 cursor-pointer">
-                <Settings class="w-3.5 h-3.5" /> تحرير
-              </button>
-            </div>
-            <div class="p-3 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-center gap-2 bg-gray-50 dark:bg-gray-900/20">
-              <Lock class="w-3.5 h-3.5" /> يحتوي على: الرقم الوطني، مكان الميلاد، مكان الإقامة (محافظة، مديرية، عزلة)...
+            <div class="p-3 flex flex-wrap gap-1.5 bg-gray-50 dark:bg-gray-900/20">
+              <span v-for="f in autoSec.fields" :key="f.key" class="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-md border border-blue-200 dark:border-blue-800 font-bold">
+                🗄️ {{ f.label }}
+              </span>
             </div>
           </div>
 
           <!-- Divider -->
-          <div v-if="activeService.service_type === 'form' && !hasCoreSections" class="flex items-center gap-4 py-2">
+          <div v-if="registryAutoSections.length > 0 || activeService.service_type === 'form'" class="flex items-center gap-4 py-2">
             <div class="h-px bg-brand-200 dark:bg-brand-800/30 flex-1"></div>
-            <span class="text-xs font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 px-3 py-1 rounded-full border border-brand-100 dark:border-brand-800/50">ثالثاً: الأقسام والحقول الديناميكية (قابلة للتحرير المباشر)</span>
+            <span class="text-xs font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 px-3 py-1 rounded-full border border-brand-100 dark:border-brand-800/50">الأقسام والحقول الديناميكية (قابلة للتحرير)</span>
             <div class="h-px bg-brand-200 dark:bg-brand-800/30 flex-1"></div>
           </div>
+
+          <!-- ══ Live Table Preview ══ -->
+          <details v-if="sections.some(s => s.fields.length > 0)" class="border border-brand-200 dark:border-brand-800/60 rounded-xl overflow-hidden bg-white dark:bg-gray-900 shadow-sm mt-4">
+            <summary class="flex items-center gap-2 px-5 py-4 cursor-pointer select-none font-bold text-sm text-brand-800 dark:text-brand-300 list-none hover:bg-brand-50/50 dark:hover:bg-brand-900/20 transition-colors border-b border-transparent dark:border-transparent data-[open]:border-brand-100">
+              <svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              معاينة — كيف ستظهر الحقول في دليل الخدمات
+              <span class="mr-auto text-xs font-normal text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">انقر للعرض</span>
+            </summary>
+            <div class="p-5 overflow-x-auto bg-gray-50/30 dark:bg-gray-900/30">
+              <div class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm bg-white dark:bg-gray-900">
+                <table class="w-full border-collapse text-right text-sm">
+                  <thead>
+                    <tr class="bg-gray-50 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 font-bold text-xs uppercase tracking-wider">
+                      <th class="p-3 border-b border-l border-gray-200 dark:border-gray-700 text-center w-10">م</th>
+                      
+                      <!-- Hardcoded columns for Specialized Transactions to match directory UI -->
+                      <template v-if="['rank_demotion', 'rank_promotion', 'personnel_to_officer'].includes(activeService.form_type)">
+                        <th class="p-3 border-b border-l border-gray-200 dark:border-gray-700 text-center text-blue-700 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/10">الرتبة</th>
+                        <th class="p-3 border-b border-l border-gray-200 dark:border-gray-700 text-center text-blue-700 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/10">الرقم العسكري</th>
+                        <th class="p-3 border-b border-l border-gray-200 dark:border-gray-700 text-center text-blue-700 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/10">الاسم الرباعي</th>
+                      </template>
+
+                      <template v-for="(autoSec) in registryAutoSections" :key="'prev-auto-' + autoSec.title">
+                        <th v-for="f in autoSec.fields" :key="'prev-' + f.key" class="p-3 border-b border-l border-gray-200 dark:border-gray-700 text-center text-blue-700 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/10">
+                          {{ f.label }}
+                        </th>
+                      </template>
+                      <template v-for="sec in sections" :key="'prev-sec-' + sec.title">
+                        <template v-for="f in sec.fields.filter((ff:any) => ff.source !== 'system')" :key="'prev-f-' + f.key">
+                          <th class="p-3 border-b border-l border-gray-200 dark:border-gray-700 text-center text-brand-700 dark:text-brand-400 bg-brand-50/30 dark:bg-brand-900/10">
+                            {{ f.label }}
+                            <span v-if="f.required" class="text-red-500 mr-1">*</span>
+                          </th>
+                        </template>
+                      </template>
+                      <th class="p-3 border-b border-gray-200 dark:border-gray-700 text-center w-16">الإجراء</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                      <td class="p-3 border-b border-l border-gray-200 dark:border-gray-700 text-center font-bold">1</td>
+                      
+                      <template v-if="['rank_demotion', 'rank_promotion', 'personnel_to_officer'].includes(activeService.form_type)">
+                        <td class="p-3 border-b border-l border-gray-200 dark:border-gray-700 text-center text-xs opacity-60">(تلقائي)</td>
+                        <td class="p-3 border-b border-l border-gray-200 dark:border-gray-700 text-center text-xs opacity-60 font-mono">(تلقائي)</td>
+                        <td class="p-3 border-b border-l border-gray-200 dark:border-gray-700 text-center text-xs opacity-60">(تلقائي)</td>
+                      </template>
+
+                      <template v-for="(autoSec) in registryAutoSections" :key="'sample-auto-' + autoSec.title">
+                        <td v-for="f in autoSec.fields" :key="'sample-' + f.key" class="p-3 border-b border-l border-gray-200 dark:border-gray-700 text-center text-xs opacity-60">
+                          (تلقائي)
+                        </td>
+                      </template>
+                      <template v-for="sec in sections" :key="'sample-sec-' + sec.title">
+                        <template v-for="f in sec.fields.filter((ff:any) => ff.source !== 'system')" :key="'sample-f-' + f.key">
+                          <td class="p-3 border-b border-l border-gray-200 dark:border-gray-700 text-center text-xs text-gray-400">
+                            <div v-if="f.options_source" class="flex items-center justify-center gap-1.5 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 py-1 px-2 rounded">
+                              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                              {{ linkedDataSources[f.options_source] || 'قائمة' }}
+                            </div>
+                            <div v-else-if="f.type === 'select'" class="flex items-center justify-center gap-1.5 bg-gray-100 dark:bg-gray-800 py-1 px-2 rounded">
+                              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg> قائمة
+                            </div>
+                            <div v-else-if="f.type === 'date'" class="flex items-center justify-center gap-1.5">
+                              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </div>
+                            <div v-else-if="f.type === 'textarea'" class="flex items-center justify-center gap-1.5">
+                              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+                            </div>
+                            <div v-else class="text-gray-300 dark:text-gray-600 border-b-2 border-dashed border-gray-300 dark:border-gray-600 w-8 mx-auto"></div>
+                          </td>
+                        </template>
+                      </template>
+                      <td class="p-3 border-b border-gray-200 dark:border-gray-700 text-center">
+                        <button class="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 p-1.5 rounded-lg transition-colors cursor-not-allowed">
+                          <Trash2 class="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
 
           <div v-if="sections.length === 0" class="text-center py-10 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
             <p class="text-gray-500">لم يتم إضافة أي أقسام إضافية لهذه الاستمارة.</p>
@@ -439,9 +506,10 @@
             </div>
             
             <div class="p-4 space-y-3">
-              <div v-if="section.fields.length === 0" class="text-center py-4 text-xs text-gray-400">لا توجد حقول في هذا القسم</div>
+              <div v-if="section.fields.filter((f:any) => f.source !== 'system' || !['rank_demotion', 'rank_promotion', 'personnel_to_officer'].includes(activeService.form_type)).length === 0" class="text-center py-4 text-xs text-gray-400">لا توجد حقول في هذا القسم</div>
               
-              <div v-for="(field, fIdx) in section.fields" :key="fIdx" class="p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/50 relative group">
+              <template v-for="(field, fIdx) in section.fields" :key="'f-' + fIdx">
+                <div v-if="field.source !== 'system' || !['rank_demotion', 'rank_promotion', 'personnel_to_officer'].includes(activeService.form_type)" class="p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/50 relative group">
                 <button @click="removeFieldFromSection(Number(sIdx), Number(fIdx))" class="absolute top-2 left-2 p-1 text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
                   <Trash2 class="w-3 h-3" />
                 </button>
@@ -496,15 +564,25 @@
                 
                 <div v-if="field.type === 'select' || field.default !== undefined || true" class="mt-2 grid grid-cols-2 gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
                   <div v-if="field.type === 'select'">
-                    <label class="block text-[10px] font-bold text-gray-500 mb-1">الخيارات (مفصولة بفاصلة)</label>
-                    <input type="text" v-model="field.optionsStr" placeholder="ذكر, أنثى" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 text-xs outline-none" />
+                    <label class="block text-[10px] font-bold text-gray-500 mb-1">مصدر الخيارات</label>
+                    <select v-model="field.options_source" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 text-xs outline-none">
+                      <option v-for="(lbl, key) in linkedDataSources" :key="key" :value="key">{{ lbl }}</option>
+                    </select>
+                    <div v-if="!field.options_source" class="mt-1">
+                      <label class="block text-[10px] font-bold text-gray-500 mb-1">الخيارات (مفصولة بفاصلة)</label>
+                      <input type="text" v-model="field.optionsStr" placeholder="خيار 1, خيار 2, خيار 3" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 text-xs outline-none" />
+                    </div>
+                    <div v-else class="mt-1 text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded border border-emerald-200 dark:border-emerald-800">
+                      ✅ سيتم تحميل الخيارات تلقائياً من النظام ({{ linkedDataSources[field.options_source] || field.options_source }})
+                    </div>
                   </div>
                   <div :class="field.type === 'select' ? '' : 'col-span-2'">
                     <label class="block text-[10px] font-bold text-gray-500 mb-1">قيمة افتراضية (Default)</label>
-                    <input type="text" v-model="field.default" placeholder="مثال: منتدب" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 text-xs outline-none" />
+                    <input type="text" v-model="field.default" placeholder="" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 text-xs outline-none" />
                   </div>
                 </div>
               </div>
+              </template>
             </div>
           </div>
         </div>
@@ -794,10 +872,21 @@ const modals = ref({
 
 const activeService = ref<any>({})
 const sections = ref<any[]>([])
+const registryAutoSections = ref<any[]>([])
 const workflowSteps = ref<any[]>([])
 const prerequisites = ref<any[]>([])
 const attachments = ref<any[]>([])
 const hasCoreSections = computed(() => sections.value.some(s => s.title.includes('البيانات الشخصية') || s.title.includes('بيانات الميلاد')))
+
+// Available linked data sources for select fields
+const linkedDataSources: Record<string, string> = {
+  '': 'خيارات يدوية (مفصولة بفاصلة)',
+  'ranks': 'الرتب العسكرية (من النظام)',
+  'statuses': 'الحالات الخدمية (من النظام)',
+  'units': 'الوحدات / التشكيلات',
+  'governorates': 'المحافظات',
+  'settlement_types': 'أنواع التسويات',
+}
 
 const personnelFields = ref<any[]>([
   { key: 'full_name', label: 'الاسم الرباعي (من السجل)', type: 'text' },
@@ -951,25 +1040,57 @@ async function saveBasicService() {
 async function openFieldsModal(svc: any) {
   activeService.value = { ...svc, _is_registry_managed: false }
   sections.value = []
+  registryAutoSections.value = []
   loading.value = true
 
   try {
-    // ── Try to load schema from API (DB first, then FormRegistry as seed) ──
     if (svc.form_type) {
       const res = await api.get(`/service-cycle/forms/schema/?type=${svc.form_type}`)
       const schema = res.data?.data
       if (schema && schema.sections && schema.sections.length > 0) {
-        // Show ONLY user_input sections (auto sections are always shown separately)
+        // Store auto sections for reference display ONLY for standard forms
+        const isStandardForm = !['rank_demotion', 'rank_promotion', 'personnel_to_officer'].includes(svc.form_type)
+        
+        if (isStandardForm) {
+          registryAutoSections.value = schema.sections
+            .filter((s: any) => s.source === 'auto')
+            .map((s: any) => ({
+              title: s.title,
+              fields: (s.fields || []).map((f: any) => ({ key: f.key, label: f.label, type: f.type }))
+            }))
+        } else {
+          registryAutoSections.value = []
+        }
+
+        // Load ALL user_input section fields with correct source
         const userSections = schema.sections.filter((s: any) => s.source === 'user_input' || !s.source)
         if (userSections.length > 0) {
-          sections.value = userSections.map((s: any) => ({
-            title: s.title || 'بيانات الحالة',
-            source: 'user_input',
-            fields: (s.fields || []).map((f: any) => {
-              // Determine correct source label
+          sections.value = userSections.map((s: any) => {
+            let sectionTitle = s.title || 'بيانات الحالة'
+            // Clean up the "ثالثاً:" prefix for non-form services
+            if (!isStandardForm) {
+              if (sectionTitle.includes('ثالثاً:')) {
+                sectionTitle = sectionTitle.replace('ثالثاً:', '').trim()
+              }
+              if (sectionTitle === 'بيانات الحالة') {
+                sectionTitle = 'بيانات الطلب / القرار'
+              }
+            }
+
+            return {
+              title: sectionTitle,
+              source: 'user_input',
+              fields: (s.fields || []).map((f: any) => {
               let src = f.source || 'user_input'
+              const defaultVal = f.default || f.value || ''
               if (f.type === 'auto') src = 'personnel_master'
-              else if (f.disabled) src = 'system'
+              else if (f.disabled && defaultVal) src = 'system'
+
+              // Detect linked data source for select fields
+              let optionsSrc = f.options_source || ''
+              if (f.key === 'to_rank' && f.type === 'select') optionsSrc = 'ranks'
+              if (f.key === 'settlement_type' && f.type === 'select') optionsSrc = 'settlement_types'
+
               return {
                 key: f.key,
                 label: f.label,
@@ -977,22 +1098,25 @@ async function openFieldsModal(svc: any) {
                 source: src,
                 required: f.required ?? true,
                 disabled: f.disabled ?? false,
-                default: f.default || '',
-                optionsStr: f.options ? f.options.join(', ') : ''
+                default: defaultVal,
+                options_source: optionsSrc,
+                optionsStr: (!optionsSrc && f.options) ? (f.options.map((o: any) => typeof o === 'object' ? o.label || o.value : o).join(', ')) : ''
               }
             })
-          }))
+            }
+          })
           modals.value.fields = true
+          loading.value = false
           return
         }
       }
     }
 
-    // ── Fallback: empty default section ──
-    sections.value = [{ title: 'أولاً: بيانات الطلب', source: 'user_input', fields: [] }]
+    // Fallback
+    sections.value = [{ title: 'ثالثاً: بيانات الحالة', source: 'user_input', fields: [] }]
   } catch (err) {
     console.error('Failed to load schema from API, using empty default', err)
-    sections.value = [{ title: 'أولاً: بيانات الطلب', source: 'user_input', fields: [] }]
+    sections.value = [{ title: 'ثالثاً: بيانات الحالة', source: 'user_input', fields: [] }]
   } finally {
     loading.value = false
   }
@@ -1058,24 +1182,39 @@ function removeFieldFromSection(sIdx: number, fIdx: number) {
 async function saveFieldsSchema() {
   saving.value = true
   try {
-    const finalSections = sections.value.map(s => {
-      return {
-        title: s.title,
-        source: s.source,
-        fields: s.fields.map((f: any) => {
-          const fieldData: any = { key: f.key, label: f.label, type: f.type, required: !!f.required, disabled: !!f.disabled }
-          if (f.default) fieldData.default = f.default
-          if (f.type === 'select' && f.optionsStr) {
-            fieldData.options = f.optionsStr.split(',').map((opt: string) => opt.trim()).filter(Boolean)
-          }
-          return fieldData
-        })
-      }
-    })
+    // Build auto sections from registry reference
+    const autoSections = registryAutoSections.value.map((s: any) => ({
+      title: s.title,
+      source: 'auto',
+      fields: s.fields.map((f: any) => ({
+        key: f.key, label: f.label, type: f.type || 'auto',
+        required: false, disabled: true
+      }))
+    }))
+
+    // Build user sections with full metadata
+    const userSections = sections.value.map(s => ({
+      title: s.title,
+      source: s.source || 'user_input',
+      fields: s.fields.map((f: any) => {
+        const fieldData: any = {
+          key: f.key, label: f.label, type: f.type,
+          source: f.source || 'user_input',
+          required: !!f.required, disabled: !!f.disabled
+        }
+        if (f.default) fieldData.default = f.default
+        if (f.options_source) fieldData.options_source = f.options_source
+        if (f.type === 'select' && f.optionsStr && !f.options_source) {
+          fieldData.options = f.optionsStr.split(',').map((opt: string) => opt.trim()).filter(Boolean)
+        }
+        return fieldData
+      })
+    }))
 
     const finalSchema = {
       label: `استمارة ${activeService.value.name_ar}`,
-      sections: finalSections
+      form_type: activeService.value.form_type || activeService.value.code,
+      sections: [...autoSections, ...userSections]
     }
 
     await api.patch(`/service-cycle/catalog/${activeService.value.id}/`, { fields_schema: finalSchema })
