@@ -598,6 +598,10 @@ class FormRegistry:
             'key': f['key'], 'label': f['label'], 'type': f.get('type', 'text'),
             'required': f.get('required', True),
             'options': f.get('options'), 'help_text': f.get('help_text'),
+            'disabled': f.get('disabled', False),
+            'default': f.get('default', ''),
+            'source': f.get('source', 'user_input'),
+            'options_source': f.get('options_source', ''),
         } for f in (custom.fields or [])]
 
         return {
