@@ -32,6 +32,11 @@ export const useSystemStore = defineStore('system', () => {
       id: 'users_permissions',
       nameKey: 'systems.users_permissions',
       icon: 'SettingsIcon'
+    },
+    {
+      id: 'reports',
+      nameKey: 'systems.reports',
+      icon: 'PieChartIcon'
     }
   ])
 

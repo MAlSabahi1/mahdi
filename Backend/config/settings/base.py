@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     'systems.personnel.apps.PersonnelConfig',
     'systems.services.apps.ServicesConfig',
     'systems.secretariat.apps.SecretariatConfig',
+    'systems.reports.apps.ReportsConfig',
 
     # Extensions
     'extensions.webhooks.apps.WebhooksConfig',

@@ -238,6 +238,10 @@ const menuGroups = computed(() => {
                 path: "/admin/system/seeding",
               },
               {
+                name: "الأرشيف واللقطة الشهرية",
+                path: "/admin/snapshots",
+              },
+              {
                 name: "admin.system_telemetry",
                 path: "/admin/system/telemetry",
               }
@@ -340,10 +344,6 @@ const menuGroups = computed(() => {
             name: "nav.service_cycle",
             subItems: [
               {
-                name: "nav.excel_export_config",
-                path: "/services/export-config",
-              },
-              {
                 name: "nav.excel_import_wizard",
                 path: "/services/import-wizard",
               },
@@ -354,20 +354,6 @@ const menuGroups = computed(() => {
               {
                 name: "services.rejections",
                 path: "/services/rejections",
-              }
-            ]
-          },
-          {
-            icon: GridIcon,
-            name: "nav.services_reports_module",
-            subItems: [
-              {
-                name: "nav.monthly_exports",
-                path: "/services/monthly-exports",
-              },
-              {
-                name: "nav.official_reports",
-                path: "/services/official-reports",
               }
             ]
           },
@@ -415,6 +401,24 @@ const menuGroups = computed(() => {
                 path: "/services/workflow-builder",
               }
             ]
+          }
+        ]
+      }
+    ];
+  } else if (systemStore.currentSystem === "reports") {
+    return [
+      {
+        title: "نظام التقارير",
+        items: [
+          {
+            icon: GridIcon,
+            name: "لوحة تحكم التقارير",
+            path: "/reports/dashboard",
+          },
+          {
+            icon: PageIcon,
+            name: "إدارة طلبات التصدير",
+            path: "/reports/export-requests",
           }
         ]
       }

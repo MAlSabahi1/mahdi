@@ -209,7 +209,13 @@ function selectSystem(systemId: string) {
   isSystemOpen.value = false
   
   // استعادة آخر مسار توقف فيه العمل في الجلسة الحالية
-  const lastPath = sessionStorage.getItem(`pol_last_path_${systemId}`)
+  let lastPath = sessionStorage.getItem(`pol_last_path_${systemId}`)
+  
+  // معالجة المشكلة المؤقتة الخاصة بمسار التقارير المحفوظ سابقاً
+  if (systemId === 'reports' && (!lastPath || lastPath === '/reports')) {
+    lastPath = '/reports/dashboard'
+  }
+
   if (lastPath) {
     router.push(lastPath)
   } else {

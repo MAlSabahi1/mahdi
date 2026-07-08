@@ -1,0 +1,47 @@
+[
+  {
+    "military_number": "1111111",
+    "current_status__name": "بالخدمة",
+    "current_status__classification": "",
+    "central_department__name": null,
+    "branch__name": null,
+    "district_police__name": null,
+    "unit__name": null
+  },
+  {
+    "military_number": "2222222",
+    "current_status__name": "بالخدمة",
+    "current_status__classification": "",
+    "central_department__name": null,
+    "branch__name": null,
+    "district_police__name": null,
+    "unit__name": null
+  },
+  {
+    "military_number": "3333333",
+    "current_status__name": "بالخدمة",
+    "current_status__classification": "",
+    "central_department__name": null,
+    "branch__name": null,
+    "district_police__name": null,
+    "unit__name": null
+  },
+  {
+    "military_number": "4444444",
+    "current_status__name": "بالخدمة",
+    "current_status__classification": "",
+    "central_department__name": null,
+    "branch__name": null,
+    "district_police__name": null,
+    "unit__name": null
+  },
+  {
+    "military_number": "5555555",
+    "current_status__name": "بالخدمة",
+    "current_status__classification": "",
+    "central_department__name": null,
+    "branch__name": null,
+    "district_police__name": null,
+    "unit__name": null
+  }
+]

@@ -70,6 +70,7 @@ Personnel URLs - مسارات API الأفراد
 from rest_framework.routers import DefaultRouter
 from django.urls import path, include
 from . import views
+from .views.reports_views import WorkforceSummaryReportView
 
 router = DefaultRouter()
 router.register(r'corrections', views.SuggestedCorrectionViewSet, basename='suggested-corrections')
@@ -77,6 +78,7 @@ router.register(r'rank-settlements', views.RankSettlementViewSet, basename='rank
 router.register(r'', views.PersonnelViewSet, basename='personnel')
 
 urlpatterns = [
+    path('reports/workforce-summary/', WorkforceSummaryReportView.as_view(), name='reports-workforce-summary'),
     path('legacy-import/', views.LegacyImportView.as_view(), name='legacy-import'),
     path('rank-settlement/', views.RankSettlementView.as_view(), name='rank-settlement'),
     path('check-national-id/', views.CheckNationalIdView.as_view(), name='check-national-id'),

@@ -325,8 +325,24 @@ class PersonnelMaster(SoftDeletableModel):
         related_name='current_personnel',
         verbose_name=_('نوع الحالة الخدمية (التفصيلي)')
     )
-
-    
+    temp_status_details = models.JSONField(
+        null=True,
+        blank=True,
+        verbose_name=_('تفاصيل الحالة المؤقتة'),
+        help_text=_('بيانات إضافية مثل: اسم المستشفى، نوع القضية، جهة الانتداب، الخ')
+    )
+    perm_status_details = models.JSONField(
+        null=True,
+        blank=True,
+        verbose_name=_('تفاصيل الحالة النهائية'),
+        help_text=_('بيانات إضافية مثل: تاريخ الوفاة، نسبة العجز الطبي، رقم القرار، الخ')
+    )
+    audit_movement_details = models.JSONField(
+        null=True,
+        blank=True,
+        verbose_name=_('تفاصيل التدقيق والحركة'),
+        help_text=_('بيانات التنقلات، الانتداب، الغياب، وتصحيح الأسماء')
+    )
     # علامة الاكتمال
     is_complete = models.BooleanField(default=False, verbose_name=_('بيانات كاملة'))
     
@@ -1239,3 +1255,34 @@ class PersonnelEvent(TimeStampedModel):
     def event_type_display(self):
         return dict(self.EVENT_TYPE_CHOICES).get(self.event_type, self.event_type)
 
+
+class MonthlySnapshot(models.Model):
+    """
+    جدول اللقطة الشهرية (الأرشيف التاريخي).
+    يتم تسجيل لقطة لحالة الفرد في نهاية كل شهر لتكون مرجعاً ثابتاً لا يتأثر بالتعديلات اللاحقة.
+    """
+    personnel = models.ForeignKey(PersonnelMaster, on_delete=models.CASCADE, related_name='monthly_snapshots', verbose_name=_('الفرد'))
+    snapshot_date = models.CharField(max_length=7, verbose_name=_('تاريخ اللقطة (YYYY-MM)'))
+    
+    # نسخة من الحقول الأساسية لسهولة الاستعلام دون فتح الـ JSON
+    rank = models.CharField(max_length=50, null=True, blank=True, verbose_name=_('الرتبة'))
+    status_name = models.CharField(max_length=100, null=True, blank=True, verbose_name=_('الحالة'))
+    unit_name = models.CharField(max_length=100, null=True, blank=True, verbose_name=_('الجهة'))
+    
+    # نسخة كاملة من البيانات
+    snapshot_data = models.JSONField(verbose_name=_('بيانات الفرد كاملة'), help_text=_('لقطة JSON كاملة لجميع حقول الفرد وقت الأرشفة'))
+    
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('تاريخ الإنشاء'))
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_('بواسطة'))
+
+    class Meta:
+        db_table = 'personnel_monthly_snapshot'
+        verbose_name = _('لقطة شهرية')
+        verbose_name_plural = _('اللقطات الشهرية')
+        unique_together = ('personnel', 'snapshot_date')
+        indexes = [
+            models.Index(fields=['snapshot_date']),
+        ]
+
+    def __str__(self):
+        return f"{self.personnel.military_number} - {self.snapshot_date}"

@@ -135,10 +135,11 @@
     "personnel_management": "Services/Personnel Unit",
     "service_cycle": "Services & Payroll Cycles Unit",
     "services_reports_module": "Services Reports Export Module",
-    "transactions_management_module": "Services & Transactions Management Module",
+    "reports_dashboard": "Reports Dashboard",
+    "transactions_management_module": "Transactions Management Module",
     "excel_export_config": "Excel Export & Lock Column Configurator",
     "excel_import_wizard": "Celery-Powered Excel Import Wizard",
-    "monthly_exports": "Monthly Services Export",
+    "monthly_exports": "Monthly Consolidated Reports Export",
     "official_reports": "Official Reports Export",
     "cards_directory": "Services Directory & Cards",
     "service_builder": "Service Builder (Admin)",
@@ -625,7 +626,8 @@
     "administration": "Administration System",
     "secretariat": "Secretariat System",
     "services_personnel": "Services & Personnel System",
-    "users_permissions": "Users & Permissions"
+    "users_permissions": "Users & Permissions",
+    "reports": "Reports System"
   },
   "admin": {
     "dashboard_group": "Monitoring & Control",

@@ -25,6 +25,7 @@ def api_root(request):
             'personnel': '/api/v1/personnel/',
             'service_cycle': '/api/v1/service-cycle/',
             'secretariat': '/api/v1/secretariat/',
+            'reports': '/api/v1/reports/',
             'dictionaries': '/api/v1/dictionaries/',
             'admin_panel': '/admin/',
         }
@@ -56,6 +57,9 @@ api_v1_patterns = [
 
     # Secretariat
     path('secretariat/', include('systems.secretariat.api.urls')),
+
+    # Reports
+    path('reports/', include('systems.reports.urls')),
 
     # Storage
     path('storage/', include('infra.storage.urls')),

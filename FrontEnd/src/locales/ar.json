@@ -75,11 +75,12 @@
     "personnel_management": "وحدة الخدمات",
     "service_cycle": "وحدة دورة الكشوفات والخدمات",
     "services_reports_module": "وحدة تصدير تقارير الخدمات",
-    "transactions_management_module": "وحدة إدارة الخدمات والمعاملات",
+    "transactions_management_module": "وحدة إدارة المعاملات والمهام",
     "excel_export_config": "إعداد وتصدير النماذج",
     "excel_import_wizard": "معالج الاستيراد الجماعي",
     "monthly_exports": "تصدير التقارير الشهرية الموحدة",
     "official_reports": "تصدير تقارير رسمية",
+    "reports_dashboard": "شاشات التقارير",
     "cards_directory": "دليل الخدمات والاستمارات",
     "service_builder": "مُنشئ الخدمات (Admin)",
     "workflow_builder": "مُنشئ مسارات العمل (Admin)",
@@ -635,7 +636,8 @@
     "administration": "نظام الإدارة",
     "secretariat": "نظام السكرتارية",
     "services_personnel": "نظام الخدمات والأفراد",
-    "users_permissions": "إدارة المستخدمين والصلاحيات"
+    "users_permissions": "إدارة المستخدمين والصلاحيات",
+    "reports": "نظام التقارير"
   },
   "admin": {
     "dashboard_group": "لوحات التحكم والمراقبة",

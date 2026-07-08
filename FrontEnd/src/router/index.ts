@@ -250,6 +250,101 @@ const router = createRouter({
       },
     },
     {
+      path: "/reports",
+      redirect: "/reports/dashboard",
+    },
+    {
+      path: "/reports/dashboard",
+      name: "CentralReportsDashboard",
+      component: () => import("@/views/Reports/ReportsDashboard.vue"),
+      meta: {
+        title: "وحدة التقارير والإحصائيات المركزية",
+        requiresAuth: true
+      }
+    },
+    {
+      path: "/reports/view/1",
+      name: "WorkforceSummaryReport",
+      component: () => import("@/views/Reports/WorkforceSummaryReport.vue"),
+      meta: {
+        title: "خلاصة القوة العاملة",
+        requiresAuth: true
+      }
+    },
+    {
+      path: "/reports/view/2",
+      name: "WorkforceCategoricalReport",
+      component: () => import("@/views/Reports/WorkforceCategoricalReport.vue"),
+      meta: {
+        title: "خلاصة فئوية للقوة العاملة",
+        requiresAuth: true
+      }
+    },
+    {
+      path: "/reports/view/3",
+      name: "NonWorkforceReport",
+      component: () => import("@/views/Reports/NonWorkforceReport.vue"),
+      meta: {
+        title: "خلاصة القوة غير العاملة",
+        requiresAuth: true
+      }
+    },
+    {
+      path: "/reports/export-requests",
+      name: "ExportRequestsManagement",
+      component: () => import("@/views/Reports/ExportRequestsManagement.vue"),
+      meta: {
+        title: "إدارة طلبات التصدير",
+        requiresAuth: true,
+        permissions: ["secretariat.task.execute"] // Using an existing permission for demo
+      }
+    },
+    {
+      path: "/reports/view/4",
+      name: "ActiveForceReport",
+      component: () => import("@/views/Reports/ActiveForceReport.vue"),
+      meta: {
+        title: "كشف القوة العاملة فعلياً",
+        requiresAuth: true
+      }
+    },
+    {
+      path: "/reports/view/:id(5|6|7|8|9|10|11)",
+      name: "TempInactiveReports",
+      component: () => import("@/views/Reports/TempInactiveReports.vue"),
+      meta: {
+        title: "كشف القوة غير العاملة مؤقتاً",
+        requiresAuth: true
+      }
+    },
+    {
+      path: "/reports/view/:id(12|13|14|15|16|17)",
+      name: "PermInactiveReports",
+      component: () => import("@/views/Reports/PermInactiveReports.vue"),
+      meta: {
+        title: "كشف القوة غير العاملة نهائياً",
+        requiresAuth: true
+      }
+    },
+    {
+      path: "/reports/view/:id(18|19|20|21|22|23|24a|24b|25)",
+      name: "AuditMovementReports",
+      component: () => import("@/views/Reports/AuditMovementReports.vue"),
+      meta: {
+        title: "كشوفات التدقيق وحركة القوة",
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/admin/snapshots',
+      name: 'MonthlySnapshots',
+      component: () => import('@/views/SystemAdmin/MonthlySnapshots.vue'),
+      meta: {
+        title: 'الأرشيف واللقطة الشهرية',
+        requiresAuth: true
+      }
+    },
+    {
       path: '/admin/structure/org-tree',
       name: 'OrgHierarchyTree',
       component: () => import('@/views/SystemAdmin/Structure/OrgHierarchyTree.vue'),
@@ -497,38 +592,11 @@ const router = createRouter({
       },
     },
     {
-      path: '/services/export-config',
-      name: 'ExcelExportConfigurator',
-      component: () => import('@/views/Services/ExcelExportConfigurator.vue'),
-      meta: {
-        title: 'إعداد وتصدير النماذج المقفلة',
-        requiresAuth: true,
-      },
-    },
-    {
       path: '/services/import-wizard',
       name: 'ExcelImportWizard',
       component: () => import('@/views/Services/ExcelImportWizard.vue'),
       meta: {
         title: 'معالج الاستيراد الجماعي وتتبع Celery',
-        requiresAuth: true,
-      },
-    },
-    {
-      path: '/services/monthly-exports',
-      name: 'MonthlyExports',
-      component: () => import('@/views/Services/MonthlyExports.vue'),
-      meta: {
-        title: 'تصدير التقارير الشهرية الموحدة',
-        requiresAuth: true,
-      },
-    },
-    {
-      path: '/services/official-reports',
-      name: 'OfficialReports',
-      component: () => import('@/views/Services/OfficialReports.vue'),
-      meta: {
-        title: 'تصدير التقارير الرسمية',
         requiresAuth: true,
       },
     },
@@ -718,6 +786,9 @@ function getSystemFromPath(path: string, currentSystem: string): string {
   }
   if (path.startsWith('/admin') || path.startsWith('/audit')) {
     return 'administration'
+  }
+  if (path.startsWith('/reports')) {
+    return 'reports'
   }
   return currentSystem
 }
