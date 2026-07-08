@@ -374,29 +374,36 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
         """GET /forms/schema/?type=martyr أو بدون type للكل"""
         ft = request.query_params.get('type')
         if ft:
-            # 1. Prioritize official Forms defined in FormRegistry
+            from systems.services.models import ServiceCatalog
+
+            # ── 1. DB first: if ServiceCatalog has a custom fields_schema, use it ──
+            service = (
+                ServiceCatalog.objects.filter(form_type=ft).first()
+                or ServiceCatalog.objects.filter(code=ft).first()
+            )
+            if service and service.fields_schema and service.fields_schema.get('sections'):
+                schema_data = service.fields_schema.copy()
+                # Merge attachments from attachments_schema if present
+                db_attachments = [
+                    {
+                        'doc_type': att.get('key', att.get('doc_type', '')),
+                        'label': att.get('label', att.get('name', '')),
+                        'required': att.get('required', True),
+                    }
+                    for att in (service.attachments_schema or [])
+                ]
+                if db_attachments:
+                    schema_data['attachments'] = db_attachments
+                return Response({'success': True, 'data': schema_data})
+
+            # ── 2. Fallback: use FormRegistry as default seed ──
             if FormRegistry.exists(ft):
                 return Response({'success': True, 'data': FormRegistry.schema(ft)})
-            
-            # 2. Otherwise query database ServiceCatalog
-            from systems.services.models import ServiceCatalog
-            service = ServiceCatalog.objects.filter(code=ft).first() or ServiceCatalog.objects.filter(form_type=ft).first()
-            if service and service.fields_schema:
-                schema_data = service.fields_schema.copy()
-                
-                attachments = []
-                for att in service.attachments_schema or []:
-                    attachments.append({
-                        'doc_type': att.get('key', att.get('doc_type', '')),
-                        'name': att.get('label', att.get('name', '')),
-                        'required': att.get('required', True),
-                        'description': att.get('description', '')
-                    })
-                schema_data['attachments'] = attachments
-                
-                return Response({'success': True, 'data': schema_data})
-            return Response({'success': False, 'error': f'نوع غير صالح: {ft}'},
-                            status=status.HTTP_400_BAD_REQUEST)
+
+            return Response(
+                {'success': False, 'error': f'نوع غير صالح: {ft}'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         return Response({'success': True, 'data': FormRegistry.all_schemas()})
 
     @action(detail=False, methods=['get'])

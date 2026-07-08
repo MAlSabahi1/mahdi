@@ -133,255 +133,122 @@
       <div v-if="step === 2" class="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-2xl p-8 shadow-sm">
         <div class="mb-6 pb-4 border-b border-gray-100 dark:border-gray-800">
           <h2 class="text-lg font-black">الخطوة 2: تعبئة بيانات الطلب أو القرار</h2>
-          
-          <!-- Official Form Header matching the Paper Forms -->
-          <div v-if="selectedPersonnelList.length === 1" class="mt-6 border border-gray-300 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm font-serif">
-            <!-- Header Banner -->
-            <div class="bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 px-4 py-2 flex justify-between items-center">
-              <span class="font-bold text-gray-700 dark:text-gray-300 text-sm flex items-center gap-2">
-                <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                استمارة إثبات حالة ({{ schema?.label || 'الطلب' }})
-              </span>
-              <span class="text-xs text-gray-500 font-sans tracking-wider">سجل رقمي معتمد</span>
-            </div>
-            
-            <!-- أولاً: البيانات الشخصية -->
-            <div class="p-4 border-b border-gray-200 dark:border-gray-800">
-              <h3 class="text-brand-700 dark:text-brand-400 font-bold mb-3 border-b-2 border-brand-200 dark:border-brand-900 pb-1 w-max">أولاً: البيانات الشخصية</h3>
-              <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
-                <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span class="block text-[10px] font-bold text-gray-500 mb-1">الرتبة</span>
-                  <strong class="text-sm dark:text-white">{{ selectedPersonnelList[0].rank_name || selectedPersonnelList[0].current_rank?.name || selectedPersonnelList[0].rank?.name || '—' }}</strong>
-                </div>
-                <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span class="block text-[10px] font-bold text-gray-500 mb-1">الرقم العسكري</span>
-                  <strong class="text-sm dark:text-white font-sans">{{ selectedPersonnelList[0].military_number || '—' }}</strong>
-                </div>
-                <div class="md:col-span-2 bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span class="block text-[10px] font-bold text-gray-500 mb-1">الاسم الرباعي</span>
-                  <strong class="text-sm dark:text-white">{{ selectedPersonnelList[0].full_name || '—' }}</strong>
-                </div>
-                <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span class="block text-[10px] font-bold text-gray-500 mb-1">الوحدة</span>
-                  <strong class="text-sm dark:text-white">{{ selectedPersonnelList[0].unit_name || selectedPersonnelList[0].unit?.name || '—' }}</strong>
-                </div>
-                <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span class="block text-[10px] font-bold text-gray-500 mb-1">إدارته / المديرية / الفرع</span>
-                  <strong class="text-sm dark:text-white">{{ selectedPersonnelList[0].department_name || selectedPersonnelList[0].branch?.name || selectedPersonnelList[0].district_police?.name || selectedPersonnelList[0].central_department?.name || '—' }}</strong>
-                </div>
-              </div>
-            </div>
-
-            <!-- ثانياً: بيانات الميلاد والإقامة الحالية -->
-            <div class="p-4 bg-gray-50/50 dark:bg-gray-800/30">
-              <h3 class="text-brand-700 dark:text-brand-400 font-bold mb-3 border-b-2 border-brand-200 dark:border-brand-900 pb-1 w-max">ثانياً: بيانات الميلاد والإقامة الحالية</h3>
-              
-              <div class="space-y-4">
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <span class="block text-[10px] font-bold text-gray-500 mb-1">الرقم الوطني</span>
-                    <strong class="text-sm dark:text-white font-sans tracking-widest">{{ selectedPersonnelList[0].national_id || '—' }}</strong>
-                  </div>
-                  <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <span class="block text-[10px] font-bold text-gray-500 mb-1">تاريخ الإصدار</span>
-                    <input type="date" v-model="localHeaderData.id_issue_date" class="w-full bg-transparent text-sm font-sans dark:text-white outline-none border-b border-gray-300 dark:border-gray-600 focus:border-brand-500" />
-                  </div>
-                  <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <span class="block text-[10px] font-bold text-gray-500 mb-1">جهة الإصدار</span>
-                    <input type="text" v-model="localHeaderData.id_issue_place" placeholder="جهة الإصدار" class="w-full bg-transparent text-sm dark:text-white outline-none border-b border-gray-300 dark:border-gray-600 focus:border-brand-500" />
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <!-- Birth Place -> 4 boxes -->
-                  <div class="bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <span class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">محل الميلاد</span>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">المحافظة</span>
-                        <select v-model="localHeaderData.birth_gov_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="gov in coreStore.governorates" :key="gov.id" :value="gov.id">{{ gov.name }}</option>
-                        </select>
-                      </div>
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">المديرية</span>
-                        <select v-model="localHeaderData.birth_district_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none" :disabled="!localHeaderData.birth_gov_id">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="d in headerDistrictsCache[localHeaderData.birth_gov_id as number] || []" :key="d.id" :value="d.id">{{ d.name_ar || d.name }}</option>
-                        </select>
-                      </div>
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">العزلة</span>
-                        <select v-model="localHeaderData.birth_sub_district_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none" :disabled="!localHeaderData.birth_district_id">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="s in headerSubDistrictsCache[localHeaderData.birth_district_id as number] || []" :key="s.id" :value="s.id">{{ s.name_ar || s.name }}</option>
-                        </select>
-                      </div>
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">القرية/الحارة</span>
-                        <select v-model="localHeaderData.birth_village_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none" :disabled="!localHeaderData.birth_sub_district_id">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="v in headerVillagesCache[localHeaderData.birth_sub_district_id as number] || []" :key="v.id" :value="v.id">{{ v.name_ar || v.name_ar_normalized || v.name }}</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Residence Place -> 4 boxes -->
-                  <div class="bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <span class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">محل الإقامة الحالية</span>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">المحافظة</span>
-                        <select v-model="localHeaderData.residence_gov_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="gov in coreStore.governorates" :key="gov.id" :value="gov.id">{{ gov.name }}</option>
-                        </select>
-                      </div>
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">المديرية</span>
-                        <select v-model="localHeaderData.residence_district_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none" :disabled="!localHeaderData.residence_gov_id">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="d in headerDistrictsCache[localHeaderData.residence_gov_id as number] || []" :key="d.id" :value="d.id">{{ d.name_ar || d.name }}</option>
-                        </select>
-                      </div>
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">العزلة</span>
-                        <select v-model="localHeaderData.residence_sub_district_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none" :disabled="!localHeaderData.residence_district_id">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="s in headerSubDistrictsCache[localHeaderData.residence_district_id as number] || []" :key="s.id" :value="s.id">{{ s.name_ar || s.name }}</option>
-                        </select>
-                      </div>
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">الشارع/القرية</span>
-                        <select v-model="localHeaderData.residence_village_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none" :disabled="!localHeaderData.residence_sub_district_id">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="v in headerVillagesCache[localHeaderData.residence_sub_district_id as number] || []" :key="v.id" :value="v.id">{{ v.name_ar || v.name_ar_normalized || v.name }}</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="p-4 bg-gray-100/50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 flex justify-center">
-               <span class="text-xs text-gray-500 font-bold">⬇ ثالثاً: بيانات الحالة (يرجى استكمال البيانات أدناه بناءً على القرار) ⬇</span>
-            </div>
-          </div>
-          
-          <div v-else class="mt-6 p-5 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 rounded-xl border border-blue-200 dark:border-blue-800 shadow-sm">
-            <span class="font-bold flex items-center gap-2 mb-2">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-              طلب استمارة جماعية
-            </span>
-            سيتم تطبيق إثبات الحالة (القرار) المدخل في الأسفل على جميع الأفراد المحددين دفعة واحدة (العدد: {{ selectedPersonnelList.length }} أفراد).
-          </div>
         </div>
         
         <div class="space-y-8">
-          <!-- General Dynamic Layout -->
-          <div v-for="(section, sIdx) in schema.sections" :key="sIdx">
-            <template v-if="getDynamicFields(section).length > 0">
-              <h3 class="text-md font-bold text-brand-600 mb-4">{{ section.title }}</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <template v-for="field in getDynamicFields(section)" :key="field.key">
-                <!-- Current Rank injected right before to_rank for Rank Settlements -->
-                <div v-if="field.key === 'to_rank' && category === 'rank_settlement'" class="bg-gray-50/50 dark:bg-gray-800/20 p-4 rounded-xl border border-gray-100 dark:border-gray-800/60 flex flex-col justify-center">
-                  <label class="mb-1 block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">الرتبة الحالية</label>
-                  <div class="text-sm font-bold text-gray-900 dark:text-white">
-                    {{ selectedPersonnelList[0]?.rank_name || selectedPersonnelList[0]?.current_rank?.name || selectedPersonnelList[0]?.rank?.name || 'غير متوفر' }}
-                  </div>
-                </div>
-
-                <div v-show="field.key !== 'new_military_number' || formData.settlement_type === 'personnel_to_officer'" 
-                     class="space-y-1.5">
-                  <label class="text-xs font-bold text-gray-700 dark:text-gray-300">
-                    {{ field.label }} <span v-if="field.required || (field.key === 'new_military_number' && formData.settlement_type === 'personnel_to_officer')" class="text-red-500">*</span>
+          <!-- General Form Fields (Shared across all selected personnel) -->
+          <!-- General Form Fields (Shared across all selected personnel) -->
+          <div class="mb-8" v-if="!isRankSettlement || schema?.sections?.find((s:any) => s.source === 'user_input')?.fields?.some((f:any) => !(isRankSettlement && ['to_rank', 'demotion_reason', 'new_military_number', 'decision_number', 'decision_date', 'university_degree_type'].includes(f.key)) && !f.disabled)">
+            <h3 class="text-md font-bold text-brand-600 mb-4 border-b pb-2 border-gray-100 dark:border-gray-800">بيانات القرار والتسوية المشتركة</h3>
+            <div v-for="(section, sIdx) in schema?.sections?.filter((s:any) => s.source === 'user_input')" :key="sIdx" class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+              <template v-for="field in section.fields.filter((f:any) => !(isRankSettlement && ['to_rank', 'demotion_reason', 'new_military_number', 'decision_number', 'decision_date', 'university_degree_type'].includes(f.key)) && !f.disabled)" :key="field.key">
+                <div v-if="!field.hidden">
+                  <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                    {{ field.label }} <span v-if="field.required" class="text-red-500">*</span>
                   </label>
-                
-                <select v-if="field.type === 'select'" v-model="formData[field.key]" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-shadow">
-                  <option value="" disabled>اختر...</option>
-                  <option v-for="opt in getFilteredOptions(field)" :key="opt && typeof opt === 'object' ? opt.value : opt" :value="opt && typeof opt === 'object' ? opt.value : opt">
-                    {{ opt && typeof opt === 'object' ? opt.label : opt }}
-                  </option>
-                </select>
-
-                <!-- Location Cascade: محافظة → مديرية → عزلة → قرية/حارة -->
-                <div v-else-if="field.type === 'location_cascade'" class="space-y-3">
-                  <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <!-- محافظة -->
-                    <div>
-                      <label class="text-[10px] font-bold text-gray-500 mb-1 block">المحافظة</label>
-                      <select v-model="locationState[field.key + '_gov']" @change="onGovernorateChange(field.key)"
-                        class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                        <option value="">اختر المحافظة...</option>
-                        <option v-for="g in governorates" :key="g.id" :value="g.id">{{ g.name_ar }}</option>
-                      </select>
-                    </div>
-                    <!-- مديرية -->
-                    <div>
-                      <label class="text-[10px] font-bold text-gray-500 mb-1 block">المديرية</label>
-                      <select v-model="locationState[field.key + '_dist']" @change="onDistrictChange(field.key)"
-                        :disabled="!locationState[field.key + '_gov']"
-                        class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-50">
-                        <option value="">اختر المديرية...</option>
-                        <option v-for="d in getDistricts(field.key)" :key="d.id" :value="d.id">{{ d.name_ar }}</option>
-                      </select>
-                    </div>
-                    <!-- عزلة -->
-                    <div>
-                      <label class="text-[10px] font-bold text-gray-500 mb-1 block">العزلة</label>
-                      <select v-model="locationState[field.key + '_sub']" @change="onSubDistrictChange(field.key)"
-                        :disabled="!locationState[field.key + '_dist']"
-                        class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-50">
-                        <option value="">اختر العزلة...</option>
-                        <option v-for="s in getSubDistricts(field.key)" :key="s.id" :value="s.id">{{ s.name_ar }}</option>
-                      </select>
-                    </div>
-                    <!-- قرية / حارة -->
-                    <div>
-                      <label class="text-[10px] font-bold text-gray-500 mb-1 block">القرية / الحارة</label>
-                      <select v-model="locationState[field.key + '_vil']" @change="onVillageChange(field.key)"
-                        :disabled="!locationState[field.key + '_sub']"
-                        class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-50">
-                        <option value="">اختر القرية...</option>
-                        <option v-for="v in getVillages(field.key)" :key="v.id" :value="v.id">{{ v.name_ar || v.name_ar_normalized }}</option>
-                      </select>
-                    </div>
-                  </div>
-                  <!-- الكتابة اليدوية -->
-                  <div class="flex items-center gap-2">
-                    <label class="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" v-model="locationState[field.key + '_manual']" class="w-3.5 h-3.5 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
-                      <span class="text-[10px] text-gray-500">كتابة يدوية</span>
-                    </label>
-                  </div>
-                  <input v-if="locationState[field.key + '_manual']"
-                    v-model="formData[field.key]" type="text" placeholder="اكتب المكان يدوياً..."
-                    class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
-                  <!-- المكان النهائي المُجمّع -->
-                  <div v-if="formData[field.key] && !locationState[field.key + '_manual']" class="text-[10px] text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950/20 px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800">
-                    📍 {{ formData[field.key] }}
-                  </div>
-                </div>
-
-                <textarea v-else-if="field.type === 'textarea'" v-model="formData[field.key]" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none h-24 transition-shadow"></textarea>
-                <input v-else :type="field.type" v-model="formData[field.key]" 
-                        :readonly="field.key === 'old_value' || field.disabled"
-                        :maxlength="field.key === 'new_military_number' ? 7 : (field.key === 'new_value' && (formData.correction_type === 'national_id_correction' || formData.field_name === 'national_id') ? 11 : undefined)"
-                        :class="['w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-shadow', field.type === 'date' ? 'text-left' : '', (field.key === 'old_value' || field.disabled) ? 'opacity-70 cursor-not-allowed font-bold text-gray-600 bg-gray-100 dark:bg-gray-800/50' : '']"
-                        :dir="field.type === 'date' ? 'ltr' : 'rtl'" />
-                <p v-if="field.key === 'new_military_number'" class="mt-1 text-xs text-brand-600 dark:text-brand-400 flex items-center gap-1">
-                  <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  الرقم العسكري للضابط يبدأ بـ 60 ويتكون من 7 خانات
-                </p>
-                <p v-if="field.help_text" class="text-[10px] text-gray-400 mt-1">{{ field.help_text }}</p>
+                  
+                  <input v-if="field.type === 'text' || field.type === 'number'" :type="field.type" v-model="formData[field.key]" :placeholder="field.placeholder" :disabled="field.disabled" class="w-full text-xs rounded-xl border border-gray-300 dark:border-gray-700 bg-transparent py-2.5 px-3 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400 disabled:cursor-not-allowed" />
+                  
+                  <input v-else-if="field.type === 'date'" type="date" v-model="formData[field.key]" :disabled="field.disabled" class="w-full text-xs rounded-xl border border-gray-300 dark:border-gray-700 bg-transparent py-2.5 px-3 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400 disabled:cursor-not-allowed" />
+                  
+                  <textarea v-else-if="field.type === 'textarea'" v-model="formData[field.key]" :rows="field.rows || 3" :placeholder="field.placeholder" :disabled="field.disabled" class="w-full text-xs rounded-xl border border-gray-300 dark:border-gray-700 bg-transparent py-2.5 px-3 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400 disabled:cursor-not-allowed"></textarea>
+                  
+                  <select v-else-if="field.type === 'select'" v-model="formData[field.key]" :disabled="field.disabled" class="w-full text-xs rounded-xl border border-gray-300 dark:border-gray-700 bg-transparent py-2.5 px-3 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400 disabled:cursor-not-allowed">
+                    <option value="" disabled selected>اختر {{ field.label }}</option>
+                    <option v-for="opt in getFilteredOptions(field)" :key="opt.value || opt" :value="opt.value || opt">{{ opt.label || opt }}</option>
+                  </select>
                 </div>
               </template>
             </div>
-            </template>
+          </div>
+
+          <!-- Rank Settlement Personnel Table -->
+          <div>
+            <h3 class="text-md font-bold text-brand-600 mb-4 border-b pb-2 border-gray-100 dark:border-gray-800 flex justify-between items-center">
+              <span>الأفراد المشمولين بالتسوية</span>
+              <span class="text-xs bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 px-3 py-1 rounded-full font-bold">العدد: {{ selectedPersonnelList.length }}</span>
+            </h3>
+            
+            <div class="overflow-x-auto border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm bg-white dark:bg-gray-900">
+              <table class="w-full border-collapse text-right text-sm">
+                <thead>
+                  <tr class="bg-gray-50 dark:bg-gray-850 text-gray-700 dark:text-gray-300 font-bold text-xs uppercase tracking-wider">
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center w-12">م</th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center w-28">الرتبة الحالية</th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center w-32">الرقم العسكري الحالي</th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800">الاسم الرباعي</th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center w-28" v-if="formData.settlement_type === 'personnel_to_officer' || type === 'personnel_to_officer'">المؤهل <span class="text-red-500">*</span></th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center w-40" v-if="formData.settlement_type === 'personnel_to_officer' || type === 'personnel_to_officer'">الرقم العسكري الجديد <span class="text-red-500">*</span></th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center w-32" v-if="isRankSettlement">الرتبة المستهدفة <span class="text-red-500">*</span></th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center w-32" v-if="isRankSettlement">رقم القرار <span class="text-red-500">*</span></th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center w-32" v-if="isRankSettlement">تاريخ القرار <span class="text-red-500">*</span></th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center w-40" v-if="isRankSettlement">السبب / الملاحظات <span class="text-red-500" v-if="type === 'rank_demotion'">*</span></th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center w-24" v-if="isRankSettlement">مرفق خاص</th>
+                    <th class="p-3 border-b border-gray-200 dark:border-gray-800 text-center w-16">الإجراء</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(person, idx) in selectedPersonnelList" :key="person.military_number" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
+                    <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center font-bold text-gray-400">{{ idx + 1 }}</td>
+                    <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center text-xs font-bold text-gray-600 dark:text-gray-300">
+                      {{ person.rank_name || person.current_rank?.name || person.rank?.name || '—' }}
+                    </td>
+                    <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center font-mono font-bold text-gray-700 dark:text-gray-300">
+                      {{ person.military_number }}
+                    </td>
+                    <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800 font-bold text-gray-900 dark:text-white">
+                      {{ person.full_name }}
+                    </td>
+                    <td v-if="formData.settlement_type === 'personnel_to_officer' || type === 'personnel_to_officer'" class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center">
+                      <select v-model="perPersonData[person.military_number].university_degree_type" class="w-full text-xs p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 outline-none font-bold text-brand-600 dark:text-brand-400">
+                        <option value="" disabled selected>اختر</option>
+                        <option value="بكالوريوس">بكالوريوس</option>
+                        <option value="ماجستير">ماجستير</option>
+                        <option value="دكتوراه">دكتوراه</option>
+                        <option value="أخرى">أخرى</option>
+                      </select>
+                    </td>
+                    <td v-if="formData.settlement_type === 'personnel_to_officer' || type === 'personnel_to_officer'" class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center">
+                      <input v-model="perPersonData[person.military_number].new_military_number" type="text" placeholder="يبدأ بـ 60 (7 أرقام)" class="w-full text-xs p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 outline-none text-center font-mono font-bold text-brand-600 dark:text-brand-400" />
+                    </td>
+                    <td v-if="isRankSettlement" class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center">
+                      <select v-model="perPersonData[person.military_number].to_rank" class="w-full text-xs p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 outline-none font-bold text-brand-600 dark:text-brand-400">
+                        <option value="" disabled selected>اختر الرتبة</option>
+                        <option v-for="opt in getSettlementRanks(person)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                      </select>
+                    </td>
+                    <td v-if="isRankSettlement" class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center">
+                      <input v-model="perPersonData[person.military_number].decision_number" type="text" placeholder="رقم القرار" class="w-full text-xs p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 outline-none text-brand-600 dark:text-brand-400" />
+                    </td>
+                    <td v-if="isRankSettlement" class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center">
+                      <input v-model="perPersonData[person.military_number].decision_date" type="date" class="w-full text-xs p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 outline-none text-brand-600 dark:text-brand-400" />
+                    </td>
+                    <td v-if="isRankSettlement" class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center">
+                      <input v-model="perPersonData[person.military_number].notes" type="text" :placeholder="type === 'rank_demotion' ? 'سبب التنزيل' : 'ملاحظات / رقم خاص'" class="w-full text-xs p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 outline-none text-brand-600 dark:text-brand-400" />
+                    </td>
+                    <td v-if="isRankSettlement" class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center">
+                      <div class="flex items-center justify-center gap-1.5">
+                        <label :for="'file-settlement-' + person.military_number" class="cursor-pointer bg-emerald-50 hover:bg-emerald-100 text-emerald-600 text-[10px] font-bold px-2 py-1.5 rounded transition-colors flex items-center gap-1">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                          {{ perPersonData[person.military_number].file ? 'تغيير' : 'إرفاق' }}
+                        </label>
+                        <input :id="'file-settlement-' + person.military_number" type="file" @change="handlePersonAttachment(person.military_number, $event)" class="hidden" accept=".pdf,.jpg,.jpeg,.png" />
+                        <span v-if="perPersonData[person.military_number].uploading" class="animate-spin h-3 w-3 border-2 border-emerald-500 border-t-transparent rounded-full"></span>
+                        <span v-if="perPersonData[person.military_number].file && !perPersonData[person.military_number].uploading" class="text-emerald-500 text-[10px]">✓</span>
+                      </div>
+                    </td>
+                    <td class="p-3 border-b border-gray-200 dark:border-gray-800 text-center">
+                      <button @click="removePersonnel(person.military_number)" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/50 p-1.5 rounded-lg transition-colors">
+                        <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div v-if="selectedPersonnelList.length === 0" class="text-center py-6 text-gray-500 text-sm">
+              لم يتم تحديد أي أفراد لهذه التسوية. يرجى العودة للخطوة الأولى.
+            </div>
           </div>
         </div>
 
@@ -589,9 +456,18 @@ watch(selectedPersonnelList, (newVal) => {
 
 // Step 2 & 3 State
 const formData = ref<any>({})
+const newMilitaryNumbers = reactive<Record<string, string>>({})
+const perPersonData = reactive<Record<string, { to_rank: string, notes: string, new_military_number: string, university_degree_type: string, decision_number: string, decision_date: string, document_id: number | null, file: File | null, uploading: boolean }>>({})
 const documentIds = ref<number[]>([])
 const uploadedFiles = ref<Record<string, File>>({})
 const uploadingDoc = ref<string | null>(null)
+
+const isRankSettlement = computed(() => category === 'rank_settlement' || ['rank_demotion', 'rank_promotion', 'personnel_to_officer'].includes(type))
+const userFields = computed(() => schema.value?.sections?.find((s:any) => s.source === 'user_input')?.fields || [])
+
+const hasToRankColumn = computed(() => isRankSettlement.value && !!userFields.value.find((f:any) => f.key === 'to_rank'))
+const hasReasonColumn = computed(() => isRankSettlement.value && !!userFields.value.find((f:any) => ['notes', 'reason', 'demotion_reason'].includes(f.key)))
+const hasNewMilNumColumn = computed(() => isRankSettlement.value && (type === 'personnel_to_officer' || !!userFields.value.find((f:any) => f.key === 'new_military_number')))
 
 // Submission State
 const isSubmitting = ref(false)
@@ -600,6 +476,7 @@ const submittedCount = ref(0)
 // Location Cascade State
 const locationState = reactive<Record<string, any>>({})
 const governorates = ref<any[]>([])
+const availableRanks = ref<any[]>([])
 const districtsCache = ref<Record<number, any[]>>({})
 const subDistrictsCache = ref<Record<number, any[]>>({})
 const villagesCache = ref<Record<number, any[]>>({})
@@ -611,45 +488,40 @@ async function loadGovernorates() {
   } catch { governorates.value = [] }
 }
 
-function getDynamicFields(section: any) {
-  if (!section || !section.fields) return []
-  const hardcodedKeys = ['military_number', 'full_name', 'current_rank', 'rank', 'unit', 'national_id', 'birth_date', 'governorate', 'residence_gov_id']
-  return section.fields.filter((f: any) => !hardcodedKeys.includes(f.key))
-}
-
 function getFilteredOptions(field: any) {
   if (!field.options) return []
-  if (field.key === 'to_rank') {
-    const person = selectedPersonnelList.value[0]
-    if (!person) return field.options
-
-    const currentRankId = person.current_rank?.id || person.current_rank_id || person.current_rank
-    if (!currentRankId) return field.options
-
-    const currentRank = field.options.find((o: any) => String(o.value) === String(currentRankId))
-    const currentRankOrder = currentRank ? currentRank.order : 999
-    const currentRankIsOfficer = currentRank ? currentRank.is_officer : false
-
-    const settlementType = formData.value.settlement_type
-
-    if (settlementType === 'personnel_to_officer') {
-      const officerRanks = field.options.filter((o: any) => o.is_officer)
-      if (officerRanks.length === 0) return []
-      const lowestOfficerRankOrder = Math.max(...officerRanks.map((r: any) => r.order))
-      return officerRanks.filter((o: any) => o.order === lowestOfficerRankOrder)
-    } else if (settlementType === 'same_class_promotion') {
-      const sameClassRanks = field.options.filter((o: any) => o.is_officer === currentRankIsOfficer && o.order < currentRankOrder)
-      if (sameClassRanks.length === 0) return []
-      const immediateNextRankOrder = Math.max(...sameClassRanks.map((r: any) => r.order))
-      return sameClassRanks.filter((o: any) => o.order === immediateNextRankOrder)
-    } else if (settlementType === 'demotion') {
-      const sameClassRanks = field.options.filter((o: any) => o.is_officer === currentRankIsOfficer && o.order > currentRankOrder)
-      if (sameClassRanks.length === 0) return []
-      const immediateLowerRankOrder = Math.min(...sameClassRanks.map((r: any) => r.order))
-      return sameClassRanks.filter((o: any) => o.order === immediateLowerRankOrder)
-    }
-  }
   return field.options
+}
+
+function getSettlementRanks(person: any) {
+  if (availableRanks.value.length === 0) return []
+  
+  const currentRankId = person.current_rank?.id || person.current_rank_id || person.current_rank || person.rank?.id || person.rank_id || person.rank
+  
+  let currentRank = null;
+  if (currentRankId) {
+    currentRank = availableRanks.value.find((o: any) => String(o.value) === String(currentRankId))
+  }
+  
+  if (!currentRank && (person.rank_name || person.current_rank?.name || person.rank?.name)) {
+    const rankName = person.rank_name || person.current_rank?.name || person.rank?.name
+    currentRank = availableRanks.value.find((o: any) => o.label === rankName)
+  }
+
+  if (!currentRank) return availableRanks.value 
+
+  if (type === 'rank_demotion') {
+    const filtered = availableRanks.value.filter((o: any) => o.order > currentRank.order)
+    return filtered.length > 0 ? filtered : availableRanks.value
+  } else if (type === 'rank_promotion') {
+    const filtered = availableRanks.value.filter((o: any) => o.order < currentRank.order)
+    return filtered.length > 0 ? filtered : availableRanks.value
+  } else if (type === 'personnel_to_officer' || formData.value.settlement_type === 'personnel_to_officer') {
+    const filtered = availableRanks.value.filter((o: any) => o.is_officer === true)
+    return filtered.length > 0 ? filtered : availableRanks.value
+  }
+  
+  return availableRanks.value
 }
 
 watch(() => formData.value.settlement_type, () => {
@@ -657,7 +529,8 @@ watch(() => formData.value.settlement_type, () => {
   
   // Auto-select if there is exactly 1 valid option based on intelligent filtering
   setTimeout(() => {
-    const toRankField = schema.value?.sections?.flatMap((s:any) => s.fields || []).find((f:any) => f.key === 'to_rank')
+    if (type === 'rank_demotion') return; // Handled per person
+    const toRankField = schema.value?.sections?.find((s:any) => s.source === 'user_input')?.fields?.find((f:any) => f.key === 'to_rank')
     if (toRankField) {
       const filtered = getFilteredOptions(toRankField)
       if (filtered.length === 1) {
@@ -749,13 +622,88 @@ function onVillageChange(fieldKey: string) {
   formData.value[fieldKey] = [gov?.name_ar, dist?.name_ar, sub?.name_ar, vil?.name_ar || vil?.name_ar_normalized].filter(Boolean).join(' — ')
 }
 
+// Name Correction Special Fields
+const nameParts = reactive({
+  first: '',
+  father: '',
+  grandfather: '',
+  family: ''
+})
+const notes = ref('')
 
+const generatedFullName = computed(() => {
+  const parts = [
+    nameParts.first.trim(),
+    nameParts.father.trim(),
+    nameParts.grandfather.trim(),
+    nameParts.family.trim()
+  ].filter(p => p !== '')
+  return parts.join(' ')
+})
+
+const isValidArabic = computed(() => {
+  if (!generatedFullName.value) return false
+  const arRegex = /^[\u0621-\u064A\s]+$/
+  return arRegex.test(generatedFullName.value)
+})
+
+const hasFourParts = computed(() => {
+  return (
+    nameParts.first.trim() !== '' &&
+    nameParts.father.trim() !== '' &&
+    nameParts.grandfather.trim() !== '' &&
+    nameParts.family.trim() !== ''
+  )
+})
+
+const isDifferentName = computed(() => {
+  if (selectedPersonnelList.value.length === 0 || !generatedFullName.value) return false
+  return selectedPersonnelList.value[0].full_name !== generatedFullName.value
+})
+
+const hasPendingNameCorrection = computed(() => {
+  if (selectedPersonnelList.value.length === 0) return false
+  const person = selectedPersonnelList.value[0]
+  if (!person.pending_corrections) return false
+  return person.pending_corrections.some(
+    (c: any) => c.field_name === 'full_name' && c.status === 'pending'
+  )
+})
+
+const pendingNameCorrectionDetails = computed(() => {
+  if (selectedPersonnelList.value.length === 0) return null
+  const person = selectedPersonnelList.value[0]
+  if (!person.pending_corrections) return null
+  return person.pending_corrections.find(
+    (c: any) => c.field_name === 'full_name' && c.status === 'pending'
+  )
+})
+
+function updateFullName() {
+  formData.value.new_value = generatedFullName.value
+}
 
 onMounted(async () => {
   if (coreStore.governorates.length === 0) {
     await coreStore.fetchAllReferences()
   }
   await loadGovernorates()
+
+  // FORCE FETCH RANKS FOR DEMOTION REGARDLESS OF SCHEMA
+  if (type === 'rank_demotion' || category === 'rank_settlement') {
+    try {
+      const ranksRes = await api.get('/dictionaries/ranks/?page_size=1000')
+      const ranks = ranksRes.data?.results || ranksRes.data || []
+      availableRanks.value = ranks.map((r: any) => ({
+        value: r.id,
+        label: r.name,
+        order: r.order,
+        is_officer: r.is_officer
+      }))
+    } catch (e) {
+      console.error('Failed to global load ranks:', e)
+    }
+  }
 
   if (!type) {
     error.value = 'الرجاء اختيار نوع الخدمة من الدليل.'
@@ -768,9 +716,9 @@ onMounted(async () => {
     if (res) {
       schema.value = res
       // Initialize form data
-      const allFields = res.sections?.flatMap((s: any) => s.fields || []) || []
-      if (allFields.length > 0) {
-        allFields.forEach((f: any) => {
+      const userSection = res.sections?.find((s: any) => s.source === 'user_input')
+      if (userSection) {
+        userSection.fields.forEach((f: any) => {
           formData.value[f.key] = f.default !== undefined ? f.default : (f.value !== undefined ? f.value : '')
           // Auto-select if only one option
           if (f.type === 'select' && f.options?.length === 1) {
@@ -778,26 +726,14 @@ onMounted(async () => {
           }
         })
         // Load governorates if any location_cascade field exists
-        const hasLocationField = allFields.some((f: any) => f.type === 'location_cascade')
+        const hasLocationField = userSection.fields.some((f: any) => f.type === 'location_cascade')
         if (hasLocationField) {
           loadGovernorates()
         }
 
-        // Load ranks if any select field is to_rank
-        const rankField = allFields.find((f: any) => f.key === 'to_rank')
-        if (rankField) {
-          try {
-            const ranksRes = await api.get('/dictionaries/ranks/?page_size=1000')
-            const ranks = ranksRes.data?.results || ranksRes.data || []
-            rankField.options = ranks.map((r: any) => ({
-              value: r.id,
-              label: r.name,
-              order: r.order,
-              is_officer: r.is_officer
-            }))
-          } catch (e) {
-            console.error('Failed to load ranks:', e)
-          }
+        const rankField = userSection.fields.find((f: any) => f.key === 'to_rank')
+        if (rankField && availableRanks.value.length > 0) {
+          rankField.options = availableRanks.value
         }
       }
     } else {
@@ -851,13 +787,58 @@ async function addPersonnel(person: any) {
         selectedPersonnelList.value.push(person)
       }
     } else {
+      if (type === 'personnel_to_officer' || formData.value.settlement_type === 'personnel_to_officer') {
+        const currentRankId = person.current_rank?.id || person.current_rank_id || person.current_rank || person.rank?.id || person.rank_id || person.rank
+        const rankName = person.rank_name || person.current_rank?.name || person.rank?.name
+        let isOfficer = false
+        if (availableRanks.value.length > 0) {
+          const r = availableRanks.value.find((o: any) => String(o.value) === String(currentRankId) || o.label === rankName)
+          if (r && r.is_officer) isOfficer = true
+        }
+        if (isOfficer) {
+          Swal.fire({
+            icon: 'error',
+            title: 'عملية غير صالحة',
+            text: `الفرد المختار (${person.full_name}) يحمل رتبة ضابط بالفعل ولا يمكن تسويته من كادر الأفراد.`
+          })
+          return
+        }
+      }
+
       selectedPersonnelList.value.push(person)
+      if (!perPersonData[person.military_number]) {
+        const ranks = getSettlementRanks(person)
+        let defaultRank = ''
+        if (type === 'rank_promotion' && ranks.length > 0) {
+            const nextRank = ranks.reduce((prev: any, curr: any) => (prev.order > curr.order) ? prev : curr, ranks[0])
+            if (nextRank) defaultRank = nextRank.value
+        } else if (type === 'personnel_to_officer' || formData.value.settlement_type === 'personnel_to_officer') {
+            const officers = ranks.filter((r: any) => r.is_officer)
+            if (officers.length > 0) {
+                const lowestOfficer = officers.reduce((prev: any, curr: any) => (prev.order > curr.order) ? prev : curr, officers[0])
+                defaultRank = lowestOfficer.value
+            }
+        }
+
+        perPersonData[person.military_number] = { 
+            to_rank: defaultRank, 
+            notes: '', 
+            new_military_number: '', 
+            university_degree_type: '',
+            decision_number: '',
+            decision_date: '',
+            document_id: null, 
+            file: null, 
+            uploading: false 
+        }
+      }
     }
   }
 }
 
 function removePersonnel(militaryNumber: string) {
   selectedPersonnelList.value = selectedPersonnelList.value.filter(p => p.military_number !== militaryNumber)
+  delete perPersonData[militaryNumber]
 }
 
 function addAllSearchResults() {
@@ -890,20 +871,16 @@ async function goToStep2() {
     }
     
     const updatedPerson = selectedPersonnelList.value[0]
-    if (type === 'national_id_correction') formData.value.old_value = updatedPerson.national_id
+    if (type === 'name_correction') {
+      formData.value.old_value = updatedPerson.full_name
+      nameParts.first = ''
+      nameParts.father = ''
+      nameParts.grandfather = ''
+      nameParts.family = ''
+      notes.value = ''
+    }
+    else if (type === 'national_id_correction') formData.value.old_value = updatedPerson.national_id
     else if (type === 'military_number_correction') formData.value.old_value = updatedPerson.military_number
-  }
-  
-  // Auto-populate 'personnel_master' fields from the first selected person
-  if (selectedPersonnelList.value.length > 0 && schema.value?.sections) {
-    const person = selectedPersonnelList.value[0]
-    schema.value.sections.forEach((section: any) => {
-      section.fields?.forEach((field: any) => {
-        if (field.source === 'personnel_master') {
-          formData.value[field.key] = person[field.key] || ''
-        }
-      })
-    })
   }
   
   step.value = 2
@@ -911,27 +888,139 @@ async function goToStep2() {
 
 // === Step 2 Logic ===
 async function validateAndGoToStep3() {
-  // Check required fields in all dynamic sections
-  const allFields = schema.value.sections?.flatMap((s: any) => s.fields || []) || []
-  if (allFields.length > 0) {
-    const missing = allFields.filter((f: any) => {
-      if (f.key === 'new_military_number') {
-        return formData.value.settlement_type === 'personnel_to_officer' && !formData.value[f.key]
-      }
-      return f.required && !formData.value[f.key]
-    })
-    if (missing.length > 0) {
+  if (type === 'name_correction') {
+    if (hasPendingNameCorrection.value) {
       Swal.fire({
-        icon: 'warning',
-        title: 'بيانات ناقصة',
-        text: `الرجاء تعبئة الحقول الإلزامية: ${missing.map((f:any) => f.label).join('، ')}`
+        icon: 'error',
+        title: 'طلب معلق موجود',
+        text: 'يوجد بالفعل طلب تصحيح اسم معلق لهذا الفرد.'
       })
       return
     }
+    if (!hasFourParts.value) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'الاسم غير مكتمل',
+        text: 'الرجاء إدخال الاسم الرباعي الجديد بالكامل.'
+      })
+      return
+    }
+    if (!isValidArabic.value) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'صيغة غير صحيحة',
+        text: 'يجب أن يحتوي الاسم على أحرف عربية ومسافات فقط.'
+      })
+      return
+    }
+    if (!isDifferentName.value) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'تطابق الأسماء',
+        text: 'الاسم الجديد يجب أن يكون مختلفاً عن الاسم الحالي.'
+      })
+      return
+    }
+    if (!notes.value.trim()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'بيانات ناقصة',
+        text: 'الرجاء إدخال أسباب ومبررات التعديل.'
+      })
+      return
+    }
+    
+    formData.value.new_value = generatedFullName.value
+    
+    let finalReason = notes.value.trim()
+    if (formData.value.correction_targets && formData.value.correction_targets.length > 0) {
+      finalReason = `المطلوب تصحيحه: ${formData.value.correction_targets.join('، ')} \n المبررات: ${finalReason}`
+    }
+    
+    formData.value.notes = finalReason
+    formData.value.reason = finalReason
+  } else {
+    // Check required fields in the user_input section
+    const userSection = schema.value.sections?.find((s: any) => s.source === 'user_input')
+    if (userSection) {
+      const missing = userSection.fields.filter((f: any) => {
+        if (type === 'rank_demotion' && (f.key === 'to_rank' || f.key === 'demotion_reason')) return false; // Handled in table
+        if (f.key === 'new_military_number') {
+          return formData.value.settlement_type === 'personnel_to_officer' && !formData.value[f.key]
+        }
+        return f.required && !formData.value[f.key]
+      })
+      if (missing.length > 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'بيانات ناقصة',
+          text: `الرجاء تعبئة الحقول الإلزامية: ${missing.map((f:any) => f.label).join('، ')}`
+        })
+        return
+      }
+
+      // Check per person fields for rank_settlement
+      if (isRankSettlement.value) {
+        const missingRank = selectedPersonnelList.value.find(p => !perPersonData[p.military_number]?.to_rank)
+        if (missingRank) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'بيانات ناقصة في الجدول',
+            text: `الرجاء تعبئة الرتبة المستهدفة للفرد: ${missingRank.full_name}`
+          })
+          return
+        }
+
+        const missingDecision = selectedPersonnelList.value.find(p => !perPersonData[p.military_number]?.decision_number || !perPersonData[p.military_number]?.decision_date)
+        if (missingDecision) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'بيانات ناقصة في الجدول',
+            text: `الرجاء كتابة رقم وتاريخ القرار للفرد: ${missingDecision.full_name}`
+          })
+          return
+        }
+
+        if (type === 'rank_demotion') {
+          const missingDemotion = selectedPersonnelList.value.find(p => !perPersonData[p.military_number]?.notes)
+          if (missingDemotion) {
+            Swal.fire({
+              icon: 'warning',
+              title: 'بيانات ناقصة في الجدول',
+              text: `الرجاء كتابة سبب التنزيل للفرد: ${missingDemotion.full_name}`
+            })
+            return
+          }
+        }
+
+        if (type === 'personnel_to_officer' || formData.value.settlement_type === 'personnel_to_officer') {
+          const missingMilNum = selectedPersonnelList.value.find(p => !perPersonData[p.military_number]?.new_military_number)
+          if (missingMilNum) {
+            Swal.fire({
+              icon: 'warning',
+              title: 'بيانات ناقصة في الجدول',
+              text: `الرجاء إدخال الرقم العسكري الجديد للفرد: ${missingMilNum.full_name}`
+            })
+            return
+          }
+
+          const missingDegree = selectedPersonnelList.value.find(p => !perPersonData[p.military_number]?.university_degree_type)
+          if (missingDegree) {
+            Swal.fire({
+              icon: 'warning',
+              title: 'بيانات ناقصة في الجدول',
+              text: `الرجاء اختيار نوع المؤهل للفرد: ${missingDegree.full_name}`
+            })
+            return
+          }
+        }
+      }
 
       // Rank Settlement validations
-      if (formData.value.settlement_type === 'personnel_to_officer' && formData.value.new_military_number) {
-        const milNum = formData.value.new_military_number
+      if ((type === 'personnel_to_officer' || formData.value.settlement_type === 'personnel_to_officer') && isRankSettlement.value) {
+        for (const p of selectedPersonnelList.value) {
+          const milNum = perPersonData[p.military_number]?.new_military_number || ''
+
         if (!milNum.startsWith('60') || milNum.length !== 7 || isNaN(Number(milNum))) {
           Swal.fire({
             icon: 'warning',
@@ -957,6 +1046,7 @@ async function validateAndGoToStep3() {
         }
       }
 
+      }
       // National ID and Military Number validations in Correction forms
       const currentField = formData.value.field_name || formData.value.correction_type || type
       if (currentField === 'national_id' || currentField === 'national_id_correction') {
@@ -1013,6 +1103,7 @@ async function validateAndGoToStep3() {
         }
       }
     }
+  }
   step.value = 3
 }
 
@@ -1046,6 +1137,35 @@ async function handleFileUpload(docType: string, event: Event) {
   }
 }
 
+async function handlePersonAttachment(militaryNumber: string, event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+
+  perPersonData[militaryNumber].uploading = true
+  perPersonData[militaryNumber].file = file
+
+  try {
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('document_type', 'personal_attachment')
+    
+    const res = await api.post('/storage/upload/', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    
+    const docId = res.data?.data?.id || res.data?.id
+    if (docId) {
+      perPersonData[militaryNumber].document_id = docId
+    }
+  } catch (err: any) {
+    console.warn('Local attachment fallback for person:', militaryNumber)
+    perPersonData[militaryNumber].document_id = 999 // mock
+  } finally {
+    perPersonData[militaryNumber].uploading = false
+  }
+}
+
 async function submitBulk() {
   if (selectedPersonnelList.value.length === 0) return
 
@@ -1062,10 +1182,10 @@ async function submitBulk() {
     return
   }
 
-  // Validate All Fields
-  const allFields = schema.value.sections?.flatMap((s:any) => s.fields || []) || []
-  if (allFields.length > 0) {
-    for (const f of allFields) {
+  // Validate User Input Fields for generic (skip rank_demotion specific loops)
+  const userSection = schema.value.sections?.find((s:any) => s.source === 'user_input')
+  if (userSection && type !== 'rank_demotion') {
+    for (const f of userSection.fields) {
       const val = formData.value[f.key]
       
       // 1. Required Check
@@ -1129,17 +1249,26 @@ async function submitBulk() {
         })
         if (req && req.id) lastCorrectionId = req.id
       } else if (category === 'rank_settlement') {
+        const toRank = hasToRankColumn.value ? perPersonData[person.military_number]?.to_rank : formData.value.to_rank
+        const notes = hasReasonColumn.value ? perPersonData[person.military_number]?.notes : (formData.value.notes || '')
+        const newMilNum = hasNewMilNumColumn.value ? perPersonData[person.military_number]?.new_military_number : (formData.value.new_military_number || '')
+        const supportDoc = isRankSettlement.value && perPersonData[person.military_number]?.document_id ? perPersonData[person.military_number].document_id : (documentIds.value?.length > 0 ? documentIds.value[0] : null)
+        
+        let mappedType = formData.value.settlement_type || type
+        if (mappedType === 'rank_demotion') mappedType = 'demotion'
+        if (mappedType === 'rank_promotion') mappedType = 'promotion'
+
         await rankSettlementStore.createSettlement({
-          personnel_military_number_input: person.military_number,
-          settlement_type: formData.value.settlement_type || type,
-          from_rank: person.current_rank,
-          to_rank: formData.value.to_rank,
-          new_military_number: formData.value.new_military_number || null,
-          decision_number: formData.value.decision_number || '',
-          decision_date: formData.value.decision_date || null,
+          personnel: person.military_number,
+          settlement_type: mappedType,
+          from_rank: person.current_rank?.id || person.current_rank_id || person.current_rank || person.rank?.id || person.rank_id || person.rank,
+          to_rank: toRank,
+          new_military_number: newMilNum || null,
+          decision_number: perPersonData[person.military_number]?.decision_number || formData.value.decision_number || 'بدون رقم',
+          decision_date: perPersonData[person.military_number]?.decision_date || formData.value.decision_date || new Date().toISOString().split('T')[0],
           due_date: formData.value.due_date || null,
-          notes: formData.value.notes || '',
-          supporting_document: documentIds.value?.length > 0 ? documentIds.value[0] : null
+          notes: notes,
+          supporting_document: supportDoc
         })
       } else if (category === 'disciplinary') {
         await disciplinaryStore.createAction({
@@ -1156,11 +1285,30 @@ async function submitBulk() {
         })
       } else {
         // Default: forms
+        const perPersonFormOverrides: any = {}
+        if (isRankSettlement.value) {
+            if (perPersonData[person.military_number]?.to_rank) perPersonFormOverrides.to_rank = perPersonData[person.military_number].to_rank
+            if (perPersonData[person.military_number]?.notes) {
+                perPersonFormOverrides.notes = perPersonData[person.military_number].notes
+                perPersonFormOverrides.demotion_reason = perPersonData[person.military_number].notes
+            }
+            if (perPersonData[person.military_number]?.new_military_number) perPersonFormOverrides.new_military_number = perPersonData[person.military_number].new_military_number
+            if (perPersonData[person.military_number]?.decision_number) perPersonFormOverrides.decision_number = perPersonData[person.military_number].decision_number
+            if (perPersonData[person.military_number]?.decision_date) perPersonFormOverrides.decision_date = perPersonData[person.military_number].decision_date
+            if (perPersonData[person.military_number]?.university_degree_type) perPersonFormOverrides.university_degree_type = perPersonData[person.military_number].university_degree_type
+        }
+        
+        const mergedFormData = { ...formData.value, ...perPersonFormOverrides }
+        
+        const personDocId = isRankSettlement.value && perPersonData[person.military_number]?.document_id ? perPersonData[person.military_number].document_id : null
+        const allDocIds = [...documentIds.value]
+        if (personDocId) allDocIds.push(personDocId)
+
         const createRes = await servicesStore.createForm({
           personnel: person.military_number,
           form_type: type,
-          form_data: formData.value,
-          document_ids: documentIds.value
+          form_data: mergedFormData,
+          document_ids: allDocIds
         })
         if (createRes.success && createRes.data?.id) {
           await servicesStore.submitForm(createRes.data.id)

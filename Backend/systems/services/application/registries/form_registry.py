@@ -352,6 +352,70 @@ _FORMS = {
         ),
         min_documents=2,
     ),
+    # ── استمارة 12: تنزيل الرتبة ──
+    'rank_demotion': FormDefinition(
+        form_type='rank_demotion',
+        label='طلب تنزيل الرتبة',
+        target_status='تنزيل رتبة',
+        description='تنزيل رتبة الفرد نتيجة عقوبة عسكرية أو إدارية أو حكم قضائي',
+        fields=(
+            FormField('category', 'الفئة', 'text', required=True, disabled=True, default='الترقيات وتسويات الرتب'),
+            FormField('settlement_type', 'نوع التسوية', 'text', required=True, disabled=True, default='تنزيل رتبة'),
+            FormField('to_rank', 'الرتبة المستهدفة', 'select', required=True),
+            FormField('demotion_reason', 'سبب التنزيل (بناءً على القرار)', 'textarea', required=True),
+            FormField('decision_number', 'رقم قرار التنزيل', 'text', required=True),
+            FormField('decision_date', 'تاريخ القرار', 'date', required=True),
+        ),
+        attachments=(
+            AttachmentSpec('demotion_decision', 'نسخة من قرار التنزيل'),
+            AttachmentSpec('national_id_front', 'صورة البطاقة العسكرية والشخصية'),
+        ),
+        min_documents=2,
+    ),
+
+    # ── استمارة 13: ترقية / تسوية رتبة ──
+    'rank_promotion': FormDefinition(
+        form_type='rank_promotion',
+        label='طلب ترقية اعتيادية / استثنائية',
+        target_status='ترقية رتبة',
+        description='ترقية الفرد إلى الرتبة العسكرية التالية',
+        fields=(
+            FormField('category', 'الفئة', 'text', required=True, disabled=True, default='الترقيات وتسويات الرتب'),
+            FormField('settlement_type', 'نوع الترقية', 'select', required=True, options=('ترقية اعتيادية', 'ترقية استثنائية', 'ترقية استثنائية (شهيد)', 'ترقية (متقاعد)')),
+            FormField('to_rank', 'الرتبة المستهدفة', 'select', required=True),
+            FormField('due_date', 'تاريخ الاستحقاق', 'date', required=True),
+            FormField('decision_number', 'رقم قرار الترقية', 'text', required=True),
+            FormField('decision_date', 'تاريخ القرار', 'date', required=True),
+        ),
+        attachments=(
+            AttachmentSpec('promotion_decision', 'نسخة من قرار الترقية'),
+            AttachmentSpec('national_id_front', 'صورة البطاقة العسكرية والشخصية'),
+        ),
+        min_documents=2,
+    ),
+
+    # ── استمارة 14: تسوية من كادر الأفراد إلى كادر الضباط ──
+    'personnel_to_officer': FormDefinition(
+        form_type='personnel_to_officer',
+        label='طلب تسوية من كادر الأفراد إلى كادر الضباط',
+        target_status='ضباط (تسوية جامعيين)',
+        description='تسوية وضع فرد حاصل على مؤهل جامعي وتحويله إلى كادر الضباط مع رقم عسكري جديد يبدأ بـ (60)',
+        fields=(
+            FormField('category', 'الفئة', 'text', required=True, disabled=True, default='التسويات لجامعيين'),
+            FormField('settlement_type', 'نوع التسوية', 'text', required=True, disabled=True, default='تسوية وضع (من فرد إلى ضابط)'),
+            FormField('to_rank', 'الرتبة المستهدفة', 'select', required=True, help_text='عادة ما تكون ملازم'),
+            FormField('new_military_number', 'الرقم العسكري الجديد (للضابط)', 'text', required=True, help_text='يجب أن يبدأ بـ 60 ويتكون من 7 أرقام'),
+            FormField('university_degree_type', 'نوع المؤهل الجامعي', 'select', required=True, options=('بكالوريوس', 'ماجستير', 'دكتوراه', 'أخرى')),
+            FormField('decision_number', 'رقم قرار التسوية', 'text', required=True),
+            FormField('decision_date', 'تاريخ القرار', 'date', required=True),
+        ),
+        attachments=(
+            AttachmentSpec('university_degree', 'صورة المؤهل الجامعي مصدقة'),
+            AttachmentSpec('settlement_decision', 'نسخة من قرار التسوية'),
+            AttachmentSpec('national_id_front', 'صورة البطاقة العسكرية والشخصية'),
+        ),
+        min_documents=3,
+    ),
 }
 
 

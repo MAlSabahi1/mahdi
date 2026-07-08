@@ -97,6 +97,9 @@
           <!-- Selected List -->
           <div class="bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex flex-col h-[350px]">
             <h3 class="text-sm font-bold text-gray-900 dark:text-white mb-4">قائمة المشمولين بالخدمة</h3>
+            <div v-if="type === 'linked_military_swap'" class="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs p-2 rounded mb-3 border border-blue-200 dark:border-blue-800">
+              يرجى تحديد فردين (2) بالضبط لإجراء التبديل المترابط للأرقام العسكرية.
+            </div>
             
             <div v-if="selectedPersonnelList.length === 0" class="flex-1 flex flex-col items-center justify-center text-gray-400">
               <svg class="w-12 h-12 mb-3 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
@@ -119,7 +122,7 @@
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
               <button 
                 @click="goToStep2" 
-                :disabled="selectedPersonnelList.length === 0" 
+                :disabled="selectedPersonnelList.length === 0 || (type === 'linked_military_swap' && selectedPersonnelList.length !== 2)" 
                 class="bg-emerald-600 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md shadow-emerald-500/20"
               >
                 التالي
@@ -132,256 +135,216 @@
       <!-- Step 2: Form Fields -->
       <div v-if="step === 2" class="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-2xl p-8 shadow-sm">
         <div class="mb-6 pb-4 border-b border-gray-100 dark:border-gray-800">
-          <h2 class="text-lg font-black">الخطوة 2: تعبئة بيانات الطلب أو القرار</h2>
-          
-          <!-- Official Form Header matching the Paper Forms -->
-          <div v-if="selectedPersonnelList.length === 1" class="mt-6 border border-gray-300 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm font-serif">
-            <!-- Header Banner -->
-            <div class="bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 px-4 py-2 flex justify-between items-center">
-              <span class="font-bold text-gray-700 dark:text-gray-300 text-sm flex items-center gap-2">
-                <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                استمارة إثبات حالة ({{ schema?.label || 'الطلب' }})
-              </span>
-              <span class="text-xs text-gray-500 font-sans tracking-wider">سجل رقمي معتمد</span>
-            </div>
-            
-            <!-- أولاً: البيانات الشخصية -->
-            <div class="p-4 border-b border-gray-200 dark:border-gray-800">
-              <h3 class="text-brand-700 dark:text-brand-400 font-bold mb-3 border-b-2 border-brand-200 dark:border-brand-900 pb-1 w-max">أولاً: البيانات الشخصية</h3>
-              <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
-                <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span class="block text-[10px] font-bold text-gray-500 mb-1">الرتبة</span>
-                  <strong class="text-sm dark:text-white">{{ selectedPersonnelList[0].rank_name || selectedPersonnelList[0].current_rank?.name || selectedPersonnelList[0].rank?.name || '—' }}</strong>
-                </div>
-                <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span class="block text-[10px] font-bold text-gray-500 mb-1">الرقم العسكري</span>
-                  <strong class="text-sm dark:text-white font-sans">{{ selectedPersonnelList[0].military_number || '—' }}</strong>
-                </div>
-                <div class="md:col-span-2 bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span class="block text-[10px] font-bold text-gray-500 mb-1">الاسم الرباعي</span>
-                  <strong class="text-sm dark:text-white">{{ selectedPersonnelList[0].full_name || '—' }}</strong>
-                </div>
-                <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span class="block text-[10px] font-bold text-gray-500 mb-1">الوحدة</span>
-                  <strong class="text-sm dark:text-white">{{ selectedPersonnelList[0].unit_name || selectedPersonnelList[0].unit?.name || '—' }}</strong>
-                </div>
-                <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span class="block text-[10px] font-bold text-gray-500 mb-1">إدارته / المديرية / الفرع</span>
-                  <strong class="text-sm dark:text-white">{{ selectedPersonnelList[0].department_name || selectedPersonnelList[0].branch?.name || selectedPersonnelList[0].district_police?.name || selectedPersonnelList[0].central_department?.name || '—' }}</strong>
-                </div>
-              </div>
-            </div>
-
-            <!-- ثانياً: بيانات الميلاد والإقامة الحالية -->
-            <div class="p-4 bg-gray-50/50 dark:bg-gray-800/30">
-              <h3 class="text-brand-700 dark:text-brand-400 font-bold mb-3 border-b-2 border-brand-200 dark:border-brand-900 pb-1 w-max">ثانياً: بيانات الميلاد والإقامة الحالية</h3>
-              
-              <div class="space-y-4">
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <span class="block text-[10px] font-bold text-gray-500 mb-1">الرقم الوطني</span>
-                    <strong class="text-sm dark:text-white font-sans tracking-widest">{{ selectedPersonnelList[0].national_id || '—' }}</strong>
-                  </div>
-                  <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <span class="block text-[10px] font-bold text-gray-500 mb-1">تاريخ الإصدار</span>
-                    <input type="date" v-model="localHeaderData.id_issue_date" class="w-full bg-transparent text-sm font-sans dark:text-white outline-none border-b border-gray-300 dark:border-gray-600 focus:border-brand-500" />
-                  </div>
-                  <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <span class="block text-[10px] font-bold text-gray-500 mb-1">جهة الإصدار</span>
-                    <input type="text" v-model="localHeaderData.id_issue_place" placeholder="جهة الإصدار" class="w-full bg-transparent text-sm dark:text-white outline-none border-b border-gray-300 dark:border-gray-600 focus:border-brand-500" />
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <!-- Birth Place -> 4 boxes -->
-                  <div class="bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <span class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">محل الميلاد</span>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">المحافظة</span>
-                        <select v-model="localHeaderData.birth_gov_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="gov in coreStore.governorates" :key="gov.id" :value="gov.id">{{ gov.name }}</option>
-                        </select>
-                      </div>
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">المديرية</span>
-                        <select v-model="localHeaderData.birth_district_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none" :disabled="!localHeaderData.birth_gov_id">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="d in headerDistrictsCache[localHeaderData.birth_gov_id as number] || []" :key="d.id" :value="d.id">{{ d.name_ar || d.name }}</option>
-                        </select>
-                      </div>
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">العزلة</span>
-                        <select v-model="localHeaderData.birth_sub_district_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none" :disabled="!localHeaderData.birth_district_id">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="s in headerSubDistrictsCache[localHeaderData.birth_district_id as number] || []" :key="s.id" :value="s.id">{{ s.name_ar || s.name }}</option>
-                        </select>
-                      </div>
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">القرية/الحارة</span>
-                        <select v-model="localHeaderData.birth_village_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none" :disabled="!localHeaderData.birth_sub_district_id">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="v in headerVillagesCache[localHeaderData.birth_sub_district_id as number] || []" :key="v.id" :value="v.id">{{ v.name_ar || v.name_ar_normalized || v.name }}</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Residence Place -> 4 boxes -->
-                  <div class="bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <span class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">محل الإقامة الحالية</span>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">المحافظة</span>
-                        <select v-model="localHeaderData.residence_gov_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="gov in coreStore.governorates" :key="gov.id" :value="gov.id">{{ gov.name }}</option>
-                        </select>
-                      </div>
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">المديرية</span>
-                        <select v-model="localHeaderData.residence_district_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none" :disabled="!localHeaderData.residence_gov_id">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="d in headerDistrictsCache[localHeaderData.residence_gov_id as number] || []" :key="d.id" :value="d.id">{{ d.name_ar || d.name }}</option>
-                        </select>
-                      </div>
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">العزلة</span>
-                        <select v-model="localHeaderData.residence_sub_district_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none" :disabled="!localHeaderData.residence_district_id">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="s in headerSubDistrictsCache[localHeaderData.residence_district_id as number] || []" :key="s.id" :value="s.id">{{ s.name_ar || s.name }}</option>
-                        </select>
-                      </div>
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">الشارع/القرية</span>
-                        <select v-model="localHeaderData.residence_village_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none" :disabled="!localHeaderData.residence_sub_district_id">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="v in headerVillagesCache[localHeaderData.residence_sub_district_id as number] || []" :key="v.id" :value="v.id">{{ v.name_ar || v.name_ar_normalized || v.name }}</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="p-4 bg-gray-100/50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 flex justify-center">
-               <span class="text-xs text-gray-500 font-bold">⬇ ثالثاً: بيانات الحالة (يرجى استكمال البيانات أدناه بناءً على القرار) ⬇</span>
-            </div>
-          </div>
-          
-          <div v-else class="mt-6 p-5 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 rounded-xl border border-blue-200 dark:border-blue-800 shadow-sm">
-            <span class="font-bold flex items-center gap-2 mb-2">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-              طلب استمارة جماعية
-            </span>
-            سيتم تطبيق إثبات الحالة (القرار) المدخل في الأسفل على جميع الأفراد المحددين دفعة واحدة (العدد: {{ selectedPersonnelList.length }} أفراد).
-          </div>
+          <h2 class="text-lg font-black">الخطوة 2: تعبئة بيانات التصحيح</h2>
+          <p class="text-sm text-gray-500 mt-1">يرجى التأكد من البيانات المدخلة بعناية حيث سيتم تعديل السجل المعتمد.</p>
         </div>
         
         <div class="space-y-8">
-          <!-- General Dynamic Layout -->
-          <div v-for="(section, sIdx) in schema.sections" :key="sIdx">
-            <template v-if="getDynamicFields(section).length > 0">
-              <h3 class="text-md font-bold text-brand-600 mb-4">{{ section.title }}</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <template v-for="field in getDynamicFields(section)" :key="field.key">
-                <!-- Current Rank injected right before to_rank for Rank Settlements -->
-                <div v-if="field.key === 'to_rank' && category === 'rank_settlement'" class="bg-gray-50/50 dark:bg-gray-800/20 p-4 rounded-xl border border-gray-100 dark:border-gray-800/60 flex flex-col justify-center">
-                  <label class="mb-1 block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">الرتبة الحالية</label>
-                  <div class="text-sm font-bold text-gray-900 dark:text-white">
-                    {{ selectedPersonnelList[0]?.rank_name || selectedPersonnelList[0]?.current_rank?.name || selectedPersonnelList[0]?.rank?.name || 'غير متوفر' }}
-                  </div>
-                </div>
-
-                <div v-show="field.key !== 'new_military_number' || formData.settlement_type === 'personnel_to_officer'" 
-                     class="space-y-1.5">
-                  <label class="text-xs font-bold text-gray-700 dark:text-gray-300">
-                    {{ field.label }} <span v-if="field.required || (field.key === 'new_military_number' && formData.settlement_type === 'personnel_to_officer')" class="text-red-500">*</span>
-                  </label>
-                
-                <select v-if="field.type === 'select'" v-model="formData[field.key]" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-shadow">
-                  <option value="" disabled>اختر...</option>
-                  <option v-for="opt in getFilteredOptions(field)" :key="opt && typeof opt === 'object' ? opt.value : opt" :value="opt && typeof opt === 'object' ? opt.value : opt">
-                    {{ opt && typeof opt === 'object' ? opt.label : opt }}
-                  </option>
-                </select>
-
-                <!-- Location Cascade: محافظة → مديرية → عزلة → قرية/حارة -->
-                <div v-else-if="field.type === 'location_cascade'" class="space-y-3">
-                  <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <!-- محافظة -->
-                    <div>
-                      <label class="text-[10px] font-bold text-gray-500 mb-1 block">المحافظة</label>
-                      <select v-model="locationState[field.key + '_gov']" @change="onGovernorateChange(field.key)"
-                        class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                        <option value="">اختر المحافظة...</option>
-                        <option v-for="g in governorates" :key="g.id" :value="g.id">{{ g.name_ar }}</option>
-                      </select>
-                    </div>
-                    <!-- مديرية -->
-                    <div>
-                      <label class="text-[10px] font-bold text-gray-500 mb-1 block">المديرية</label>
-                      <select v-model="locationState[field.key + '_dist']" @change="onDistrictChange(field.key)"
-                        :disabled="!locationState[field.key + '_gov']"
-                        class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-50">
-                        <option value="">اختر المديرية...</option>
-                        <option v-for="d in getDistricts(field.key)" :key="d.id" :value="d.id">{{ d.name_ar }}</option>
-                      </select>
-                    </div>
-                    <!-- عزلة -->
-                    <div>
-                      <label class="text-[10px] font-bold text-gray-500 mb-1 block">العزلة</label>
-                      <select v-model="locationState[field.key + '_sub']" @change="onSubDistrictChange(field.key)"
-                        :disabled="!locationState[field.key + '_dist']"
-                        class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-50">
-                        <option value="">اختر العزلة...</option>
-                        <option v-for="s in getSubDistricts(field.key)" :key="s.id" :value="s.id">{{ s.name_ar }}</option>
-                      </select>
-                    </div>
-                    <!-- قرية / حارة -->
-                    <div>
-                      <label class="text-[10px] font-bold text-gray-500 mb-1 block">القرية / الحارة</label>
-                      <select v-model="locationState[field.key + '_vil']" @change="onVillageChange(field.key)"
-                        :disabled="!locationState[field.key + '_sub']"
-                        class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-50">
-                        <option value="">اختر القرية...</option>
-                        <option v-for="v in getVillages(field.key)" :key="v.id" :value="v.id">{{ v.name_ar || v.name_ar_normalized }}</option>
-                      </select>
-                    </div>
-                  </div>
-                  <!-- الكتابة اليدوية -->
-                  <div class="flex items-center gap-2">
-                    <label class="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" v-model="locationState[field.key + '_manual']" class="w-3.5 h-3.5 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
-                      <span class="text-[10px] text-gray-500">كتابة يدوية</span>
-                    </label>
-                  </div>
-                  <input v-if="locationState[field.key + '_manual']"
-                    v-model="formData[field.key]" type="text" placeholder="اكتب المكان يدوياً..."
-                    class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
-                  <!-- المكان النهائي المُجمّع -->
-                  <div v-if="formData[field.key] && !locationState[field.key + '_manual']" class="text-[10px] text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950/20 px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800">
-                    📍 {{ formData[field.key] }}
-                  </div>
-                </div>
-
-                <textarea v-else-if="field.type === 'textarea'" v-model="formData[field.key]" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none h-24 transition-shadow"></textarea>
-                <input v-else :type="field.type" v-model="formData[field.key]" 
-                        :readonly="field.key === 'old_value' || field.disabled"
-                        :maxlength="field.key === 'new_military_number' ? 7 : (field.key === 'new_value' && (formData.correction_type === 'national_id_correction' || formData.field_name === 'national_id') ? 11 : undefined)"
-                        :class="['w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-shadow', field.type === 'date' ? 'text-left' : '', (field.key === 'old_value' || field.disabled) ? 'opacity-70 cursor-not-allowed font-bold text-gray-600 bg-gray-100 dark:bg-gray-800/50' : '']"
-                        :dir="field.type === 'date' ? 'ltr' : 'rtl'" />
-                <p v-if="field.key === 'new_military_number'" class="mt-1 text-xs text-brand-600 dark:text-brand-400 flex items-center gap-1">
-                  <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  الرقم العسكري للضابط يبدأ بـ 60 ويتكون من 7 خانات
-                </p>
-                <p v-if="field.help_text" class="text-[10px] text-gray-400 mt-1">{{ field.help_text }}</p>
-                </div>
-              </template>
+          <!-- Special Name Correction Table Layout -->
+          <div v-if="type === 'name_correction'" class="space-y-6">
+            <!-- Warning banner for pending name corrections -->
+            <div v-if="hasPendingNameCorrection" class="p-4 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 text-red-700 dark:text-red-400 space-y-2 text-xs">
+              <div class="flex items-center gap-2 font-bold">
+                <svg class="w-4.5 h-4.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                <span>تنبيه: يوجد طلب تصحيح اسم معلق قيد الانتظار لهذا الفرد</span>
+              </div>
+              <p class="font-normal text-[11px] text-gray-600 dark:text-gray-400 leading-relaxed pr-6">
+                لا يمكن تقديم طلب تصحيح اسم جديد لهذا الفرد لوجود طلب سابق قيد المراجعة حالياً بالاسم المقترح:
+                <strong class="text-red-800 dark:text-red-350 font-black">"{{ pendingNameCorrectionDetails?.new_value }}"</strong>
+                والذي تم تقديمه بتاريخ {{ pendingNameCorrectionDetails?.requested_at ? new Date(pendingNameCorrectionDetails.requested_at).toLocaleDateString('ar-EG') : '' }}.
+                يرجى الانتظار حتى يتم البت في الطلب الحالي (موافقة أو رفض) قبل تقديم طلب جديد.
+              </p>
             </div>
-            </template>
+
+            <!-- The Correction Table Grid -->
+            <div class="overflow-x-auto border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm bg-white dark:bg-gray-900">
+              <table class="w-full border-collapse text-right text-sm">
+                <thead>
+                  <tr class="bg-gray-50 dark:bg-gray-850 text-gray-700 dark:text-gray-300 font-bold">
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center w-12">م</th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center w-24">الرتبة</th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center w-32">الرقم العسكري</th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800">الاسم الخطأ (قاعدة البيانات)</th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 w-1/3">الاسم الصحيح (بحسب البطاقة)</th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 w-48">المطلوب تصحيحه</th>
+                    <th class="p-3 border-b border-gray-200 dark:border-gray-800 w-48">ملاحظات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
+                    <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center font-bold text-gray-400">1</td>
+                    <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center font-bold text-gray-600 dark:text-gray-300">
+                      {{ selectedPersonnelList[0].rank_name || selectedPersonnelList[0].current_rank?.name || selectedPersonnelList[0].rank?.name || '—' }}
+                    </td>
+                    <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center font-mono font-bold text-brand-600 dark:text-brand-400">
+                      {{ selectedPersonnelList[0].military_number }}
+                    </td>
+                    <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800 font-bold text-red-500 line-through decoration-red-500/40">
+                      {{ selectedPersonnelList[0].full_name }}
+                    </td>
+                    <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800">
+                      <div class="grid grid-cols-2 md:grid-cols-5 gap-1.5">
+                        <input v-model="nameParts.first" @input="updateFullName" :disabled="hasPendingNameCorrection" type="text" placeholder="الأول" class="w-full text-xs p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-50" />
+                        <input v-model="nameParts.second" @input="updateFullName" :disabled="hasPendingNameCorrection" type="text" placeholder="الثاني" class="w-full text-xs p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-50" />
+                        <input v-model="nameParts.third" @input="updateFullName" :disabled="hasPendingNameCorrection" type="text" placeholder="الثالث" class="w-full text-xs p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-50" />
+                        <input v-model="nameParts.fourth" @input="updateFullName" :disabled="hasPendingNameCorrection" type="text" placeholder="الرابع" class="w-full text-xs p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-50" />
+                        <input v-model="nameParts.surname" @input="updateFullName" :disabled="hasPendingNameCorrection" type="text" placeholder="اللقب" class="w-full text-xs p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-50" />
+                      </div>
+                      <!-- Preview & Validation -->
+                      <div class="mt-2 flex items-center justify-between text-[9px] font-bold">
+                        <div class="flex items-center gap-1" :class="isDifferentName ? 'text-emerald-500' : 'text-red-500'">
+                          <span v-if="isDifferentName">✓ مختلف</span>
+                          <span v-else>✗ يطابق القديم</span>
+                        </div>
+                        <div class="flex items-center gap-1" :class="hasFiveParts ? 'text-emerald-500' : 'text-red-500'">
+                          <span v-if="hasFiveParts">✓ خماسي</span>
+                          <span v-else>✗ ناقص</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center">
+                      <select v-model="formData.correction_targets" multiple :disabled="hasPendingNameCorrection" class="w-full text-xs p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 outline-none h-16 custom-scrollbar disabled:opacity-50">
+                        <option value="الاسم الأول">الاسم الأول</option>
+                        <option value="الاسم الثاني">الاسم الثاني</option>
+                        <option value="الاسم الثالث">الاسم الثالث</option>
+                        <option value="الاسم الرابع">الاسم الرابع</option>
+                        <option value="اللقب">اللقب</option>
+                      </select>
+                      <span class="text-[9px] text-gray-400 mt-1 block">حدد بمفتاح Ctrl لاختيار أكثر من جزء</span>
+                    </td>
+                    <td class="p-3 border-b border-gray-200 dark:border-gray-800 text-center">
+                      <textarea v-model="notes" rows="2" :disabled="hasPendingNameCorrection" placeholder="أدخل أسباب التصحيح استناداً للمستند الرسمي..." class="w-full text-xs p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 outline-none resize-none disabled:opacity-50"></textarea>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+
+          <!-- Military Number Correction Table Layout -->
+          <div v-else-if="type === 'military_number_correction'" class="space-y-6">
+            <div class="overflow-x-auto border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm bg-white dark:bg-gray-900">
+              <table class="w-full border-collapse text-right text-sm">
+                <thead>
+                  <tr class="bg-gray-50 dark:bg-gray-850 text-gray-700 dark:text-gray-300 font-bold text-xs">
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center w-12">م</th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center w-48">الاسم</th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center w-32">الرقم العسكري الخاطئ</th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 w-48">الرقم العسكري الصحيح <span class="text-red-500">*</span></th>
+                    <th class="p-3 border-b border-gray-200 dark:border-gray-800 w-48">أسباب التصحيح <span class="text-red-500">*</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(person, idx) in selectedPersonnelList" :key="person.military_number" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
+                    <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center font-bold text-gray-400">{{ idx + 1 }}</td>
+                    <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800 font-bold text-gray-900 dark:text-white">
+                      {{ person.full_name }}
+                    </td>
+                    <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center font-mono font-bold text-red-500 line-through decoration-red-500/40">
+                      {{ person.military_number }}
+                    </td>
+                    <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center">
+                      <input v-model="formData.new_values[person.military_number]" type="text" maxlength="7" pattern="\d*" placeholder="أدخل الرقم الصحيح" class="w-full text-xs p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 outline-none font-mono text-center" />
+                    </td>
+                    <td class="p-3 border-b border-gray-200 dark:border-gray-800 text-center">
+                      <textarea v-model="formData.notes[person.military_number]" rows="1" placeholder="أسباب التصحيح..." class="w-full text-xs p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 outline-none resize-none"></textarea>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- National ID Correction Table Layout -->
+          <div v-else-if="type === 'national_id_correction'" class="space-y-6">
+            <div class="overflow-x-auto border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm bg-white dark:bg-gray-900">
+              <table class="w-full border-collapse text-right text-sm">
+                <thead>
+                  <tr class="bg-gray-50 dark:bg-gray-850 text-gray-700 dark:text-gray-300 font-bold text-xs">
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center w-12">م</th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center w-48">الاسم</th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center w-32">الرقم الوطني الخاطئ</th>
+                    <th class="p-3 border-b border-l border-gray-200 dark:border-gray-800 w-48">الرقم الوطني الصحيح <span class="text-red-500">*</span></th>
+                    <th class="p-3 border-b border-gray-200 dark:border-gray-800 w-48">أسباب التصحيح <span class="text-red-500">*</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(person, idx) in selectedPersonnelList" :key="person.military_number" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
+                    <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center font-bold text-gray-400">{{ idx + 1 }}</td>
+                    <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800 font-bold text-gray-900 dark:text-white">
+                      {{ person.full_name }}
+                    </td>
+                    <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center font-mono font-bold text-red-500 line-through decoration-red-500/40">
+                      {{ person.national_id || 'غير مسجل' }}
+                    </td>
+                    <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center">
+                      <input v-model="formData.new_values[person.military_number]" type="text" placeholder="11 رقم" maxlength="11" class="w-full text-xs p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 outline-none font-mono text-center" />
+                    </td>
+                    <td class="p-3 border-b border-gray-200 dark:border-gray-800 text-center">
+                      <textarea v-model="formData.notes[person.military_number]" rows="1" placeholder="أسباب التصحيح..." class="w-full text-xs p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 outline-none resize-none"></textarea>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Linked Military Swap Layout -->
+          <div v-else-if="type === 'linked_military_swap' && selectedPersonnelList.length === 2" class="space-y-6">
+            <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-200 dark:border-blue-800/50 mb-6 flex items-start gap-3">
+              <svg class="w-6 h-6 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+              <div>
+                <h4 class="font-bold text-blue-900 dark:text-blue-300 text-sm">عملية تبديل مترابط</h4>
+                <p class="text-xs text-blue-700 dark:text-blue-400 mt-1">سيتم تبديل الأرقام العسكرية بين الفردين أدناه بشكل متزامن. يرجى التأكد من هوياتهم بشكل قاطع.</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
+              <!-- Swap Icon Overlay -->
+              <div class="hidden md:flex absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-900 rounded-full border-2 border-gray-200 dark:border-gray-700 items-center justify-center shadow-lg">
+                <svg class="w-6 h-6 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+              </div>
+
+              <!-- Person 1 -->
+              <div class="border border-gray-200 dark:border-gray-700 rounded-xl p-5 bg-white dark:bg-gray-900 shadow-sm relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-brand-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg">الفرد 1</div>
+                <div class="text-center mt-3 mb-4">
+                  <div class="font-bold text-lg dark:text-white">{{ selectedPersonnelList[0].full_name }}</div>
+                  <div class="text-sm text-gray-500 mt-1">{{ selectedPersonnelList[0].rank_name || 'بدون رتبة' }}</div>
+                </div>
+                <div class="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-900/30 text-center mb-3">
+                  <span class="block text-[10px] text-red-600 dark:text-red-400 font-bold mb-1">الرقم الحالي (سيُسحب منه)</span>
+                  <span class="font-mono font-bold text-red-700 dark:text-red-300 line-through">{{ selectedPersonnelList[0].military_number }}</span>
+                </div>
+                <div class="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900/30 text-center">
+                  <span class="block text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mb-1">الرقم الجديد (الذي سيأخذه)</span>
+                  <span class="font-mono font-bold text-emerald-700 dark:text-emerald-300">{{ selectedPersonnelList[1].military_number }}</span>
+                </div>
+              </div>
+
+              <!-- Person 2 -->
+              <div class="border border-gray-200 dark:border-gray-700 rounded-xl p-5 bg-white dark:bg-gray-900 shadow-sm relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-brand-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg">الفرد 2</div>
+                <div class="text-center mt-3 mb-4">
+                  <div class="font-bold text-lg dark:text-white">{{ selectedPersonnelList[1].full_name }}</div>
+                  <div class="text-sm text-gray-500 mt-1">{{ selectedPersonnelList[1].rank_name || 'بدون رتبة' }}</div>
+                </div>
+                <div class="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-900/30 text-center mb-3">
+                  <span class="block text-[10px] text-red-600 dark:text-red-400 font-bold mb-1">الرقم الحالي (سيُسحب منه)</span>
+                  <span class="font-mono font-bold text-red-700 dark:text-red-300 line-through">{{ selectedPersonnelList[1].military_number }}</span>
+                </div>
+                <div class="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900/30 text-center">
+                  <span class="block text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mb-1">الرقم الجديد (الذي سيأخذه)</span>
+                  <span class="font-mono font-bold text-emerald-700 dark:text-emerald-300">{{ selectedPersonnelList[0].military_number }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">أسباب ومبررات التبديل المترابط <span class="text-red-500">*</span></label>
+              <textarea v-model="formData.swap_notes" rows="2" placeholder="أدخل الأسباب التي أدت إلى خطأ الصرف المتبادل بين الفردين..." class="w-full text-xs p-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 focus:ring-2 focus:ring-brand-500 outline-none resize-none"></textarea>
+            </div>
           </div>
         </div>
 
@@ -409,6 +372,9 @@
                   <span v-if="uploadedFiles[att.doc_type]" class="text-emerald-600 text-[10px] bg-emerald-100 dark:bg-emerald-900/50 px-2 py-0.5 rounded font-bold border border-emerald-200 dark:border-emerald-800">✓ تم الرفع</span>
                 </p>
                 <p class="text-xs text-gray-400 mt-1">صيغ مدعومة: PDF, JPG, PNG (الحد الأقصى 5MB)</p>
+                <p v-if="att.label.includes('البطاقة العسكرية') || att.label.includes('البطاقة الوطنية') || att.label.includes('البطاقة الشخصية')" class="text-[10px] text-brand-600 dark:text-brand-400 mt-1 font-bold">
+                  💡 ملاحظة: إذا كان المرفق للبطاقة، فيمكنك رفع صورة دمجت فيها الجهتين، أو ملف PDF يحتوي على صورتي الوجهين معاً.
+                </p>
                 <p v-if="uploadedFiles[att.doc_type]" class="text-xs text-emerald-600 mt-1.5 font-mono bg-white dark:bg-gray-900 inline-block px-2 py-1 rounded border border-emerald-100 dark:border-emerald-900/30">{{ uploadedFiles[att.doc_type].name }}</p>
               </div>
               <div class="flex items-center gap-3 self-end sm:self-auto">
@@ -588,7 +554,11 @@ watch(selectedPersonnelList, (newVal) => {
 }, { deep: true })
 
 // Step 2 & 3 State
-const formData = ref<any>({})
+const formData = ref<any>({
+  new_values: {},
+  notes: {},
+  correction_targets: []
+})
 const documentIds = ref<number[]>([])
 const uploadedFiles = ref<Record<string, File>>({})
 const uploadingDoc = ref<string | null>(null)
@@ -609,12 +579,6 @@ async function loadGovernorates() {
     const res = await api.get('/dictionaries/geo/governorates/')
     governorates.value = res.data?.results || res.data || []
   } catch { governorates.value = [] }
-}
-
-function getDynamicFields(section: any) {
-  if (!section || !section.fields) return []
-  const hardcodedKeys = ['military_number', 'full_name', 'current_rank', 'rank', 'unit', 'national_id', 'birth_date', 'governorate', 'residence_gov_id']
-  return section.fields.filter((f: any) => !hardcodedKeys.includes(f.key))
 }
 
 function getFilteredOptions(field: any) {
@@ -657,7 +621,7 @@ watch(() => formData.value.settlement_type, () => {
   
   // Auto-select if there is exactly 1 valid option based on intelligent filtering
   setTimeout(() => {
-    const toRankField = schema.value?.sections?.flatMap((s:any) => s.fields || []).find((f:any) => f.key === 'to_rank')
+    const toRankField = schema.value?.sections?.find((s:any) => s.source === 'user_input')?.fields?.find((f:any) => f.key === 'to_rank')
     if (toRankField) {
       const filtered = getFilteredOptions(toRankField)
       if (filtered.length === 1) {
@@ -749,7 +713,69 @@ function onVillageChange(fieldKey: string) {
   formData.value[fieldKey] = [gov?.name_ar, dist?.name_ar, sub?.name_ar, vil?.name_ar || vil?.name_ar_normalized].filter(Boolean).join(' — ')
 }
 
+// Name Correction Special Fields
+const nameParts = reactive({
+  first: '',
+  second: '',
+  third: '',
+  fourth: '',
+  surname: ''
+})
+const notes = ref('')
 
+const generatedFullName = computed(() => {
+  const parts = [
+    nameParts.first.trim(),
+    nameParts.second.trim(),
+    nameParts.third.trim(),
+    nameParts.fourth.trim(),
+    nameParts.surname.trim()
+  ].filter(p => p !== '')
+  return parts.join(' ')
+})
+
+const isValidArabic = computed(() => {
+  if (!generatedFullName.value) return false
+  const arRegex = /^[\u0621-\u064A\s]+$/
+  return arRegex.test(generatedFullName.value)
+})
+
+const hasFiveParts = computed(() => {
+  return (
+    nameParts.first.trim() !== '' &&
+    nameParts.second.trim() !== '' &&
+    nameParts.third.trim() !== '' &&
+    nameParts.fourth.trim() !== '' &&
+    nameParts.surname.trim() !== ''
+  )
+})
+
+const isDifferentName = computed(() => {
+  if (selectedPersonnelList.value.length === 0 || !generatedFullName.value) return false
+  return selectedPersonnelList.value[0].full_name !== generatedFullName.value
+})
+
+const hasPendingNameCorrection = computed(() => {
+  if (selectedPersonnelList.value.length === 0) return false
+  const person = selectedPersonnelList.value[0]
+  if (!person.pending_corrections) return false
+  return person.pending_corrections.some(
+    (c: any) => c.field_name === 'full_name' && c.status === 'pending'
+  )
+})
+
+const pendingNameCorrectionDetails = computed(() => {
+  if (selectedPersonnelList.value.length === 0) return null
+  const person = selectedPersonnelList.value[0]
+  if (!person.pending_corrections) return null
+  return person.pending_corrections.find(
+    (c: any) => c.field_name === 'full_name' && c.status === 'pending'
+  )
+})
+
+function updateFullName() {
+  formData.value.new_value = generatedFullName.value
+}
 
 onMounted(async () => {
   if (coreStore.governorates.length === 0) {
@@ -768,9 +794,9 @@ onMounted(async () => {
     if (res) {
       schema.value = res
       // Initialize form data
-      const allFields = res.sections?.flatMap((s: any) => s.fields || []) || []
-      if (allFields.length > 0) {
-        allFields.forEach((f: any) => {
+      const userSection = res.sections?.find((s: any) => s.source === 'user_input')
+      if (userSection) {
+        userSection.fields.forEach((f: any) => {
           formData.value[f.key] = f.default !== undefined ? f.default : (f.value !== undefined ? f.value : '')
           // Auto-select if only one option
           if (f.type === 'select' && f.options?.length === 1) {
@@ -778,13 +804,13 @@ onMounted(async () => {
           }
         })
         // Load governorates if any location_cascade field exists
-        const hasLocationField = allFields.some((f: any) => f.type === 'location_cascade')
+        const hasLocationField = userSection.fields.some((f: any) => f.type === 'location_cascade')
         if (hasLocationField) {
           loadGovernorates()
         }
 
         // Load ranks if any select field is to_rank
-        const rankField = allFields.find((f: any) => f.key === 'to_rank')
+        const rankField = userSection.fields.find((f: any) => f.key === 'to_rank')
         if (rankField) {
           try {
             const ranksRes = await api.get('/dictionaries/ranks/?page_size=1000')
@@ -832,12 +858,21 @@ function isPersonnelSelected(militaryNumber: string) {
 
 async function addPersonnel(person: any) {
   if (category === 'correction' && selectedPersonnelList.value.length >= 1) {
-    Swal.fire({
-      icon: 'info',
-      title: 'فرد واحد فقط',
-      text: 'خدمات تصحيح البيانات تتم لفرد واحد فقط في كل طلب. لا يمكنك تحديد أكثر من شخص.'
-    })
-    return
+    if (type !== 'linked_military_swap') {
+      Swal.fire({
+        icon: 'info',
+        title: 'فرد واحد فقط',
+        text: 'خدمات تصحيح البيانات تتم لفرد واحد فقط في كل طلب. لا يمكنك تحديد أكثر من شخص.'
+      })
+      return
+    } else if (selectedPersonnelList.value.length >= 2) {
+      Swal.fire({
+        icon: 'info',
+        title: 'فردين فقط',
+        text: 'التبديل المترابط يتم بين فردين فقط.'
+      })
+      return
+    }
   }
   
   if (!isPersonnelSelected(person.military_number)) {
@@ -890,20 +925,17 @@ async function goToStep2() {
     }
     
     const updatedPerson = selectedPersonnelList.value[0]
-    if (type === 'national_id_correction') formData.value.old_value = updatedPerson.national_id
+    if (type === 'name_correction') {
+      formData.value.old_value = updatedPerson.full_name
+      nameParts.first = ''
+      nameParts.second = ''
+      nameParts.third = ''
+      nameParts.fourth = ''
+      nameParts.surname = ''
+      notes.value = ''
+    }
+    else if (type === 'national_id_correction') formData.value.old_value = updatedPerson.national_id
     else if (type === 'military_number_correction') formData.value.old_value = updatedPerson.military_number
-  }
-  
-  // Auto-populate 'personnel_master' fields from the first selected person
-  if (selectedPersonnelList.value.length > 0 && schema.value?.sections) {
-    const person = selectedPersonnelList.value[0]
-    schema.value.sections.forEach((section: any) => {
-      section.fields?.forEach((field: any) => {
-        if (field.source === 'personnel_master') {
-          formData.value[field.key] = person[field.key] || ''
-        }
-      })
-    })
   }
   
   step.value = 2
@@ -911,23 +943,146 @@ async function goToStep2() {
 
 // === Step 2 Logic ===
 async function validateAndGoToStep3() {
-  // Check required fields in all dynamic sections
-  const allFields = schema.value.sections?.flatMap((s: any) => s.fields || []) || []
-  if (allFields.length > 0) {
-    const missing = allFields.filter((f: any) => {
-      if (f.key === 'new_military_number') {
-        return formData.value.settlement_type === 'personnel_to_officer' && !formData.value[f.key]
-      }
-      return f.required && !formData.value[f.key]
-    })
-    if (missing.length > 0) {
+  if (type === 'name_correction') {
+    if (hasPendingNameCorrection.value) {
       Swal.fire({
-        icon: 'warning',
-        title: 'بيانات ناقصة',
-        text: `الرجاء تعبئة الحقول الإلزامية: ${missing.map((f:any) => f.label).join('، ')}`
+        icon: 'error',
+        title: 'طلب معلق موجود',
+        text: 'يوجد بالفعل طلب تصحيح اسم معلق لهذا الفرد.'
       })
       return
     }
+    if (!hasFiveParts.value) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'الاسم غير مكتمل',
+        text: 'الرجاء إدخال الاسم الجديد المكون من 5 أجزاء بالكامل.'
+      })
+      return
+    }
+    if (!isValidArabic.value) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'صيغة غير صحيحة',
+        text: 'يجب أن يحتوي الاسم على أحرف عربية ومسافات فقط.'
+      })
+      return
+    }
+    if (!isDifferentName.value) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'تطابق الأسماء',
+        text: 'الاسم الجديد يجب أن يكون مختلفاً عن الاسم الحالي.'
+      })
+      return
+    }
+    if (!notes.value.trim()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'بيانات ناقصة',
+        text: 'الرجاء إدخال أسباب ومبررات التعديل.'
+      })
+      return
+    }
+    
+    formData.value.new_value = generatedFullName.value
+    
+    let finalReason = notes.value.trim()
+    if (formData.value.correction_targets && formData.value.correction_targets.length > 0) {
+      finalReason = `المطلوب تصحيحه: ${formData.value.correction_targets.join('، ')} \n المبررات: ${finalReason}`
+    }
+    
+    formData.value.notes = finalReason
+    formData.value.reason = finalReason
+    step.value = 3
+    return
+  }
+
+  if (category === 'correction') {
+    if (type === 'linked_military_swap') {
+      if (!formData.value.swap_notes) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'بيانات ناقصة',
+          text: 'الرجاء إدخال أسباب ومبررات التبديل المترابط.'
+        })
+        return
+      }
+    } else if (type === 'national_id_correction') {
+      for (const person of selectedPersonnelList.value) {
+        const val = formData.value.new_values?.[person.military_number]
+        const note = formData.value.notes?.[person.military_number]
+        if (!val || !note) {
+          Swal.fire({ icon: 'warning', title: 'بيانات ناقصة', text: 'الرجاء تعبئة جميع الحقول الإلزامية للفرد ' + person.full_name })
+          return
+        }
+        if (val.length !== 11 || !/^\d+$/.test(val)) {
+          Swal.fire({ icon: 'warning', title: 'رقم وطني غير صالح', text: 'الرقم الوطني الجديد للفرد ' + person.full_name + ' يجب أن يتكون من 11 رقماً.' })
+          return
+        }
+      }
+    } else if (type === 'military_number_correction') {
+      for (const person of selectedPersonnelList.value) {
+        const val = formData.value.new_values?.[person.military_number]
+        const note = formData.value.notes?.[person.military_number]
+        if (!val || !note) {
+          Swal.fire({ icon: 'warning', title: 'بيانات ناقصة', text: 'الرجاء تعبئة جميع الحقول الإلزامية للفرد ' + person.full_name })
+          return
+        }
+        if (val.length < 4 || isNaN(Number(val))) {
+          Swal.fire({ icon: 'warning', title: 'رقم عسكري غير صالح', text: 'الرجاء إدخال رقم عسكري صالح للفرد ' + person.full_name })
+          return
+        }
+        if (person.military_number === val) {
+          Swal.fire({ icon: 'warning', title: 'رقم مطابق', text: 'الرقم العسكري الصحيح يجب أن يكون مختلفاً عن الرقم العسكري الخاطئ للفرد ' + person.full_name })
+          return
+        }
+
+        const officerKeywords = ['ملازم', 'نقيب', 'رائد', 'مقدم', 'عقيد', 'عميد', 'لواء', 'فريق', 'مشير']
+        const isOfficer = person.rank?.is_officer || person.current_rank?.is_officer || (person.rank_name && officerKeywords.some(r => person.rank_name.includes(r)))
+
+        if (isOfficer) {
+          if (!val.startsWith('60') || val.length !== 7) {
+            Swal.fire({
+              icon: 'warning',
+              title: 'رقم عسكري غير صالح للضابط',
+              text: `الرقم العسكري الجديد للضابط (${person.full_name}) يجب أن يبدأ بـ 60 ويتكون من 7 أرقام.`
+            })
+            return
+          }
+        } else {
+          if (val.startsWith('60')) {
+            Swal.fire({
+              icon: 'warning',
+              title: 'رقم عسكري غير صالح للأفراد',
+              text: `الرقم العسكري الجديد للأفراد (${person.full_name}) لا يمكن أن يبدأ بـ 60 لأن رتبته (${person.rank_name || person.rank?.name || 'أفراد'}) لا تسمح بذلك.`
+            })
+            return
+          }
+        }
+      }
+    }
+    step.value = 3
+    return
+  }
+
+  // Check required fields in the user_input section
+  const userSection = schema.value.sections?.find((s: any) => s.source === 'user_input')
+  if (userSection) {
+      const missing = userSection.fields.filter((f: any) => {
+        if (f.key === 'new_military_number') {
+          return formData.value.settlement_type === 'personnel_to_officer' && !formData.value[f.key]
+        }
+        return f.required && !formData.value[f.key]
+      })
+      if (missing.length > 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'بيانات ناقصة',
+          text: `الرجاء تعبئة الحقول الإلزامية: ${missing.map((f:any) => f.label).join('، ')}`
+        })
+        return
+      }
 
       // Rank Settlement validations
       if (formData.value.settlement_type === 'personnel_to_officer' && formData.value.new_military_number) {
@@ -957,61 +1112,6 @@ async function validateAndGoToStep3() {
         }
       }
 
-      // National ID and Military Number validations in Correction forms
-      const currentField = formData.value.field_name || formData.value.correction_type || type
-      if (currentField === 'national_id' || currentField === 'national_id_correction') {
-        const val = formData.value.new_value
-        if (!val || val.length !== 11 || !/^\d+$/.test(val)) {
-          Swal.fire({
-            icon: 'warning',
-            title: 'رقم وطني غير صالح',
-            text: 'الرقم الوطني الجديد يجب أن يتكون من 11 رقماً.'
-          })
-          return
-        }
-
-        // Live check national ID
-        try {
-          const checkRes = await api.get('/personnel/check-national-id/', { params: { value: val } })
-          if (checkRes.data?.exists) {
-            Swal.fire({
-              icon: 'error',
-              title: 'الرقم الوطني مسجل مسبقاً',
-              text: 'هذا الرقم الوطني مسجل بالفعل في النظام.'
-            })
-            return
-          }
-        } catch (e) {
-          console.error(e)
-        }
-      }
-
-      if (currentField === 'military_number' || currentField === 'military_number_correction') {
-        const val = formData.value.new_value
-        if (!val || val.length < 4 || isNaN(Number(val))) {
-          Swal.fire({
-            icon: 'warning',
-            title: 'رقم عسكري غير صالح',
-            text: 'الرجاء إدخال رقم عسكري صالح.'
-          })
-          return
-        }
-
-        // Live check military number
-        try {
-          const checkRes = await api.get('/personnel/check-military-number/', { params: { value: val } })
-          if (checkRes.data?.exists) {
-            Swal.fire({
-              icon: 'error',
-              title: 'الرقم العسكري مستخدم',
-              text: 'هذا الرقم العسكري مستخدم بالفعل في النظام.'
-            })
-            return
-          }
-        } catch (e) {
-          console.error(e)
-        }
-      }
     }
   step.value = 3
 }
@@ -1062,13 +1162,16 @@ async function submitBulk() {
     return
   }
 
-  // Validate All Fields
-  const allFields = schema.value.sections?.flatMap((s:any) => s.fields || []) || []
-  if (allFields.length > 0) {
-    for (const f of allFields) {
-      const val = formData.value[f.key]
-      
-      // 1. Required Check
+  isSubmitting.value = true
+
+  // Validate User Input Fields
+  if (category !== 'correction') {
+    const userSection = schema.value.sections?.find((s:any) => s.source === 'user_input')
+    if (userSection) {
+      for (const f of userSection.fields) {
+        const val = formData.value[f.key]
+        
+        // 1. Required Check
       if (f.required && !f.disabled && (val === undefined || val === null || val === '')) {
         Swal.fire({
           icon: 'error',
@@ -1103,6 +1206,7 @@ async function submitBulk() {
           return
         }
       }
+      }
     }
   }
 
@@ -1113,18 +1217,44 @@ async function submitBulk() {
 
   let lastCorrectionId = null
   let lastFormId = null
-
-  // Loop through all selected personnel and submit
   for (const person of selectedPersonnelList.value) {
     try {
       if (category === 'correction') {
+        let finalNewValue = formData.value.new_value || ''
+        let finalReason = formData.value.notes || formData.value.reason || ''
+        let finalField = formData.value.field_name || formData.value.field || type
+        let finalCorrectionType = formData.value.correction_type || null
+
+        if (type === 'national_id_correction' || type === 'military_number_correction') {
+          finalNewValue = formData.value.new_values?.[person.military_number] || ''
+          finalReason = formData.value.notes?.[person.military_number] || ''
+          finalField = type
+          finalCorrectionType = type
+          
+          if (!finalNewValue || !finalReason) {
+            throw new Error(`Missing required fields for ${person.military_number}`)
+          }
+        } else if (type === 'linked_military_swap') {
+          const otherPerson = selectedPersonnelList.value.find((p:any) => p.military_number !== person.military_number)
+          if (otherPerson) {
+            finalNewValue = otherPerson.military_number
+          }
+          finalReason = formData.value.swap_notes || ''
+          finalField = 'military_number_correction'
+          finalCorrectionType = 'military_number_correction'
+          
+          if (!finalNewValue || !finalReason) {
+            throw new Error(`Missing required fields for swap`)
+          }
+        }
+
         const req = await correctionStore.submitCorrection({
           military_number: person.military_number,
-          field: formData.value.field_name || formData.value.field || type,
-          correction_type: formData.value.correction_type || null,
+          field: finalField,
+          correction_type: finalCorrectionType,
           old_value: formData.value.old_value || '',
-          new_value: formData.value.new_value || '',
-          reason: formData.value.notes || formData.value.reason || '',
+          new_value: finalNewValue,
+          reason: finalReason,
           document_ids: documentIds.value
         })
         if (req && req.id) lastCorrectionId = req.id

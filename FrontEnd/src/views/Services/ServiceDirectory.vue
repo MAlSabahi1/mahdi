@@ -147,7 +147,7 @@
             <span v-else></span>
 
             <!-- Request button -->
-            <RouterLink v-if="card.form_type && card.is_active && !card.is_locked" :to="`/services/request?type=${card.form_type}&category=${card.service_type}`"
+            <RouterLink v-if="card.form_type && card.is_active && !card.is_locked" :to="getServiceRoute(card)"
               class="relative overflow-hidden inline-flex items-center gap-1.5 px-4 py-2 text-xs font-black rounded-xl border transition-all duration-300 cursor-pointer"
               :class="getTypeColor(card.service_type, 'btn')">
               <span>طلب الخدمة</span>
@@ -260,6 +260,12 @@ function getServiceTypeLabel(t: string) {
     disciplinary: 'جزاء تأديبي', security: 'أمان ومزامنة', other: 'أخرى'
   }
   return map[t] || 'أخرى'
+}
+
+function getServiceRoute(card: ServiceCard) {
+  if (card.service_type === 'correction') return `/services/request/correction?type=${card.form_type}&category=${card.service_type}`
+  if (card.service_type === 'rank_settlement') return `/services/request/rank-settlement?type=${card.form_type}&category=${card.service_type}`
+  return `/services/request?type=${card.form_type}&category=${card.service_type}`
 }
 
 // Tabs matching m.md exactly

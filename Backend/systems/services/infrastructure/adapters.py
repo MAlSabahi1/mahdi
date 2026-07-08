@@ -17,24 +17,81 @@ class DjangoExecutionActionEngine:
     ينفذ تغييرات على قاعدة البيانات بناءً على نوع الإجراء (execution_action) المحدد في الخدمة.
     """
 
-    def execute_action(self, personnel_id: int, form_id: str, action_type: str, to_status_id: int = None) -> None:
+    def execute_action(self, personnel_id: int, form_id: str, action_type: str, execution_config: dict, to_status_id: int = None) -> None:
         from systems.personnel.models import PersonnelMaster
         from systems.services.infrastructure.models.status_change import StatusChangeForm
         
         with transaction.atomic():
-            if action_type == 'UPDATE_STATUS' and to_status_id:
-                PersonnelMaster.objects.filter(pk=personnel_id).update(
-                    current_status_id=to_status_id,
-                    updated_at=timezone.now(),
-                )
+            if action_type == 'UPDATE_STATUS':
+                # Use to_status_id from execution_config if provided (dynamic), else fallback to form.to_status_id (legacy/static)
+                target_status = execution_config.get('to_status_id') or to_status_id
+                if target_status:
+                    PersonnelMaster.objects.filter(pk=personnel_id).update(
+                        current_status_id=target_status,
+                        updated_at=timezone.now(),
+                    )
             elif action_type == 'UPDATE_RANK':
-                # منطق تحديث الرتبة مستقبلاً (يتطلب بيانات الرتبة من الاستمارة)
-                pass
-            elif action_type == 'SECURITY_RESTRICT':
+                # منطق تحديث الرتبة
+                form = StatusChangeForm.objects.filter(id=form_id).first()
+                if form and form.form_data:
+                    new_rank_val = form.form_data.get('to_rank')
+                    if new_rank_val:
+                        from systems.personnel.models import Rank
+                        rank_obj = None
+                        if str(new_rank_val).isdigit():
+                            rank_obj = Rank.objects.filter(pk=new_rank_val).first()
+                        if not rank_obj:
+                            rank_obj = Rank.objects.filter(name=new_rank_val).first()
+                        if rank_obj:
+                            PersonnelMaster.objects.filter(pk=personnel_id).update(
+                                current_rank=rank_obj,
+                                updated_at=timezone.now()
+                            )
+
+            elif action_type == 'PERSONNEL_TO_OFFICER':
+                # تسوية وضع من فرد إلى ضابط (ترقية مع تغيير الرقم العسكري)
+                form = StatusChangeForm.objects.filter(id=form_id).first()
+                if form and form.form_data:
+                    new_rank_val = form.form_data.get('to_rank')
+                    new_mil_num = form.form_data.get('new_military_number')
+                    if new_rank_val and new_mil_num:
+                        from systems.personnel.models import Rank
+                        rank_obj = None
+                        if str(new_rank_val).isdigit():
+                            rank_obj = Rank.objects.filter(pk=new_rank_val).first()
+                        if not rank_obj:
+                            rank_obj = Rank.objects.filter(name=new_rank_val).first()
+                        if rank_obj:
+                            PersonnelMaster.objects.filter(pk=personnel_id).update(
+                                current_rank=rank_obj,
+                                military_number=new_mil_num,
+                                updated_at=timezone.now()
+                            )
+            elif action_type == 'SECURITY_RESTRICT' or action_type == 'SECURITY_SYNC':
                 # منطق إضافة قيد أمني
                 pass
+            elif action_type.startswith('CORRECTION_'):
+                # التحديث الأوتوماتيكي لبيانات السجل (تصحيح بيانات)
+                form = StatusChangeForm.objects.filter(id=form_id).first()
+                if form and form.form_data:
+                    update_fields = {}
+                    if action_type == 'CORRECTION_NAME' and 'correct_name' in form.form_data:
+                        update_fields['full_name'] = form.form_data['correct_name']
+                    elif action_type == 'CORRECTION_MILITARY_NUM' and 'correct_military_number' in form.form_data:
+                        update_fields['military_number'] = form.form_data['correct_military_number']
+                    elif action_type == 'CORRECTION_NATIONAL_ID' and 'correct_national_id' in form.form_data:
+                        update_fields['national_id'] = form.form_data['correct_national_id']
+                    
+                    if update_fields:
+                        update_fields['updated_at'] = timezone.now()
+                        PersonnelMaster.objects.filter(pk=personnel_id).update(**update_fields)
+
+            elif action_type.startswith('DISCIPLINARY_'):
+                # منطق الجزاءات التأديبية
+                pass
+                
             elif action_type == 'NONE':
-                # توثيق فقط
+                # توثيق فقط - لا يوجد تحديث آلي على الجداول الرئيسية
                 pass
 
 

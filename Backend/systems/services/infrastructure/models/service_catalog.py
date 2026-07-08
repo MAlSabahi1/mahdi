@@ -34,6 +34,7 @@ class ServiceCatalog(TimeStampedModel):
     EXECUTION_ACTION_CHOICES = [
         ('UPDATE_STATUS', _('تغيير الحالة (استمارات إثبات الحالة)')),
         ('UPDATE_RANK', _('تحديث الرتبة (ترقيات)')),
+        ('PERSONNEL_TO_OFFICER', _('تحديث رتبة ورقم عسكري (ضباط)')),
         ('SECURITY_RESTRICT', _('قيد أمني')),
         ('NONE', _('للتوثيق فقط (لا يوجد تأثير)')),
     ]
@@ -75,6 +76,13 @@ class ServiceCatalog(TimeStampedModel):
         default='UPDATE_STATUS',
         verbose_name=_('الإجراء التنفيذي'),
         help_text=_('ما هو الإجراء الفعلي الذي سيتم تطبيقه على قاعدة البيانات بعد الاعتماد؟')
+    )
+    
+    execution_config = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name=_('إعدادات التنفيذ'),
+        help_text=_('إعدادات متغيرة تعتمد على نوع الإجراء (مثلاً: الحالة المستهدفة، مدة القيد الأمن)')
     )
     
     # إعدادات

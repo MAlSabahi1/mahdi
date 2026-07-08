@@ -569,6 +569,24 @@ const router = createRouter({
       },
     },
     {
+      path: '/services/request/correction',
+      name: 'CorrectionRequestForm',
+      component: () => import('@/views/Services/Specialized/CorrectionRequestForm.vue'),
+      meta: {
+        title: 'طلب تصحيح بيانات',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/request/rank-settlement',
+      name: 'RankSettlementRequestForm',
+      component: () => import('@/views/Services/Specialized/RankSettlementRequestForm.vue'),
+      meta: {
+        title: 'تسوية وترقية الرتب',
+        requiresAuth: true,
+      },
+    },
+    {
       path: '/services/inbox',
       name: 'InboxTransactions',
       component: () => import('@/views/Services/InboxTransactions.vue'),

@@ -58,7 +58,7 @@ class ServiceCatalogSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'code', 'name_ar', 'description', 'category', 'icon', 'form_type',
             'approval_type', 'approval_type_display', 'service_type', 'service_type_display',
-            'execution_action', 'execution_action_display',
+            'execution_action', 'execution_action_display', 'execution_config',
             'is_active', 'requires_approval', 'is_repeatable', 'is_locked', 'lock_reason',
             'expected_duration_hours',
             'attachments_count', 'target_audience', 'fields_schema', 'attachments_schema', 'sort_order',

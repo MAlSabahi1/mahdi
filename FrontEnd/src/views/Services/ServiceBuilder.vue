@@ -20,6 +20,19 @@
         </div>
       </div>
 
+      <!-- Tabs Control Panel -->
+      <div class="flex gap-2 p-1.5 bg-gray-100/80 dark:bg-gray-800/80 rounded-xl overflow-x-auto mb-2 border border-gray-200 dark:border-gray-800">
+        <button v-for="tab in tabs" :key="tab.id" @click="selectedTab = tab.id" :class="[
+          selectedTab === tab.id
+            ? 'bg-white dark:bg-gray-700 text-brand-600 dark:text-brand-400 shadow-sm ring-1 ring-gray-900/5 dark:ring-white/10'
+            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-200/50 dark:hover:bg-gray-700/50',
+          'px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2'
+        ]">
+          {{ tab.label }}
+          <span class="px-2 py-0.5 rounded-md bg-gray-200/50 dark:bg-gray-800 text-[10px]">{{ tab.count }}</span>
+        </button>
+      </div>
+
       <!-- Services Table -->
       <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm">
         <div class="overflow-x-auto">
@@ -39,12 +52,12 @@
                   جاري تحميل البيانات...
                 </td>
               </tr>
-              <tr v-else-if="services.length === 0" class="border-b border-gray-100 dark:border-gray-800">
+              <tr v-else-if="filteredServices.length === 0" class="border-b border-gray-100 dark:border-gray-800">
                 <td colspan="4" class="px-6 py-10 text-center text-gray-400">
-                  لا توجد خدمات مضافة حتى الآن.
+                  لا توجد خدمات مضافة حتى الآن في هذا التبويب.
                 </td>
               </tr>
-              <tr v-else v-for="svc in services" :key="svc.id" class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
+              <tr v-else v-for="svc in filteredServices" :key="svc.id" class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-500 border border-gray-100 dark:border-gray-700">
@@ -67,6 +80,10 @@
                 </td>
                 <td class="px-6 py-4">
                   <div class="flex items-center justify-center gap-2">
+                    <button @click="openEditModal(svc)" class="px-3 py-1.5 text-[10px] font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 rounded-lg transition-colors border border-gray-200 dark:border-gray-700 flex items-center gap-1" title="تعديل الإعدادات الأساسية">
+                      <Settings class="w-3.5 h-3.5" />
+                      تعديل الأساسية
+                    </button>
                     <button @click="openFieldsModal(svc)" class="px-3 py-1.5 text-[10px] font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 dark:bg-brand-900/20 dark:text-brand-400 dark:hover:bg-brand-900/40 rounded-lg transition-colors border border-brand-200 dark:border-brand-800/50 flex items-center gap-1" title="بناء حقول الاستمارة">
                       <LayoutTemplate class="w-3.5 h-3.5" />
                       إصدارات الحقول
@@ -131,12 +148,30 @@
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الإجراء التنفيذي</label>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الإجراء التنفيذي (الأوتوماتيكي)</label>
               <select v-model="activeService.execution_action" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm outline-none">
-                <option value="UPDATE_STATUS">تغيير الحالة (استمارات إثبات الحالة)</option>
-                <option value="UPDATE_RANK">تحديث الرتبة (ترقيات)</option>
-                <option value="SECURITY_RESTRICT">قيد أمني</option>
-                <option value="NONE">للتوثيق فقط (لا يوجد تأثير)</option>
+                <!-- استمارات إثبات الحالة -->
+                <option v-if="activeService.service_type === 'form'" value="UPDATE_STATUS">تغيير الحالة (استمارات إثبات الحالة)</option>
+                
+                <!-- تصحيحات -->
+                <option v-if="activeService.service_type === 'correction'" value="CORRECTION_NAME">تصحيح الاسم</option>
+                <option v-if="activeService.service_type === 'correction'" value="CORRECTION_MILITARY_NUM">تصحيح الرقم العسكري</option>
+                <option v-if="activeService.service_type === 'correction'" value="CORRECTION_NATIONAL_ID">تصحيح الرقم الوطني</option>
+                <option v-if="activeService.service_type === 'correction'" value="CORRECTION_LINKED_SWAP">التبديل المترابط للأرقام</option>
+                
+                <!-- ترقيات وتسويات -->
+                <option v-if="activeService.service_type === 'rank_settlement'" value="UPDATE_RANK">تحديث الرتبة (ترقيات وتسويات)</option>
+                
+                <!-- أمان ومزامنة -->
+                <option v-if="activeService.service_type === 'security'" value="SECURITY_RESTRICT">قيد أمني (إيقاف / تجميد)</option>
+                <option v-if="activeService.service_type === 'security'" value="SECURITY_SYNC">مزامنة أمنية</option>
+
+                <!-- جزاءات -->
+                <option v-if="activeService.service_type === 'disciplinary'" value="DISCIPLINARY_DEDUCTION">خصم مالي / أيام</option>
+                <option v-if="activeService.service_type === 'disciplinary'" value="DISCIPLINARY_DEMOTION">تنزيل رتبة</option>
+                <option v-if="activeService.service_type === 'disciplinary'" value="DISCIPLINARY_PRISON">سجن عسكري</option>
+
+                <option value="NONE">للتوثيق فقط (لا يُنفذ تغيير آلي)</option>
               </select>
             </div>
           </div>
@@ -151,8 +186,8 @@
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">تصنيف الخدمة</label>
-              <select v-model="activeService.service_type" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm outline-none">
-                <option value="form">استمارة</option>
+              <select v-model="activeService.service_type" @change="activeService.execution_action = 'NONE'" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm outline-none">
+                <option value="form">استمارة (تغيير حالة)</option>
                 <option value="correction">تصحيح بيانات</option>
                 <option value="rank_settlement">ترقية / تسوية رتبة</option>
                 <option value="disciplinary">جزاء تأديبي</option>
@@ -164,21 +199,90 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الفئة المستهدفة</label>
-              <input type="text" v-model="activeService.target_audience" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="مثال: الكل، الضباط، الأفراد" />
+              <select v-model="activeService.target_audience" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm outline-none">
+                <option value="الكل">الكل</option>
+                <option value="الضباط">الضباط فقط</option>
+                <option value="الأفراد">الأفراد فقط</option>
+              </select>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">المدة المتوقعة (بالساعات)</label>
               <input type="number" v-model="activeService.expected_duration_hours" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="مثال: 24" />
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-4 pt-2">
+          <!-- Dynamic Execution Config based on Action -->
+          <div v-if="activeService.execution_action !== 'NONE'" class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700 space-y-4 mb-4">
+            <h4 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <Settings class="w-4 h-4 text-brand-500" />
+              إعدادات التنفيذ (Execution Config)
+            </h4>
+            
+            <div v-if="activeService.execution_action === 'UPDATE_STATUS'">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الحالة المستهدفة (Target Status) <span class="text-rose-500">*</span></label>
+              <select v-model="activeService.execution_config.to_status_id" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm outline-none">
+                <option value="">-- اختر الحالة --</option>
+                <option v-for="st in statuses" :key="st.id" :value="st.id">{{ st.name }}</option>
+              </select>
+              <p class="text-[10px] text-gray-500 mt-1">الحالة التي سيتحول إليها الفرد بعد الموافقة النهائية.</p>
+            </div>
+
+            <div v-if="activeService.execution_action === 'UPDATE_RANK'">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">نوع الترقية / التسوية</label>
+              <select v-model="activeService.execution_config.promotion_type" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm outline-none">
+                <option value="normal_promotion">ترقية أفراد عادية</option>
+                <option value="officer_settlement">تسوية رتبة لضابط</option>
+              </select>
+            </div>
+
+            <div v-if="activeService.execution_action === 'SECURITY_RESTRICT' || activeService.execution_action === 'SECURITY_SYNC'">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">نوع القيد / المزامنة</label>
+              <input type="text" v-model="activeService.execution_config.restriction_type" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm outline-none" placeholder="مثال: حرمان من الترقية، إيقاف راتب" />
+            </div>
+
+            <!-- Correction Info -->
+            <div v-if="activeService.execution_action.startsWith('CORRECTION_')" class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <p class="text-xs text-blue-700 dark:text-blue-300 font-bold flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                تحديث تلقائي لقاعدة البيانات
+              </p>
+              <p class="text-[10px] text-blue-600 dark:text-blue-400 mt-1">
+                هذا الإجراء سيقوم بتحديث بيانات السجل المدني والعسكري للفرد مباشرة فور الاعتماد النهائي، ولا يتطلب إعدادات إضافية هنا.
+              </p>
+            </div>
+
+            <!-- Disciplinary Config -->
+            <div v-if="activeService.execution_action === 'DISCIPLINARY_DEDUCTION'">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الحد الأقصى للخصم (بالأيام)</label>
+              <input type="number" v-model="activeService.execution_config.max_deduction_days" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm outline-none" placeholder="مثال: 15" />
+            </div>
+            
+            <div v-if="activeService.execution_action === 'DISCIPLINARY_DEMOTION'">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">مستوى التنزيل</label>
+              <select v-model="activeService.execution_config.demotion_levels" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm outline-none">
+                <option value="1">رتبة واحدة (الرتبة الأدنى مباشرة)</option>
+                <option value="2">رتبتين</option>
+                <option value="custom">تحديد يدوي من قبل اللجنة</option>
+              </select>
+            </div>
+
+            <div v-if="activeService.execution_action === 'DISCIPLINARY_PRISON'">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الحد الأقصى للسجن (بالأيام)</label>
+              <input type="number" v-model="activeService.execution_config.max_prison_days" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm outline-none" placeholder="مثال: 30" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" v-model="activeService.is_active" class="w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500" />
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">الخدمة مفعلة</span>
+            </label>
             <label class="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" v-model="activeService.requires_approval" class="w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500" />
               <span class="text-sm font-medium text-gray-700 dark:text-gray-300">تتطلب موافقات</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" v-model="activeService.is_repeatable" class="w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500" />
-              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">قابلة للتكرار (أكثر من مرة للفرد)</span>
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">قابلة للتكرار</span>
             </label>
           </div>
           <div>
@@ -199,7 +303,7 @@
     <!-- 2. Fields Builder Modal (Dynamic Sections) -->
     <div v-if="modals.fields" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
       <div class="bg-white dark:bg-gray-800 w-full max-w-5xl rounded-2xl shadow-xl overflow-hidden animate-fade-in-up flex flex-col max-h-[90vh]">
-        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50">
+          <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50">
           <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <LayoutTemplate class="w-5 h-5 text-brand-600" />
             إصدارات الحقول للخدمة: {{ activeService.name_ar }}
@@ -215,18 +319,114 @@
         </div>
         
         <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50/30 dark:bg-gray-900/30">
+
+          <!-- ══ Field Guide Reference Panel ══ -->
+          <details class="border border-blue-200 dark:border-blue-800 rounded-xl overflow-hidden bg-blue-50/60 dark:bg-blue-900/10">
+            <summary class="flex items-center gap-2 px-4 py-3 cursor-pointer select-none font-bold text-sm text-blue-800 dark:text-blue-300 list-none hover:bg-blue-100/50 dark:hover:bg-blue-900/20">
+              <span class="text-lg">📖</span>
+              دليل الحقول — أنواع المصادر وكيفية استخدامها
+              <span class="mr-auto text-xs font-normal opacity-60">انقر للعرض / الإخفاء</span>
+            </summary>
+            <div class="px-4 pb-4 space-y-4 text-xs">
+
+              <!-- Source Types Legend -->
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                <div class="p-3 bg-white dark:bg-gray-800 border border-green-200 dark:border-green-800 rounded-lg">
+                  <div class="font-bold text-green-700 dark:text-green-400 mb-1 flex items-center gap-1">
+                    <span>✏️</span> إدخال مستخدم
+                  </div>
+                  <p class="text-gray-600 dark:text-gray-400">حقل يُعبئه المستخدم يدوياً عند تقديم الطلب. مثل: رقم القرار، تاريخ القرار، سبب التنزيل، الملاحظات.</p>
+                </div>
+                <div class="p-3 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <div class="font-bold text-blue-700 dark:text-blue-400 mb-1 flex items-center gap-1">
+                    <span>🗄️</span> قاعدة البيانات (سجل الفرد)
+                  </div>
+                  <p class="text-gray-600 dark:text-gray-400">يُسحب تلقائياً من ملف الفرد. لا يُعبئه المستخدم. مثل: الاسم، الرقم العسكري، الرتبة، الوحدة، تاريخ الميلاد.</p>
+                </div>
+                <div class="p-3 bg-white dark:bg-gray-800 border border-orange-200 dark:border-orange-800 rounded-lg">
+                  <div class="font-bold text-orange-700 dark:text-orange-400 mb-1 flex items-center gap-1">
+                    <span>⚙️</span> من النظام (ثابت - مخفي)
+                  </div>
+                  <p class="text-gray-600 dark:text-gray-400">قيمة ثابتة يضعها النظام تلقائياً. مثل: الفئة (ثابتة كـ "الترقيات")، نوع التسوية. تكون معطلة ومخفية عن المستخدم.</p>
+                </div>
+              </div>
+
+              <!-- DB Fields Quick Reference -->
+              <div class="mt-2">
+                <p class="font-bold text-gray-700 dark:text-gray-300 mb-2">⚡ حقول سجل الفرد — يمكن إضافتها بنقرة واحدة:</p>
+                <div class="flex flex-wrap gap-1.5">
+                  <button v-for="pf in personnelFields" :key="pf.key"
+                    @click="quickAddDbField(pf)"
+                    class="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800/50 text-[10px] font-bold flex items-center gap-1 transition-colors">
+                    <span>+</span> {{ pf.label }}
+                    <code class="opacity-60 font-mono">{{ pf.key }}</code>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Common System Fields -->
+              <div class="mt-2">
+                <p class="font-bold text-gray-700 dark:text-gray-300 mb-2">⚙️ حقول النظام الثابتة الشائعة:</p>
+                <div class="flex flex-wrap gap-1.5">
+                  <button v-for="sf in systemFields" :key="sf.key"
+                    @click="quickAddSystemField(sf)"
+                    class="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700 rounded-lg hover:bg-orange-200 dark:hover:bg-orange-800/50 text-[10px] font-bold flex items-center gap-1 transition-colors">
+                    <span>+</span> {{ sf.label }}
+                    <code class="opacity-60 font-mono">{{ sf.key }}</code>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <!-- Static System Sections (Read-Only) -->
+          <div v-if="activeService.service_type === 'form' && !hasCoreSections" class="border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-100 dark:bg-gray-800 opacity-75 overflow-hidden shadow-sm relative group">
+            <div class="absolute inset-0 bg-transparent cursor-not-allowed z-10" title="هذا القسم ثابت أمنياً ومبني في النظام أساساً لجميع الخدمات"></div>
+            <div class="bg-gray-200 dark:bg-gray-700/50 px-4 py-3 flex justify-between items-center border-b border-gray-300 dark:border-gray-600">
+              <div class="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-bold text-sm">
+                <ShieldCheck class="w-4 h-4 text-emerald-600" />
+                أولاً: البيانات الشخصية والعسكرية (ثابت أمنياً)
+              </div>
+              <button @click.prevent="unlockCoreSections" class="relative z-20 flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-gray-700 hover:bg-gray-800 rounded-lg shadow-sm transition-colors opacity-0 group-hover:opacity-100 cursor-pointer">
+                <Settings class="w-3.5 h-3.5" /> تحرير
+              </button>
+            </div>
+            <div class="p-3 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-center gap-2 bg-gray-50 dark:bg-gray-900/20">
+              <Lock class="w-3.5 h-3.5" /> يحتوي على: الرتبة، الرقم العسكري، الاسم الرباعي، الوحدة...
+            </div>
+          </div>
+
+          <div v-if="activeService.service_type === 'form' && !hasCoreSections" class="border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-100 dark:bg-gray-800 opacity-75 overflow-hidden shadow-sm relative group">
+            <div class="absolute inset-0 bg-transparent cursor-not-allowed z-10" title="هذا القسم ثابت أمنياً ومبني في النظام أساساً لجميع الخدمات"></div>
+            <div class="bg-gray-200 dark:bg-gray-700/50 px-4 py-3 flex justify-between items-center border-b border-gray-300 dark:border-gray-600">
+              <div class="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-bold text-sm">
+                <ShieldCheck class="w-4 h-4 text-emerald-600" />
+                ثانياً: بيانات الميلاد والإقامة (ثابت أمنياً)
+              </div>
+              <button @click.prevent="unlockCoreSections" class="relative z-20 flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-gray-700 hover:bg-gray-800 rounded-lg shadow-sm transition-colors opacity-0 group-hover:opacity-100 cursor-pointer">
+                <Settings class="w-3.5 h-3.5" /> تحرير
+              </button>
+            </div>
+            <div class="p-3 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-center gap-2 bg-gray-50 dark:bg-gray-900/20">
+              <Lock class="w-3.5 h-3.5" /> يحتوي على: الرقم الوطني، مكان الميلاد، مكان الإقامة (محافظة، مديرية، عزلة)...
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div v-if="activeService.service_type === 'form' && !hasCoreSections" class="flex items-center gap-4 py-2">
+            <div class="h-px bg-brand-200 dark:bg-brand-800/30 flex-1"></div>
+            <span class="text-xs font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 px-3 py-1 rounded-full border border-brand-100 dark:border-brand-800/50">ثالثاً: الأقسام والحقول الديناميكية (قابلة للتحرير المباشر)</span>
+            <div class="h-px bg-brand-200 dark:bg-brand-800/30 flex-1"></div>
+          </div>
+
           <div v-if="sections.length === 0" class="text-center py-10 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
-            <p class="text-gray-500">لم يتم إضافة أي أقسام لهذه الاستمارة.</p>
+            <p class="text-gray-500">لم يتم إضافة أي أقسام إضافية لهذه الاستمارة.</p>
           </div>
           
           <div v-for="(section, sIdx) in sections" :key="sIdx" class="border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 overflow-hidden shadow-sm">
             <div class="bg-gray-100 dark:bg-gray-700/50 px-4 py-3 flex justify-between items-center border-b border-gray-300 dark:border-gray-600">
               <div class="flex items-center gap-3 w-2/3">
-                <input type="text" v-model="section.title" placeholder="عنوان القسم (مثال: البيانات الشخصية)" class="w-1/2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 text-sm font-bold outline-none" />
-                <select v-model="section.source" class="w-1/3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 text-sm outline-none">
-                  <option value="personnel_master">قاعدة بيانات الأفراد (DB)</option>
-                  <option value="user_input">إدخال مستخدم (User Input)</option>
-                </select>
+                <input type="text" v-model="section.title" placeholder="عنوان القسم (مثال: البيانات الشخصية)" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 text-sm font-bold outline-none" />
               </div>
               <div class="flex items-center gap-2">
                 <button @click="addFieldToSection(Number(sIdx))" class="px-2 py-1 text-xs font-bold text-brand-700 bg-brand-50 rounded-lg hover:bg-brand-100 border border-brand-200 flex items-center gap-1">
@@ -247,14 +447,23 @@
                 </button>
                 
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
-                  <div class="col-span-1 md:col-span-2">
+                  <div class="col-span-1 md:col-span-1">
                     <label class="block text-[10px] font-bold text-gray-500 mb-1">اسم الحقل (يظهر للمستخدم)</label>
                     <input type="text" v-model="field.label" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 text-xs outline-none" />
                   </div>
                   
+                  <div class="col-span-1 md:col-span-1">
+                    <label class="block text-[10px] font-bold text-gray-500 mb-1">مصدر الحقل</label>
+                    <select v-model="field.source" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 text-xs outline-none">
+                      <option value="user_input">إدخال مستخدم</option>
+                      <option value="personnel_master">قاعدة البيانات (سجل الفرد)</option>
+                      <option value="system">من النظام (ثابت - مخفي)</option>
+                    </select>
+                  </div>
+                  
                   <div class="col-span-1">
                     <label class="block text-[10px] font-bold text-gray-500 mb-1">المفتاح (Key)</label>
-                    <select v-if="section.source === 'personnel_master'" v-model="field.key" @change="onDbFieldSelected(field)" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 text-xs outline-none">
+                    <select v-if="field.source === 'personnel_master'" v-model="field.key" @change="onDbFieldSelected(field)" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 text-xs outline-none">
                       <option value="" disabled>اختر الحقل...</option>
                       <option v-for="pf in personnelFields" :key="pf.key" :value="pf.key">{{ pf.label }}</option>
                     </select>
@@ -263,7 +472,7 @@
                   
                   <div class="col-span-1">
                     <label class="block text-[10px] font-bold text-gray-500 mb-1">نوع الحقل</label>
-                    <select v-model="field.type" :disabled="section.source === 'personnel_master'" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 text-xs outline-none disabled:opacity-50 disabled:cursor-not-allowed">
+                    <select v-model="field.type" :disabled="field.source === 'personnel_master'" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 text-xs outline-none disabled:opacity-50 disabled:cursor-not-allowed">
                       <option value="text">نص</option>
                       <option value="number">رقم</option>
                       <option value="date">تاريخ</option>
@@ -314,7 +523,7 @@
     <div v-if="modals.workflow" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
       <div class="bg-white dark:bg-gray-800 w-full max-w-4xl rounded-2xl shadow-xl overflow-hidden animate-fade-in-up flex flex-col max-h-[90vh]">
         <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-indigo-50 dark:bg-indigo-900/20">
-          <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h3 class="font-bold text-gray-900 dark:white flex items-center gap-2">
             <GitMerge class="w-5 h-5 text-indigo-600" />
             مراحل سير العمل للخدمة: {{ activeService.name_ar }}
           </h3>
@@ -488,9 +697,18 @@
             </button>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="col-span-1 md:col-span-2">
+              <div class="col-span-1 md:col-span-2 relative">
                 <label class="block text-xs font-medium text-gray-500 mb-1">اسم المرفق (مثال: صورة البطاقة)</label>
-                <input type="text" v-model="att.label" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm outline-none" />
+                <input type="text" v-model="att.label" @focus="att.showDropdown = true" @blur="hideDropdown(att)" placeholder="اختر من القائمة أو اكتب اسماً جديداً..." class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-amber-500" />
+                
+                <div v-if="att.showDropdown" class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-48 overflow-y-auto">
+                  <div v-for="(item, i) in commonAttachmentsList.filter(x => !att.label || x.includes(att.label))" :key="i" @mousedown="selectAttachment(att, item)" class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-900/30 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-0">
+                    {{ item }}
+                  </div>
+                  <div v-if="commonAttachmentsList.filter(x => !att.label || x.includes(att.label)).length === 0" class="px-3 py-2 text-xs text-gray-500">
+                    اضغط Enter لإضافة "{{ att.label }}"
+                  </div>
+                </div>
               </div>
               
               <div class="col-span-1">
@@ -523,17 +741,48 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
-import { Settings, Save, Loader2, Plus, LayoutTemplate, Trash2, FileText, GitMerge, ShieldCheck, X, PlusCircle, ShieldAlert, Paperclip } from 'lucide-vue-next'
+import { Settings, Save, Loader2, Plus, LayoutTemplate, Trash2, FileText, GitMerge, ShieldCheck, X, PlusCircle, ShieldAlert, Paperclip, Lock } from 'lucide-vue-next'
 import Swal from 'sweetalert2'
 import api from '@/lib/api'
 
-// --- State ---
 const loading = ref(true)
 const saving = ref(false)
 const services = ref<any[]>([])
 const availableStages = ref<any[]>([])
+const statuses = ref<any[]>([])
+
+const selectedTab = ref('all')
+
+const tabs = computed(() => [
+  { id: 'all', label: 'الكل', count: services.value.length },
+  { id: 'form', label: 'استمارات إثبات حالة', count: services.value.filter(s => s.service_type === 'form').length },
+  { id: 'correction', label: 'طلبات تصحيح', count: services.value.filter(s => s.service_type === 'correction').length },
+  { id: 'rank_settlement', label: 'ترقيات وتسويات', count: services.value.filter(s => s.service_type === 'rank_settlement').length },
+  { id: 'disciplinary', label: 'إجراءات وجزاءات', count: services.value.filter(s => s.service_type === 'disciplinary').length },
+  { id: 'security', label: 'أمان ومزامنة', count: services.value.filter(s => s.service_type === 'security').length }
+])
+
+const filteredServices = computed(() => {
+  if (selectedTab.value === 'all') return services.value
+  return services.value.filter(s => s.service_type === selectedTab.value)
+})
+
+const commonAttachmentsList = [
+  'بطاقة وطنية - الوجهين معاً (ملف واحد)', 'بطاقة وطنية - أمامي', 'بطاقة وطنية - خلفي', 'بطاقة وطنية - ماسح ضوئي',
+  'بطاقة عسكرية - الوجهين معاً (ملف واحد)', 'بطاقة عسكرية - أمامي', 'بطاقة عسكرية - خلفي', 'قرار ترقية',
+  'قرار تسوية فرد→ضابط', 'أمر نقل', 'قرار تصحيح اسم', 'قرار تغيير حالة خدمية',
+  'طلب إجازة', 'القرار الطبي الأصل', 'إجازة مرضية', 'شهادة الوفاة',
+  'حكم انحصار الورثة', 'وكالة شرعية', 'حكم التنصيب', 'حكم شرعي بالفقدان',
+  'إعلان الجريدة (لإثبات النشر عن فقدان الفرد)', 'بلاغ الفقدان', 
+  'بلاغ العمليات (لإثبات واقعة الاستشهاد ميدانياً)', 'استمارة إثبات حالة (شهيد)',
+  'الطلب الشخصي المقدم من المذكور', 'صورة البطاقة الشخصية للوكيل', 'صورة حديثة للمريض',
+  'نسخة من الحكم (في حال صدوره)', 'مذكرة توضح بأن الفرد لا زال في السجن من النيابة',
+  'نسخة من الأمر الصادر بالتكليف / المهمة', 'نسخة من الأمر الصادر بالتفرغ الدراسي',
+  'نسخة من الأمر الصادر بالانتداب', 'مذكرة توضيحية / إرسال', 'خطاب رسمي',
+  'شهادة', 'صورة شخصية', 'مذكرة رسمية بطلب تصحيح الرقم العسكري', 'مذكرة رسمية بطلب التبديل', 'أخرى'
+]
 
 const modals = ref({
   create: false,
@@ -548,12 +797,83 @@ const sections = ref<any[]>([])
 const workflowSteps = ref<any[]>([])
 const prerequisites = ref<any[]>([])
 const attachments = ref<any[]>([])
-const personnelFields = ref<any[]>([])
+const hasCoreSections = computed(() => sections.value.some(s => s.title.includes('البيانات الشخصية') || s.title.includes('بيانات الميلاد')))
+
+const personnelFields = ref<any[]>([
+  { key: 'full_name', label: 'الاسم الرباعي (من السجل)', type: 'text' },
+  { key: 'military_number', label: 'الرقم العسكري', type: 'text' },
+  { key: 'national_id', label: 'الرقم الوطني', type: 'text' },
+  { key: 'current_rank', label: 'الرتبة الحالية', type: 'text' },
+  { key: 'current_status', label: 'الحالة الحالية', type: 'text' },
+  { key: 'birth_date', label: 'تاريخ الميلاد', type: 'date' },
+  { key: 'blood_type', label: 'فصيلة الدم', type: 'text' },
+  { key: 'governorate', label: 'المحافظة', type: 'text' },
+  { key: 'district', label: 'المديرية', type: 'text' },
+  { key: 'unit', label: 'الوحدة / التشكيل', type: 'text' },
+  { key: 'join_date', label: 'تاريخ التجنيد', type: 'date' },
+])
+
+// Common system/fixed fields reference
+const systemFields = ref([
+  { key: 'category', label: 'الفئة', type: 'text', default: '' },
+  { key: 'settlement_type', label: 'نوع التسوية', type: 'text', default: '' },
+  { key: 'service_type', label: 'نوع الخدمة', type: 'text', default: '' },
+  { key: 'status_type', label: 'نوع الحالة', type: 'text', default: '' },
+  { key: 'form_type', label: 'نوع الاستمارة', type: 'text', default: '' },
+])
+
+// Quick-add a personnel_master (DB) field to the first user_input section
+function quickAddDbField(pf: any) {
+  let targetSection = sections.value.find((s: any) => s.source !== 'personnel_master')
+  if (!targetSection) {
+    sections.value.push({ title: 'بيانات الحالة', source: 'user_input', fields: [] })
+    targetSection = sections.value[sections.value.length - 1]
+  }
+  targetSection.fields.push({
+    key: pf.key,
+    label: pf.label,
+    type: pf.type || 'text',
+    source: 'personnel_master',
+    required: false,
+    disabled: true,
+    default: '',
+    optionsStr: ''
+  })
+}
+
+// Quick-add a system-fixed field to the first user_input section
+function quickAddSystemField(sf: any) {
+  let targetSection = sections.value.find((s: any) => s.source !== 'personnel_master')
+  if (!targetSection) {
+    sections.value.push({ title: 'بيانات الحالة', source: 'user_input', fields: [] })
+    targetSection = sections.value[sections.value.length - 1]
+  }
+  targetSection.fields.push({
+    key: sf.key,
+    label: sf.label,
+    type: sf.type || 'text',
+    source: 'system',
+    required: true,
+    disabled: true,
+    default: sf.default || '',
+    optionsStr: ''
+  })
+}
 
 // --- Initialization ---
 onMounted(async () => {
   await fetchData()
+  await fetchStatuses()
 })
+
+async function fetchStatuses() {
+  try {
+    const res = await api.get('/dictionaries/statuses/')
+    statuses.value = res.data.results || res.data
+  } catch (err) {
+    console.error('Failed to fetch statuses', err)
+  }
+}
 
 async function fetchData() {
   loading.value = true
@@ -563,13 +883,6 @@ async function fetchData() {
 
     const wRes = await api.get('/service-cycle/workflow-stages/')
     availableStages.value = wRes.data.results || wRes.data
-
-    if (personnelFields.value.length === 0) {
-      const pfRes = await api.get('/personnel/schema/')
-      if (pfRes.data?.success) {
-        personnelFields.value = pfRes.data.data
-      }
-    }
   } catch (err) {
     console.error(err)
   } finally {
@@ -585,7 +898,23 @@ function openCreateModal() {
     category: 'military', 
     is_active: true,
     description: '',
-    icon: 'FileText'
+    icon: 'FileText',
+    execution_action: 'UPDATE_STATUS',
+    approval_type: 'internal',
+    service_type: 'form',
+    target_audience: 'الكل',
+    expected_duration_hours: 48,
+    requires_approval: true,
+    is_repeatable: true,
+    execution_config: {}
+  }
+  modals.value.create = true
+}
+
+function openEditModal(svc: any) {
+  activeService.value = { 
+    ...svc,
+    execution_config: svc.execution_config || {}
   }
   modals.value.create = true
 }
@@ -619,40 +948,78 @@ async function saveBasicService() {
 }
 
 // --- 2. Fields Builder ---
-function openFieldsModal(svc: any) {
-  activeService.value = { ...svc }
+async function openFieldsModal(svc: any) {
+  activeService.value = { ...svc, _is_registry_managed: false }
   sections.value = []
-  
-  if (svc.fields_schema && svc.fields_schema.sections && svc.fields_schema.sections.length > 0) {
-    sections.value = svc.fields_schema.sections.map((s: any) => ({
-      title: s.title || '',
-      source: s.source || 'user_input',
-      fields: (s.fields || []).map((f: any) => ({
-        ...f,
-        optionsStr: f.options ? f.options.join(', ') : ''
-      }))
-    }))
-  } else {
-    // Default sections for a new form
-    sections.value = [
-      {
-        title: 'أولاً: البيانات الشخصية',
-        source: 'personnel_master',
-        fields: [
-          { key: 'military_number', label: 'الرقم العسكري', type: 'auto', required: true, disabled: false },
-          { key: 'full_name', label: 'الاسم الرباعي واللقب', type: 'auto', required: true, disabled: false },
-          { key: 'rank', label: 'الرتبة', type: 'auto', required: false, disabled: false },
-        ]
-      },
-      {
-        title: 'ثانياً: بيانات الطلب',
-        source: 'user_input',
-        fields: []
+  loading.value = true
+
+  try {
+    // ── Try to load schema from API (DB first, then FormRegistry as seed) ──
+    if (svc.form_type) {
+      const res = await api.get(`/service-cycle/forms/schema/?type=${svc.form_type}`)
+      const schema = res.data?.data
+      if (schema && schema.sections && schema.sections.length > 0) {
+        // Show ONLY user_input sections (auto sections are always shown separately)
+        const userSections = schema.sections.filter((s: any) => s.source === 'user_input' || !s.source)
+        if (userSections.length > 0) {
+          sections.value = userSections.map((s: any) => ({
+            title: s.title || 'بيانات الحالة',
+            source: 'user_input',
+            fields: (s.fields || []).map((f: any) => {
+              // Determine correct source label
+              let src = f.source || 'user_input'
+              if (f.type === 'auto') src = 'personnel_master'
+              else if (f.disabled) src = 'system'
+              return {
+                key: f.key,
+                label: f.label,
+                type: f.type === 'auto' ? 'text' : f.type,
+                source: src,
+                required: f.required ?? true,
+                disabled: f.disabled ?? false,
+                default: f.default || '',
+                optionsStr: f.options ? f.options.join(', ') : ''
+              }
+            })
+          }))
+          modals.value.fields = true
+          return
+        }
       }
-    ]
+    }
+
+    // ── Fallback: empty default section ──
+    sections.value = [{ title: 'أولاً: بيانات الطلب', source: 'user_input', fields: [] }]
+  } catch (err) {
+    console.error('Failed to load schema from API, using empty default', err)
+    sections.value = [{ title: 'أولاً: بيانات الطلب', source: 'user_input', fields: [] }]
+  } finally {
+    loading.value = false
   }
-  
+
   modals.value.fields = true
+}
+
+function unlockCoreSections() {
+  sections.value.unshift(
+    {
+      title: 'أولاً: البيانات الشخصية',
+      fields: [
+        { key: 'military_number', label: 'الرقم العسكري', type: 'text', source: 'personnel_master', required: true, disabled: true },
+        { key: 'full_name', label: 'الاسم الرباعي', type: 'text', source: 'personnel_master', required: true, disabled: true },
+        { key: 'current_rank', label: 'الرتبة', type: 'text', source: 'personnel_master', required: false, disabled: true },
+        { key: 'unit', label: 'الوحدة', type: 'text', source: 'personnel_master', required: false, disabled: true },
+      ]
+    },
+    {
+      title: 'ثانياً: بيانات الميلاد والإقامة',
+      fields: [
+        { key: 'national_id', label: 'الرقم الوطني', type: 'text', source: 'personnel_master', required: true, disabled: true },
+        { key: 'birth_date', label: 'تاريخ الميلاد', type: 'date', source: 'personnel_master', required: true, disabled: true },
+        { key: 'governorate', label: 'محافظة الإقامة', type: 'text', source: 'personnel_master', required: false, disabled: true },
+      ]
+    }
+  )
 }
 
 function onDbFieldSelected(field: any) {
@@ -666,13 +1033,22 @@ function onDbFieldSelected(field: any) {
 }
 
 function addSection() {
-  sections.value.push({ title: 'قسم جديد', source: 'user_input', fields: [] })
+  sections.value.push({ title: 'قسم جديد', fields: [] })
 }
 
 function removeSection(idx: number) { sections.value.splice(idx, 1) }
 
 function addFieldToSection(sIdx: number) {
-  sections.value[sIdx].fields.push({ key: `field_${sections.value[sIdx].fields.length + 1}`, label: 'حقل جديد', type: 'text', required: false, disabled: false, optionsStr: '', default: '' })
+  sections.value[sIdx].fields.push({
+    label: 'حقل جديد',
+    key: `field_${Date.now()}`,
+    type: 'text',
+    source: 'user_input',
+    required: false,
+    disabled: false,
+    optionsStr: '',
+    default: ''
+  })
 }
 
 function removeFieldFromSection(sIdx: number, fIdx: number) {
@@ -910,10 +1286,27 @@ function openAttachmentsModal(svc: any) {
 }
 
 function addAttachment() {
-  attachments.value.push({ key: `attach_${attachments.value.length + 1}`, label: 'مرفق جديد', required: true, description: '' })
+  attachments.value.push({
+    key: `attach_${attachments.value.length + 1}`,
+    label: '',
+    required: true,
+    description: '',
+    showDropdown: false
+  })
 }
 
-function removeAttachment(idx: number) { attachments.value.splice(idx, 1) }
+function hideDropdown(att: any) {
+  setTimeout(() => {
+    att.showDropdown = false
+  }, 200)
+}
+
+function selectAttachment(att: any, item: string) {
+  att.label = item
+  att.showDropdown = false
+}
+
+function removeAttachment(index: number) { attachments.value.splice(index, 1) }
 
 async function saveAttachmentsSchema() {
   saving.value = true
