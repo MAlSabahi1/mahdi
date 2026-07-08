@@ -21,7 +21,7 @@ from core.services import AuditService, NotificationService, ServiceEventService
 
 # ── Clean Architecture Imports ──
 from systems.services.infrastructure.repositories.django_status_change_repo import DjangoStatusChangeFormRepository
-from systems.services.infrastructure.adapters import DjangoPersonnelUpdater, DjangoEventPublisher, DjangoAttachmentCommitter
+from systems.services.infrastructure.adapters import DjangoEventPublisher, DjangoAttachmentCommitter
 from systems.services.application.use_cases.status_change_use_cases import (
     SubmitStatusFormUseCase, SubmitFormCommand,
     ApproveStatusFormUseCase, ApproveFormCommand,
@@ -46,8 +46,9 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
         return DjangoEventPublisher()
 
     @property
-    def personnel_updater(self):
-        return DjangoPersonnelUpdater()
+    def execution_engine(self):
+        from systems.services.infrastructure.adapters import DjangoExecutionActionEngine
+        return DjangoExecutionActionEngine()
 
     @property
     def attachment_committer(self):
@@ -333,7 +334,7 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
 
             uc = ApproveStatusFormUseCase(
                 self.repo,
-                self.personnel_updater,
+                self.execution_engine,
                 self.attachment_committer,
                 self.event_publisher
             )
@@ -341,7 +342,8 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
                 form_id=form.id,
                 approved_by=request.user.id,
                 approved_at=timezone.now(),
-                next_step_id=next_step_id
+                next_step_id=next_step_id,
+                execution_action=catalog.execution_action if catalog else 'UPDATE_STATUS'
             )
             uc.execute(cmd)
             
@@ -372,18 +374,36 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
         """GET /forms/schema/?type=martyr أو بدون type للكل"""
         ft = request.query_params.get('type')
         if ft:
-            # 1. Prioritize official Forms defined in FormRegistry
+            from systems.services.models import ServiceCatalog
+
+            # ── 1. DB first: if ServiceCatalog has a custom fields_schema, use it ──
+            service = (
+                ServiceCatalog.objects.filter(form_type=ft).first()
+                or ServiceCatalog.objects.filter(code=ft).first()
+            )
+            if service and service.fields_schema and service.fields_schema.get('sections'):
+                schema_data = service.fields_schema.copy()
+                # Merge attachments from attachments_schema if present
+                db_attachments = [
+                    {
+                        'doc_type': att.get('key', att.get('doc_type', '')),
+                        'label': att.get('label', att.get('name', '')),
+                        'required': att.get('required', True),
+                    }
+                    for att in (service.attachments_schema or [])
+                ]
+                if db_attachments:
+                    schema_data['attachments'] = db_attachments
+                return Response({'success': True, 'data': schema_data})
+
+            # ── 2. Fallback: use FormRegistry as default seed ──
             if FormRegistry.exists(ft):
                 return Response({'success': True, 'data': FormRegistry.schema(ft)})
-            
-            # 2. Otherwise query database ServiceCatalog
-            from systems.services.models import ServiceCatalog
-            service = ServiceCatalog.objects.filter(code=ft).first() or ServiceCatalog.objects.filter(form_type=ft).first()
-            if service and service.fields_schema:
-                return Response({'success': True, 'data': service.fields_schema})
-            
-            return Response({'success': False, 'error': f'نوع غير صالح: {ft}'},
-                            status=status.HTTP_400_BAD_REQUEST)
+
+            return Response(
+                {'success': False, 'error': f'نوع غير صالح: {ft}'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         return Response({'success': True, 'data': FormRegistry.all_schemas()})
 
     @action(detail=False, methods=['get'])

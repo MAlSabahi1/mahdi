@@ -51,15 +51,17 @@ class ServiceCatalogSerializer(serializers.ModelSerializer):
     workflow_steps = ServiceWorkflowStepSerializer(many=True, read_only=True)
     approval_type_display = serializers.CharField(source='get_approval_type_display', read_only=True)
     service_type_display = serializers.CharField(source='get_service_type_display', read_only=True)
+    execution_action_display = serializers.CharField(source='get_execution_action_display', read_only=True)
 
     class Meta:
         model = ServiceCatalog
         fields = [
             'id', 'code', 'name_ar', 'description', 'category', 'icon', 'form_type',
             'approval_type', 'approval_type_display', 'service_type', 'service_type_display',
+            'execution_action', 'execution_action_display', 'execution_config',
             'is_active', 'requires_approval', 'is_repeatable', 'is_locked', 'lock_reason',
             'expected_duration_hours',
-            'attachments_count', 'target_audience', 'fields_schema', 'sort_order',
+            'attachments_count', 'target_audience', 'fields_schema', 'attachments_schema', 'sort_order',
             'prerequisites', 'checklist_templates', 'workflow_steps'
         ]
 

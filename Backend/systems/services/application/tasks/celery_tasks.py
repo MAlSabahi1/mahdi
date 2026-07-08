@@ -188,3 +188,50 @@ def generate_compliance_report(service_month: str):
         'total_directorates': len(directorates),
         'submitted_count': sum(1 for r in report if r['submitted'])
     }
+
+
+@shared_task
+def track_form_deadlines():
+    """
+    مهمة يومية لفحص الاستمارات الفعالة التي تقترب من تاريخ الانتهاء (end_date)
+    مثل المنتدب، المفرغ للدراسة، أو المرافق.
+    وإرسال إشعار تنبيهي (Notification) للمسؤولين قبل الانتهاء بـ 30 يوم و 7 أيام.
+    """
+    from datetime import timedelta
+    from django.utils import timezone
+    from systems.services.infrastructure.models.status_change import StatusChangeForm
+    from core.services.notification_service import NotificationService
+    import datetime
+    
+    # 1. جلب الاستمارات المعتمدة فقط، التي تحتوي على 'end_date' في form_data
+    # لأن SQLite لا يدعم البحث المتقدم في JSON، سنجلب الاستمارات المعتمدة ونفلتر بالبايثون
+    # في بيئة الإنتاج يفضل استخدام PostgreSQL JSONB field filters
+    approved_forms = StatusChangeForm.objects.filter(status='approved')
+    
+    today = timezone.now().date()
+    notified_count = 0
+    
+    for form in approved_forms:
+        end_date_str = form.form_data.get('end_date')
+        if not end_date_str:
+            continue
+            
+        try:
+            end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            days_left = (end_date - today).days
+            
+            # تنبيه قبل 30 يوم وقبل 7 أيام
+            if days_left == 30 or days_left == 7:
+                # إرسال تنبيه (افتراض وجود دالة إشعار في NotificationService)
+                NotificationService.notify_status_change(
+                    personnel=form.personnel,
+                    form=form,
+                )
+                notified_count += 1
+                
+        except (ValueError, TypeError):
+            continue
+            
+    logger.info(f"Deadline tracking completed. Sent {notified_count} notifications.")
+    return {'notified': notified_count}
+

@@ -46,26 +46,59 @@ class PrerequisitesValidationViewSet(viewsets.ViewSet):
     """
     permission_classes = [AllowAny]
 
-    @decorators.action(detail=True, methods=['post'])
-    def validate(self, request, pk=None):
+    @decorators.action(detail=False, methods=['post'])
+    def validate(self, request):
         """التحقق من الشروط المسبقة للفرد بناءً على الخدمة"""
-        # (Simplified Mock Logic for now)
-        from systems.services.models import StatusChangeForm
+        from systems.services.models import ServiceCatalog
         from systems.personnel.models import PersonnelMaster
+        from datetime import date
         
-        form = get_object_or_404(StatusChangeForm, pk=pk)
+        military_number = request.data.get('military_number')
+        service_id = request.data.get('service_id')
         
-        if not form.service_catalog:
-            return Response({'valid': True, 'errors': []})
+        if not military_number or not service_id:
+            return Response({'valid': False, 'errors': ['الرقم العسكري ومعرف الخدمة مطلوبان']}, status=status.HTTP_400_BAD_REQUEST)
             
-        prerequisites = form.service_catalog.prerequisites.all()
+        personnel = get_object_or_404(PersonnelMaster, military_number=military_number)
+        service = get_object_or_404(ServiceCatalog, pk=service_id)
+        
+        prerequisites = service.prerequisites.filter(is_mandatory=True)
         errors = []
+        today = date.today()
         
         for prereq in prerequisites:
-            # Here we would implement real validation logic 
-            # e.g., checking personnel age if prereq.validation_type == 'age_min'
-            pass
-            
+            val = prereq.validation_value
+            try:
+                if prereq.validation_type == 'age_min':
+                    if personnel.birth_date:
+                        age = today.year - personnel.birth_date.year - ((today.month, today.day) < (personnel.birth_date.month, personnel.birth_date.day))
+                        if age < int(val):
+                            errors.append(f"{prereq.name_ar}: العمر الحالي {age} وهو أقل من الحد الأدنى {val}")
+                    else:
+                        errors.append(f"{prereq.name_ar}: تاريخ الميلاد غير متوفر للفرد")
+                        
+                elif prereq.validation_type == 'age_max':
+                    if personnel.birth_date:
+                        age = today.year - personnel.birth_date.year - ((today.month, today.day) < (personnel.birth_date.month, personnel.birth_date.day))
+                        if age > int(val):
+                            errors.append(f"{prereq.name_ar}: العمر الحالي {age} وهو أكبر من الحد الأقصى {val}")
+                    else:
+                        errors.append(f"{prereq.name_ar}: تاريخ الميلاد غير متوفر للفرد")
+                        
+                elif prereq.validation_type == 'service_years_min':
+                    if personnel.join_date:
+                        years = today.year - personnel.join_date.year - ((today.month, today.day) < (personnel.join_date.month, personnel.join_date.day))
+                        if years < int(val):
+                            errors.append(f"{prereq.name_ar}: سنوات الخدمة {years} أقل من المطلوب {val}")
+                    else:
+                        errors.append(f"{prereq.name_ar}: تاريخ الالتحاق غير متوفر")
+                        
+                elif prereq.validation_type == 'status_check':
+                    if personnel.current_status and personnel.current_status.name != val and personnel.current_status.classification != val:
+                        errors.append(f"{prereq.name_ar}: الحالة الحالية ({personnel.current_status.name}) غير مطابقة للمطلوب")
+            except (ValueError, TypeError):
+                errors.append(f"خطأ في إعداد شرط: {prereq.name_ar}")
+                
         return Response({
             'valid': len(errors) == 0,
             'errors': errors

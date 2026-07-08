@@ -301,6 +301,42 @@ class PersonnelViewSet(BaseModelViewSet):
         xff = self.request.META.get('HTTP_X_FORWARDED_FOR')
         return xff.split(',')[0].strip() if xff else self.request.META.get('REMOTE_ADDR')
 
+    @extend_schema(summary='جلب قائمة الحقول وأنواعها من قاعدة البيانات', tags=['personnel'])
+    @action(detail=False, methods=['get'], url_path='schema')
+    def schema(self, request):
+        """
+        يقرأ الموديل PersonnelMaster ويعيد جميع الحقول وأنواعها لبرمجة الاستمارات ديناميكياً.
+        """
+        from django.db import models
+        fields_data = []
+        
+        for field in PersonnelMaster._meta.fields:
+            # تخطي الحقول الداخلية
+            if field.name in ['id', 'created_at', 'updated_at', 'created_by', 'updated_by']:
+                continue
+                
+            field_type = 'text'
+            options = []
+            
+            if isinstance(field, models.ForeignKey):
+                field_type = 'select'
+                # يمكن جلب الخيارات إذا لزم الأمر، لكن الأفضل ترك الفرونت إند يتعامل مع lookup_table
+            elif isinstance(field, models.DateField):
+                field_type = 'date'
+            elif isinstance(field, models.BooleanField):
+                field_type = 'checkbox'
+            elif isinstance(field, models.IntegerField):
+                field_type = 'number'
+                
+            fields_data.append({
+                'key': field.name,
+                'label': str(field.verbose_name),
+                'type': field_type,
+                'auto_mapped': True  # ليعرف الفرونت إند أن هذا الحقل مقفول
+            })
+            
+        return Response({'success': True, 'data': fields_data})
+
 class LegacyImportView(APIView):
     """
     مسار مخصص لمدير النظام حصراً لرفع البيانات الخام التاريخية

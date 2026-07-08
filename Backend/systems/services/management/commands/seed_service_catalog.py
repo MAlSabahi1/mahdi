@@ -20,15 +20,51 @@ class Command(BaseCommand):
             {'code': '10', 'name_ar': 'استمارة شهيد', 'description': 'إثبات استشهاد الفرد وتحديث حالته في النظام.', 'category': 'military', 'icon': 'Binary', 'form_type': 'martyr', 'service_type': 'form', 'approval_type': 'internal'},
 
             # ═══════ تبويب 2: معاملات تصحيح البيانات الأساسية (corrections) ═══════
-            {'code': 'C01', 'name_ar': 'طلب تصحيح الاسم', 'description': 'تصحيح اسم الفرد وفقاً للوثائق الرسمية. يتطلب رفع نموذج (23) الرسمي وصورة البطاقة الوطنية.', 'category': 'military', 'icon': 'FileText', 'form_type': 'name_correction', 'service_type': 'correction', 'approval_type': 'external', 'is_repeatable': False},
-            {'code': 'C02', 'name_ar': 'طلب تصحيح الرقم الوطني', 'description': 'تعديل الرقم الوطني للفرد. يتطلب إرفاق صورة البطاقة الذكية أو الوطنية. تحقق فوري من عدم التكرار.', 'category': 'military', 'icon': 'Binary', 'form_type': 'national_id_correction', 'service_type': 'correction', 'approval_type': 'internal', 'is_repeatable': False},
-            {'code': 'C03', 'name_ar': 'طلب تصحيح الرقم العسكري', 'description': 'تصحيح الرقم العسكري للفرد عند وجود خطأ في بياناته.', 'category': 'military', 'icon': 'ShieldCheck', 'form_type': 'military_number_correction', 'service_type': 'correction', 'approval_type': 'internal', 'is_repeatable': False},
-            {'code': 'C04', 'name_ar': 'طلب التبديل المترابط للأرقام العسكرية', 'description': 'تصحيح تبديل الأرقام العسكرية بين شخصين بالخطأ. عملية ذرية واحدة.', 'category': 'military', 'icon': 'Users', 'form_type': 'linked_military_swap', 'service_type': 'correction', 'approval_type': 'external', 'is_repeatable': False},
+            {'code': 'C01', 'name_ar': 'طلب تصحيح الاسم', 'description': 'تصحيح اسم الفرد وفقاً للوثائق الرسمية. يتطلب رفع نموذج (23) الرسمي وصورة البطاقة الوطنية.', 'category': 'military', 'icon': 'FileText', 'form_type': 'name_correction', 'service_type': 'correction', 'approval_type': 'external', 'is_repeatable': False,
+             'fields_schema': {
+                 'sections': [
+                     {'title': 'بيانات التصحيح', 'fields': [
+                         {'key': 'old_value', 'label': 'الاسم الحالي (الخاطئ)', 'type': 'text', 'source': 'personnel_master', 'required': True, 'disabled': True},
+                         {'key': 'new_value', 'label': 'الاسم الجديد الصحيح', 'type': 'text', 'source': 'user_input', 'required': True},
+                         {'key': 'reason', 'label': 'سبب التصحيح', 'type': 'textarea', 'source': 'user_input', 'required': True}
+                     ]}
+                 ]
+             }},
+            {'code': 'C02', 'name_ar': 'طلب تصحيح الرقم الوطني', 'description': 'تعديل الرقم الوطني للفرد. يتطلب إرفاق صورة البطاقة الذكية أو الوطنية. تحقق فوري من عدم التكرار.', 'category': 'military', 'icon': 'Binary', 'form_type': 'national_id_correction', 'service_type': 'correction', 'approval_type': 'internal', 'is_repeatable': False,
+             'fields_schema': {
+                 'sections': [
+                     {'title': 'بيانات التصحيح', 'fields': [
+                         {'key': 'old_value', 'label': 'الرقم الوطني الحالي', 'type': 'text', 'source': 'personnel_master', 'required': True, 'disabled': True},
+                         {'key': 'new_value', 'label': 'الرقم الوطني الجديد الصحيح', 'type': 'text', 'source': 'user_input', 'required': True},
+                         {'key': 'reason', 'label': 'سبب التصحيح', 'type': 'textarea', 'source': 'user_input', 'required': True}
+                     ]}
+                 ]
+             }},
+            {'code': 'C03', 'name_ar': 'طلب تصحيح الرقم العسكري', 'description': 'تصحيح الرقم العسكري للفرد عند وجود خطأ في بياناته.', 'category': 'military', 'icon': 'ShieldCheck', 'form_type': 'military_number_correction', 'service_type': 'correction', 'approval_type': 'internal', 'is_repeatable': False,
+             'fields_schema': {
+                 'sections': [
+                     {'title': 'بيانات التصحيح', 'fields': [
+                         {'key': 'old_value', 'label': 'الرقم العسكري الحالي (الخاطئ)', 'type': 'text', 'source': 'personnel_master', 'required': True, 'disabled': True},
+                         {'key': 'new_value', 'label': 'الرقم العسكري الجديد الصحيح', 'type': 'text', 'source': 'user_input', 'required': True},
+                         {'key': 'reason', 'label': 'سبب التصحيح', 'type': 'textarea', 'source': 'user_input', 'required': True}
+                     ]}
+                 ]
+             }},
+            {'code': 'C04', 'name_ar': 'طلب التبديل المترابط للأرقام العسكرية', 'description': 'تصحيح تبديل الأرقام العسكرية بين شخصين بالخطأ. عملية ذرية واحدة.', 'category': 'military', 'icon': 'Users', 'form_type': 'linked_military_swap', 'service_type': 'correction', 'approval_type': 'external', 'is_repeatable': False,
+             'fields_schema': {
+                 'sections': [
+                     {'title': 'بيانات التبديل', 'fields': [
+                         {'key': 'old_value', 'label': 'الرقم العسكري للطرف الأول', 'type': 'text', 'source': 'personnel_master', 'required': True, 'disabled': True},
+                         {'key': 'new_value', 'label': 'الرقم العسكري للطرف الثاني', 'type': 'text', 'source': 'user_input', 'required': True},
+                         {'key': 'reason', 'label': 'سبب التبديل', 'type': 'textarea', 'source': 'user_input', 'required': True}
+                     ]}
+                 ]
+             }},
 
             # ═══════ تبويب 3: الترقيات وتسويات الرتب (rank_settlement) ═══════
-            {'code': 'R01', 'name_ar': 'طلب ترقية اعتيادية / استثنائية', 'description': 'ترقية الفرد إلى الرتبة العسكرية التالية. يدعم ترقية فرد واحد أو عدة أفراد.', 'category': 'military', 'icon': 'Award', 'form_type': 'rank_promotion', 'service_type': 'rank_settlement', 'approval_type': 'internal'},
-            {'code': 'R02', 'name_ar': 'طلب تسوية من كادر الأفراد إلى كادر الضباط', 'description': 'تسوية وضع فرد حاصل على مؤهل جامعي وتحويله إلى كادر الضباط مع رقم عسكري جديد يبدأ بـ (60).', 'category': 'military', 'icon': 'TrendingUp', 'form_type': 'personnel_to_officer', 'service_type': 'rank_settlement', 'approval_type': 'internal'},
-            {'code': 'R03', 'name_ar': 'طلب تنزيل الرتبة', 'description': 'تنزيل رتبة الفرد نتيجة عقوبة عسكرية أو إدارية أو حكم قضائي.', 'category': 'disciplinary', 'icon': 'ArrowDown', 'form_type': 'rank_demotion', 'service_type': 'rank_settlement', 'approval_type': 'internal'},
+            {'code': 'R01', 'name_ar': 'طلب ترقية اعتيادية / استثنائية', 'description': 'ترقية الفرد إلى الرتبة العسكرية التالية. يدعم ترقية فرد واحد أو عدة أفراد.', 'category': 'military', 'icon': 'Award', 'form_type': 'rank_promotion', 'service_type': 'rank_settlement', 'approval_type': 'internal', 'execution_action': 'UPDATE_RANK'},
+            {'code': 'R02', 'name_ar': 'طلب تسوية من كادر الأفراد إلى كادر الضباط', 'description': 'تسوية وضع فرد حاصل على مؤهل جامعي وتحويله إلى كادر الضباط مع رقم عسكري جديد يبدأ بـ (60).', 'category': 'military', 'icon': 'TrendingUp', 'form_type': 'personnel_to_officer', 'service_type': 'rank_settlement', 'approval_type': 'internal', 'execution_action': 'PERSONNEL_TO_OFFICER'},
+            {'code': 'R03', 'name_ar': 'طلب تنزيل الرتبة', 'description': 'تنزيل رتبة الفرد نتيجة عقوبة عسكرية أو إدارية أو حكم قضائي.', 'category': 'disciplinary', 'icon': 'ArrowDown', 'form_type': 'rank_demotion', 'service_type': 'rank_settlement', 'approval_type': 'internal', 'execution_action': 'UPDATE_RANK'},
 
             # ═══════ تبويب 4: المزامنة والمطابقات والأمان (security) ═══════
             {'code': 'S01', 'name_ar': 'طلب تنزيل بيانات', 'description': 'طلب تصدير بيانات من النظام. التصدير ممنوع افتراضياً ويتطلب موافقة رسمية.', 'category': 'other', 'icon': 'Download', 'form_type': 'data_export_request', 'service_type': 'security', 'approval_type': 'internal'},
@@ -71,6 +107,11 @@ class Command(BaseCommand):
                     'is_repeatable': s.get('is_repeatable', True),
                 }
             )
+            
+            # Update JSON fields explicitly if they are provided in seed data to ensure they overwrite empty ones
+            if 'fields_schema' in s:
+                obj.fields_schema = s['fields_schema']
+                obj.save()
             if created:
                 count += 1
                 

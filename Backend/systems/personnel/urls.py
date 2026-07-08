@@ -55,17 +55,17 @@ Personnel URLs - مسارات API الأفراد
 🔷 POST /api/v1/personnel/rank-settlements/{id}/apply/
    ← تطبيق التسوية فعلياً على الفرد
 
-🔷 POST /api/v1/personnel/rank-settlements/{id}/reject/
+ POST /api/v1/personnel/rank-settlements/{id}/reject/
    ← رفض طلب التسوية
 
-📌 ملاحظات سلوك الترابط الذكي (Position↔JobTitle↔Category):
+ ملاحظات سلوك الترابط الذكي (Position↔JobTitle↔Category):
 ────────────────────────────────────────────────────────────
 1. عند اختيار job_title → category تتعبأ تلقائياً (Backend: save() auto-fill)
 2. عند اختيار position → تحقق من allowed_categories (Backend: clean() validation)
 3. لا يمكن تغيير job_title أثناء وجود منصب (Backend: clean() يمنع)
-4. ⚠️ Frontend: عطّل حقل job_title عندما position مختار
-5. ⚠️ Frontend: عند اختيار job_title أولاً → فلتر المناصب المتوافقة
-6. ⚠️ Frontend: category = readonly (تتحدد تلقائياً — لا تسمح بالتعديل اليدوي)
+4. Frontend: عطّل حقل job_title عندما position مختار
+5.  Frontend: عند اختيار job_title أولاً → فلتر المناصب المتوافقة
+6.  Frontend: category = readonly (تتحدد تلقائياً — لا تسمح بالتعديل اليدوي)
 """
 from rest_framework.routers import DefaultRouter
 from django.urls import path, include
@@ -81,6 +81,7 @@ urlpatterns = [
     path('rank-settlement/', views.RankSettlementView.as_view(), name='rank-settlement'),
     path('check-national-id/', views.CheckNationalIdView.as_view(), name='check-national-id'),
     path('check-military-number/', views.CheckMilitaryNumberView.as_view(), name='check-military-number'),
+    path('schema/', views.PersonnelViewSet.as_view({'get': 'schema'}), name='personnel-schema'),
     path('<str:military_number>/update-national-id/', views.UpdateNationalIdView.as_view(), name='update-national-id'),
     path('', include(router.urls)),
 ]

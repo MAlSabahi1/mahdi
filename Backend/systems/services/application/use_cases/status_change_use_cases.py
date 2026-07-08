@@ -10,7 +10,7 @@ Application Use Cases: Status Change Form
 """
 from __future__ import annotations
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Protocol, Optional
 from uuid import UUID
@@ -26,9 +26,9 @@ logger = logging.getLogger(__name__)
 # Protocols (Dependency Injection بطريقة Python)
 # ──────────────────────────────────────────────────────────────────
 
-class IPersonnelUpdater(Protocol):
-    """تحديث الحالة الخدمية للفرد عند الاعتماد النهائي."""
-    def update_status(self, personnel_id: int, to_status_id: int) -> None: ...
+class IExecutionActionEngine(Protocol):
+    """تنفيذ الإجراء الخاص بالخدمة عند الاعتماد النهائي."""
+    def execute_action(self, personnel_id: int, form_id: UUID, action_type: str, execution_config: dict, to_status_id: Optional[int] = None) -> None: ...
 
 
 class IAttachmentCommitter(Protocol):
@@ -60,6 +60,8 @@ class ApproveFormCommand:
     approved_by:  int
     approved_at:  datetime
     next_step_id: Optional[int] = None
+    execution_action: str = 'UPDATE_STATUS'
+    execution_config: dict = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -113,12 +115,12 @@ class ApproveStatusFormUseCase:
     def __init__(
         self,
         repo:                IStatusChangeFormRepository,
-        personnel_updater:   IPersonnelUpdater,
+        execution_engine:    IExecutionActionEngine,
         attachment_committer: IAttachmentCommitter,
         event_publisher:     IEventPublisher,
     ):
         self._repo                 = repo
-        self._personnel_updater    = personnel_updater
+        self._execution_engine     = execution_engine
         self._attachment_committer = attachment_committer
         self._event_publisher      = event_publisher
 
@@ -138,11 +140,14 @@ class ApproveStatusFormUseCase:
         self._repo.save_fields(form, ['status', 'current_step_id', 'workflow_log'])
 
         # المستوى النهائي
-        if form.is_approved() and form.to_status_id:
-            # تحديث حالة الفرد
-            self._personnel_updater.update_status(
+        if form.is_approved():
+            # تنفيذ الإجراءات
+            self._execution_engine.execute_action(
                 personnel_id=form.personnel_id,
-                to_status_id=form.to_status_id,
+                form_id=form.id,
+                action_type=cmd.execution_action,
+                execution_config=cmd.execution_config,
+                to_status_id=form.to_status_id
             )
             # تثبيت المرفقات
             self._attachment_committer.commit_form_attachments(form.id)
