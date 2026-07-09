@@ -70,76 +70,58 @@
             <h3 class="text-sm font-black text-gray-900 dark:text-white">سجل التراخيص والتفويضات النشطة</h3>
           </div>
 
-          <div class="overflow-x-auto">
-            <table class="w-full text-right border-collapse min-w-[1000px]">
-              <thead>
-                <tr class="border-b border-gray-100 dark:border-gray-800 text-xs font-bold text-gray-400 bg-gray-50/50 dark:bg-gray-900/50">
-                  <th class="p-3 text-start">الضابط المفوض (المنشِئ)</th>
-                  <th class="p-3">الضابط المفوض له (المستفيد)</th>
-                  <th class="p-3">حزمة الصلاحيات والمستوى المعين</th>
-                  <th class="p-3">رقم الأمر الإداري</th>
-                  <th class="p-3">تاريخ الصلاحية</th>
-                  <th class="p-3">المبرر وسياق التفويض</th>
-                  <th class="p-3 text-left">الحالة والتحكم</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100 dark:divide-gray-850">
-                <tr v-if="delegations.length === 0">
-                  <td colspan="7" class="p-8 text-center text-gray-400">
-                    لا توجد سجلات تفويض نشطة حالياً.
-                  </td>
-                </tr>
-                <tr 
-                  v-for="del in delegations" 
-                  :key="del.id" 
-                  class="text-xs hover:bg-gray-50/40 dark:hover:bg-gray-850/20 transition-colors"
-                >
-                  <td class="p-3">
-                    <span class="font-extrabold text-gray-900 dark:text-white block">{{ del.delegator_name }}</span>
-                    <span class="text-[10px] text-gray-400 font-mono block">@{{ del.delegator }}</span>
-                  </td>
-                  <td class="p-3">
-                    <span class="font-extrabold text-gray-900 dark:text-white block">{{ del.delegatee_name }}</span>
-                    <span class="text-[10px] text-gray-400 font-mono block">@{{ del.delegatee }}</span>
-                  </td>
-                  <td class="p-3">
-                    <span class="font-bold text-gray-800 dark:text-gray-250 block">{{ getPackageLabel(del.package_code) }}</span>
-                    <span class="px-1.5 py-0.5 rounded text-[8px] font-mono bg-brand-50 text-brand-600 dark:bg-brand-950/20 dark:text-brand-400 border border-brand-200/30">
-                      {{ del.package_code }}
-                    </span>
-                  </td>
-                  <td class="p-3 font-mono font-bold text-gray-700 dark:text-gray-300">
-                    {{ del.official_order }}
-                  </td>
-                  <td class="p-3 font-mono text-[10px]">
-                    <span class="text-emerald-600 dark:text-emerald-450 block">البدء: {{ del.startDate }}</span>
-                    <span class="text-red-500 block">الانتهاء: {{ del.endDate }}</span>
-                  </td>
-                  <td class="p-3 max-w-[200px] truncate" :title="del.reason">
-                    <span class="text-gray-550 dark:text-gray-400">{{ del.reason }}</span>
-                  </td>
-                  <td class="p-3 text-left">
-                    <div class="flex items-center justify-end gap-2">
-                      <span 
-                        class="px-2 py-0.5 rounded-full font-bold text-[9px] border"
-                        :class="[
-                          del.status === 'active' ? 'bg-success-50 text-success-700 border-success-200 dark:bg-success-950/20 dark:text-success-400' : 'bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400'
-                        ]"
-                      >
-                        {{ del.status === 'active' ? 'نشط' : 'ملغى' }}
-                      </span>
-                      <button
-                        v-if="del.status === 'active'"
-                        @click="revokeDelegation(del.id)"
-                        class="text-[9px] font-black text-red-650 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/40 border border-red-200/30 px-2 py-1 rounded-lg transition-all cursor-pointer"
-                      >
-                        سحب
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="mt-4">
+            <DataTable
+              :columns="delegationsColumns"
+              :data="delegations"
+              row-key="id"
+            >
+              <template #cell-delegator="{ row }">
+                <span class="font-extrabold text-gray-900 dark:text-white block">{{ row.delegator_name }}</span>
+                <span class="text-[10px] text-gray-400 font-mono block">@{{ row.delegator }}</span>
+              </template>
+              <template #cell-delegatee="{ row }">
+                <span class="font-extrabold text-gray-900 dark:text-white block">{{ row.delegatee_name }}</span>
+                <span class="text-[10px] text-gray-400 font-mono block">@{{ row.delegatee }}</span>
+              </template>
+              <template #cell-package="{ row }">
+                <span class="font-bold text-gray-800 dark:text-gray-250 block">{{ getPackageLabel(row.package_code) }}</span>
+                <span class="px-1.5 py-0.5 rounded text-[8px] font-mono bg-brand-50 text-brand-600 dark:bg-brand-950/20 dark:text-brand-400 border border-brand-200/30">
+                  {{ row.package_code }}
+                </span>
+              </template>
+              <template #cell-official_order="{ value }">
+                <span class="font-mono font-bold text-gray-700 dark:text-gray-300">{{ value }}</span>
+              </template>
+              <template #cell-dates="{ row }">
+                <div class="font-mono text-[10px]">
+                  <span class="text-emerald-600 dark:text-emerald-450 block">البدء: {{ row.startDate }}</span>
+                  <span class="text-red-500 block">الانتهاء: {{ row.endDate }}</span>
+                </div>
+              </template>
+              <template #cell-reason="{ value }">
+                <span class="text-gray-550 dark:text-gray-400 max-w-[200px] truncate block" :title="value">{{ value }}</span>
+              </template>
+              <template #cell-status="{ row }">
+                <div class="flex items-center gap-2">
+                  <span 
+                    class="px-2 py-0.5 rounded-full font-bold text-[9px] border"
+                    :class="[
+                      row.status === 'active' ? 'bg-success-50 text-success-700 border-success-200 dark:bg-success-950/20 dark:text-success-400' : 'bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400'
+                    ]"
+                  >
+                    {{ row.status === 'active' ? 'نشط' : 'ملغى' }}
+                  </span>
+                  <button
+                    v-if="row.status === 'active'"
+                    @click="revokeDelegation(row.id)"
+                    class="text-[9px] font-black text-red-650 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/40 border border-red-200/30 px-2 py-1 rounded-lg transition-all cursor-pointer"
+                  >
+                    سحب
+                  </button>
+                </div>
+              </template>
+            </DataTable>
           </div>
         </div>
       </div>
@@ -316,64 +298,46 @@
             <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">توثيق العمليات الاستثنائية وتفاصيل الموافقين وتبريرات الإدارة المدخلة.</p>
           </div>
 
-          <div class="overflow-x-auto">
-            <table class="w-full text-right border-collapse min-w-[1000px]">
-              <thead>
-                <tr class="border-b border-gray-100 dark:border-gray-800 text-xs font-bold text-gray-400 bg-gray-50/50 dark:bg-gray-900/50">
-                  <th class="p-3 text-start">المستخدم الفاعل</th>
-                  <th class="p-3">الجهة والمنطقة العسكرية</th>
-                  <th class="p-3">رقم برقية العمليات</th>
-                  <th class="p-3">المصادق المعتمد الثاني</th>
-                  <th class="p-3">مدة وساعة التفعيل</th>
-                  <th class="p-3">المبرر وسياق الطوارئ</th>
-                  <th class="p-3 text-left">الحالة</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100 dark:divide-gray-855">
-                <tr v-if="breakGlassLogs.length === 0">
-                  <td colspan="7" class="p-8 text-center text-gray-400">
-                    لا توجد سجلات تفعيل لوضع التجاوز حالياً.
-                  </td>
-                </tr>
-                <tr 
-                  v-for="log in breakGlassLogs" 
-                  :key="log.id" 
-                  class="text-xs hover:bg-gray-50/40 dark:hover:bg-gray-850/20 transition-colors"
+          <div class="mt-4">
+            <DataTable
+              :columns="emergencyColumns"
+              :data="breakGlassLogs"
+              row-key="id"
+            >
+              <template #cell-username="{ row }">
+                <span class="font-extrabold text-gray-900 dark:text-white block">{{ row.username }}</span>
+                <span class="text-[10px] text-gray-400 font-mono block">IP: {{ row.ip_address }}</span>
+              </template>
+              <template #cell-scope="{ value }">
+                <span class="font-semibold text-gray-700 dark:text-gray-300">{{ value }}</span>
+              </template>
+              <template #cell-order_num="{ value }">
+                <span class="font-mono font-bold text-gray-850 dark:text-gray-250">{{ value }}</span>
+              </template>
+              <template #cell-approver="{ value }">
+                <span class="font-extrabold text-gray-800 dark:text-gray-300">{{ value || '—' }}</span>
+              </template>
+              <template #cell-duration="{ row }">
+                <div class="font-mono text-[10px]">
+                  <span class="block text-gray-800 dark:text-gray-250">البدء: {{ row.timestamp }}</span>
+                  <span class="block text-red-500 font-bold">المدة: {{ row.duration_hours }} ساعات</span>
+                </div>
+              </template>
+              <template #cell-reason="{ value }">
+                <span class="text-gray-600 dark:text-gray-400 italic max-w-xs truncate block" :title="value">{{ value }}</span>
+              </template>
+              <template #cell-status="{ row }">
+                <span 
+                  class="px-2 py-0.5 rounded-full font-bold text-[9px] border inline-flex items-center gap-1"
+                  :class="[
+                    row.status === 'active' ? 'bg-error-50 text-error-700 border-error-200 dark:bg-error-950/20 dark:text-error-400' : 'bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400'
+                  ]"
                 >
-                  <td class="p-3">
-                    <span class="font-extrabold text-gray-900 dark:text-white block">{{ log.username }}</span>
-                    <span class="text-[10px] text-gray-400 font-mono block">IP: {{ log.ip_address }}</span>
-                  </td>
-                  <td class="p-3 font-semibold text-gray-700 dark:text-gray-300">
-                    {{ log.scope }}
-                  </td>
-                  <td class="p-3 font-mono font-bold text-gray-850 dark:text-gray-250">
-                    {{ log.order_num }}
-                  </td>
-                  <td class="p-3 font-extrabold text-gray-800 dark:text-gray-300">
-                    {{ log.approver || '—' }}
-                  </td>
-                  <td class="p-3 font-mono text-[10px]">
-                    <span class="block text-gray-800 dark:text-gray-250">البدء: {{ log.timestamp }}</span>
-                    <span class="block text-red-500 font-bold">المدة: {{ log.duration_hours }} ساعات</span>
-                  </td>
-                  <td class="p-3 max-w-xs truncate" :title="log.reason">
-                    <span class="text-gray-600 dark:text-gray-400 italic">{{ log.reason }}</span>
-                  </td>
-                  <td class="p-3 text-left">
-                    <span 
-                      class="px-2 py-0.5 rounded-full font-bold text-[9px] border inline-flex items-center gap-1"
-                      :class="[
-                        log.status === 'active' ? 'bg-error-50 text-error-700 border-error-200 dark:bg-error-950/20 dark:text-error-400' : 'bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400'
-                      ]"
-                    >
-                      <span class="h-1 w-1 rounded-full" :class="log.status === 'active' ? 'bg-red-500 animate-pulse' : 'bg-gray-450'"></span>
-                      {{ log.status === 'active' ? 'نشط (تجاوز)' : 'منتهي' }}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                  <span class="h-1 w-1 rounded-full" :class="row.status === 'active' ? 'bg-red-500 animate-pulse' : 'bg-gray-450'"></span>
+                  {{ row.status === 'active' ? 'نشط (تجاوز)' : 'منتهي' }}
+                </span>
+              </template>
+            </DataTable>
           </div>
         </div>
 
@@ -501,8 +465,29 @@
 import { ref, onMounted } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
+import DataTable from '@/components/tables/DataTable.vue'
 import api from '@/lib/api'
 import Swal from 'sweetalert2'
+
+const delegationsColumns = [
+  { key: 'delegator', label: 'الضابط المفوض (المنشِئ)', sortable: true },
+  { key: 'delegatee', label: 'الضابط المفوض له (المستفيد)', sortable: true },
+  { key: 'package', label: 'حزمة الصلاحيات والمستوى المعين', sortable: true },
+  { key: 'official_order', label: 'رقم الأمر الإداري', sortable: true },
+  { key: 'dates', label: 'تاريخ الصلاحية', sortable: false },
+  { key: 'reason', label: 'المبرر وسياق التفويض', sortable: true },
+  { key: 'status', label: 'الحالة والتحكم', sortable: true }
+]
+
+const emergencyColumns = [
+  { key: 'username', label: 'المستخدم الفاعل', sortable: true },
+  { key: 'scope', label: 'الجهة والمنطقة العسكرية', sortable: true },
+  { key: 'order_num', label: 'رقم برقية العمليات', sortable: true },
+  { key: 'approver', label: 'المصادق المعتمد الثاني', sortable: true },
+  { key: 'duration', label: 'مدة وساعة التفعيل', sortable: false },
+  { key: 'reason', label: 'المبرر وسياق الطوارئ', sortable: true },
+  { key: 'status', label: 'الحالة', sortable: true }
+]
 
 interface UserRecord {
   id: number
@@ -575,49 +560,51 @@ function getPackageLabel(code: string): string {
 }
 
 // Mock High Fidelity list for Delegations
-const delegations = ref<Delegation[]>([
-  {
-    id: 1,
-    delegator: 'admin',
-    delegator_name: 'مدير عام النظام',
-    delegatee: 'ali_ahmad',
-    delegatee_name: 'الرائد علي أحمد',
-    package_code: 'LIMITED_ENTRY',
-    official_order: 'أمر إداري رقم 44/2026',
-    startDate: '2026-07-04',
-    endDate: '2026-07-10',
-    reason: 'أمر تكليف رسمي لتغطية عجز الإدخال خلال فترة حصر دفعات التجنيد.',
-    status: 'active'
-  },
-  {
-    id: 2,
-    delegator: 'admin',
-    delegator_name: 'مدير عام النظام',
-    delegatee: 'salah_ali',
-    delegatee_name: 'العقيد صلاح علي',
-    package_code: 'FULL_PROXY',
-    official_order: 'قرار تكليف رقم 12/2026',
-    startDate: '2026-06-25',
-    endDate: '2026-06-30',
-    reason: 'تفويض كامل الصلاحيات بالنيابة بسبب السفر في مهمة عمل خارجية لمحافظة حضرموت.',
-    status: 'revoked'
-  }
-])
+const delegations = ref<Delegation[]>([])
+const breakGlassLogs = ref<BreakGlassLog[]>([])
 
-const breakGlassLogs = ref<BreakGlassLog[]>([
-  {
-    id: 101,
-    username: 'salem_hassan',
-    ip_address: '10.140.22.45',
-    scope: 'شؤون الأفراد - أمن عدن',
-    order_num: 'برقية طوارئ رقم 982-م',
-    approver: 'admin_security',
-    duration_hours: 4,
-    timestamp: '2026-07-01 10:22:15 ص',
-    reason: 'انقطاع ربط الألياف الضوئية الإقليمي وحاجة طارئة لمطابقة كشوفات الترقيات للضباط.',
-    status: 'expired'
+async function fetchDelegations() {
+  try {
+    const res = await api.get('/delegations/')
+    const data = res.data.results || res.data || []
+    delegations.value = data.map((d: any) => ({
+      id: d.id,
+      delegator: d.delegator_username || 'مدير عام',
+      delegator_name: d.delegator_name || 'مدير النظام',
+      delegatee: d.delegate_username || 'مستخدم',
+      delegatee_name: d.delegate_name || 'المفوض إليه',
+      package_code: 'FULL_PROXY', // mapping logic if needed
+      official_order: 'قرار تفويض داخلي',
+      startDate: d.starts_at ? new Date(d.starts_at).toISOString().split('T')[0] : '',
+      endDate: d.ends_at ? new Date(d.ends_at).toISOString().split('T')[0] : '',
+      reason: d.reason || '',
+      status: d.status ? d.status.toLowerCase() : 'active'
+    }))
+  } catch(err) {
+    console.error('Failed to fetch delegations', err)
   }
-])
+}
+
+async function fetchEmergencyAccesses() {
+  try {
+    const res = await api.get('/emergency-access/')
+    const data = res.data.results || res.data || []
+    breakGlassLogs.value = data.map((ea: any) => ({
+      id: ea.id,
+      username: ea.user_username || 'مستخدم',
+      ip_address: '10.0.0.X',
+      scope: 'النظام بأكمله',
+      order_num: 'طوارئ ' + ea.id,
+      approver: ea.granted_by_username || 'النظام',
+      duration_hours: 12,
+      timestamp: ea.granted_at ? new Date(ea.granted_at).toLocaleString('ar-SA') : '',
+      reason: ea.reason || '',
+      status: ea.status ? ea.status.toLowerCase() : 'active'
+    }))
+  } catch(err) {
+    console.error('Failed to fetch emergency accesses', err)
+  }
+}
 
 async function fetchUsers() {
   loadingUsers.value = true
@@ -794,7 +781,9 @@ async function revokeDelegation(id: number) {
   }
 }
 
-onMounted(() => {
-  fetchUsers()
+onMounted(async () => {
+  await fetchUsers()
+  await fetchDelegations()
+  await fetchEmergencyAccesses()
 })
 </script>

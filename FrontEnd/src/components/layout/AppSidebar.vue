@@ -491,16 +491,20 @@ const menuGroups = computed(() => {
             name: "nav.advanced_policy_module",
             subItems: [
               {
-                name: "مجموعات الصلاحيات",
-                path: "/roles/permission-groups",
-              },
-              {
                 name: "الصلاحيات المباشرة",
                 path: "/roles/permissions",
               },
               {
+                name: "مجموعات الصلاحيات",
+                path: "/roles/permission-groups",
+              },
+              {
                 name: "nav.roles",
                 path: "/roles",
+              },
+              {
+                name: "nav.policy_simulator",
+                path: "/users/policy-simulator",
               },
               {
                 name: "nav.policy_matrix",
@@ -517,10 +521,6 @@ const menuGroups = computed(() => {
               {
                 name: "nav.audit_trail",
                 path: "/users/audit-trail",
-              },
-              {
-                name: "nav.policy_simulator",
-                path: "/users/policy-simulator",
               }
             ]
           },

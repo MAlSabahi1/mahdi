@@ -110,80 +110,53 @@
           </div>
 
           <!-- Pending list Table -->
-          <div class="overflow-x-auto">
-            <table class="w-full text-right border-collapse min-w-[1000px]">
-              <thead>
-                <tr class="border-b border-gray-100 dark:border-gray-800 text-xs font-bold text-gray-400 bg-gray-50/50 dark:bg-gray-900/50">
-                  <th class="p-3 text-start">المنشئ (طالب الإجراء)</th>
-                  <th class="p-3">نوع العملية الحساسة</th>
-                  <th class="p-3">الكائن / النطاق المستهدف</th>
-                  <th class="p-3">مبرر العملية وسياق العمل</th>
-                  <th class="p-3">تاريخ الطلب وصلاحيته</th>
-                  <th class="p-3 text-left">الإجراءات والاعتماد</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100 dark:divide-gray-850">
-                <tr v-if="pendingRequests.length === 0">
-                  <td colspan="6" class="p-12 text-center text-gray-400">
-                    <div class="flex flex-col items-center justify-center space-y-2">
-                      <span class="p-3 rounded-full bg-emerald-500/10 text-emerald-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z" />
-                        </svg>
-                      </span>
-                      <span class="text-xs font-bold text-gray-700 dark:text-gray-300">لا توجد طلبات معلقة بانتظار الاعتماد المزدوج حالياً.</span>
-                    </div>
-                  </td>
-                </tr>
-                <tr 
-                  v-else 
-                  v-for="req in pendingRequests" 
-                  :key="req.id" 
-                  class="text-xs hover:bg-gray-50/40 dark:hover:bg-gray-850/20 transition-colors"
-                >
-                  <td class="p-3">
-                    <span class="font-extrabold text-gray-900 dark:text-white block">{{ req.requester_name }}</span>
-                    <span class="text-[10px] text-gray-400 font-mono block">Requester ID: {{ req.requester }}</span>
-                  </td>
-                  <td class="p-3">
-                    <span class="font-bold text-gray-800 dark:text-gray-250 block">{{ getActionDisplay(req.action_type) }}</span>
-                    <span class="px-1.5 py-0.5 rounded text-[8px] font-bold bg-error-50 text-error-750 dark:bg-error-950/20 dark:text-error-450 border border-error-200/40">
-                      طلب توقيع ثنائي (Four-Eyes Required)
-                    </span>
-                  </td>
-                  <td class="p-3">
-                    <span class="font-mono text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-950 px-2 py-0.5 rounded border border-gray-200/40 dark:border-gray-800">
-                      {{ req.target_object_type }} : {{ req.target_object_id }}
-                    </span>
-                  </td>
-                  <td class="p-3 max-w-xs truncate" :title="req.request_data?.reason">
-                    <span class="text-gray-600 dark:text-gray-400 italic">
-                      {{ req.request_data?.reason || 'لم يتم تزويد مبرر.' }}
-                    </span>
-                  </td>
-                  <td class="p-3">
-                    <span class="block text-[10px] text-gray-500 font-mono">بدء: {{ formatDate(req.requested_at) }}</span>
-                    <span class="block text-[10px] text-red-500 font-bold font-mono">انتهاء: {{ formatDate(req.expires_at) }}</span>
-                  </td>
-                  <td class="p-3 text-left">
-                    <div class="flex items-center gap-1.5 justify-end">
-                      <button 
-                        @click="approveRequest(req.id)"
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold px-3 py-1.5 rounded-xl cursor-pointer transition-colors shadow-theme-xs"
-                      >
-                        اعتماد وتوقيع
-                      </button>
-                      <button 
-                        @click="rejectRequest(req.id)"
-                        class="border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 text-red-650 text-[10px] font-extrabold px-3 py-1.5 rounded-xl cursor-pointer transition-colors"
-                      >
-                        رفض
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="mt-4">
+            <DataTable
+              :columns="pendingColumns"
+              :data="pendingRequests"
+              row-key="id"
+            >
+              <template #cell-requester="{ row }">
+                <span class="font-extrabold text-gray-900 dark:text-white block">{{ row.requester_name }}</span>
+                <span class="text-[10px] text-gray-400 font-mono block">Requester ID: {{ row.requester }}</span>
+              </template>
+              <template #cell-action="{ row }">
+                <span class="font-bold text-gray-800 dark:text-gray-250 block">{{ getActionDisplay(row.action_type) }}</span>
+                <span class="px-1.5 py-0.5 rounded text-[8px] font-bold bg-error-50 text-error-750 dark:bg-error-950/20 dark:text-error-450 border border-error-200/40">
+                  طلب توقيع ثنائي (Four-Eyes Required)
+                </span>
+              </template>
+              <template #cell-target="{ row }">
+                <span class="font-mono text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-950 px-2 py-0.5 rounded border border-gray-200/40 dark:border-gray-800">
+                  {{ row.target_object_type }} : {{ row.target_object_id }}
+                </span>
+              </template>
+              <template #cell-reason="{ row }">
+                <span class="text-gray-600 dark:text-gray-400 italic max-w-xs truncate block" :title="row.request_data?.reason">
+                  {{ row.request_data?.reason || 'لم يتم تزويد مبرر.' }}
+                </span>
+              </template>
+              <template #cell-dates="{ row }">
+                <span class="block text-[10px] text-gray-500 font-mono">بدء: {{ formatDate(row.requested_at) }}</span>
+                <span class="block text-[10px] text-red-500 font-bold font-mono">انتهاء: {{ formatDate(row.expires_at) }}</span>
+              </template>
+              <template #cell-status="{ row }">
+                <div class="flex items-center gap-1.5 justify-end">
+                  <button 
+                    @click="approveRequest(row.id)"
+                    class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold px-3 py-1.5 rounded-xl cursor-pointer transition-colors shadow-theme-xs"
+                  >
+                    اعتماد وتوقيع
+                  </button>
+                  <button 
+                    @click="rejectRequest(row.id)"
+                    class="border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 text-red-650 text-[10px] font-extrabold px-3 py-1.5 rounded-xl cursor-pointer transition-colors"
+                  >
+                    رفض
+                  </button>
+                </div>
+              </template>
+            </DataTable>
           </div>
         </div>
       </div>
@@ -206,46 +179,35 @@
             </div>
           </div>
 
-          <div class="overflow-x-auto">
-            <table class="w-full text-right border-collapse min-w-[900px]">
-              <thead>
-                <tr class="border-b border-gray-100 dark:border-gray-800 text-xs font-bold text-gray-400 bg-gray-50/50 dark:bg-gray-900/50">
-                  <th class="p-3 text-start min-w-[200px]">رمز السياسة المفروضة</th>
-                  <th class="p-3">اسم الإجراء السيادي</th>
-                  <th class="p-3">تفاصيل السياسة والأثر الأمني في قاعدة البيانات</th>
-                  <th class="p-3">مستوى الحساسية</th>
-                  <th class="p-3 text-center">حالة الفرض</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100 dark:divide-gray-850">
-                <tr 
-                  v-for="policy in systemPolicies" 
-                  :key="policy.code" 
-                  class="text-xs hover:bg-gray-50/40 dark:hover:bg-gray-850/20 transition-colors"
-                >
-                  <td class="p-3 font-mono text-gray-700 dark:text-gray-300 font-bold">
-                    {{ policy.code }}
-                  </td>
-                  <td class="p-3 font-extrabold text-gray-900 dark:text-white">
-                    {{ policy.name }}
-                  </td>
-                  <td class="p-3 text-gray-650 dark:text-gray-400 leading-relaxed">
-                    {{ policy.description }}
-                  </td>
-                  <td class="p-3">
-                    <span class="px-2 py-0.5 rounded bg-red-50 text-red-700 dark:bg-red-950/20 dark:text-red-400 font-bold text-[9px] border border-red-200/40">
-                      حساسية فائقة
-                    </span>
-                  </td>
-                  <td class="p-3 text-center">
-                    <span class="inline-flex items-center gap-1 rounded-full bg-success-50 px-2 py-0.5 text-[9px] font-bold text-success-700 dark:bg-success-500/10 dark:text-success-400">
-                      <span class="h-1 w-1 rounded-full bg-success-500"></span>
-                      قيد الفرض النشط
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="mt-4">
+            <DataTable
+              :columns="policiesColumns"
+              :data="systemPolicies"
+              row-key="code"
+            >
+              <template #cell-code="{ value }">
+                <span class="font-mono text-gray-700 dark:text-gray-300 font-bold">{{ value }}</span>
+              </template>
+              <template #cell-name="{ value }">
+                <span class="font-extrabold text-gray-900 dark:text-white">{{ value }}</span>
+              </template>
+              <template #cell-description="{ value }">
+                <span class="text-gray-650 dark:text-gray-400 leading-relaxed">{{ value }}</span>
+              </template>
+              <template #cell-sensitivity="{ row }">
+                <span class="px-2 py-0.5 rounded bg-red-50 text-red-700 dark:bg-red-950/20 dark:text-red-400 font-bold text-[9px] border border-red-200/40">
+                  حساسية فائقة
+                </span>
+              </template>
+              <template #cell-status="{ row }">
+                <div class="text-center">
+                  <span class="inline-flex items-center gap-1 rounded-full bg-success-50 px-2 py-0.5 text-[9px] font-bold text-success-700 dark:bg-success-500/10 dark:text-success-400">
+                    <span class="h-1 w-1 rounded-full bg-success-500"></span>
+                    قيد الفرض النشط
+                  </span>
+                </div>
+              </template>
+            </DataTable>
           </div>
         </div>
       </div>
@@ -299,69 +261,51 @@
           </div>
 
           <!-- History Table -->
-          <div class="overflow-x-auto">
-            <table class="w-full text-right border-collapse min-w-[1000px]">
-              <thead>
-                <tr class="border-b border-gray-100 dark:border-gray-800 text-xs font-bold text-gray-400 bg-gray-50/50 dark:bg-gray-900/50">
-                  <th class="p-3 text-start">تاريخ المعالجة</th>
-                  <th class="p-3">طالب الإجراء (المنشئ)</th>
-                  <th class="p-3">نوع العملية والمستهدف</th>
-                  <th class="p-3">مسؤول الاعتماد الثاني</th>
-                  <th class="p-3">النتيجة والمبرر</th>
-                  <th class="p-3 text-center">التوقيع الرقمي</th>
-                  <th class="p-3 text-left">حالة الطلب</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100 dark:divide-gray-850">
-                <tr v-if="filteredHistory.length === 0">
-                  <td colspan="7" class="p-8 text-center text-gray-400">
-                    لا توجد سجلات مطابقة للبحث في الأرشيف.
-                  </td>
-                </tr>
-                <tr 
-                  v-for="h in filteredHistory" 
-                  :key="h.id"
-                  class="text-xs hover:bg-gray-50/40 dark:hover:bg-gray-850/20 transition-colors"
+          <div class="mt-4">
+            <DataTable
+              :columns="historyColumns"
+              :data="filteredHistory"
+              row-key="id"
+            >
+              <template #cell-processed_at="{ value }">
+                <span class="font-mono text-[11px] text-gray-500">{{ value }}</span>
+              </template>
+              <template #cell-requester="{ value }">
+                <span class="font-extrabold text-gray-900 dark:text-white">{{ value }}</span>
+              </template>
+              <template #cell-action="{ row }">
+                <span class="font-bold text-gray-850 dark:text-gray-200 block">{{ row.action_name }}</span>
+                <span class="text-[10px] text-gray-400 block font-mono">ID: {{ row.target_id }}</span>
+              </template>
+              <template #cell-approver="{ value }">
+                <span class="font-bold text-gray-750 dark:text-gray-300">{{ value || '—' }}</span>
+              </template>
+              <template #cell-notes="{ value }">
+                <span class="text-gray-600 dark:text-gray-400 max-w-[250px] truncate block" :title="value">{{ value }}</span>
+              </template>
+              <template #cell-signature="{ value }">
+                <div class="text-center">
+                  <span 
+                    v-if="value" 
+                    class="font-mono text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-450 px-2 py-0.5 rounded-lg border border-emerald-500/20"
+                    :title="value"
+                  >
+                    {{ value.substring(0, 12) }}...
+                  </span>
+                  <span v-else class="text-gray-400">—</span>
+                </div>
+              </template>
+              <template #cell-status="{ value }">
+                <span 
+                  class="px-2.5 py-0.5 rounded-full font-bold text-[9px] border"
+                  :class="[
+                    value === 'executed' ? 'bg-success-50 text-success-700 border-success-200 dark:bg-success-950/20 dark:text-success-400' : 'bg-error-50 text-error-750 border-error-200 dark:bg-error-950/20 dark:text-error-450'
+                  ]"
                 >
-                  <td class="p-3 font-mono text-[11px] text-gray-500">
-                    {{ h.processed_at }}
-                  </td>
-                  <td class="p-3">
-                    <span class="font-extrabold text-gray-900 dark:text-white">{{ h.requester }}</span>
-                  </td>
-                  <td class="p-3">
-                    <span class="font-bold text-gray-850 dark:text-gray-200 block">{{ h.action_name }}</span>
-                    <span class="text-[10px] text-gray-400 block font-mono">ID: {{ h.target_id }}</span>
-                  </td>
-                  <td class="p-3">
-                    <span class="font-bold text-gray-750 dark:text-gray-300">{{ h.approver || '—' }}</span>
-                  </td>
-                  <td class="p-3 max-w-[250px] truncate" :title="h.notes">
-                    <span class="text-gray-600 dark:text-gray-400">{{ h.notes }}</span>
-                  </td>
-                  <td class="p-3 text-center">
-                    <span 
-                      v-if="h.signature" 
-                      class="font-mono text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-450 px-2 py-0.5 rounded-lg border border-emerald-500/20"
-                      :title="h.signature"
-                    >
-                      {{ h.signature.substring(0, 12) }}...
-                    </span>
-                    <span v-else class="text-gray-400">—</span>
-                  </td>
-                  <td class="p-3 text-left">
-                    <span 
-                      class="px-2.5 py-0.5 rounded-full font-bold text-[9px] border"
-                      :class="[
-                        h.status === 'executed' ? 'bg-success-50 text-success-700 border-success-200 dark:bg-success-950/20 dark:text-success-400' : 'bg-error-50 text-error-750 border-error-200 dark:bg-error-950/20 dark:text-error-450'
-                      ]"
-                    >
-                      {{ h.status === 'executed' ? 'تم التنفيذ' : 'مرفوض' }}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                  {{ value === 'executed' ? 'تم التنفيذ' : 'مرفوض' }}
+                </span>
+              </template>
+            </DataTable>
           </div>
         </div>
       </div>
@@ -374,8 +318,36 @@
 import { ref, onMounted, computed } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
+import DataTable from '@/components/tables/DataTable.vue'
 import api from '@/lib/api'
 import Swal from 'sweetalert2'
+
+const pendingColumns = [
+  { key: 'requester', label: 'المنشئ (طالب الإجراء)', sortable: true },
+  { key: 'action', label: 'نوع العملية الحساسة', sortable: true },
+  { key: 'target', label: 'الكائن / النطاق المستهدف', sortable: true },
+  { key: 'reason', label: 'مبرر العملية وسياق العمل', sortable: true },
+  { key: 'dates', label: 'تاريخ الطلب وصلاحيته', sortable: false },
+  { key: 'status', label: 'الإجراءات والاعتماد', sortable: false }
+]
+
+const policiesColumns = [
+  { key: 'code', label: 'رمز السياسة المفروضة', sortable: true },
+  { key: 'name', label: 'اسم الإجراء السيادي', sortable: true },
+  { key: 'description', label: 'تفاصيل السياسة والأثر الأمني', sortable: true },
+  { key: 'sensitivity', label: 'مستوى الحساسية', sortable: true },
+  { key: 'status', label: 'حالة الفرض', sortable: true }
+]
+
+const historyColumns = [
+  { key: 'processed_at', label: 'تاريخ المعالجة', sortable: true },
+  { key: 'requester', label: 'طالب الإجراء (المنشئ)', sortable: true },
+  { key: 'action', label: 'نوع العملية والمستهدف', sortable: true },
+  { key: 'approver', label: 'مسؤول الاعتماد الثاني', sortable: true },
+  { key: 'notes', label: 'النتيجة والمبرر', sortable: true },
+  { key: 'signature', label: 'التوقيع الرقمي', sortable: false },
+  { key: 'status', label: 'حالة الطلب', sortable: true }
+]
 
 interface PendingRequest {
   id: string

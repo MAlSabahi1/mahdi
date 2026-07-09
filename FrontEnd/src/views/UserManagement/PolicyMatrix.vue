@@ -82,12 +82,14 @@
               <tr>
                 <th class="px-5 py-4 text-start text-sm font-semibold text-gray-700 dark:text-gray-300 min-w-[200px] border-l border-gray-200 dark:border-gray-800">الحقل في قاعدة البيانات</th>
                 <th 
-                  v-for="role in roles" 
-                  :key="role.code" 
-                  class="px-4 py-4 text-center border-l border-gray-200 dark:border-gray-800 last:border-0"
+                  v-for="role in rolesList" 
+                  :key="role.code"
+                  class="px-5 py-4 text-center border-x border-gray-200/50 dark:border-gray-800/50 min-w-[120px]"
                 >
-                  <div class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ role.label }}</div>
-                  <div class="text-[10px] text-gray-400 font-mono mt-0.5">{{ role.code }}</div>
+                  <div class="flex flex-col items-center gap-1.5">
+                    <span class="text-xs font-bold text-gray-900 dark:text-white">{{ role.name }}</span>
+                    <div class="text-[10px] text-gray-400 font-mono mt-0.5">{{ role.code }}</div>
+                  </div>
                 </th>
               </tr>
             </thead>
@@ -95,8 +97,8 @@
             <tbody class="divide-y divide-gray-100 bg-white dark:divide-gray-800 dark:bg-transparent">
               <template v-for="group in groups" :key="group.title">
                 <!-- Group Header Row -->
-                <tr class="bg-gray-50/70 dark:bg-gray-950/20 font-bold text-gray-900 dark:text-gray-100">
-                  <td :colspan="roles.length + 1" class="px-5 py-3 text-start border-y border-gray-200 dark:border-gray-800 text-xs font-black">
+                <tr class="bg-gray-100/50 dark:bg-gray-850/50">
+                  <td :colspan="rolesList.length + 1" class="px-5 py-3 text-start border-y border-gray-200 dark:border-gray-800 text-xs font-black text-brand-600 dark:text-brand-400">
                     📁 {{ group.title }}
                   </td>
                 </tr>
@@ -109,7 +111,7 @@
                   </td>
                   
                   <td 
-                    v-for="role in roles" 
+                    v-for="role in rolesList" 
                     :key="role.code" 
                     class="px-4 py-4 text-center border-l border-gray-200 dark:border-gray-850 last:border-0"
                   >
@@ -195,12 +197,60 @@ const groups = [
 ]
 
 const permissions = ref<Record<string, Record<string, { read: boolean; write: boolean }>>>({})
+const rolesList = ref<{ code: string; name: string }[]>([])
 
-const initializePermissions = () => {
+import axiosInstance from '@/lib/api'
+
+const fetchRoles = async () => {
+  try {
+    const res = await axiosInstance.get('/roles/')
+    rolesList.value = res.data.results || res.data || []
+  } catch (err) {
+    console.error('Failed to load roles', err)
+    // fallback to static if api fails
+    rolesList.value = roles.map(r => ({ code: r.code, name: r.label }))
+  }
+}
+
+const fetchFieldPermissions = async () => {
+  try {
+    const res = await axiosInstance.get('/field-permissions/')
+    const dbPerms = res.data.results || res.data || []
+    
+    // First initialize with defaults (deny all)
+    groups.forEach(group => {
+      group.fields.forEach(field => {
+        permissions.value[field.key] = {}
+        rolesList.value.forEach(role => {
+          permissions.value[field.key][role.code] = {
+            read: false,
+            write: false
+          }
+        })
+      })
+    })
+
+    // Now populate from DB
+    dbPerms.forEach((p: any) => {
+      if (permissions.value[p.field_name] && p.role_code) {
+        permissions.value[p.field_name][p.role_code] = {
+          read: p.can_read,
+          write: p.can_write
+        }
+      }
+    })
+
+  } catch (err) {
+    console.error('Failed to load field permissions', err)
+    initializePermissionsMock()
+  }
+}
+
+const initializePermissionsMock = () => {
   groups.forEach(group => {
     group.fields.forEach(field => {
       permissions.value[field.key] = {}
-      roles.forEach(role => {
+      rolesList.value.forEach(role => {
         permissions.value[field.key][role.code] = {
           read: field.defaultRead.includes(role.code),
           write: field.defaultWrite.includes(role.code)
@@ -210,18 +260,24 @@ const initializePermissions = () => {
   })
 }
 
-onMounted(() => {
-  initializePermissions()
+onMounted(async () => {
+  await fetchRoles()
+  await fetchFieldPermissions()
 })
 
-const saveMatrix = () => {
-  Swal.fire({
-    toast: true,
-    position: 'top-end',
-    icon: 'success',
-    title: 'تم حفظ مصفوفة صلاحيات الحقول بنجاح',
-    showConfirmButton: false,
-    timer: 3000
-  })
+const saveMatrix = async () => {
+  try {
+    // Note: This would send the updated permissions.value to the backend
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'تم حفظ مصفوفة صلاحيات الحقول بنجاح (Simulation)',
+      showConfirmButton: false,
+      timer: 3000
+    })
+  } catch(err) {
+    console.error(err)
+  }
 }
 </script>

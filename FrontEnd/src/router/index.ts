@@ -113,8 +113,19 @@ const router = createRouter({
       path: '/users/:id',
       name: 'user-details',
       component: () => import('@/views/UserManagement/UserDetails.vue'),
+
       meta: {
         title: 'تفاصيل المستخدم',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/users/policy-simulator',
+      name: 'policy-simulator',
+      component: () => import('@/views/UserManagement/PolicySimulator.vue'),
+      meta: {
+        title: 'محاكي الصلاحيات',
         requiresAuth: true,
         requiresAdmin: true,
       },
