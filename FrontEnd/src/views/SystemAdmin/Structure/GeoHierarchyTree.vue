@@ -3,70 +3,92 @@
     <PageBreadcrumb :pageTitle="t('admin.geo_tree')" />
     
     <div class="space-y-6 text-start" dir="rtl">
-      <!-- Development Alert -->
-      <div class="rounded-2xl border border-blue-100 bg-blue-50/50 p-6 dark:border-blue-900/30 dark:bg-blue-950/20">
-        <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white shrink-0">
-            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-            </svg>
-          </div>
-          <div>
-            <h4 class="text-lg font-bold text-blue-950 dark:text-blue-200">الشاشة قيد التطوير والتهيئة</h4>
-            <p class="text-sm text-blue-700/80 dark:text-blue-300/80 mt-1">
-              ملاحظة: هذه الشاشة مصممة كـ هيكل أساسي واقتراح تنظيمي. سيتم ربطها بالخلفية وتخصيصها بالكامل بما يتوافق مع متطلبات النظام الإنتاجي النهائية.
-            </p>
-          </div>
+      <!-- Header & Search -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+            <Network class="w-6 h-6 text-emerald-500" />
+            شجرة الهيكل الجغرافي
+          </h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">تصفح وإدارة النطاقات والتقسيمات الجغرافية للنظام</p>
+        </div>
+        <div class="relative w-full md:w-96">
+          <input 
+            type="text" 
+            v-model="searchQuery"
+            placeholder="بحث في الهيكل الجغرافي..." 
+            class="w-full pl-10 pr-10 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+          >
+          <Search class="w-5 h-5 text-gray-400 absolute top-3 right-3" />
         </div>
       </div>
 
-      <!-- Main Layout -->
-      <div class="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6">الوظائف والخصائص المقترحة للتطوير المستقبلي:</h3>
+      <!-- Tree View -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm overflow-x-auto min-h-[500px]">
         
-        <div class="grid gap-6 md:grid-cols-2">
-          <!-- Card 1 -->
-          <div class="rounded-xl border border-gray-100 p-5 dark:border-gray-800 bg-gray-50/40 dark:bg-gray-900/30">
-            <h5 class="font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full bg-blue-500"></span>
-              استعراض الشجرة الجغرافية العسكرية
-            </h5>
-            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-              عرض هرمي تفاعلي للشجرة الجغرافية التي تبدأ من مستوى الجمهورية والمحافظات وصولاً للمديريات والعزل والمربعات الأمنية.
-            </p>
-          </div>
+        <div class="min-w-[600px]">
+          <!-- Level 1: Country -->
+          <div v-for="country in filteredTree" :key="country.id" class="mb-4">
+            <div class="flex items-center gap-2 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border border-gray-100 dark:border-gray-700">
+              <button @click="country.expanded = !country.expanded" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer">
+                <ChevronDown v-if="country.expanded" class="w-5 h-5 text-gray-500" />
+                <ChevronLeft v-else class="w-5 h-5 text-gray-500" />
+              </button>
+              <Globe2 class="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              <span class="font-black text-lg text-gray-900 dark:text-white">{{ country.name }}</span>
+              <span class="mr-auto text-xs font-bold px-3 py-1 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                {{ country.children.length }} محافظات
+              </span>
+            </div>
 
-          <!-- Card 2 -->
-          <div class="rounded-xl border border-gray-100 p-5 dark:border-gray-800 bg-gray-50/40 dark:bg-gray-900/30">
-            <h5 class="font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full bg-blue-500"></span>
-              التحكم في النطاقات بالسحب والإفلات
-            </h5>
-            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-              توفير واجهة تفاعلية تمكن المدراء من سحب وإعادة هيكلة وتوزيع التبعية الجغرافية لبعض المراكز الأمنية بسهولة وسلاسة.
-            </p>
-          </div>
+            <!-- Level 2: Regions -->
+            <div v-show="country.expanded" class="pr-8 mt-2 space-y-2 border-r-2 border-gray-100 dark:border-gray-800">
+              <div v-for="region in country.children" :key="region.id" class="relative">
+                <!-- Connector Line -->
+                <div class="absolute right-[-32px] top-6 w-8 h-0.5 bg-gray-100 dark:bg-gray-800"></div>
+                
+                <div class="flex items-center gap-2 p-3 rounded-xl bg-white dark:bg-gray-900 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors border border-gray-100 dark:border-gray-800">
+                  <button v-if="region.children && region.children.length > 0" @click="region.expanded = !region.expanded" class="p-1 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors cursor-pointer">
+                    <ChevronDown v-if="region.expanded" class="w-4 h-4 text-blue-500" />
+                    <ChevronLeft v-else class="w-4 h-4 text-gray-400" />
+                  </button>
+                  <div v-else class="w-6 h-6"></div> <!-- Spacer -->
+                  <MapPin class="w-5 h-5 text-blue-500" />
+                  <span class="font-bold text-gray-800 dark:text-gray-200">{{ region.name }}</span>
+                  
+                  <div class="mr-auto flex items-center gap-2">
+                    <span class="text-xs font-mono text-gray-500 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded-md">{{ region.code }}</span>
+                    <button class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors cursor-pointer" title="تعديل">
+                      <Settings2 class="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
 
-          <!-- Card 3 -->
-          <div class="rounded-xl border border-gray-100 p-5 dark:border-gray-800 bg-gray-50/40 dark:bg-gray-900/30">
-            <h5 class="font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full bg-blue-500"></span>
-              تأثير التغييرات على القوى البشرية
-            </h5>
-            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-              عرض إحصائيات سريعة بجانب كل عقدة في الشجرة الجغرافية توضح أعداد الأفراد المسجلين فيها وتحديثها تلقائياً عند النقل.
-            </p>
-          </div>
+                <!-- Level 3: Districts -->
+                <div v-show="region.expanded" class="pr-8 mt-2 space-y-2 border-r-2 border-gray-100 dark:border-gray-800">
+                  <div v-for="district in region.children" :key="district.id" class="relative">
+                    <div class="absolute right-[-32px] top-5 w-8 h-0.5 bg-gray-100 dark:bg-gray-800"></div>
+                    
+                    <div class="flex items-center gap-2 p-2.5 rounded-xl bg-gray-50/50 dark:bg-gray-800/20 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700 group">
+                      <Building2 class="w-4 h-4 text-gray-400" />
+                      <span class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ district.name }}</span>
+                      
+                      <div class="mr-auto flex items-center gap-4">
+                        <span class="text-[10px] font-bold text-gray-500 flex items-center gap-1">
+                          <Users class="w-3 h-3" /> {{ district.population }}
+                        </span>
+                        <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                          <button class="p-1 text-gray-400 hover:text-emerald-600 rounded cursor-pointer" title="إضافة فرع"><Plus class="w-3.5 h-3.5" /></button>
+                          <button class="p-1 text-gray-400 hover:text-blue-600 rounded cursor-pointer" title="إعدادات"><Settings2 class="w-3.5 h-3.5" /></button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-          <!-- Card 4 -->
-          <div class="rounded-xl border border-gray-100 p-5 dark:border-gray-800 bg-gray-50/40 dark:bg-gray-900/30">
-            <h5 class="font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full bg-blue-500"></span>
-              تدقيق التغيرات الجغرافية التاريخية
-            </h5>
-            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-              الاحتفاظ بسجل تاريخي للتعديلات الجغرافية مثل فصل مديريات أو استحداث مراكز جديدة للرجوع إليها في أي وقت.
-            </p>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -74,10 +96,84 @@
   </AdminLayout>
 </template>
 
-<script setup>
-import { useI18n } from "vue-i18n";
-import AdminLayout from "@/components/layout/AdminLayout.vue";
-import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import AdminLayout from '@/components/layout/AdminLayout.vue'
+import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
+import { Network, Search, ChevronDown, ChevronLeft, Globe2, MapPin, Building2, Users, Settings2, Plus } from 'lucide-vue-next'
 
-const { t } = useI18n();
+const { t } = useI18n()
+const searchQuery = ref('')
+
+const treeData = ref([
+  {
+    id: 'root-1',
+    name: 'الجمهورية اليمنية',
+    expanded: true,
+    children: [
+      {
+        id: 'reg-1',
+        name: 'أمانة العاصمة',
+        code: 'YE-SA',
+        expanded: true,
+        children: [
+          { id: 'dist-101', name: 'مديرية السبعين', population: 1250 },
+          { id: 'dist-102', name: 'مديرية الوحدة', population: 840 },
+          { id: 'dist-103', name: 'مديرية شعوب', population: 920 },
+        ]
+      },
+      {
+        id: 'reg-2',
+        name: 'محافظة صنعاء',
+        code: 'YE-SN',
+        expanded: false,
+        children: [
+          { id: 'dist-201', name: 'مديرية سنحان', population: 450 },
+          { id: 'dist-202', name: 'مديرية بني حشيش', population: 320 },
+        ]
+      },
+      {
+        id: 'reg-3',
+        name: 'محافظة عدن',
+        code: 'YE-AD',
+        expanded: false,
+        children: [
+          { id: 'dist-301', name: 'مديرية صيرة', population: 600 },
+        ]
+      }
+    ]
+  }
+])
+
+// Basic deep filter implementation for mock tree
+const filteredTree = computed(() => {
+  if (!searchQuery.value) return treeData.value
+
+  const q = searchQuery.value.toLowerCase()
+  
+  // Clone and filter
+  return treeData.value.map(country => {
+    if (country.name.toLowerCase().includes(q)) return { ...country, expanded: true }
+    
+    const filteredRegions = country.children.filter(region => {
+      if (region.name.toLowerCase().includes(q) || region.code.toLowerCase().includes(q)) return true
+      return region.children?.some(dist => dist.name.toLowerCase().includes(q))
+    }).map(region => {
+      return {
+        ...region,
+        expanded: true, // Auto expand on search match
+        children: region.children?.filter(dist => 
+          region.name.toLowerCase().includes(q) || region.code.toLowerCase().includes(q) || dist.name.toLowerCase().includes(q)
+        )
+      }
+    })
+
+    if (filteredRegions.length > 0) {
+      return { ...country, expanded: true, children: filteredRegions }
+    }
+    return null
+  }).filter(Boolean) as any[]
+})
+
 </script>

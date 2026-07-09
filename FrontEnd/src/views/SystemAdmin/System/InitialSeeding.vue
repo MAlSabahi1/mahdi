@@ -18,23 +18,27 @@
               class="flex items-center"
             >
               <div 
-                class="flex h-10 w-10 items-center justify-center rounded-full font-bold text-sm transition-all duration-300"
+                class="flex h-10 w-10 items-center justify-center rounded-full font-bold text-sm transition-all duration-500 ease-out relative"
                 :class="[
                   currentStep === step 
-                    ? 'bg-blue-600 text-white shadow-lg ring-4 ring-blue-500/20' 
+                    ? 'bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)] ring-4 ring-blue-500/30 scale-110' 
                     : currentStep > step 
-                    ? 'bg-green-500 text-white' 
-                    : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-600'
+                    ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-md' 
+                    : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-600 border border-gray-200 dark:border-gray-700'
                 ]"
               >
-                <Check v-if="currentStep > step" class="w-5 h-5" />
+                <!-- Pulse effect for active step -->
+                <div v-if="currentStep === step" class="absolute inset-0 rounded-full animate-ping bg-blue-400 opacity-20"></div>
+                <Check v-if="currentStep > step" class="w-5 h-5 animate-in zoom-in" />
                 <span v-else>{{ step }}</span>
               </div>
               <div 
                 v-if="step < 4" 
-                class="h-1 w-8 sm:w-12 transition-all duration-300"
-                :class="[currentStep > step ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-800']"
-              ></div>
+                class="h-1 w-8 sm:w-12 transition-all duration-500 rounded-full overflow-hidden relative bg-gray-200 dark:bg-gray-800 mx-1"
+              >
+                <div class="absolute inset-y-0 left-0 transition-all duration-700 bg-gradient-to-r from-blue-500 to-emerald-500"
+                     :style="`width: ${currentStep > step ? '100%' : '0%'}`"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -58,26 +62,29 @@
       <div v-else>
         <!-- STEP 1: UPLOAD FILE -->
         <div v-if="currentStep === 1" class="space-y-6">
-          <div class="rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-white/[0.03] p-12 text-center transition-all hover:border-blue-500 flex flex-col items-center justify-center group relative overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-tr from-blue-50/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div class="rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-white/[0.03] p-12 text-center transition-all duration-300 hover:border-blue-500 hover:bg-blue-50/30 dark:hover:bg-blue-950/10 flex flex-col items-center justify-center group relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-tr from-blue-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
             
-            <div class="h-16 w-16 rounded-2xl bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
-              <UploadCloud class="w-8 h-8" />
+            <div class="relative h-20 w-20 flex items-center justify-center mb-6">
+              <div class="absolute inset-0 bg-blue-100 dark:bg-blue-900/30 rounded-full animate-ping opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
+              <div class="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/40 dark:to-blue-800/40 text-blue-600 dark:text-blue-400 flex items-center justify-center transition-transform duration-500 group-hover:scale-110 group-hover:shadow-lg shadow-blue-500/20 z-10">
+                <UploadCloud class="w-8 h-8 group-hover:-translate-y-1 transition-transform duration-300" />
+              </div>
             </div>
 
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">قم بسحب وإفلات ملف كشف البيانات هنا</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">يدعم النظام ملفات Excel فقط (.xlsx, .xls) بحد أقصى 20 ميجابايت</p>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2 relative z-10">قم بسحب وإفلات ملف كشف البيانات هنا</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-8 relative z-10 max-w-md mx-auto">يدعم النظام ملفات Excel فقط (.xlsx, .xls) بحد أقصى 20 ميجابايت، يرجى التأكد من خلو الملف من التنسيقات المعقدة.</p>
             
             <input 
               type="file" 
               accept=".xlsx, .xls" 
-              class="absolute inset-0 opacity-0 cursor-pointer" 
+              class="absolute inset-0 opacity-0 cursor-pointer z-20" 
               @change="handleFileUpload" 
             />
 
-            <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-6 py-2.5 rounded-xl shadow-md transition-all flex items-center gap-2">
+            <button class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold text-sm px-8 py-3 rounded-xl shadow-[0_4px_14px_0_rgba(37,99,235,0.39)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2 relative z-10">
               <FileSpreadsheet class="w-4 h-4" />
-              تصفح الملفات
+              تصفح الملفات من الجهاز
             </button>
           </div>
 

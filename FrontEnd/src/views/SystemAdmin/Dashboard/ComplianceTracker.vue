@@ -3,81 +3,141 @@
     <PageBreadcrumb :pageTitle="t('admin.compliance_tracker')" />
     
     <div class="space-y-6 text-start" dir="rtl">
-      <!-- Development Alert -->
-      <div class="rounded-2xl border border-blue-100 bg-blue-50/50 p-6 dark:border-blue-900/30 dark:bg-blue-950/20">
-        <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white shrink-0">
-            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
+      <!-- Overall Compliance Score -->
+      <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 flex flex-col md:flex-row items-center gap-8">
+        <div class="flex-1">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">مؤشر الالتزام الكلي للمحافظات</h3>
+          <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed max-w-2xl">
+            يقيس هذا المؤشر نسبة المحافظات التي التزمت برفع كشوفاتها وتحديث بياناتها في الوقت المحدد لهذا الشهر. المحافظات المتأخرة تؤثر سلباً على جودة التقارير المركزية.
+          </p>
+        </div>
+        <div class="shrink-0 text-center">
+          <div class="inline-flex items-center justify-center w-32 h-32 rounded-full border-8 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400">
+            <span class="text-3xl font-black">85%</span>
           </div>
-          <div>
-            <h4 class="text-lg font-bold text-blue-950 dark:text-blue-200">الشاشة قيد التطوير والتهيئة</h4>
-            <p class="text-sm text-blue-700/80 dark:text-blue-300/80 mt-1">
-              ملاحظة: هذه الشاشة مصممة كـ هيكل أساسي واقتراح تنظيمي. سيتم ربطها بالخلفية وتخصيصها بالكامل بما يتوافق مع متطلبات النظام الإنتاجي النهائية.
-            </p>
+          <p class="text-sm font-bold text-gray-500 dark:text-gray-400 mt-3">نسبة الإنجاز</p>
+        </div>
+        <div class="shrink-0 flex flex-col gap-3 border-r border-gray-100 dark:border-gray-800 pr-6">
+          <div class="flex items-center gap-3">
+            <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+            <span class="text-sm text-gray-700 dark:text-gray-300">17 محافظة ملتزمة</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+            <span class="text-sm text-gray-700 dark:text-gray-300">2 محافظة متأخرة</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+            <span class="text-sm text-gray-700 dark:text-gray-300">1 محافظة حرجة</span>
           </div>
         </div>
       </div>
 
-      <!-- Main Layout -->
-      <div class="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6">الوظائف والخصائص المقترحة للتطوير المستقبلي:</h3>
-        
-        <div class="grid gap-6 md:grid-cols-2">
-          <!-- Card 1 -->
-          <div class="rounded-xl border border-gray-100 p-5 dark:border-gray-800 bg-gray-50/40 dark:bg-gray-900/30">
-            <h5 class="font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full bg-blue-500"></span>
-              متابعة التزام المحافظات والمديريات
-            </h5>
-            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-              شاشة مخصصة لقياس نسب إنجاز المحافظات في رفع الكشوفات الشهرية بالتواريخ المحددة ودون تأخير.
-            </p>
-          </div>
-
-          <!-- Card 2 -->
-          <div class="rounded-xl border border-gray-100 p-5 dark:border-gray-800 bg-gray-50/40 dark:bg-gray-900/30">
-            <h5 class="font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full bg-blue-500"></span>
-              مؤشر جودة البيانات (Data Quality)
-            </h5>
-            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-              مقياس النسبة المئوية للأخطاء المكتشفة في كشوفات كل محافظة عند الاستيراد، لمتابعة دقة الإدخال في كل قطاع.
-            </p>
-          </div>
-
-          <!-- Card 3 -->
-          <div class="rounded-xl border border-gray-100 p-5 dark:border-gray-800 bg-gray-50/40 dark:bg-gray-900/30">
-            <h5 class="font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full bg-blue-500"></span>
-              جدول الترتيب والتقييم السنوي
-            </h5>
-            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-              ترتيب تلقائي للمحافظات الأكثر انضباطاً بناءً على سرعة الإنجاز وجودة الملفات المرفوعة وعدد طلبات التصحيح.
-            </p>
-          </div>
-
-          <!-- Card 4 -->
-          <div class="rounded-xl border border-gray-100 p-5 dark:border-gray-800 bg-gray-50/40 dark:bg-gray-900/30">
-            <h5 class="font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full bg-blue-500"></span>
-              نظام الإشعارات بالمواعيد النهائية
-            </h5>
-            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-              توجيه رسائل وتنبيهات تلقائية لمدراء المحافظات المتأخرين عن تسليم كشوفاتهم قبل إقفال الشهر المالي.
-            </p>
-          </div>
+      <!-- Compliance Table -->
+      <div class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+        <div class="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+          <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <ListChecks class="w-5 h-5 text-gray-400" />
+            سجل التزام المحافظات والقطاعات
+          </h3>
+          <button class="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-xl text-sm font-bold transition-colors cursor-pointer">
+            تصدير التقرير
+          </button>
         </div>
+        
+        <DataTable
+          :columns="columns"
+          :data="complianceData"
+          :search-placeholder="'ابحث عن محافظة أو قطاع...'"
+        >
+          <template #cell-status="{ row }">
+            <span v-if="row.status === 'compliant'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+              <CheckCircle class="w-3.5 h-3.5" />
+              ملتزم
+            </span>
+            <span v-else-if="row.status === 'warning'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+              <Clock class="w-3.5 h-3.5" />
+              متأخر
+            </span>
+            <span v-else class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+              <AlertOctagon class="w-3.5 h-3.5" />
+              حرج
+            </span>
+          </template>
+
+          <template #cell-dataQuality="{ row }">
+            <div class="flex items-center gap-2">
+              <div class="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden w-24">
+                <div class="h-full rounded-full" 
+                     :class="row.dataQuality >= 90 ? 'bg-emerald-500' : (row.dataQuality >= 70 ? 'bg-amber-500' : 'bg-red-500')"
+                     :style="`width: ${row.dataQuality}%`">
+                </div>
+              </div>
+              <span class="text-xs font-mono text-gray-500">{{ row.dataQuality }}%</span>
+            </div>
+          </template>
+
+          <template #actions="{ row }">
+            <button v-if="row.status !== 'compliant'" @click="sendReminder(row)" title="إرسال تذكير عاجل" class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg dark:text-amber-400 dark:hover:bg-amber-900/20 transition-colors cursor-pointer">
+              <BellRing class="w-4 h-4" />
+            </button>
+            <button title="التفاصيل" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg dark:hover:text-gray-300 dark:hover:bg-gray-800 transition-colors cursor-pointer">
+              <Eye class="w-4 h-4" />
+            </button>
+          </template>
+        </DataTable>
       </div>
     </div>
   </AdminLayout>
 </template>
 
-<script setup>
-import { useI18n } from "vue-i18n";
-import AdminLayout from "@/components/layout/AdminLayout.vue";
-import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import AdminLayout from '@/components/layout/AdminLayout.vue'
+import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
+import DataTable from '@/components/tables/DataTable.vue'
+import Swal from 'sweetalert2'
+import { ListChecks, CheckCircle, Clock, AlertOctagon, BellRing, Eye } from 'lucide-vue-next'
 
-const { t } = useI18n();
+const { t } = useI18n()
+
+const columns = ref([
+  { key: 'name', label: 'الجهة / المحافظة', sortable: true },
+  { key: 'lastUpdate', label: 'تاريخ آخر تحديث', sortable: true },
+  { key: 'dataQuality', label: 'جودة البيانات', sortable: true },
+  { key: 'status', label: 'حالة الالتزام', sortable: true }
+])
+
+const complianceData = ref([
+  { id: 1, name: 'محافظة صنعاء', lastUpdate: '2026-07-09', dataQuality: 98, status: 'compliant' },
+  { id: 2, name: 'أمانة العاصمة', lastUpdate: '2026-07-08', dataQuality: 95, status: 'compliant' },
+  { id: 3, name: 'محافظة عدن', lastUpdate: '2026-07-07', dataQuality: 92, status: 'compliant' },
+  { id: 4, name: 'محافظة تعز', lastUpdate: '2026-06-30', dataQuality: 75, status: 'warning' },
+  { id: 5, name: 'محافظة مأرب', lastUpdate: '2026-06-25', dataQuality: 60, status: 'critical' },
+  { id: 6, name: 'محافظة حضرموت', lastUpdate: '2026-07-01', dataQuality: 80, status: 'warning' },
+])
+
+const sendReminder = (row: any) => {
+  Swal.fire({
+    title: 'إرسال تذكير عاجل',
+    text: `هل أنت متأكد من إرسال إشعار تذكير عبر النظام و SMS لمدير ${row.name}؟`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#f59e0b',
+    cancelButtonColor: '#d1d5db',
+    confirmButtonText: 'نعم، إرسال التذكير',
+    cancelButtonText: 'إلغاء'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      Swal.fire({
+        title: 'تم الإرسال',
+        text: 'تم إرسال التذكير بنجاح.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+      })
+    }
+  })
+}
 </script>
