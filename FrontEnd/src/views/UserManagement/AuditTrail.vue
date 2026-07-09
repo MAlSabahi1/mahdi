@@ -111,85 +111,73 @@
         </div>
 
         <div v-else class="space-y-4">
-          <div class="overflow-x-auto">
-            <table class="w-full text-right border-collapse min-w-[1200px]">
-              <thead>
-                <tr class="border-b border-gray-100 dark:border-gray-800 text-xs font-bold text-gray-400 bg-gray-50/50 dark:bg-gray-900/50">
-                  <th class="p-3 text-start">التوقيت</th>
-                  <th class="p-3">المستخدم</th>
-                  <th class="p-3">الحدث / العملية</th>
-                  <th class="p-3">النموذج المتأثر</th>
-                  <th class="p-3">مبرر التغيير</th>
-                  <th class="p-3">مستوى الأمان</th>
-                  <th class="p-3 text-center">التوقيع الرقمي</th>
-                  <th class="p-3 text-left">التفاصيل</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100 dark:divide-gray-850">
-                <tr 
-                  v-for="log in auditStore.systemLogs" 
-                  :key="log.id" 
-                  class="text-xs hover:bg-gray-50/40 dark:hover:bg-gray-850/20 transition-colors"
+          <div class="mt-4">
+            <DataTable
+              :columns="auditColumns"
+              :data="auditStore.systemLogs"
+              row-key="id"
+            >
+              <template #cell-timestamp="{ row }">
+                <span class="font-mono text-[11px] text-gray-500">{{ formatDate(row.timestamp) }}</span>
+              </template>
+              <template #cell-user="{ row }">
+                <span class="font-extrabold text-gray-900 dark:text-white">{{ row.username }}</span>
+                <span class="text-[10px] text-gray-400 block font-mono">IP: {{ row.ip_address || '—' }}</span>
+              </template>
+              <template #cell-action="{ row }">
+                <span 
+                  class="px-2 py-0.5 rounded-md font-extrabold text-[10px]"
+                  :class="getActionClass(row.action)"
                 >
-                  <td class="p-3 font-mono text-[11px] text-gray-500">{{ formatDate(log.timestamp) }}</td>
-                  <td class="p-3">
-                    <span class="font-extrabold text-gray-900 dark:text-white">{{ log.username }}</span>
-                    <span class="text-[10px] text-gray-400 block font-mono">IP: {{ log.ip_address || '—' }}</span>
-                  </td>
-                  <td class="p-3">
-                    <span 
-                      class="px-2 py-0.5 rounded-md font-extrabold text-[10px]"
-                      :class="getActionClass(log.action)"
-                    >
-                      {{ log.action }}
-                    </span>
-                  </td>
-                  <td class="p-3">
-                    <span class="font-bold text-gray-700 dark:text-gray-300">{{ log.model_name }}</span>
-                    <span class="text-[10px] text-gray-400 block font-mono">ID: {{ log.object_id }}</span>
-                  </td>
-                  <td class="p-3 max-w-[200px] truncate" :title="log.change_reason">
-                    {{ log.change_reason || '—' }}
-                  </td>
-                  <td class="p-3">
-                    <span 
-                      class="px-2 py-0.5 rounded-full font-black text-[9px]"
-                      :class="getSeverityClass(log.severity)"
-                    >
-                      {{ getSeverityLabel(log.severity) }}
-                    </span>
-                  </td>
-                  <td class="p-3 text-center">
-                    <button 
-                      @click.stop="handleVerifySignature(log)"
-                      class="px-2 py-1 rounded-xl text-[10px] font-black transition-all flex items-center gap-1 mx-auto cursor-pointer"
-                      :class="[
-                        verificationStatus[log.id] === 'valid' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
-                        verificationStatus[log.id] === 'invalid' ? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20' :
-                        verificationStatus[log.id] === 'checking' ? 'bg-blue-500/10 text-blue-600 animate-pulse' :
-                        'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200'
-                      ]"
-                    >
-                      <svg v-if="verificationStatus[log.id] === 'valid'" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M2.166 11.37a1 1 0 011.196-.718l2.802.73 4.29-6.865a1 1 0 011.64 1.024l-4.952 7.923a1 1 0 01-1.464.236l-3.212-2.529a1 1 0 01-.304-1.12z" clip-rule="evenodd" />
-                      </svg>
-                      <svg v-else-if="verificationStatus[log.id] === 'invalid'" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                      </svg>
-                      <span>{{ getVerificationText(log.id) }}</span>
-                    </button>
-                  </td>
-                  <td class="p-3 text-left">
-                    <button
-                      @click="showDetailsModal(log)"
-                      class="text-blue-600 hover:text-blue-700 font-extrabold text-[11px] hover:underline cursor-pointer"
-                    >
-                      عرض التعديلات &larr;
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                  {{ row.action }}
+                </span>
+              </template>
+              <template #cell-model="{ row }">
+                <span class="font-bold text-gray-700 dark:text-gray-300">{{ row.model_name }}</span>
+                <span class="text-[10px] text-gray-400 block font-mono">ID: {{ row.object_id }}</span>
+              </template>
+              <template #cell-reason="{ row }">
+                <span class="max-w-[200px] truncate block" :title="row.change_reason">
+                  {{ row.change_reason || '—' }}
+                </span>
+              </template>
+              <template #cell-severity="{ row }">
+                <span 
+                  class="px-2 py-0.5 rounded-full font-black text-[9px]"
+                  :class="getSeverityClass(row.severity)"
+                >
+                  {{ getSeverityLabel(row.severity) }}
+                </span>
+              </template>
+              <template #cell-signature="{ row }">
+                <button 
+                  @click.stop="handleVerifySignature(row)"
+                  class="px-2 py-1 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1 mx-auto cursor-pointer w-fit"
+                  :class="[
+                    verificationStatus[row.id] === 'valid' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
+                    verificationStatus[row.id] === 'invalid' ? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20' :
+                    verificationStatus[row.id] === 'checking' ? 'bg-blue-500/10 text-blue-600 animate-pulse' :
+                    'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200'
+                  ]"
+                >
+                  <svg v-if="verificationStatus[row.id] === 'valid'" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M2.166 11.37a1 1 0 011.196-.718l2.802.73 4.29-6.865a1 1 0 011.64 1.024l-4.952 7.923a1 1 0 01-1.464.236l-3.212-2.529a1 1 0 01-.304-1.12z" clip-rule="evenodd" />
+                  </svg>
+                  <svg v-else-if="verificationStatus[row.id] === 'invalid'" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                  </svg>
+                  <span>{{ getVerificationText(row.id) }}</span>
+                </button>
+              </template>
+              <template #cell-details="{ row }">
+                <button
+                  @click="showDetailsModal(row)"
+                  class="text-blue-600 hover:text-blue-700 font-extrabold text-[11px] hover:underline cursor-pointer"
+                >
+                  عرض التعديلات &larr;
+                </button>
+              </template>
+            </DataTable>
           </div>
 
           <!-- Pagination -->
@@ -296,8 +284,20 @@
 import { ref, onMounted } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
+import DataTable from '@/components/tables/DataTable.vue'
 import { useAuditStore } from '@/stores/audit'
 import Swal from 'sweetalert2'
+
+const auditColumns = [
+  { key: 'timestamp', label: 'التوقيت', sortable: true },
+  { key: 'user', label: 'المستخدم', sortable: true },
+  { key: 'action', label: 'الحدث / العملية', sortable: true },
+  { key: 'model', label: 'النموذج المتأثر', sortable: true },
+  { key: 'reason', label: 'مبرر التغيير', sortable: true },
+  { key: 'severity', label: 'مستوى الأمان', sortable: true },
+  { key: 'signature', label: 'التوقيع الرقمي', sortable: false },
+  { key: 'details', label: 'التفاصيل', sortable: false }
+]
 
 const auditStore = useAuditStore()
 const selectedLog = ref<any>(null)

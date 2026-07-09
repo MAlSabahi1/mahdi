@@ -32,64 +32,54 @@
           {{ $t('common.no_data') || 'لا توجد مجموعات لعرضها.' }}
         </div>
 
-        <div v-else class="overflow-x-auto">
-          <table class="w-full">
-            <thead>
-              <tr class="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
-                <th class="px-5 py-3 text-start text-sm font-medium text-gray-500 dark:text-gray-400">{{ $t('roles.role_name') }}</th>
-                <th class="px-5 py-3 text-start text-sm font-medium text-gray-500 dark:text-gray-400">{{ $t('roles.description') }}</th>
-                <th class="px-5 py-3 text-start text-sm font-medium text-gray-500 dark:text-gray-400">{{ $t('roles.permissions') }}</th>
-                <th class="px-5 py-3 text-start text-sm font-medium text-gray-500 dark:text-gray-400">{{ $t('users.role') || 'نوع المجموعة' }}</th>
-                <th class="px-5 py-3 text-start text-sm font-medium text-gray-500 dark:text-gray-400">{{ $t('users.status') }}</th>
-                <th class="px-5 py-3 text-start text-sm font-medium text-gray-500 dark:text-gray-400">{{ $t('common.actions') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="role in rolesStore.roles" :key="role.id" class="border-b border-gray-100 last:border-0 dark:border-gray-800">
-                <td class="px-5 py-4">
-                  <span class="font-medium text-gray-900 dark:text-white">{{ role.name }}</span>
-                </td>
-                <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
-                  {{ role.description || '—' }}
-                </td>
-                <td class="px-5 py-4 text-sm text-brand-600 dark:text-brand-400 font-medium">
-                  {{ role.permissions?.length || 0 }} {{ $t('roles.permissions') }}
-                </td>
-                <td class="px-5 py-4">
-                  <span v-if="role.is_system_role" class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400">
-                    {{ $t('users.admin') || 'أساسي (نظام)' }}
-                  </span>
-                  <span v-else class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-                    {{ $t('users.regular_user') || 'مخصص' }}
-                  </span>
-                </td>
-                <td class="px-5 py-4">
-                  <span v-if="role.is_active" class="inline-flex items-center gap-1 rounded-full bg-success-50 px-2.5 py-0.5 text-xs font-medium text-success-700 dark:bg-success-500/10 dark:text-success-400">
-                    <span class="h-1.5 w-1.5 rounded-full bg-success-500"></span>
-                    {{ $t('users.active') }}
-                  </span>
-                  <span v-else class="inline-flex items-center gap-1 rounded-full bg-error-50 px-2.5 py-0.5 text-xs font-medium text-error-700 dark:bg-error-500/10 dark:text-error-400">
-                    <span class="h-1.5 w-1.5 rounded-full bg-error-500"></span>
-                    {{ $t('users.inactive') }}
-                  </span>
-                </td>
-                <td class="px-5 py-4">
-                  <div class="flex items-center gap-2">
-                    <button @click="$router.push({ name: 'role-edit', params: { id: role.id } })" class="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-brand-600 dark:hover:bg-gray-800 transition-colors" :title="$t('common.edit') || 'تعديل'">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                      </svg>
-                    </button>
-                    <button v-if="!role.is_system_role" @click="handleDelete(role)" class="rounded-lg p-2 text-gray-500 hover:bg-error-50 hover:text-error-600 dark:hover:bg-error-500/10 transition-colors" :title="$t('common.delete') || 'حذف'">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                      </svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div v-else class="mt-4">
+          <DataTable
+            :columns="tableColumns"
+            :data="rolesStore.roles"
+            row-key="id"
+          >
+            <template #cell-name="{ value }">
+              <span class="font-medium text-gray-900 dark:text-white">{{ value }}</span>
+            </template>
+            <template #cell-description="{ value }">
+              <span class="text-sm text-gray-600 dark:text-gray-400">{{ value || '—' }}</span>
+            </template>
+            <template #cell-permissions="{ row }">
+              <span class="text-sm text-brand-600 dark:text-brand-400 font-medium">{{ row.permissions?.length || 0 }} {{ $t('roles.permissions') }}</span>
+            </template>
+            <template #cell-is_system_role="{ value }">
+              <span v-if="value" class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400">
+                {{ $t('users.admin') || 'أساسي (نظام)' }}
+              </span>
+              <span v-else class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                {{ $t('users.regular_user') || 'مخصص' }}
+              </span>
+            </template>
+            <template #cell-is_active="{ value }">
+              <span v-if="value" class="inline-flex items-center gap-1 rounded-full bg-success-50 px-2.5 py-0.5 text-xs font-medium text-success-700 dark:bg-success-500/10 dark:text-success-400">
+                <span class="h-1.5 w-1.5 rounded-full bg-success-500"></span>
+                {{ $t('users.active') }}
+              </span>
+              <span v-else class="inline-flex items-center gap-1 rounded-full bg-error-50 px-2.5 py-0.5 text-xs font-medium text-error-700 dark:bg-error-500/10 dark:text-error-400">
+                <span class="h-1.5 w-1.5 rounded-full bg-error-500"></span>
+                {{ $t('users.inactive') }}
+              </span>
+            </template>
+            <template #actions="{ row }">
+              <div class="flex items-center gap-2">
+                <button @click="$router.push({ name: 'role-edit', params: { id: row.id } })" class="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-brand-600 dark:hover:bg-gray-800 transition-colors" :title="$t('common.edit') || 'تعديل'">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                  </svg>
+                </button>
+                <button v-if="!row.is_system_role" @click="handleDelete(row)" class="rounded-lg p-2 text-gray-500 hover:bg-error-50 hover:text-error-600 dark:hover:bg-error-500/10 transition-colors" :title="$t('common.delete') || 'حذف'">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </template>
+          </DataTable>
         </div>
       </div>
     </div>
@@ -97,13 +87,25 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
+import DataTable from '@/components/tables/DataTable.vue'
 import { useRolesStore } from '@/stores/roles'
+import { useI18n } from 'vue-i18n'
 import Swal from 'sweetalert2'
 
+const { t } = useI18n()
 const rolesStore = useRolesStore()
+
+const tableColumns = computed(() => [
+  { key: 'name', label: t('roles.role_name'), sortable: true },
+  { key: 'description', label: t('roles.description'), sortable: true },
+  { key: 'permissions', label: t('roles.permissions'), sortable: true },
+  { key: 'is_system_role', label: t('users.role') || 'نوع المجموعة', sortable: true },
+  { key: 'is_active', label: t('users.status'), sortable: true },
+  { key: 'actions', label: t('common.actions'), sortable: false }
+])
 
 onMounted(() => {
   rolesStore.fetchRoles()
