@@ -3,78 +3,89 @@
     <PageBreadcrumb :pageTitle="t('admin.analytics_dashboard')" />
     
     <div class="space-y-6 text-start" dir="rtl">
-      <!-- Development Alert -->
-      <div class="rounded-2xl border border-blue-100 bg-blue-50/50 p-6 dark:border-blue-900/30 dark:bg-blue-950/20">
-        <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white shrink-0">
-            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
-            </svg>
-          </div>
-          <div>
-            <h4 class="text-lg font-bold text-blue-950 dark:text-blue-200">الشاشة قيد التطوير والتهيئة</h4>
-            <p class="text-sm text-blue-700/80 dark:text-blue-300/80 mt-1">
-              <strong>تنبيه هام جداً:</strong> إن كافة الميزات والخصائص والبيانات المذكورة في هذه الشاشة هي <strong>مقترحات وتصاميم توجيهية فقط</strong>، ويتم تطويعها وتخصيصها بدقة تامة طبقاً لمتطلبات وتفاصيل النظام الإنتاجي الفعلية.
-            </p>
-          </div>
+      <!-- Filters Row -->
+      <div class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 flex flex-col md:flex-row items-center gap-4">
+        <div class="flex-1 flex items-center gap-2">
+          <Filter class="w-5 h-5 text-gray-400" />
+          <span class="font-bold text-gray-700 dark:text-gray-300">أدوات التحليل:</span>
+        </div>
+        <div class="flex items-center gap-3 w-full md:w-auto">
+          <select class="form-select bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700 rounded-xl text-sm font-bold px-4 py-2 w-full md:w-48 cursor-pointer text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500">
+            <option value="all">جميع المحافظات</option>
+            <option value="1">صنعاء</option>
+            <option value="2">عدن</option>
+            <option value="3">مأرب</option>
+          </select>
+          <select class="form-select bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700 rounded-xl text-sm font-bold px-4 py-2 w-full md:w-48 cursor-pointer text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500">
+            <option value="all">جميع القطاعات</option>
+            <option value="1">الأمن العام</option>
+            <option value="2">القوات الخاصة</option>
+          </select>
+          <button class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-xl transition-colors shadow-sm cursor-pointer shrink-0">
+            <Search class="w-5 h-5" />
+          </button>
         </div>
       </div>
 
-      <!-- Main Layout -->
-      <div class="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-        <div class="mb-6 border-b border-gray-150 dark:border-gray-800 pb-4">
-          <h3 class="text-xl font-bold text-gray-900 dark:text-white">طبيعة ودور هذه الشاشة في النظام:</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mt-2 leading-relaxed">
-            هي <strong>الشاشة الجامعة</strong> التي تعرض الإحصائيات الكلية العميقة والخرائط التحليلية لكامل قاعدة البيانات (مثل: إجمالي القوة البشرية، نسبة الضباط للأفراد، أعداد الأفراد الموزعين على المحافظات، وحجم القوات في كل قطاع وإدارة). تمنح الإدارة العليا نظرة عامة وشاملة على النظام بأكمله ومراقبة تكامل الأنظمة.
-          </p>
+      <!-- Main Charts Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Bar Chart: Force by Governorate -->
+        <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <h3 class="font-bold text-gray-900 dark:text-white mb-4">التوزيع الجغرافي للقوات</h3>
+          <div class="h-[300px] w-full" dir="ltr">
+            <ClientOnly>
+              <VueApexCharts 
+                type="bar" 
+                height="100%" 
+                :options="barChartOptions" 
+                :series="barChartSeries" 
+              />
+            </ClientOnly>
+          </div>
         </div>
 
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">الوظائف والخصائص المقترحة للتطوير المستقبلية:</h3>
-        
-        <div class="grid gap-6 md:grid-cols-2">
-          <!-- Card 1 -->
-          <div class="rounded-xl border border-gray-100 p-5 dark:border-gray-800 bg-gray-50/40 dark:bg-gray-900/30">
-            <h5 class="font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full bg-blue-500"></span>
-              الإحصائيات الكلية العميقة
-            </h5>
-            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-              عرض إجمالي القوة البشرية المفصلة، نسب توزيع الضباط إلى الأفراد، توزيع الرتب على مستوى القطاعات المختلفة.
-            </p>
+        <!-- Donut Chart: Status Distribution -->
+        <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <h3 class="font-bold text-gray-900 dark:text-white mb-4">توزيع حالات الخدمة</h3>
+          <div class="h-[300px] w-full flex items-center justify-center" dir="ltr">
+            <ClientOnly>
+              <VueApexCharts 
+                type="donut" 
+                height="100%" 
+                :options="donutChartOptions" 
+                :series="donutChartSeries" 
+              />
+            </ClientOnly>
           </div>
+        </div>
 
-          <!-- Card 2 -->
-          <div class="rounded-xl border border-gray-100 p-5 dark:border-gray-800 bg-gray-50/40 dark:bg-gray-900/30">
-            <h5 class="font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full bg-blue-500"></span>
-              التوزيع الجغرافي والإداري للقوات
-            </h5>
-            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-              مخططات بيانية دائرية وخرائط تفاعلية توضح تركيز أعداد الأفراد في كل محافظة أو إدارة أو فرع إقليمي بشكل لحظي.
-            </p>
+        <!-- Radar Chart: Readiness -->
+        <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <h3 class="font-bold text-gray-900 dark:text-white mb-4">مؤشر الجاهزية والتدريب بالقطاعات</h3>
+          <div class="h-[350px] w-full flex items-center justify-center" dir="ltr">
+            <ClientOnly>
+              <VueApexCharts 
+                type="radar" 
+                height="100%" 
+                :options="radarChartOptions" 
+                :series="radarChartSeries" 
+              />
+            </ClientOnly>
           </div>
+        </div>
 
-          <!-- Card 3 -->
-          <div class="rounded-xl border border-gray-100 p-5 dark:border-gray-800 bg-gray-50/40 dark:bg-gray-900/30">
-            <h5 class="font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full bg-blue-500"></span>
-              مقارنة وتكامل نشاط الفروع
-            </h5>
-            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-              تحليل دورات الكشوفات وتدفق المراسلات ومعدلات تسليم البيانات الشهرية بين المحافظات لقياس الكفاءة الكلية.
-            </p>
-          </div>
-
-          <!-- Card 4 -->
-          <div class="rounded-xl border border-gray-100 p-5 dark:border-gray-800 bg-gray-50/40 dark:bg-gray-900/30">
-            <h5 class="font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full bg-blue-500"></span>
-              استعلامات مخصصة للإدارة العليا
-            </h5>
-            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-              تصفية وتقاطعات متعددة للبيانات (فرز برتبة معينة + محافظة معينة + حالة الخدمة) وتصدير النتائج فوراً.
-            </p>
+        <!-- Horizontal Bar Chart: Ranks -->
+        <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <h3 class="font-bold text-gray-900 dark:text-white mb-4">الهرم الرتبي (ضباط وأفراد)</h3>
+          <div class="h-[350px] w-full" dir="ltr">
+            <ClientOnly>
+              <VueApexCharts 
+                type="bar" 
+                height="100%" 
+                :options="horizontalBarOptions" 
+                :series="horizontalBarSeries" 
+              />
+            </ClientOnly>
           </div>
         </div>
       </div>
@@ -82,10 +93,101 @@
   </AdminLayout>
 </template>
 
-<script setup>
-import { useI18n } from "vue-i18n";
-import AdminLayout from "@/components/layout/AdminLayout.vue";
-import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
+<script setup lang="ts">
+import { ref, defineComponent, h, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import AdminLayout from '@/components/layout/AdminLayout.vue'
+import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
+import VueApexCharts from 'vue3-apexcharts'
+import { Filter, Search } from 'lucide-vue-next'
 
-const { t } = useI18n();
+const { t } = useI18n()
+
+// SSR Wrapper
+const ClientOnly = defineComponent({
+  setup(_, { slots }) {
+    const isMounted = ref(false)
+    onMounted(() => {
+      isMounted.value = true
+    })
+    return () => (isMounted.value && slots.default ? slots.default() : h('div', { class: 'h-full w-full bg-gray-50 dark:bg-gray-800 animate-pulse rounded-xl' }))
+  }
+})
+
+// Bar Chart (Geographical)
+const barChartSeries = ref([
+  { name: 'عامل', data: [4500, 3200, 2100, 1500, 900] },
+  { name: 'احتياط', data: [1200, 800, 600, 400, 200] }
+])
+const barChartOptions = ref({
+  chart: { type: 'bar', stacked: true, fontFamily: 'Tajawal, sans-serif', toolbar: { show: false }, background: 'transparent' },
+  colors: ['#3b82f6', '#94a3b8'],
+  plotOptions: { bar: { borderRadius: 4, horizontal: false, columnWidth: '40%' } },
+  xaxis: {
+    categories: ['صنعاء', 'عدن', 'مأرب', 'تعز', 'حضرموت'],
+    labels: { style: { fontFamily: 'Tajawal, sans-serif', colors: '#9ca3af' } }
+  },
+  yaxis: { labels: { style: { colors: '#9ca3af' } } },
+  grid: { borderColor: 'rgba(156, 163, 175, 0.1)', strokeDashArray: 4 },
+  dataLabels: { enabled: false },
+  legend: { position: 'top', fontFamily: 'Tajawal, sans-serif', labels: { colors: '#6b7280' } }
+})
+
+// Donut Chart (Status)
+const donutChartSeries = ref([65, 15, 10, 5, 5])
+const donutChartOptions = ref({
+  chart: { type: 'donut', fontFamily: 'Tajawal, sans-serif', background: 'transparent' },
+  labels: ['عامل', 'مجاز', 'منتدب', 'موقوف', 'فرار'],
+  colors: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#6b7280'],
+  plotOptions: {
+    pie: {
+      donut: {
+        size: '70%',
+        labels: {
+          show: true,
+          name: { show: true, fontSize: '14px', fontFamily: 'Tajawal, sans-serif' },
+          value: { show: true, fontSize: '20px', fontWeight: 'bold', color: '#6b7280' },
+          total: { show: true, label: 'الإجمالي', color: '#6b7280', fontSize: '14px', fontFamily: 'Tajawal, sans-serif' }
+        }
+      }
+    }
+  },
+  dataLabels: { enabled: false },
+  stroke: { show: true, colors: 'transparent' },
+  legend: { position: 'bottom', fontFamily: 'Tajawal, sans-serif', labels: { colors: '#6b7280' } }
+})
+
+// Radar Chart (Readiness)
+const radarChartSeries = ref([
+  { name: 'الأمن العام', data: [80, 90, 70, 85, 60] },
+  { name: 'القوات الخاصة', data: [95, 85, 90, 80, 85] }
+])
+const radarChartOptions = ref({
+  chart: { type: 'radar', fontFamily: 'Tajawal, sans-serif', toolbar: { show: false }, background: 'transparent' },
+  labels: ['التسليح', 'التدريب البدني', 'الالتزام الإداري', 'الجاهزية الفنية', 'الاستجابة'],
+  colors: ['#3b82f6', '#8b5cf6'],
+  stroke: { width: 2 },
+  fill: { opacity: 0.2 },
+  markers: { size: 4 },
+  yaxis: { show: false },
+  xaxis: { labels: { style: { colors: '#6b7280', fontFamily: 'Tajawal, sans-serif' } } },
+  legend: { position: 'bottom', fontFamily: 'Tajawal, sans-serif', labels: { colors: '#6b7280' } }
+})
+
+// Horizontal Bar (Ranks)
+const horizontalBarSeries = ref([{ name: 'العدد', data: [120, 300, 850, 1500, 3200, 6000] }])
+const horizontalBarOptions = ref({
+  chart: { type: 'bar', fontFamily: 'Tajawal, sans-serif', toolbar: { show: false }, background: 'transparent' },
+  colors: ['#0ea5e9'],
+  plotOptions: {
+    bar: { borderRadius: 4, horizontal: true, barHeight: '50%' }
+  },
+  dataLabels: { enabled: true, textAnchor: 'start', style: { colors: ['#6b7280'] }, offsetX: 0 },
+  xaxis: {
+    categories: ['لواء', 'عميد', 'عقيد', 'مقدم', 'رائد', 'نقيب'],
+    labels: { style: { colors: '#9ca3af' } }
+  },
+  yaxis: { labels: { style: { fontFamily: 'Tajawal, sans-serif', colors: '#6b7280' } } },
+  grid: { borderColor: 'rgba(156, 163, 175, 0.1)', strokeDashArray: 4 },
+})
 </script>
