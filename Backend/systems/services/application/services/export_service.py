@@ -590,6 +590,7 @@ class ExcelExportService:
                     first_sheet = False
 
         meta_ws.hide() # إخفاء ورقة البيانات بعد تنشيط ورقة أخرى لكي تعمل بنجاح
+        meta_ws.protect(password) # حماية ورقة البيانات المخفية بكلمة مرور لمنع العبث ببيانات القوائم المنسدلة ومعادلات VLOOKUP
         
         workbook.close()
         output.seek(0)

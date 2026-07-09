@@ -260,15 +260,45 @@ async function handleImport() {
       startTaskPoller(response.task_id)
     } else {
       // Sync processing completed instantly
-      Swal.fire({
-        title: 'تم الاستيراد بنجاح',
-        text: 'تم رفع الملف واكتشاف التعديلات بنجاح. سيتم توجيهك الآن لمراجعتها.',
-        icon: 'success',
-        confirmButtonText: 'الذهاب للاعتمادات',
-        confirmButtonColor: '#10b981'
-      }).then(() => {
-        router.push('/services/staging')
-      })
+      const responseData = response.data || response;
+      const errorCount = responseData.errors ? responseData.errors.length : 0;
+      const changesCount = responseData.stats ? responseData.stats.changes_detected : 0;
+
+      if (errorCount > 0 && changesCount === 0) {
+          Swal.fire({
+            title: 'لم يتم اعتماد أي تغييرات',
+            text: `يحتوي الملف على أخطاء تمنع استيراده. يرجى مراجعة الملف الأصلي. (${errorCount} أخطاء)`,
+            icon: 'error',
+          });
+          selectedFile.value = null;
+          return;
+      } else if (errorCount > 0) {
+          Swal.fire({
+            title: 'تم الاستيراد جزئياً',
+            text: `تم اكتشاف ${changesCount} تعديلات، ولكن يوجد ${errorCount} أخطاء في بعض الصفوف.`,
+            icon: 'warning',
+            confirmButtonText: 'الذهاب للاعتمادات',
+            confirmButtonColor: '#f59e0b'
+          }).then(() => {
+            router.push('/services/staging')
+          })
+      } else if (changesCount === 0) {
+          Swal.fire({
+            title: 'لا توجد تغييرات',
+            text: 'الملف مطابق تماماً للبيانات الحالية، لم يتم اكتشاف أي تعديلات.',
+            icon: 'info',
+          });
+      } else {
+          Swal.fire({
+            title: 'تم الاستيراد بنجاح',
+            text: `تم رفع الملف واكتشاف ${changesCount} تعديلات بنجاح. سيتم توجيهك الآن لمراجعتها.`,
+            icon: 'success',
+            confirmButtonText: 'الذهاب للاعتمادات',
+            confirmButtonColor: '#10b981'
+          }).then(() => {
+            router.push('/services/staging')
+          })
+      }
       selectedFile.value = null
     }
   } catch (err: any) {

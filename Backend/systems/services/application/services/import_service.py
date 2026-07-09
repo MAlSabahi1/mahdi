@@ -264,6 +264,13 @@ class ExcelImportService:
             if not new_status_type:
                 new_status_type = old_status
                 new_status_cls = person.current_status.get_classification_display() if person.current_status else ''
+            else:
+                # جلب التصنيف من قاعدة البيانات لضمان الموثوقية (بدلاً من الاعتماد على معادلة الإكسل)
+                try:
+                    status_obj = ServiceStatus.objects.get(name=new_status_type)
+                    new_status_cls = status_obj.get_classification_display()
+                except ServiceStatus.DoesNotExist:
+                    new_status_cls = 'غير معروف'
 
             is_status_changed = (new_status_type != old_status)
 
@@ -396,6 +403,10 @@ class ExcelImportService:
 
         self._step5_verify_row_count(all_rows)
         self._step6_detect_changes(all_rows)
+
+        # Sanity check: If the user uploaded a file with rows, but NONE of them had a valid UUID, it's a completely invalid/random file!
+        if all_rows and len(self.errors) >= len(all_rows):
+            raise ImportValidationError("الملف المرفوع لا يحتوي على أي بيانات مطابقة للكشف الأصلي. تأكد من أنك ترفع الكشف الصحيح ولم تقم بتعديل الهيكل الأساسي.")
 
         if self.changes:
             self._create_staging_records()

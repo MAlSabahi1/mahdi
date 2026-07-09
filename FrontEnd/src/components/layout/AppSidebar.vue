@@ -348,6 +348,10 @@ const menuGroups = computed(() => {
                 path: "/services/import-wizard",
               },
               {
+                name: "nav.service_dashboard",
+                path: "/services/dashboard",
+              },
+              {
                 name: "services.staging",
                 path: "/services/staging",
               },
