@@ -320,17 +320,39 @@ const router = createRouter({
       }
     },
     {
-      path: "/reports/view/11",
-      name: "MissingPersonnelReport",
-      component: () => import("@/views/Reports/MissingPersonnelReport.vue"),
-      meta: { title: "كشف مفقودين", requiresAuth: true }
+      path: "/reports/view/:id(4b1|4b2)",
+      name: "InactiveActualForceReport",
+      component: () => import("@/views/Reports/InactiveActualForceReport.vue"),
+      meta: {
+        title: "القوة العاملة الغير فعلية",
+        requiresAuth: true
+      }
     },
     {
-      path: "/reports/view/:id(5|6|7|8|9|10)",
-      name: "TempInactiveReports",
-      component: () => import("@/views/Reports/TempInactiveReports.vue"),
+      path: "/reports/builder/studio/:id?",
+      name: "ReportStudio",
+      component: () => import("@/views/Reports/Builder/ReportStudio.vue"),
       meta: {
-        title: "كشف القوة غير العاملة مؤقتاً",
+        title: "تصميم تقرير مخصص",
+        requiresAuth: true,
+        requiresAdmin: true
+      }
+    },
+    {
+      path: "/reports/builder/view/:id",
+      name: "CustomReportViewer",
+      component: () => import("@/views/Reports/Builder/CustomReportViewer.vue"),
+      meta: {
+        title: "عرض تقرير مخصص",
+        requiresAuth: true
+      }
+    },
+    {
+      path: "/reports/view/:id(5|6|7|8|9|10|11)",
+      name: "UnifiedListReport",
+      component: () => import("@/views/Reports/UnifiedListReport.vue"),
+      meta: {
+        title: "كشوفات القوة غير العاملة مؤقتاً",
         requiresAuth: true
       }
     },
@@ -688,6 +710,33 @@ const router = createRouter({
       component: () => import('@/views/Services/ExcelImportWizard.vue'),
       meta: {
         title: 'معالج الاستيراد الجماعي وتتبع Celery',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/export-config',
+      name: 'ExcelExportConfigurator',
+      component: () => import('@/views/Services/ExcelExportConfigurator.vue'),
+      meta: {
+        title: 'إعداد وتصدير النماذج المقفلة',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/monthly-exports',
+      name: 'MonthlyExports',
+      component: () => import('@/views/Services/MonthlyExports.vue'),
+      meta: {
+        title: 'تصدير التقارير الشهرية الموحدة',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/official-reports',
+      name: 'OfficialReports',
+      component: () => import('@/views/Services/OfficialReports.vue'),
+      meta: {
+        title: 'تصدير التقارير الرسمية',
         requiresAuth: true,
       },
     },

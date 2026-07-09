@@ -354,6 +354,18 @@ const menuGroups = computed(() => {
               {
                 name: "services.rejections",
                 path: "/services/rejections",
+              },
+              {
+                name: "إعداد وتصدير النماذج",
+                path: "/services/export-config",
+              },
+              {
+                name: "التقارير الشهرية الموحدة",
+                path: "/services/monthly-exports",
+              },
+              {
+                name: "التقارير والكشوفات الرسمية",
+                path: "/services/official-reports",
               }
             ]
           },

@@ -37,13 +37,12 @@ DEFAULT_PROTECTED_COLUMNS = [
     'الاسم الكامل',
     'الرتبة',
     'الرقم الوطني',
-    'الحالة الحالية',
+    'الحالة',
 ]
 
 # الأعمدة القابلة للتعديل الافتراضية
 DEFAULT_EDITABLE_COLUMNS = [
-    'الحالة',                # القائمة المنسدلة الأولى (التصنيف العام)
-    'نوع الحالة',            # القائمة المنسدلة الثانية (الفرعية)
+    'نوع الحالة',            # القائمة المنسدلة الوحيدة (التفصيلية)
     'المتغير الشهري',        # المتغير الذي يطبع في سجل المتغيرات
     'ملاحظات',               # نص حر للتعليقات
 ]
@@ -132,12 +131,17 @@ class ExcelExportService:
 
     def __init__(
         self,
-        central_department: CentralDepartment,
+        entity_name: str,
+        queryset,
         service_month: str,
         exported_by,
         mode: str = 'multi',
+        split_by: Optional[str] = None,
         protected_columns: Optional[List[str]] = None,
         editable_columns: Optional[List[str]] = None,
+        raw_columns: Optional[List[str]] = None,
+        security_admin=None,
+        central_department=None,
     ):
         """
         Args:
@@ -151,13 +155,18 @@ class ExcelExportService:
         if mode not in ('multi', 'single'):
             raise ValueError("mode يجب أن يكون 'multi' أو 'single'")
 
-        self.central_department = central_department
+        self.entity_name = entity_name
+        self.queryset = queryset
         self.service_month = service_month
         self.exported_by = exported_by
         self.mode = mode
+        self.split_by = split_by
+        self.security_admin = security_admin
+        self.central_department = central_department
 
-        self.protected_columns = protected_columns or DEFAULT_PROTECTED_COLUMNS
-        self.editable_columns = editable_columns or DEFAULT_EDITABLE_COLUMNS
+        self.protected_columns = protected_columns if protected_columns is not None else DEFAULT_PROTECTED_COLUMNS
+        self.editable_columns = editable_columns if editable_columns is not None else DEFAULT_EDITABLE_COLUMNS
+        self.raw_columns = raw_columns if raw_columns is not None else []
 
         # يُملأ أثناء التوليد
         self.export_id = uuid.uuid4()
@@ -172,10 +181,8 @@ class ExcelExportService:
 
     def _get_personnel(self) -> List[Dict[str, Any]]:
         """جلب بيانات الأفراد وتوليد UUID لكل صف."""
-        qs = PersonnelMaster.objects.filter(
-            central_department=self.central_department,
-        ).select_related(
-            'current_rank', 'current_status'
+        qs = self.queryset.select_related(
+            'current_rank', 'current_status', 'central_department', 'branch', 'district_police'
         ).order_by('current_rank__order', 'full_name')
 
         data = []
@@ -186,30 +193,68 @@ class ExcelExportService:
                 person.current_status.classification
                 if person.current_status else ''
             )
-            data.append({
+            
+            # Determine split key if partitioning is enabled
+            split_key = 'كشف موحد'
+            if self.split_by == 'central_department' and person.central_department:
+                split_key = person.central_department.name
+            elif self.split_by == 'branch' and person.branch:
+                split_key = person.branch.name
+            elif self.split_by == 'district_police' and person.district_police:
+                split_key = person.district_police.name
+
+            person_dict = {
                 'military_number': person.military_number or '',
                 'full_name':       person.full_name or '',
-                'rank':            person.current_rank.name if person.current_rank else '',
+                'rank':            person.current_rank.name if hasattr(person, 'current_rank') and person.current_rank else '',
                 'national_id':     person.national_id or '',
-                'current_status':  person.current_status.name if person.current_status else '',
+                'current_status':  person.current_status.name if hasattr(person, 'current_status') and person.current_status else '',
                 'classification':  classification,
                 'row_uuid':        row_uuid,
-            })
+                'split_key':       split_key,
+            }
+            
+            # Extract additional raw columns if provided
+            from datetime import date
+            if self.raw_columns:
+                all_arabic = self.protected_columns + self.editable_columns
+                for i, raw_col in enumerate(self.raw_columns):
+                    if i < len(all_arabic):
+                        val = getattr(person, raw_col, '')
+                        if val is None:
+                            val = ''
+                        elif hasattr(val, 'name'):
+                            val = val.name
+                        elif isinstance(val, date):
+                            val = val.strftime('%Y-%m-%d')
+                        person_dict[all_arabic[i]] = str(val)
+
+            data.append(person_dict)
         self.row_count = len(data)
         return data
 
     def _classify_personnel(self, data: List[Dict]) -> Dict[str, List[Dict]]:
-        """توزيع الأفراد على الأوراق الأربعة."""
+        """توزيع الأفراد على الأوراق حسب وضع التصدير (multi أو تقسيم مخصص)."""
+        if self.split_by:
+            sheets = {}
+            for p in data:
+                sk = p['split_key']
+                if sk not in sheets:
+                    sheets[sk] = []
+                sheets[sk].append(p)
+            self.SHEET_NAMES = list(sheets.keys())[:30] # Limit to 30 sheets
+            return sheets
+
         sheets: Dict[str, List[Dict]] = {s: [] for s in self.SHEET_NAMES}
         for p in data:
             cls = p['classification']
             if cls in ('active_full', 'active_part'):
-                sheets['القوة العاملة'].append(p)
+                sheets.setdefault('القوة العاملة', []).append(p)
             if cls in ('inactive_temp', 'inactive_perm'):
-                sheets['القوة غير العاملة'].append(p)
-            sheets['القوة كاملة'].append(p)
+                sheets.setdefault('القوة غير العاملة', []).append(p)
+            sheets.setdefault('القوة كاملة', []).append(p)
             if p['current_status'] in ABSENCE_STATUS_NAMES:
-                sheets['الغياب'].append(p)
+                sheets.setdefault('الغياب', []).append(p)
         return sheets
 
     # ──────────────────────────────────────────────────────────
@@ -217,27 +262,47 @@ class ExcelExportService:
     # ──────────────────────────────────────────────────────────
 
     def _build_formats(self, workbook) -> Dict:
-        """تعريف الفورمات بدون ألوان مزعجة لتتوافق مع Native Excel Tables."""
+        """تعريف الفورمات بشكل صريح مع حدود وألوان احترافية جداً للأنظمة الكبرى."""
+        font = 'Cairo'
         return {
             'header': workbook.add_format({
-                'bold': True, 'align': 'center', 'valign': 'vcenter', 'font_name': 'Arial', 'font_size': 11
+                'bold': True, 'align': 'center', 'valign': 'vcenter', 
+                'font_name': font, 'font_size': 12,
+                'bg_color': '#002060', 'font_color': '#FFFFFF', # كحلي للأعمدة المقفلة
+                'border': 1, 'border_color': '#808080',
+            }),
+            'editable_header': workbook.add_format({
+                'bold': True, 'align': 'center', 'valign': 'vcenter', 
+                'font_name': font, 'font_size': 12,
+                'bg_color': '#0F9D58', 'font_color': '#FFFFFF', # أخضر للأعمدة القابلة للتعديل
+                'border': 1, 'border_color': '#808080',
             }),
             'protected': workbook.add_format({
-                'locked': True, 'align': 'center', 'valign': 'vcenter', 'font_size': 11, 'font_name': 'Arial',
+                'locked': True, 'align': 'center', 'valign': 'vcenter', 
+                'font_size': 11, 'font_name': font,
+                'border': 1, 'border_color': '#A6A6A6',
             }),
             'editable': workbook.add_format({
-                'locked': False, 'align': 'center', 'valign': 'vcenter', 'font_size': 11, 'font_name': 'Arial',
+                'locked': False, 'align': 'center', 'valign': 'vcenter', 
+                'font_size': 11, 'font_name': font,
+                'bg_color': '#F2F9FF', # لون أزرق جليدي فاتح جداً لتمييز حقول الإدخال بشكل فخم
+                'border': 1, 'border_color': '#A6A6A6',
             }),
             'notes_editable': workbook.add_format({
-                'locked': False, 'align': 'right', 'valign': 'vcenter', 'font_size': 11, 'text_wrap': True, 'font_name': 'Arial',
+                'locked': False, 'align': 'right', 'valign': 'vcenter', 
+                'font_size': 11, 'text_wrap': True, 'font_name': font,
+                'bg_color': '#F2F9FF', 'indent': 1,
+                'border': 1, 'border_color': '#A6A6A6',
             }),
             'hidden': workbook.add_format({'locked': True, 'hidden': True}),
             'meta': workbook.add_format({
-                'locked': True, 'align': 'right', 'valign': 'vcenter', 'font_size': 9, 'italic': True,
+                'locked': True, 'align': 'right', 'valign': 'vcenter', 
+                'font_size': 10, 'italic': True, 'font_name': font,
             }),
             'warning': workbook.add_format({
-                'locked': True, 'bg_color': '#FFF2CC', 'font_color': '#B45F06',
-                'align': 'center', 'valign': 'vcenter', 'font_size': 11, 'bold': True, 'font_name': 'Arial',
+                'locked': True, 'bg_color': '#17375E', 'font_color': '#FFFFFF',
+                'align': 'center', 'valign': 'vcenter', 'font_size': 14, 'bold': True, 
+                'font_name': font,
             }),
         }
 
@@ -254,34 +319,39 @@ class ExcelExportService:
         all_cols = self.protected_columns + self.editable_columns + ['__UUID__']
         all_statuses = list(self._status_cascade.keys())  # 4 تصنيفات
 
+        worksheet.right_to_left()  # تفعيل اتجاه من اليمين لليسار بشكل صريح
         worksheet.hide_gridlines(2)  # إخفاء خطوط الشبكة الافتراضية لشكل أنظف
 
         # ── صف المعلومات الأولى (تحذير + بيانات التصدير) ──
+        dept_id = self.central_department.id if self.central_department else (self.security_admin.id if self.security_admin else '0')
         worksheet.merge_range(
             0, 0, 0, len(all_cols) - 1,
-            f'معلومات الإدارة: {self.central_department.name} | '
-            f'شهر الخدمة: {self.service_month} | مرجع التصدير: {str(self.export_id)[:8]} | '
-            f'عدد الأفراد: {len(persons)}',
+            f'تفاصيل التقرير: {self.entity_name}   |   '
+            f'شهر الخدمة: {self.service_month}   |   '
+            f'إجمالي الأفراد: {len(persons)}',
             fmts['warning'],
         )
-        worksheet.set_row(0, 25)
+        worksheet.set_row(0, 40)
 
         # ── صف العناوين ──
-        # لا نحتاج لكتابة العناوين يدوياً لأن add_table ستقوم بذلك، لكن نكتبها تحسباً
         for col_idx, header in enumerate(all_cols):
-            worksheet.write(1, col_idx, header, fmts['header'])
-        worksheet.set_row(1, 25)
+            fmt = fmts['editable_header'] if header in self.editable_columns else fmts['header']
+            worksheet.write(1, col_idx, header, fmt)
+        worksheet.set_row(1, 30)
 
         # ── ضبط عرض الأعمدة ──
         col_widths = {
-            'الرقم العسكري': 15, 'الاسم الكامل': 35, 'الرتبة': 15,
-            'الرقم الوطني': 18, 'الحالة الحالية': 25,
-            'الحالة': 28, 'نوع الحالة': 32,
-            'المتغير الشهري': 35, 'ملاحظات': 45, '__UUID__': 0,
+            'الرقم العسكري': 20, 'الاسم الكامل': 45, 'الرتبة': 18,
+            'الرقم الوطني': 25, 'الحالة': 35,
+            'نوع الحالة': 35,
+            'المتغير الشهري': 45, 'ملاحظات': 60,
         }
         for col_idx, header in enumerate(all_cols):
-            width = col_widths.get(header, 20)
-            worksheet.set_column(col_idx, col_idx, width)
+            if header == '__UUID__':
+                worksheet.set_column(col_idx, col_idx, 0, None, {'hidden': 1})
+            else:
+                width = col_widths.get(header, 25)
+                worksheet.set_column(col_idx, col_idx, width)
 
         # ── تجميد الصفوف العلوية (التحذير + العناوين) ──
         worksheet.freeze_panes(2, 0)
@@ -289,38 +359,63 @@ class ExcelExportService:
         # ── كتابة بيانات الأفراد ──
         for row_offset, person in enumerate(persons):
             row = row_offset + 2  # الصف الأول للبيانات = 2
-            worksheet.set_row(row, 22)  # مساحة مريحة للعين
+            worksheet.set_row(row, 28)  # مساحة مريحة وفخمة للعين
 
-            row_data_map = {
-                'الرقم العسكري':  person['military_number'],
-                'الاسم الكامل':   person['full_name'],
-                'الرتبة':         person['rank'],
-                'الرقم الوطني':   person['national_id'],
-                'الحالة الحالية': person['current_status'],
-            }
+            # خريطة افتراضية للحقول الأساسية إذا لم يتم استخدام raw_columns
+            row_data_map = person.copy()
+            row_data_map.update({
+                'الرقم العسكري':  person.get('military_number', ''),
+                'الاسم الكامل':   person.get('full_name', ''),
+                'الرتبة':         person.get('rank', ''),
+                'الرقم الوطني':   person.get('national_id', ''),
+            })
 
             for col_idx, header in enumerate(all_cols):
                 if header == '__UUID__':
-                    worksheet.write(row, col_idx, person['row_uuid'], fmts['hidden'])
+                    worksheet.write(row, col_idx, person.get('row_uuid', ''), fmts['hidden'])
 
                 elif header in self.protected_columns:
-                    worksheet.write(row, col_idx, row_data_map.get(header, ''), fmts['protected'])
+                    if header == 'الاسم الكامل':
+                        name_fmt = workbook.add_format({
+                            'locked': True, 'align': 'right', 'valign': 'vcenter', 
+                            'font_size': 11, 'font_name': 'Cairo', 
+                            'border': 1, 'border_color': '#A6A6A6', 'indent': 1
+                        })
+                        worksheet.write(row, col_idx, row_data_map.get(header, ''), name_fmt)
+                    elif header == 'الحالة':
+                        # معادلة VLOOKUP لجلب تصنيف الحالة بناء على اختيار "نوع الحالة"
+                        type_col_idx = all_cols.index('نوع الحالة') if 'نوع الحالة' in all_cols else -1
+                        if type_col_idx >= 0:
+                            type_cell = xlsxwriter.utility.xl_rowcol_to_cell(row, type_col_idx)
+                            formula = f'=IFERROR(VLOOKUP({type_cell}, SystemData!$A$1:$B$500, 2, FALSE), "")'
+                            
+                            classification_val = person.get('classification', '')
+                            classification_display = ''
+                            for name, code in STATUS_CLASSIFICATIONS.items():
+                                if code == classification_val:
+                                    classification_display = name
+                                    break
+                            worksheet.write_formula(row, col_idx, formula, fmts['protected'], classification_display)
+                        else:
+                            worksheet.write(row, col_idx, '', fmts['protected'])
+                            
+                    else:
+                        worksheet.write(row, col_idx, row_data_map.get(header, ''), fmts['protected'])
+
+                elif header == 'نوع الحالة':
+                    worksheet.write(row, col_idx, person.get('current_status', ''), fmts['editable'])
 
                 elif header in ['ملاحظات', 'المتغير الشهري']:
                     worksheet.write(row, col_idx, '', fmts['notes_editable'])
 
                 else:
-                    # أعمدة قابلة للتعديل (قوائم منسدلة)
-                    worksheet.write(row, col_idx, '', fmts['editable'])
+                    worksheet.write(row, col_idx, row_data_map.get(header, ''), fmts['editable'])
 
         # ── تحويل البيانات إلى Native Excel Table ──
         if persons:
             last_row = len(persons) + 1
-            worksheet.add_table(1, 0, last_row, len(all_cols) - 1, {
-                'columns': [{'header': col} for col in all_cols],
-                'style': 'Table Style Light 9',  # الاستايل الأزرق الاحترافي النظيف
-                'banded_rows': True,
-            })
+            # نستخدم autofilter بدلاً من add_table للحفاظ على تنسيق العناوين الصريح الخاص بنا
+            worksheet.autofilter(1, 0, last_row, len(all_cols) - 1)
 
         # ── Data Validation للأعمدة القابلة للتعديل ──
         if persons:
@@ -328,42 +423,22 @@ class ExcelExportService:
             last_data_row = len(persons) + 1
 
             for col_idx, header in enumerate(all_cols):
-                if header == 'الحالة':
+                if header == 'نوع الحالة':
                     worksheet.data_validation(
                         first_data_row, col_idx, last_data_row, col_idx,
                         {
                             'validate':      'list',
-                            'source':        all_statuses,
-                            'input_title':   'اختر التصنيف العام',
-                            'input_message': 'اختر التصنيف الرئيسي للحالة ثم اختر النوع في العمود التالي',
+                            'source':        self.meta_ranges['detailed'],
                             'error_title':   'قيمة غير مسموحة',
-                            'error_message': 'يجب الاختيار من القائمة فقط.',
+                            'error_message': 'يجب اختيار نوع الحالة من القائمة المنسدلة حصراً. يرجى الضغط على السهم بجانب الخلية.',
                             'error_type':    'stop',
-                            'show_input':    True,
                             'show_error':    True,
+                            'input_title':   'المرفقات المطلوبة',
+                            'input_message': 'تذكر: في حال تغيير الحالة (كالفرار، الانتداب، السجناء، وغيرها) يجب أن يتم إرفاق المستندات الداعمة مع الكشف الورقي أثناء رفعه (مثل بلاغ الانقطاع، قرارات اللجان، الأحكام القضائية).',
+                            'show_input':    True,
+                            'ignore_blank':  False, # منع الكتابة اليدوية العشوائية
                         }
                     )
-
-                elif header == 'نوع الحالة':
-                    # القائمة الشرطية: كل الحالات التفصيلية مجتمعة (الفرونت اند يتحكم بالفلترة)
-                    all_detailed = []
-                    for statuses in self._status_cascade.values():
-                        all_detailed.extend(statuses)
-                    if all_detailed:
-                        worksheet.data_validation(
-                            first_data_row, col_idx, last_data_row, col_idx,
-                            {
-                                'validate':      'list',
-                                'source':        all_detailed[:255],  # حد Excel
-                                'input_title':   'اختر نوع الحالة',
-                                'input_message': 'اختر نوع الحالة التفصيلية المناسبة',
-                                'error_title':   'قيمة غير مسموحة',
-                                'error_message': 'يجب الاختيار من القائمة فقط.',
-                                'error_type':    'stop',
-                                'show_input':    True,
-                                'show_error':    True,
-                            }
-                        )
 
         # ── حماية الورقة ──
         worksheet.protect(
@@ -378,10 +453,10 @@ class ExcelExportService:
                 'delete_columns':        False,
                 'insert_rows':           False,
                 'delete_rows':           False,
-                'sort':                  False,
-                'autofilter':            False,
+                'sort':                  True,
+                'autofilter':            True,
                 'pivot_tables':          False,
-                'objects':               False,
+                'objects':               True,  # ضروري جداً لكي يعمل سهم القائمة المنسدلة في بعض نسخ الإكسل!
                 'scenarios':             False,
             }
         )
@@ -396,18 +471,20 @@ class ExcelExportService:
         })
 
         # منع إضافة/حذف/إخفاء الأوراق
+        dept_id_comment = self.central_department.id if self.central_department else (self.security_admin.id if self.security_admin else '0')
         workbook.set_properties({
-            'title':   f'كشف خدمات {self.central_department.name} - {self.service_month}',
+            'title':   f'كشف خدمات {self.entity_name} - {self.service_month}',
             'subject': 'كشف خدمات شهري رسمي',
             'author':  'نظام إدارة الموارد البشرية',
             'company': 'وزارة الداخلية',
             'created': timezone.now(),
-            'comments': f'export_id:{self.export_id}|month:{self.service_month}|dept:{self.central_department.id}',
+            'comments': f'export_id:{self.export_id}|month:{self.service_month}|dept:{dept_id_comment}',
         })
 
         fmts = self._build_formats(workbook)
+        dept_id = self.central_department.id if self.central_department else (self.security_admin.id if self.security_admin else 0)
         password = _generate_workbook_password(
-            self.central_department.id,
+            dept_id,
             self.service_month,
             self.exported_by.id,
             str(self.export_id),
@@ -416,14 +493,39 @@ class ExcelExportService:
         # جلب البيانات
         personnel_data = self._get_personnel()
 
+        # ── توليد ورقة البيانات الوصفية (Metadata) المخفية ──
+        meta_ws = workbook.add_worksheet('SystemData')
+        
+        # نحن نحتاج إلى ترتيب الأعمدة ليكون مناسباً لـ VLOOKUP:
+        # العمود A: نوع الحالة (Detailed Status)
+        # العمود B: التصنيف العام (Classification)
+        
+        all_detailed_statuses = []
+        for classification, detailed_list in self._status_cascade.items():
+            for detailed in detailed_list:
+                all_detailed_statuses.append({
+                    'detailed': detailed,
+                    'classification': classification
+                })
+        
+        # كتابة البيانات في الورقة المخفية
+        for i, status_obj in enumerate(all_detailed_statuses):
+            meta_ws.write(i, 0, status_obj['detailed'])
+            meta_ws.write(i, 1, status_obj['classification'])
+            
+        self.meta_ranges = {
+            'detailed': f"='SystemData'!$A$1:$A${len(all_detailed_statuses) or 1}"
+        }
+
         if self.mode == 'single':
             # ── وضع الورقة الواحدة ──
             ws = workbook.add_worksheet('كشف موحد')
             self._write_sheet(workbook, ws, personnel_data, fmts, password, 'كشف موحد')
-
+            ws.activate() # التأكد من أن هذه الورقة هي الفعالة عند الفتح
         else:
             # ── وضع الأوراق الأربعة ──
             sheets_data = self._classify_personnel(personnel_data)
+            first_sheet = True
             for sheet_name in self.SHEET_NAMES:
                 ws = workbook.add_worksheet(sheet_name)
                 self._write_sheet(
@@ -431,7 +533,12 @@ class ExcelExportService:
                     sheets_data[sheet_name],
                     fmts, password, sheet_name,
                 )
+                if first_sheet:
+                    ws.activate()
+                    first_sheet = False
 
+        meta_ws.hide() # إخفاء ورقة البيانات بعد تنشيط ورقة أخرى لكي تعمل بنجاح
+        
         workbook.close()
         output.seek(0)
 
@@ -452,7 +559,7 @@ class ExcelExportService:
         ExportLog.objects.create(
             export_id=self.export_id,
             central_department=self.central_department,
-            security_admin=self.central_department.security_admin,
+            security_admin=self.security_admin,
             service_month=self.service_month,
             exported_by=self.exported_by,
             file_hash=self.file_hash,
@@ -462,7 +569,7 @@ class ExcelExportService:
         )
 
         filename = _generate_secure_filename(
-            self.central_department.name,
+            self.entity_name,
             self.service_month,
             str(self.export_id),
         )

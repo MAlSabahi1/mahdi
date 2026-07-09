@@ -763,3 +763,53 @@ span.flatpickr-weekday,
 .swal2-container {
   z-index: 999999 !important;
 }
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 1cm;
+  }
+  
+  /* Print borders for all tables */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+  
+  th, td {
+    border: 1px solid #000 !important;
+    color: #000 !important;
+    padding: 8px !important;
+  }
+  
+  thead th {
+    background-color: #f3f4f6 !important; /* light gray for print headers */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .print\:hidden {
+    display: none !important;
+  }
+  
+  /* Remove Tailwind text colors in print so everything is black */
+  .text-gray-500, .text-gray-600, .text-gray-700, .text-gray-900,
+  .dark\:text-gray-300, .dark\:text-gray-400, .dark\:text-white,
+  .text-slate-500, .text-slate-600, .text-slate-700, .text-slate-900 {
+    color: #000 !important;
+  }
+}
+
+@media print {
+  .printable-area {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+}

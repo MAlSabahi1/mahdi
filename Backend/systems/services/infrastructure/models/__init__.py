@@ -21,6 +21,7 @@ from .disciplinary import DisciplinaryAction, AbsenceRecord, DisciplinaryCouncil
 from .form_notes import FormNote, FormEventLog, FormReturnLog, FormChecklist
 from .service_catalog import ServiceCatalog, ServicePrerequisite, ChecklistTemplate
 from .workflow import WorkflowStage, ServiceWorkflowStep
+from .reports_bi import BIDataSource, EnterpriseReportTemplate
 
 __all__ = [
     # Event
@@ -57,4 +58,7 @@ __all__ = [
     'ChecklistTemplate',
     'WorkflowStage',
     'ServiceWorkflowStep',
+    # Reports BI
+    'BIDataSource',
+    'EnterpriseReportTemplate',
 ]

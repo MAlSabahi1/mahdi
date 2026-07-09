@@ -66,12 +66,13 @@ class ServiceStatus(TimeStampedModel):
 class JobCategory(TimeStampedModel):
     """الفئة الوظيفية"""
     name = models.CharField(max_length=50, unique=True, verbose_name=_('اسم الفئة'))
+    sort_order = models.IntegerField(default=0, verbose_name=_('ترتيب الفرز'))
 
     class Meta:
         db_table = 'core_job_category'
         verbose_name = _('فئة وظيفية')
         verbose_name_plural = _('الفئات الوظيفية')
-        ordering = ['name']
+        ordering = ['sort_order', 'name']
 
     def __str__(self):
         return self.name

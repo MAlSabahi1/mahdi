@@ -2,12 +2,26 @@
   <admin-layout>
     <div class="space-y-6 pb-20">
       <!-- Toolbar & Page Header -->
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 print:hidden">
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">تفاصيل القوة العاملة</h2>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">يعرض كشوفات تفصيلية بأسماء الأفراد وتوزيعهم على الإدارات</p>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 print:hidden">
+        <div class="flex items-center gap-4">
+          <div class="p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+            <svg class="h-8 w-8 text-slate-700 dark:text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white">تفاصيل القوة العاملة</h2>
+            <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">استعراض كشوفات تفصيلية بأسماء الأفراد وتوزيعهم الميداني على الإدارات</p>
+          </div>
         </div>
         <div class="flex items-center gap-2">
+          <button @click="$router.push('/reports')" class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-all focus:outline-none">
+            <svg class="h-4.5 w-4.5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            عودة للوحة التقارير
+          </button>
+
           <button @click="fetchData" class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-all">
             <svg class="h-4.5 w-4.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -77,9 +91,19 @@
       
 
 
+      
+      <!-- Accordion Controls -->
+      <div v-if="!loading && filteredGroupedData.length > 0" class="flex justify-between items-center bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 print:hidden">
+        <span class="text-sm font-bold text-slate-700 dark:text-slate-300">إجمالي الإدارات: {{ filteredGroupedData.length }}</span>
+        <div class="flex gap-2">
+          <button @click="expandAll" class="px-4 py-1.5 text-sm bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors font-medium">فتح الكل</button>
+          <button @click="collapseAll" class="px-4 py-1.5 text-sm bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors font-medium">طي الكل</button>
+        </div>
+      </div>
+
       <!-- Grouped Display -->
-      <!-- Grouped Display -->
-      <div v-else class="space-y-12 printable-area">
+
+      <div v-if="!loading" class="space-y-12 printable-area mt-6">
         <div 
           v-for="(group, index) in filteredGroupedData" 
           :key="index" 
@@ -95,58 +119,75 @@
             />
           </div>
 
-          <!-- Title block matching the paper: a sharp, professional box -->
-          <div class="flex justify-center mb-5 relative group/header print:hidden">
-            <div class="bg-gray-100 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 px-12 py-2.5 text-center min-w-[350px] shadow-sm relative">
-              <h3 class="text-xl font-bold text-gray-900 dark:text-white">
-                كشف بالقوة العاملة بـ ( {{ group.unit }} )
-              </h3>
-              <!-- Individual Print Button (Hidden in print) -->
-              <button 
-                @click="printSingleUnit(group.unit)" 
-                class="absolute left-[-50px] top-1/2 -translate-y-1/2 opacity-0 group-hover/header:opacity-100 transition-opacity print:hidden bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 p-2 rounded-full shadow-sm text-gray-700 dark:text-gray-300"
-                title="طباعة كشف هذه الجهة فقط"
-              >
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          <!-- Title block as Accordion Header -->
+          <div 
+            @click="toggleGroup(group.unit)"
+            class="flex items-center justify-between bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/50 dark:hover:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 px-6 py-4 rounded-xl cursor-pointer transition-colors print:hidden mb-2 group/header"
+          >
+            <div class="flex items-center gap-4">
+              <div class="bg-white dark:bg-slate-700 p-2 rounded-lg shadow-sm border border-slate-200 dark:border-slate-600">
+                <svg class="h-6 w-6 text-slate-600 dark:text-slate-300 transform transition-transform duration-300" :class="{'rotate-180': expandedGroups[group.unit] !== false}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
-              </button>
+              </div>
+              <h3 class="text-lg font-bold text-slate-900 dark:text-white">
+                {{ group.unit }}
+              </h3>
+              <span class="inline-flex items-center justify-center rounded-md bg-slate-200 dark:bg-slate-700 px-2.5 py-1 text-xs font-bold text-slate-700 dark:text-slate-300">
+                {{ group.items.length }} فرد
+              </span>
             </div>
+            
+            <button 
+              @click.stop="printSingleUnit(group.unit)" 
+              class="opacity-0 group-hover/header:opacity-100 transition-opacity print:hidden bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 p-2 rounded-lg shadow-sm border border-slate-200 dark:border-slate-600 focus:outline-none"
+              title="طباعة كشف هذه الجهة فقط"
+            >
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+            </button>
           </div>
           
           <!-- Native Table matching official reports -->
-          <div class="overflow-x-auto bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <div v-show="expandedGroups[group.unit] !== false" class="overflow-x-auto bg-white dark:bg-slate-900 rounded-xl shadow-sm border-2 border-slate-200 dark:border-slate-800 print:border-none print:shadow-none print:rounded-none print-expand mb-12">
             <table class="w-full text-right text-sm border-collapse">
-              <thead class="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-b-2 border-gray-300 dark:border-gray-600">
+              <thead class="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-b-2 border-slate-200 dark:border-slate-700">
                 <tr>
-                  <th v-for="col in columns" :key="col.key" class="px-4 py-3.5 border-l border-gray-200 dark:border-gray-700 font-bold text-sm text-center align-middle whitespace-nowrap">
+                  <th v-for="col in columns" :key="col.key" class="px-4 py-3.5 font-bold text-sm text-center align-middle whitespace-nowrap border-l border-slate-200 dark:border-slate-700">
                     {{ col.label }}
                   </th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                <tr v-for="row in group.items" :key="row.index" class="hover:bg-brand-50/50 dark:hover:bg-brand-900/10 transition-colors">
-                  <td class="px-3 py-3 border-l border-gray-200 dark:border-gray-700 text-center font-bold text-gray-600 dark:text-gray-400">{{ row.index }}</td>
-                  <td class="px-3 py-3 border-l border-gray-200 dark:border-gray-700 text-center font-medium text-gray-900 dark:text-white whitespace-nowrap">{{ row.rank || '-' }}</td>
-                  <td class="px-3 py-3 border-l border-gray-200 dark:border-gray-700 text-center font-mono font-medium text-gray-600 dark:text-gray-300">{{ row.military_number || '-' }}</td>
-                  <td class="px-4 py-3 border-l border-gray-200 dark:border-gray-700 font-bold text-gray-900 dark:text-white text-base">{{ row.full_name || '-' }}</td>
-                  <td class="px-3 py-3 border-l border-gray-200 dark:border-gray-700 text-center font-medium text-gray-800 dark:text-gray-200">{{ row.unit !== 'غير محدد (لا توجد بيانات)' ? row.unit : '-' }}</td>
-                  <td class="px-3 py-3 border-l border-gray-200 dark:border-gray-700 text-center font-medium text-gray-800 dark:text-gray-200">{{ row.service_type || '-' }}</td>
-                  <td class="px-3 py-3 border-l border-gray-200 dark:border-gray-700 text-center font-mono font-medium text-gray-600 dark:text-gray-300">{{ row.national_id || '-' }}</td>
-                  <td class="px-3 py-3 border-l border-gray-200 dark:border-gray-700 text-center font-medium text-gray-800 dark:text-gray-200">{{ row.qualification || '-' }}</td>
-                  <td class="px-3 py-3 text-center text-gray-600 dark:text-gray-400 max-w-[150px] truncate" :title="row.notes">{{ row.notes || '-' }}</td>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr v-for="row in group.items" :key="row.index" class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                  <td class="px-3 py-3 border-l border-slate-100 dark:border-slate-800 text-center font-bold text-slate-500 dark:text-slate-400">{{ row.index }}</td>
+                  <td class="px-3 py-3 border-l border-slate-100 dark:border-slate-800 text-center font-semibold text-slate-900 dark:text-white whitespace-nowrap">{{ row.rank || '-' }}</td>
+                  <td class="px-3 py-3 border-l border-slate-100 dark:border-slate-800 text-center font-mono font-medium text-slate-600 dark:text-slate-400">{{ row.military_number || '-' }}</td>
+                  <td class="px-4 py-3 border-l border-slate-100 dark:border-slate-800 font-bold text-slate-900 dark:text-white text-base">{{ row.full_name || '-' }}</td>
+                  <td class="px-3 py-3 border-l border-slate-100 dark:border-slate-800 text-center font-medium text-slate-700 dark:text-slate-300">{{ row.unit !== 'غير محدد (لا توجد بيانات)' ? row.unit : '-' }}</td>
+                  <td class="px-3 py-3 border-l border-slate-100 dark:border-slate-800 text-center font-medium text-slate-700 dark:text-slate-300">{{ row.service_type || '-' }}</td>
+                  <td class="px-3 py-3 border-l border-slate-100 dark:border-slate-800 text-center font-mono font-medium text-slate-600 dark:text-slate-400">{{ row.national_id || '-' }}</td>
+                  <td class="px-3 py-3 border-l border-slate-100 dark:border-slate-800 text-center font-medium text-slate-700 dark:text-slate-300">{{ row.qualification || '-' }}</td>
+                  <td class="px-3 py-3 text-center text-slate-500 dark:text-slate-400 max-w-[150px] truncate" :title="row.notes">{{ row.notes || '-' }}</td>
                 </tr>
                 <!-- Empty state for dummy group -->
                 <tr v-if="group.items.length === 0">
-                  <td :colspan="columns.length" class="px-6 py-12 text-center text-gray-500 bg-gray-50 dark:bg-gray-800/50">
-                    <svg class="mx-auto h-10 w-10 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                    <span class="font-medium text-sm">لا توجد بيانات مطابقة لمعايير البحث</span>
+                  <td :colspan="columns.length" class="px-6 py-12 text-center text-slate-500 bg-slate-50 dark:bg-slate-800/30">
+                    <div class="flex flex-col items-center justify-center">
+                      <svg class="h-10 w-10 text-slate-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                      <span class="font-bold text-slate-600 dark:text-slate-300 text-base">لا توجد بيانات مطابقة لمعايير البحث</span>
+                    </div>
                   </td>
                 </tr>
               </tbody>
             </table>
+          </div>
+          <!-- Official Print Footer (Appears at the bottom of each department's page) -->
+          <div class="mt-8 hidden print:block">
+            <report-footer />
           </div>
         </div>
 
@@ -160,12 +201,28 @@ import { ref, onMounted, computed, nextTick } from 'vue'
 import api from '@/lib/api'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import ReportHeader from '@/components/reports/ReportHeader.vue'
+import ReportFooter from '@/components/reports/ReportFooter.vue'
 
 const selectedLevel = ref('all')
 const searchQuery = ref('')
 const reportData = ref([])
 const loading = ref(false)
 const printingUnit = ref<string | null>(null)
+
+const expandedGroups = ref<Record<string, boolean>>({})
+
+const toggleGroup = (unit: string) => {
+  // If undefined, it defaults to true, so toggling means false.
+  expandedGroups.value[unit] = expandedGroups.value[unit] === false ? true : false
+}
+const expandAll = () => {
+  filteredGroupedData.value.forEach((g: any) => expandedGroups.value[g.unit] = true)
+}
+const collapseAll = () => {
+  const newState: Record<string, boolean> = {}
+  filteredGroupedData.value.forEach((g: any) => newState[g.unit] = false)
+  expandedGroups.value = newState
+}
 
 const columns = [
   { key: 'index', label: 'م' },
@@ -299,6 +356,12 @@ onMounted(() => {
   }
   
   /* Force hide non-printable elements using a class */
+  
+  /* Force table expansion in print mode */
+  .print-expand {
+    display: block !important;
+  }
+
   .print\:hidden {
     display: none !important;
   }

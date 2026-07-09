@@ -613,6 +613,9 @@ async function loadGovernorates() {
 
 function getDynamicFields(section: any) {
   if (!section || !section.fields) return []
+  // If the section is marked as auto, it means it's already rendered in the official form header
+  if (section.source === 'auto') return []
+  
   const hardcodedKeys = ['military_number', 'full_name', 'current_rank', 'rank', 'unit', 'national_id', 'birth_date', 'governorate', 'residence_gov_id']
   return section.fields.filter((f: any) => !hardcodedKeys.includes(f.key))
 }
