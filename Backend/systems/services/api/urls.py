@@ -17,6 +17,11 @@ from systems.services.api.views.import_views import ImportAPIViewSet
 from systems.services.api.views.raw_data_views import RawDataStandardizedViewSet
 from systems.services.api.views.status_change_views import StatusChangeFormViewSet
 from systems.services.api.views.admin_views import CustomFormTemplateViewSet, CustomReportTemplateViewSet
+from systems.services.api.views.bi_views import (
+    BIDataSourceViewSet,
+    EnterpriseReportTemplateViewSet,
+    BIEngineRunnerAPIView
+)
 from systems.services.api.views.initial_seed_views import InitialSeedViewSet
 from systems.services.api.views.disciplinary_views import (
     DisciplinaryActionViewSet,
@@ -53,6 +58,8 @@ import_router.register(r'import', ImportAPIViewSet, basename='import-api')
 admin_router = DefaultRouter()
 admin_router.register(r'forms', CustomFormTemplateViewSet, basename='admin-forms')
 admin_router.register(r'reports', CustomReportTemplateViewSet, basename='admin-reports')
+admin_router.register(r'bi-sources', BIDataSourceViewSet, basename='bi-sources')
+admin_router.register(r'bi-templates', EnterpriseReportTemplateViewSet, basename='bi-templates')
 
 # Service Cycle Extended Router
 extended_router = DefaultRouter()
@@ -108,6 +115,9 @@ urlpatterns = [
 
     # Admin — إدارة الاستمارات والنماذج المخصصة (مدير فقط)
     path('admin/', include(admin_router.urls)),
+
+    # Enterprise BI Engine Runner
+    path('bi/run/<slug:slug>/', BIEngineRunnerAPIView.as_view(), name='bi-engine-runner'),
 
     # Router URLs (staging, rejections, compliance, snapshots, webhooks)
     path('', include(router.urls)),

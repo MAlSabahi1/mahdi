@@ -41,6 +41,8 @@ from systems.services.infrastructure.models import (  # noqa: F401
     ChecklistTemplate,
     WorkflowStage,
     ServiceWorkflowStep,
+    BIDataSource,
+    EnterpriseReportTemplate,
 )
 
 # ── Re-exports للتوافق الخلفي (من الكود الأصلي) ─────────────────────────────
@@ -70,6 +72,8 @@ __all__ = [
     'ChecklistTemplate',
     'WorkflowStage',
     'ServiceWorkflowStep',
+    'BIDataSource',
+    'EnterpriseReportTemplate',
     # Re-exports
     'AuditLog',
     'NotificationRecord',

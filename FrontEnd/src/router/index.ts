@@ -318,6 +318,25 @@ const router = createRouter({
       }
     },
     {
+      path: "/reports/builder/studio/:id?",
+      name: "ReportStudio",
+      component: () => import("@/views/Reports/Builder/ReportStudio.vue"),
+      meta: {
+        title: "تصميم تقرير مخصص",
+        requiresAuth: true,
+        requiresAdmin: true
+      }
+    },
+    {
+      path: "/reports/builder/view/:id",
+      name: "CustomReportViewer",
+      component: () => import("@/views/Reports/Builder/CustomReportViewer.vue"),
+      meta: {
+        title: "عرض تقرير مخصص",
+        requiresAuth: true
+      }
+    },
+    {
       path: "/reports/view/:id(5|6|7|8|9|10|11)",
       name: "UnifiedListReport",
       component: () => import("@/views/Reports/UnifiedListReport.vue"),
@@ -680,6 +699,33 @@ const router = createRouter({
       component: () => import('@/views/Services/ExcelImportWizard.vue'),
       meta: {
         title: 'معالج الاستيراد الجماعي وتتبع Celery',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/export-config',
+      name: 'ExcelExportConfigurator',
+      component: () => import('@/views/Services/ExcelExportConfigurator.vue'),
+      meta: {
+        title: 'إعداد وتصدير النماذج المقفلة',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/monthly-exports',
+      name: 'MonthlyExports',
+      component: () => import('@/views/Services/MonthlyExports.vue'),
+      meta: {
+        title: 'تصدير التقارير الشهرية الموحدة',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/official-reports',
+      name: 'OfficialReports',
+      component: () => import('@/views/Services/OfficialReports.vue'),
+      meta: {
+        title: 'تصدير التقارير الرسمية',
         requiresAuth: true,
       },
     },

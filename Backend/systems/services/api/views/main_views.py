@@ -53,53 +53,172 @@ class ExportView(BaseViewSet):
     required_permission = 'export_sheet'
 
     @extend_schema(
-        parameters=[
-            OpenApiParameter('directorate_id', int, required=True, description='معرف الإدارة'),
-            OpenApiParameter('month', str, required=True, description='YYYY-MM'),
-            OpenApiParameter('mode', str, required=False, description='multi أو single (افتراضي: multi)'),
-        ],
-        summary='تصدير قالب كشف لإدارة واحدة',
+        summary='تصدير قالب كشف للإدارات',
         tags=['service-cycle'],
     )
     def list(self, request):
-        dept_id = request.query_params.get('directorate_id')
-        month   = request.query_params.get('month')
-        mode    = request.query_params.get('mode', 'multi')
+        columns_str = request.query_params.get('columns', '')
+        locked_columns_str = request.query_params.get('locked_columns', '')
+        statuses_str = request.query_params.get('statuses', '')
+        security_admins_id = request.query_params.get('security_admins')
+        central_departments_id = request.query_params.get('central_departments')
+        branches_id = request.query_params.get('branches')
+        district_polices_id = request.query_params.get('district_polices')
+        split_by = request.query_params.get('split_by')
+        
+        # Determine month
+        from datetime import datetime
+        month = request.query_params.get('month') or datetime.today().strftime('%Y-%m')
 
-        if not dept_id or not month:
-            return Response(
-                {'success': False, 'error': 'directorate_id و month مطلوبان'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if mode not in ('multi', 'single'):
-            return Response(
-                {'success': False, 'error': 'mode يجب أن يكون multi أو single'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        columns = [c for c in columns_str.split(',') if c]
+        locked_columns = [c for c in locked_columns_str.split(',') if c]
+        
+        # Calculate protected and editable
+        protected_columns = []
+        editable_columns = []
+        if columns:
+            # We map frontend field names to Excel headers. Note: The frontend sends english field names (e.g. 'military_number')
+            # But the export_service expects Arabic headers (e.g. 'الرقم العسكري') for `protected_columns` logic?
+            # Let's map them.
+            pass
 
-        from core.models import CentralDepartment
+        from systems.personnel.models import PersonnelMaster
+        qs = PersonnelMaster.objects.all()
+
+        entity_name = "محافظة/إدارة"
+        sec_admin = None
+        cen_dept = None
+        
+        from core.models import SecurityAdministration, CentralDepartment, Branch, DistrictPolice
+        
+        if central_departments_id:
+            try:
+                cen_dept = CentralDepartment.objects.get(id=int(central_departments_id))
+                qs = qs.filter(central_department=cen_dept)
+                entity_name = cen_dept.name
+            except CentralDepartment.DoesNotExist:
+                pass
+        elif branches_id:
+            try:
+                br = Branch.objects.get(id=int(branches_id))
+                qs = qs.filter(branch=br)
+                entity_name = br.name
+            except Branch.DoesNotExist:
+                pass
+        elif district_polices_id:
+            try:
+                dp = DistrictPolice.objects.get(id=int(district_polices_id))
+                qs = qs.filter(district_police=dp)
+                entity_name = dp.name
+            except DistrictPolice.DoesNotExist:
+                pass
+        elif security_admins_id:
+            try:
+                sec_admin = SecurityAdministration.objects.get(id=int(security_admins_id))
+                qs = qs.filter(central_department__security_admin=sec_admin)
+                entity_name = sec_admin.name
+            except SecurityAdministration.DoesNotExist:
+                pass
+
+        if statuses_str:
+            status_ids = [int(s) for s in statuses_str.split(',') if s.isdigit()]
+            if status_ids:
+                qs = qs.filter(current_status_id__in=status_ids)
+
         try:
-            dept = CentralDepartment.objects.get(id=int(dept_id))
-        except CentralDepartment.DoesNotExist:
-            return Response({'success': False, 'error': 'الإدارة غير موجودة'}, status=status.HTTP_404_NOT_FOUND)
+            from systems.services.application.services.export_service import ExcelExportService
+            from django.apps import apps
+            
+            export_mode = request.query_params.get('mode', 'single')
+            columns_str = request.query_params.get('columns', '')
+            locked_columns_str = request.query_params.get('locked_columns', '')
+            
+            def get_field_label(field_name):
+                PersonnelMaster = apps.get_model('personnel', 'PersonnelMaster')
+                try:
+                    return str(PersonnelMaster._meta.get_field(field_name).verbose_name)
+                except Exception:
+                    mapping = {
+                        'qualification': 'المؤهل الدراسي',
+                        'current_rank': 'الرتبة',
+                        'current_status': 'الحالة',
+                        'force_classification': 'تصنيف القوة',
+                        'job_title': 'نوع العمل',
+                        'notes': 'ملاحظات',
+                        'military_number': 'الرقم العسكري',
+                        'full_name': 'الاسم الكامل',
+                        'national_id': 'الرقم الوطني',
+                    }
+                    return mapping.get(field_name, field_name)
+            
+            # Parse custom columns requested by frontend
+            protected_arabic = None
+            editable_arabic = None
+            raw_columns = None
+            if columns_str:
+                selected_cols = [c.strip() for c in columns_str.split(',') if c.strip()]
+                locked_cols = [c.strip() for c in locked_columns_str.split(',') if c.strip()] if locked_columns_str else []
+                
+                if selected_cols:
+                    raw_columns = list(selected_cols)
+                    
+                    # Force inclusion of mandatory operational columns for the import engine
+                    if 'pseudo_status_type' not in raw_columns and 'current_status' not in raw_columns:
+                        # Fallback if UI doesn't send it, but UI now sends pseudo_status_type
+                        raw_columns.append('pseudo_status_type')
+                    if 'pseudo_monthly_var' not in raw_columns:
+                        raw_columns.append('pseudo_monthly_var')
+                    if 'notes' not in raw_columns and 'pseudo_notes' not in raw_columns:
+                        raw_columns.append('pseudo_notes')
+                        
+                    # Map correctly
+                    protected_arabic = []
+                    editable_arabic = []
+                    ordered_arabic = []
+                    
+                    final_raw = []
+                    for c in raw_columns:
+                        is_locked = c in locked_cols
+                        
+                        if c == 'pseudo_status_type':
+                            lbl = 'نوع الحالة'
+                            is_locked = False
+                            final_raw.append('__EMPTY__')
+                        elif c == 'pseudo_monthly_var':
+                            lbl = 'المتغير الشهري'
+                            is_locked = False
+                            final_raw.append('__EMPTY__')
+                        elif c == 'pseudo_notes':
+                            lbl = 'ملاحظات'
+                            is_locked = False
+                            final_raw.append('notes')
+                        else:
+                            lbl = get_field_label(c)
+                            final_raw.append(c)
+                            
+                        ordered_arabic.append(lbl)
+                        if is_locked:
+                            protected_arabic.append(lbl)
+                        else:
+                            editable_arabic.append(lbl)
 
-        # فحص نطاق المحافظة
-        if getattr(request.user, 'profile', None) and getattr(request.user.profile, 'governorate_id', None):
-            if hasattr(dept, 'security_admin') and dept.security_admin:
-                if getattr(dept.security_admin, 'governorate_id', None) != request.user.profile.governorate_id:
-                    return Response(
-                        {'success': False, 'error': 'ليس لديك صلاحية على هذه الإدارة'},
-                        status=status.HTTP_403_FORBIDDEN,
-                    )
-
-        try:
-            from systems.services.export_service import export_template_for_department
-            file_output, filename = export_template_for_department(
-                department_id=int(dept_id),
+                    raw_columns = final_raw
+            
+            service = ExcelExportService(
+                entity_name=entity_name,
+                queryset=qs,
                 service_month=month,
-                user=request.user,
-                mode=mode,
+                exported_by=request.user,
+                mode=export_mode,
+                split_by=split_by,
+                protected_columns=protected_arabic,
+                editable_columns=editable_arabic,
+                raw_columns=raw_columns,
+                ordered_columns=ordered_arabic if selected_cols else None,
+                security_admin=sec_admin,
+                central_department=cen_dept,
             )
+            file_output, filename = service.export_and_log()
             resp = FileResponse(
                 file_output,
                 content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
