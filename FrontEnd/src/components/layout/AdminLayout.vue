@@ -1,13 +1,13 @@
 <template>
-  <div class="min-h-screen xl:flex">
-    <app-sidebar />
-    <Backdrop />
+  <div class="min-h-screen xl:flex print:block print:min-h-0 print:bg-white">
+    <app-sidebar class="print:hidden" />
+    <Backdrop class="print:hidden" />
     <div
-      class="flex-1 transition-all duration-300 ease-in-out"
+      class="flex-1 transition-all duration-300 ease-in-out print:ms-0 print:block"
       :class="[isExpanded || isHovered ? 'lg:ms-[290px]' : 'lg:ms-[90px]']"
     >
-      <app-header />
-      <div class="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6 space-y-5">
+      <app-header class="print:hidden" />
+      <div class="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6 space-y-5 print:p-0 print:m-0 print:space-y-0 print:max-w-none print:w-full">
         <!-- Prototype Notice Banner for Users & Permissions System -->
         <div 
           v-if="systemStore.currentSystem === 'users_permissions'"

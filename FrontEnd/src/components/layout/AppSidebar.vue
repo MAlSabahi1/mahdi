@@ -408,17 +408,57 @@ const menuGroups = computed(() => {
   } else if (systemStore.currentSystem === "reports") {
     return [
       {
-        title: "نظام التقارير",
+        title: "وحدات التقارير",
         items: [
           {
             icon: GridIcon,
-            name: "لوحة تحكم التقارير",
-            path: "/reports/dashboard",
+            name: "تقارير نظام الخدمات",
+            subItems: [
+              {
+                name: "لوحة تحكم التقارير",
+                path: "/reports/dashboard",
+              },
+              {
+                name: "نافذة طلبات التصدير",
+                path: "/reports/export-requests",
+              }
+            ]
           },
           {
             icon: PageIcon,
-            name: "إدارة طلبات التصدير",
-            path: "/reports/export-requests",
+            name: "تقارير نظام السكرتارية",
+            subItems: [
+              {
+                name: "تقرير المراسلات الواردة والصادرة",
+                path: "/reports/secretariat/correspondences",
+              },
+              {
+                name: "تقرير إنجاز المهام",
+                path: "/reports/secretariat/tasks",
+              },
+              {
+                name: "تقرير الاجتماعات",
+                path: "/reports/secretariat/meetings",
+              }
+            ]
+          },
+          {
+            icon: UserGroupIcon,
+            name: "تقارير الإدارة",
+            subItems: [
+              {
+                name: "الإحصائيات العامة للنظام",
+                path: "/reports/admin/stats",
+              },
+              {
+                name: "تقرير نشاط المستخدمين",
+                path: "/reports/admin/users-activity",
+              },
+              {
+                name: "سجل التدقيق والمراجعة",
+                path: "/reports/admin/audit",
+              }
+            ]
           }
         ]
       }

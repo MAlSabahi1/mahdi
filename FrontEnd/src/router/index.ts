@@ -309,7 +309,13 @@ const router = createRouter({
       }
     },
     {
-      path: "/reports/view/:id(5|6|7|8|9|10|11)",
+      path: "/reports/view/11",
+      name: "MissingPersonnelReport",
+      component: () => import("@/views/Reports/MissingPersonnelReport.vue"),
+      meta: { title: "كشف مفقودين", requiresAuth: true }
+    },
+    {
+      path: "/reports/view/:id(5|6|7|8|9|10)",
       name: "TempInactiveReports",
       component: () => import("@/views/Reports/TempInactiveReports.vue"),
       meta: {
@@ -318,22 +324,96 @@ const router = createRouter({
       }
     },
     {
-      path: "/reports/view/:id(12|13|14|15|16|17)",
-      name: "PermInactiveReports",
-      component: () => import("@/views/Reports/PermInactiveReports.vue"),
+      path: "/reports/view/12",
+      name: "OldAgeReport",
+      component: () => import("@/views/Reports/OldAgeReport.vue"),
+      meta: { title: "كشف كبار سن", requiresAuth: true }
+    },
+    {
+      path: "/reports/view/13",
+      name: "EndOfServiceReport",
+      component: () => import("@/views/Reports/EndOfServiceReport.vue"),
+      meta: { title: "كشف نهاية المدة", requiresAuth: true }
+    },
+    {
+      path: "/reports/view/14",
+      name: "RetirementCandidatesReport",
+      component: () => import("@/views/Reports/RetirementCandidatesReport.vue"),
+      meta: { title: "كشف مرشحين للتقاعد", requiresAuth: true }
+    },
+    {
+      path: "/reports/view/15",
+      name: "MedicalUnfitnessReport",
+      component: () => import("@/views/Reports/MedicalUnfitnessReport.vue"),
+      meta: { title: "كشف عدم اللياقة", requiresAuth: true }
+    },
+    {
+      path: "/reports/view/16",
+      name: "MartyrsDeceasedReport",
+      component: () => import("@/views/Reports/MartyrsDeceasedReport.vue"),
       meta: {
-        title: "كشف القوة غير العاملة نهائياً",
+        title: "كشف شهداء ووفيات",
         requiresAuth: true
       }
     },
     {
-      path: "/reports/view/:id(18|19|20|21|22|23|24a|24b|25)",
+      path: "/reports/view/17",
+      name: "RetiredReport",
+      component: () => import("@/views/Reports/RetiredReport.vue"),
+      meta: { title: "كشف متقاعدين", requiresAuth: true }
+    },
+    {
+      path: "/reports/view/18",
+      name: "MinistryArrivalsReport",
+      component: () => import("@/views/Reports/MinistryArrivalsReport.vue"),
+      meta: { title: "كشف الواصلين من الوزارة", requiresAuth: true }
+    },
+    {
+      path: "/reports/view/:id(19|20|21|22|23|24a|24b|25)",
       name: "AuditMovementReports",
       component: () => import("@/views/Reports/AuditMovementReports.vue"),
       meta: {
         title: "كشوفات التدقيق وحركة القوة",
         requiresAuth: true
       }
+    },
+    // Placeholder routes for Secretariat Reports
+    {
+      path: "/reports/secretariat/correspondences",
+      name: "SecretariatCorrespondencesReport",
+      component: () => import("../views/Pages/BlankPage.vue"),
+      meta: { title: "تقرير المراسلات الواردة والصادرة", requiresAuth: true }
+    },
+    {
+      path: "/reports/secretariat/tasks",
+      name: "SecretariatTasksReport",
+      component: () => import("../views/Pages/BlankPage.vue"),
+      meta: { title: "تقرير إنجاز المهام", requiresAuth: true }
+    },
+    {
+      path: "/reports/secretariat/meetings",
+      name: "SecretariatMeetingsReport",
+      component: () => import("../views/Pages/BlankPage.vue"),
+      meta: { title: "تقرير الاجتماعات", requiresAuth: true }
+    },
+    // Placeholder routes for Administration Reports
+    {
+      path: "/reports/admin/stats",
+      name: "AdminStatsReport",
+      component: () => import("../views/Pages/BlankPage.vue"),
+      meta: { title: "الإحصائيات العامة للنظام", requiresAuth: true }
+    },
+    {
+      path: "/reports/admin/users-activity",
+      name: "AdminUsersActivityReport",
+      component: () => import("../views/Pages/BlankPage.vue"),
+      meta: { title: "تقرير نشاط المستخدمين", requiresAuth: true }
+    },
+    {
+      path: "/reports/admin/audit",
+      name: "AdminAuditReport",
+      component: () => import("../views/Pages/BlankPage.vue"),
+      meta: { title: "سجل التدقيق والمراجعة", requiresAuth: true }
     },
     {
       path: '/admin/snapshots',

@@ -17,7 +17,7 @@
 
     <!-- Levels Tabs (Hidden in print) -->
     <div class="flex overflow-x-auto border-b border-gray-200 dark:border-gray-800 no-scrollbar print:hidden">
-      <nav class="-mb-px flex space-x-8 rtl:space-x-reverse">
+      <nav class="-mb-px flex gap-8">
         <button
           v-for="level in levels"
           :key="level.id"
@@ -26,7 +26,7 @@
             currentLevel === level.id
               ? 'border-brand-500 text-brand-600 dark:text-brand-400'
               : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-700',
-            'whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors'
+            'whitespace-nowrap border-b-2 py-4 px-4 text-sm font-medium transition-colors'
           ]"
         >
           {{ level.name }}
@@ -59,13 +59,19 @@
         >
           <!-- Table Header -->
           <template #header>
-            <tr>
-              <th rowspan="2" class="w-48 font-bold">الجهة / {{ currentLevelName }}</th>
-              <th :colspan="categories.length" class="font-bold bg-group-1">الفئات</th>
-              <th rowspan="2" class="w-24 font-bold bg-gray-100 dark:bg-gray-800">الإجمالي</th>
+            <tr class="border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100">
+              <th rowspan="2" class="w-40 min-w-[160px] px-4 py-3 border-l border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 align-middle text-center font-bold">
+                {{ currentLevel === 'all' ? 'السرية' : currentLevelName }}
+              </th>
+              <th :colspan="categories.length" class="px-4 py-2 border-l border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 align-middle text-center font-bold">
+                تصنيف الوظائف
+              </th>
+              <th rowspan="2" class="px-4 py-3 border-l border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 align-middle text-center font-bold">
+                الإجمالي
+              </th>
             </tr>
-            <tr>
-              <th v-for="cat in categories" :key="cat" class="font-semibold text-xs bg-group-1 border-t border-gray-200 dark:border-gray-700">
+            <tr class="border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100">
+              <th v-for="cat in categories" :key="cat" class="px-4 py-2 border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 align-middle text-center font-bold">
                 {{ cat }}
               </th>
             </tr>
@@ -73,16 +79,12 @@
 
           <!-- Table Body -->
           <template #body>
-            <tr v-for="row in filteredReportData" :key="row.unit_name" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-              <td class="font-bold text-gray-900 dark:text-gray-100 whitespace-nowrap">{{ row.unit_name }}</td>
-              
-              <!-- Categories Columns -->
-              <td v-for="cat in categories" :key="cat" class="text-center">
+            <tr v-for="(row, idx) in filteredReportData" :key="idx" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border-b border-gray-200 dark:border-gray-700">
+              <td class="px-4 py-3 font-medium text-right bg-gray-50 dark:bg-gray-800/30 border-l border-gray-200 dark:border-gray-700 whitespace-nowrap">{{ row.unit_name }}</td>
+              <td v-for="cat in categories" :key="cat" class="px-4 py-3 border-l border-gray-200 dark:border-gray-700" :class="{'text-gray-300 dark:text-gray-700': !row.categories[cat]}">
                 {{ row.categories[cat] || '-' }}
               </td>
-              
-              <!-- Row Total -->
-              <td class="text-center font-bold bg-gray-50 dark:bg-gray-800/50">{{ row.total }}</td>
+              <td class="px-4 py-3 font-bold bg-gray-50 dark:bg-gray-800/50 border-l border-gray-200 dark:border-gray-700">{{ row.total }}</td>
             </tr>
           </template>
 
@@ -120,13 +122,13 @@ import ReportFooter from '@/components/reports/ReportFooter.vue'
 const categories = ref<string[]>([])
 
 const levels = [
-  { id: 'central', name: 'الإدارات المركزية (ديوان)' },
-  { id: 'branch', name: 'الفروع الميدانية' },
-  { id: 'district', name: 'أمن المديريات' },
-  { id: 'security_admin', name: 'الإدارات الأمنية (المحافظات)' },
+  { id: 'all', name: 'الكل' },
+  { id: 'central', name: 'الإدارات المركزية' },
+  { id: 'branch', name: 'الفروع' },
+  { id: 'district', name: 'شرطات المديريات' },
 ]
 
-const currentLevel = ref('central')
+const currentLevel = ref('all')
 const currentLevelName = computed(() => levels.find(l => l.id === currentLevel.value)?.name || '')
 
 const loading = ref(false)
@@ -164,7 +166,7 @@ const fetchReport = async () => {
     categories.value = Array.from(cats).sort()
     
     if (categories.value.length === 0) {
-        categories.value = ['ضباط', 'أفراد', 'مدنيين']
+        categories.value = ['إدارية', 'ميدانية', 'فنية', 'تخصصية', 'حرفية']
     }
   } catch (error) {
     console.error('Error fetching report:', error)

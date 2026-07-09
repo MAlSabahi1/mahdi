@@ -22,22 +22,58 @@ class CategoricalWorkforceReportView(APIView):
             'security_admin': 'security_admin__name',
         }
         
-        if level not in level_field_map:
+        if level not in level_field_map and level != 'all':
             raise ValidationError({"error": "Invalid level specified."})
             
-        group_field = level_field_map[level]
+        from django.db.models.functions import Coalesce
+        from core.models.organization import CentralDepartment, Branch, DistrictPolice, SecurityAdministration
+        
+        data_map = {}
+        if level == 'all':
+            units_central = list(CentralDepartment.objects.filter(is_active=True).values_list('name', flat=True))
+            units_branch = list(Branch.objects.filter(is_active=True).values_list('name', flat=True))
+            units_district = list(DistrictPolice.objects.filter(is_active=True).values_list('name', flat=True))
+            units = units_central + units_branch + units_district
+        elif level == 'central':
+            units = CentralDepartment.objects.filter(is_active=True).values_list('name', flat=True)
+        elif level == 'branch':
+            units = Branch.objects.filter(is_active=True).values_list('name', flat=True)
+        elif level == 'district':
+            units = DistrictPolice.objects.filter(is_active=True).values_list('name', flat=True)
+        else:
+            units = SecurityAdministration.objects.filter(is_active=True).values_list('name', flat=True)
+            
+        for u in units:
+            data_map[u] = {
+                "unit_name": u,
+                "categories": {},
+                "total": 0
+            }
         
         # تجميع البيانات: فقط لمن هم "بالخدمة" حسب الفئة
         qs = PersonnelMaster.objects.filter(
-            current_status__name='بالخدمة'
-        ).values(
-            group_field, 
-            'category__name'
-        ).annotate(
-            count=Count('military_number')
+            current_status__classification__startswith='active'
         )
         
-        data_map = {}
+        if level == 'all':
+            qs = qs.annotate(
+                unit_name=Coalesce('central_department__name', 'branch__name', 'district_police__name')
+            ).values(
+                'unit_name', 
+                'category__name'
+            ).annotate(
+                count=Count('military_number')
+            )
+            group_field = 'unit_name'
+        else:
+            group_field = level_field_map[level]
+            qs = qs.filter(**{f"{group_field.split('__')[0]}__isnull": False}).values(
+                group_field, 
+                'category__name'
+            ).annotate(
+                count=Count('military_number')
+            )
+        
         grand_totals = {}
         
         for row in qs:
@@ -84,16 +120,37 @@ class NonWorkforceReportView(APIView):
             'security_admin': 'security_admin__name',
         }
         
-        if level not in level_field_map:
-            raise ValidationError({"error": "Invalid level specified."})
-            
-        # هنا لا نحتاج للـ group_field كصف، بل نستخدمه للفلترة إذا لزم الأمر، 
-        # لكن التقرير يتطلب إحصائية عن الجهة بأكملها، الصفوف هي الحالات (current_status).
+        # جلب الحالات ديناميكياً من قاعدة البيانات بدلاً من كتابتها يدوياً
+        from core.models.personnel_refs import ServiceStatus
+        # بناءً على طلبك: الحالات يتم سحبها من جدول ServiceStatus
+        # نجلب الحالات التي تتبع قوة غير عاملة نهائياً كما طلبت
+        db_statuses = ServiceStatus.objects.filter(
+            classification='inactive_perm'
+        ).values_list('name', flat=True)
         
-        # استبعاد "بالخدمة" وكل من ليس لديه حالة
-        qs = PersonnelMaster.objects.exclude(
-            current_status__name__in=['بالخدمة', None, '']
-        ).values(
+        dynamic_statuses = list(db_statuses)
+        
+        # القوة غير العاملة فقط بحسب الحالات المسحوبة من قاعدة البيانات
+        qs = PersonnelMaster.objects.filter(
+            current_status__name__in=dynamic_statuses
+        )
+        
+        # فلترة بناءً على المستوى المطلوب (إذا لم يكن 'all')
+        if level != 'all':
+            filter_kwargs = {}
+            if level == 'central':
+                filter_kwargs['central_department__isnull'] = False
+            elif level == 'branch':
+                filter_kwargs['branch__isnull'] = False
+            elif level == 'district':
+                filter_kwargs['district_police__isnull'] = False
+            elif level == 'security_admin':
+                filter_kwargs['security_admin__isnull'] = False
+                
+            if filter_kwargs:
+                qs = qs.filter(**filter_kwargs)
+                
+        qs = qs.values(
             'current_status__name', 
             'current_rank__name'
         ).annotate(
@@ -101,27 +158,29 @@ class NonWorkforceReportView(APIView):
         )
         
         data_map = {}
+        # تهيئة جميع الحالات بصفر لضمان ظهورها حتى لو لم يكن هناك أفراد
+        for s in dynamic_statuses:
+            data_map[s] = {
+                "unit_name": s,
+                "ranks": {},
+                "total": 0
+            }
+            
         grand_totals = {}
         
         for row in qs:
-            status = row['current_status__name'] or 'غير محدد'
+            status = row['current_status__name']
             rank = row['current_rank__name'] or 'بدون رتبة'
             count = row['count']
             
-            if status not in data_map:
-                data_map[status] = {
-                    "unit_name": status, # Using unit_name as a generic row label for frontend ReportTable
-                    "ranks": {},
-                    "total": 0
-                }
+            if status in data_map:
+                data_map[status]["ranks"][rank] = data_map[status]["ranks"].get(rank, 0) + count
+                data_map[status]["total"] += count
                 
-            data_map[status]["ranks"][rank] = data_map[status]["ranks"].get(rank, 0) + count
-            data_map[status]["total"] += count
+                grand_totals[rank] = grand_totals.get(rank, 0) + count
             
-            grand_totals[rank] = grand_totals.get(rank, 0) + count
-            
-        data_list = list(data_map.values())
-        data_list.sort(key=lambda x: x['unit_name'])
+        # إرجاع القائمة ديناميكياً
+        data_list = [data_map[s] for s in dynamic_statuses]
         
         return Response({
             "level": level,
@@ -196,9 +255,7 @@ class ExportRequestViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='download')
     def download(self, request, pk=None):
-        from django.http import HttpResponse
-        from systems.personnel.api.views.reports_views import WorkforceSummaryReportView
-        from systems.reports.utils.excel_generator import generate_report_excel
+        from systems.reports.utils.report_services import generate_export_response
 
         export_req = self.get_object()
         
@@ -214,140 +271,5 @@ class ExportRequestViewSet(viewsets.ModelViewSet):
             export_req.save()
             return Response({"error": "انتهت صلاحية رابط التحميل."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Map report_id to the actual view class to fetch data
-        from ..personnel.api.views.detailed_reports_views import (
-            ActiveForceReportView, 
-            TempInactiveReportsView,
-            PermInactiveReportsView,
-            AuditMovementReportsView
-        )
-        
-        report_map = {
-            'report_1': (WorkforceSummaryReportView, "خلاصة القوة العاملة بحسب الرتبة"),
-            'report_2': (CategoricalWorkforceReportView, "خلاصة القوة العاملة - فئوي"),
-            'report_3': (NonWorkforceReportView, "خلاصة القوة غير العاملة"),
-            'report_4': (ActiveForceReportView, "كشف القوة العاملة فعلياً"),
-            'report_5': (TempInactiveReportsView, "كشف المرضى المتواجدين في المستشفى"),
-            'report_6': (TempInactiveReportsView, "كشف بالقوة غير العاملة مؤقتاً مرافقين"),
-            'report_7': (TempInactiveReportsView, "كشف المنتدبين لدى جهات"),
-            'report_8': (TempInactiveReportsView, "كشف المفرغين للدراسة"),
-            'report_9': (TempInactiveReportsView, "كشف السجناء"),
-            'report_10': (TempInactiveReportsView, "كشف الإجازات الرسمية"),
-            'report_11': (TempInactiveReportsView, "كشف بالقوة غير العاملة مؤقتاً مفقودين"),
-            'report_12': (PermInactiveReportsView, "كشف كبار السن"),
-            'report_13': (PermInactiveReportsView, "كشف إنهاء الخدمة"),
-            'report_14': (PermInactiveReportsView, "كشف مرشحين للتقاعد"),
-            'report_15': (PermInactiveReportsView, "كشف عدم اللياقة (عجز طبي)"),
-            'report_16': (PermInactiveReportsView, "كشف شهداء ووفيات"),
-            'report_17': (PermInactiveReportsView, "كشف متقاعدين (القرار النهائي)"),
-            'report_18': (AuditMovementReportsView, "كشف الواصلين من الوزارة"),
-            'report_19': (AuditMovementReportsView, "كشف العازمين إلى الوزارة"),
-            'report_20': (AuditMovementReportsView, "كشف العازمين - تفصيلي مقارن"),
-            'report_21': (AuditMovementReportsView, "كشف العاملين لدينا (انتداب للداخل)"),
-            'report_22': (AuditMovementReportsView, "كشف العاملين بالخارج (انتداب للخارج)"),
-            'report_23': (AuditMovementReportsView, "كشف المطلوب تصحيح أسماؤهم"),
-            'report_24a': (AuditMovementReportsView, "كشف الغياب المؤقت"),
-            'report_24b': (AuditMovementReportsView, "كشف الفرار (الغياب المستمر)"),
-            'report_25': (AuditMovementReportsView, "كشف الملتحقين بالعدوان"),
-        }
-        
-        if export_req.report_id not in report_map:
-            return Response({"error": "هذا التقرير غير مدعوم للتصدير حالياً."}, status=status.HTTP_400_BAD_REQUEST)
-            
-        view_class, report_title = report_map[export_req.report_id]
-        
-        # Call the view to get the aggregated data
-        view_instance = view_class()
-        
-        # Add report_id to query_params for TempInactiveReportsView to filter correctly
-        request.GET = request.GET.copy()
-        request.GET['report_id'] = export_req.report_id
-        
-        # We need to simulate a request or just pass the current request
-        response = view_instance.get(request)
-        if response.status_code != 200:
-            return Response({"error": "فشل في تجميع بيانات التقرير."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            
-        data = response.data
-        data_list = data.get('data', [])
-        grand_totals = data.get('totals', {})
-        
-        if not data_list:
-            return Response({"error": "لا توجد بيانات لتصديرها."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Build columns and rows based on report type
-        if export_req.report_id in ['report_1', 'report_2', 'report_3']:
-            columns = ["م", "الجهة"]
-            
-            # Get dynamic columns from the first row's keys
-            first_row = data_list[0]
-            dynamic_keys_field = 'ranks' if 'ranks' in first_row else 'categories'
-            dynamic_cols = list(first_row.get(dynamic_keys_field, {}).keys())
-            
-            columns.extend(dynamic_cols)
-            columns.append("المجموع")
-            
-            rows = []
-            for idx, item in enumerate(data_list, start=1):
-                row = [idx, item.get('unit_name', 'غير محدد')]
-                for col in dynamic_cols:
-                    row.append(item.get(dynamic_keys_field, {}).get(col, 0))
-                row.append(item.get('total', 0))
-                rows.append(row)
-                
-            # Build totals row
-            total_row = ["", "الإجمالي العام"]
-            total_sum = 0
-            for col in dynamic_cols:
-                val = grand_totals.get(col, 0)
-                total_row.append(val)
-                total_sum += val
-            total_row.append(total_sum)
-        else:
-            # For detailed reports 4-11
-            # Dynamic columns based on the keys of the first item
-            first_row = data_list[0]
-            
-            # Translate keys to Arabic headers
-            header_translation = {
-                'index': 'م',
-                'rank': 'الرتبة',
-                'military_number': 'الرقم العسكري',
-                'full_name': 'الاسم',
-                'unit': 'الإدارة / الجهة',
-                'position': 'المنصب / العمل الحالي',
-                'hospital': 'اسم المستشفى',
-                'entry_date': 'تاريخ الدخول',
-                'medical_report': 'التقرير الطبي',
-                'escort_source': 'مصدر الأمر',
-                'escort_name': 'اسم الشخصية',
-                'duration_from': 'من تاريخ',
-                'duration_to': 'إلى تاريخ',
-                'delegate_to': 'جهة الانتداب',
-                'delegate_purpose': 'الغرض من الانتداب',
-                'study_type': 'نوع الدراسة',
-                'study_location': 'جهة الدراسة',
-                'case_type': 'نوع القضية',
-                'arrest_date': 'تاريخ التوقيف',
-                'verdict_type': 'نوع الحكم',
-                'vacation_type': 'نوع الإجازة',
-                'missing_date': 'تاريخ الفقدان',
-                'court_order': 'حكم شرعي بالفقدان',
-                'notes': 'ملاحظات'
-            }
-            
-            columns = [header_translation.get(k, k) for k in first_row.keys()]
-            rows = [[item.get(k, "") for k in first_row.keys()] for item in data_list]
-            total_row = None
-        
-        # Generate Excel
-        excel_buffer = generate_report_excel(report_title, columns, rows, total_row)
-        
-        # Return as downloadable file
-        http_response = HttpResponse(
-            excel_buffer.read(),
-            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )
-        # Safe ascii filename, will use report_id
-        http_response['Content-Disposition'] = f'attachment; filename="export_{export_req.report_id}.xlsx"'
-        return http_response
+        # Delegate logic to report services
+        return generate_export_response(export_req, request)

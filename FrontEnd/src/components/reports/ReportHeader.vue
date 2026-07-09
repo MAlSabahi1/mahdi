@@ -25,7 +25,7 @@
         </div>
         <div class="flex justify-start">
           <span class="w-16">التاريخ:</span>
-          <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/ 202 م</span>
+          <span>{{ formattedDate }}</span>
         </div>
         <div class="flex justify-start">
           <span class="w-16">المرفقات:</span>
@@ -38,14 +38,27 @@
     <!-- Center Title -->
     <div class="mt-6 text-center">
       <h2 class="text-xl font-bold text-gray-900 border-b border-gray-900 inline-block pb-1 px-4">
-        كشف بـ {{ title }} لشهر (..........) 202م
+        {{ title }} لشهر ( {{ currentMonth }} ) {{ currentYear }}م
       </h2>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 defineProps<{
   title: string
 }>()
+
+const dateObj = new Date()
+const arabicMonths = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
+const currentMonth = arabicMonths[dateObj.getMonth()]
+const currentYear = dateObj.getFullYear()
+
+const formattedDate = computed(() => {
+  const d = String(dateObj.getDate()).padStart(2, '0')
+  const m = String(dateObj.getMonth() + 1).padStart(2, '0')
+  return `${d} / ${m} / ${currentYear} م`
+})
 </script>

@@ -17,7 +17,7 @@
 
     <!-- Levels Tabs -->
     <div class="flex overflow-x-auto border-b border-gray-200 dark:border-gray-800 no-scrollbar print:hidden">
-      <nav class="-mb-px flex space-x-8 rtl:space-x-reverse">
+      <nav class="-mb-px flex gap-8">
         <button
           v-for="level in levels"
           :key="level.id"
@@ -26,7 +26,7 @@
             currentLevel === level.id
               ? 'border-brand-500 text-brand-600 dark:text-brand-400'
               : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-700',
-            'whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors'
+            'whitespace-nowrap border-b-2 py-4 px-4 text-sm font-medium transition-colors'
           ]"
         >
           {{ level.name }}
@@ -58,39 +58,47 @@
         >
           <!-- Table Header -->
           <template #header>
-            <tr>
-              <th rowspan="2" class="w-48 font-bold">الرتبة / {{ currentLevelName }}</th>
-              <th :colspan="officerRanks.length" class="font-bold bg-group-1">الضباط</th>
-              <th :colspan="ncoRanks.length" class="font-bold bg-group-2">الأفراد</th>
-              <th rowspan="2" class="font-bold bg-gray-100 dark:bg-gray-800">الإجمالي</th>
+            <tr class="border-b border-gray-200 dark:border-gray-700">
+              <th rowspan="2" class="w-40 min-w-[160px] p-0 border-l border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 relative align-middle overflow-hidden">
+                <svg class="absolute inset-0 w-full h-full text-gray-300 dark:text-gray-600" preserveAspectRatio="none" viewBox="0 0 100 100">
+                  <line x1="0" y1="100" x2="100" y2="0" stroke="currentColor" stroke-width="1.5"></line>
+                </svg>
+                <div class="relative w-full h-full min-h-[70px]">
+                  <span class="absolute top-3 left-10 text-sm font-bold text-gray-700 dark:text-gray-300">{{ currentLevel === 'all' ? 'السرية' : currentLevelName }}</span>
+                  <span class="absolute bottom-3 right-10 text-sm font-bold text-gray-900 dark:text-gray-100">الرتبة</span>
+                </div>
+              </th>
+              <th :colspan="officerRanks.length" class="px-4 py-2 border-b border-l border-gray-200 dark:border-gray-700 font-bold bg-brand-50/50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300">الضباط</th>
+              <th :colspan="ncoRanks.length" class="px-4 py-2 border-b border-l border-gray-200 dark:border-gray-700 font-bold bg-blue-50/50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">الأفراد</th>
+              <th rowspan="2" class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 font-bold align-middle bg-gray-100 dark:bg-gray-800">الإجمالي</th>
             </tr>
-            <tr>
-              <th v-for="rank in officerRanks" :key="rank" class="w-12 text-xs bg-group-1">{{ rank }}</th>
-              <th v-for="rank in ncoRanks" :key="rank" class="w-12 text-xs bg-group-2">{{ rank }}</th>
+            <tr class="border-b border-gray-200 dark:border-gray-700">
+              <th v-for="rank in officerRanks" :key="rank" class="min-w-[60px] px-2 py-2 border-l border-gray-200 dark:border-gray-700 text-xs font-semibold bg-gray-50 dark:bg-gray-800/50">{{ rank }}</th>
+              <th v-for="rank in ncoRanks" :key="rank" class="min-w-[60px] px-2 py-2 border-l border-gray-200 dark:border-gray-700 text-xs font-semibold bg-gray-50 dark:bg-gray-800/50">{{ rank }}</th>
             </tr>
           </template>
 
           <!-- Table Body -->
           <template #body>
-            <tr v-for="(row, idx) in filteredReportData" :key="idx">
-              <td class="font-medium text-right bg-gray-50 dark:bg-gray-800/30">{{ row.unit_name }}</td>
-              <td v-for="rank in officerRanks" :key="rank" :class="{'text-gray-400 dark:text-gray-600': !row.ranks[rank]}">
-                {{ row.ranks[rank] || '' }}
+            <tr v-for="(row, idx) in filteredReportData" :key="idx" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              <td class="px-4 py-3 font-medium text-right border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 whitespace-nowrap">{{ row.unit_name }}</td>
+              <td v-for="rank in officerRanks" :key="rank" class="px-2 py-3 border-l border-gray-200 dark:border-gray-700" :class="{'text-gray-300 dark:text-gray-700': !row.ranks[rank]}">
+                {{ row.ranks[rank] || '-' }}
               </td>
-              <td v-for="rank in ncoRanks" :key="rank" :class="{'text-gray-400 dark:text-gray-600': !row.ranks[rank]}">
-                {{ row.ranks[rank] || '' }}
+              <td v-for="rank in ncoRanks" :key="rank" class="px-2 py-3 border-l border-gray-200 dark:border-gray-700" :class="{'text-gray-300 dark:text-gray-700': !row.ranks[rank]}">
+                {{ row.ranks[rank] || '-' }}
               </td>
-              <td class="font-bold bg-gray-50 dark:bg-gray-800/50">{{ row.total }}</td>
+              <td class="px-4 py-3 font-bold bg-gray-50 dark:bg-gray-800/50">{{ row.total }}</td>
             </tr>
           </template>
 
           <!-- Table Footer -->
           <template #footer>
-            <tr>
-              <td class="text-right">الإجمالي الكلي</td>
-              <td v-for="rank in officerRanks" :key="rank">{{ grandTotals[rank] || '' }}</td>
-              <td v-for="rank in ncoRanks" :key="rank">{{ grandTotals[rank] || '' }}</td>
-              <td class="text-brand-600 dark:text-brand-400">{{ overallTotal }}</td>
+            <tr class="border-t-2 border-gray-300 dark:border-gray-600">
+              <td class="px-4 py-4 text-right font-bold border-l border-gray-200 dark:border-gray-700">الإجمالي الكلي</td>
+              <td v-for="rank in officerRanks" :key="rank" class="px-2 py-4 font-bold border-l border-gray-200 dark:border-gray-700">{{ grandTotals[rank] || '-' }}</td>
+              <td v-for="rank in ncoRanks" :key="rank" class="px-2 py-4 font-bold border-l border-gray-200 dark:border-gray-700">{{ grandTotals[rank] || '-' }}</td>
+              <td class="px-4 py-4 font-black text-brand-600 dark:text-brand-400 text-lg">{{ overallTotal }}</td>
             </tr>
           </template>
         </ReportTable>
@@ -113,18 +121,18 @@ import ReportFooter from '@/components/reports/ReportFooter.vue'
 
 // Ranks Arrays based on the physical paper
 const officerRanks = ['عميد', 'عقيد', 'مقدم', 'رائد', 'نقيب', 'ملازم أول', 'ملازم ثاني']
-const ncoRanks = ['مساعد ١', 'مساعد ٢', 'مساعد', 'رقيب ١', 'رقيب ٢', 'عريف', 'جندي', 'حارس', 'مدني']
+const ncoRanks = ['مساعد 1', 'مساعد 2', 'مساعد', 'رقيب 1', 'رقيب 2', 'عريف', 'جندي', 'حارس', 'مدني']
 const totalColumns = computed(() => officerRanks.length + ncoRanks.length + 2)
 
 // Levels
 const levels = [
-  { id: 'central', name: 'الإدارات المركزية (ديوان)' },
-  { id: 'branch', name: 'الفروع الميدانية' },
-  { id: 'district', name: 'أمن المديريات' },
-  { id: 'security_admin', name: 'الإدارات الأمنية (المحافظات)' },
+  { id: 'all', name: 'الكل' },
+  { id: 'central', name: 'الإدارات المركزية' },
+  { id: 'branch', name: 'الفروع' },
+  { id: 'district', name: 'شرطات المديريات' },
 ]
 
-const currentLevel = ref('central')
+const currentLevel = ref('all')
 const currentLevelName = computed(() => {
   const lvl = levels.find(l => l.id === currentLevel.value)
   return lvl ? lvl.name.split(' ')[0] + ' ' + (lvl.name.split(' ')[1] || '') : 'الجهة'

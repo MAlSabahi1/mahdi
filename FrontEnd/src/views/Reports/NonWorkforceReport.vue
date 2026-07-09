@@ -17,7 +17,7 @@
 
     <!-- Levels Tabs (Hidden in print) -->
     <div class="flex overflow-x-auto border-b border-gray-200 dark:border-gray-800 no-scrollbar print:hidden">
-      <nav class="-mb-px flex space-x-8 rtl:space-x-reverse">
+      <nav class="-mb-px flex gap-8">
         <button
           v-for="level in levels"
           :key="level.id"
@@ -26,7 +26,7 @@
             currentLevel === level.id
               ? 'border-brand-500 text-brand-600 dark:text-brand-400'
               : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-700',
-            'whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors'
+            'whitespace-nowrap border-b-2 py-4 px-4 text-sm font-medium transition-colors'
           ]"
         >
           {{ level.name }}
@@ -59,41 +59,37 @@
         >
           <!-- Table Header -->
           <template #header>
-            <tr>
-              <th rowspan="2" class="w-48 font-bold">محل الخدمة</th>
-              <th :colspan="officerRanks.length" class="font-bold bg-group-1">الضباط</th>
-              <th :colspan="individualRanks.length" class="font-bold bg-group-2">الأفراد</th>
-              <th rowspan="2" class="w-24 font-bold bg-gray-100 dark:bg-gray-800">الإجمالي</th>
+            <tr class="border-b border-gray-200 dark:border-gray-700">
+              <th rowspan="2" class="w-40 min-w-[160px] p-0 border-l border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 relative align-middle overflow-hidden">
+                <svg class="absolute inset-0 w-full h-full text-gray-300 dark:text-gray-600" preserveAspectRatio="none" viewBox="0 0 100 100">
+                  <line x1="0" y1="100" x2="100" y2="0" stroke="currentColor" stroke-width="1.5"></line>
+                </svg>
+                <div class="relative w-full h-full min-h-[70px]">
+                  <span class="absolute top-3 left-10 text-sm font-bold text-gray-700 dark:text-gray-300">محل الخدمة</span>
+                  <span class="absolute bottom-3 right-10 text-sm font-bold text-gray-900 dark:text-gray-100">الرتبة</span>
+                </div>
+              </th>
+              <th :colspan="officerRanks.length" class="px-4 py-2 border-b border-l border-gray-200 dark:border-gray-700 font-bold bg-brand-50/50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300">الضباط</th>
+              <th :colspan="individualRanks.length" class="px-4 py-2 border-b border-l border-gray-200 dark:border-gray-700 font-bold bg-blue-50/50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">الأفراد</th>
+              <th rowspan="2" class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 font-bold align-middle bg-gray-100 dark:bg-gray-800">الإجمالي</th>
             </tr>
-            <tr>
-              <!-- Officers -->
-              <th v-for="rank in officerRanks" :key="rank" class="font-semibold text-xs bg-group-1 border-t border-gray-200 dark:border-gray-700">
-                {{ rank }}
-              </th>
-              <!-- Individuals -->
-              <th v-for="rank in individualRanks" :key="rank" class="font-semibold text-xs bg-group-2 border-t border-gray-200 dark:border-gray-700">
-                {{ rank }}
-              </th>
+            <tr class="border-b border-gray-200 dark:border-gray-700">
+              <th v-for="rank in officerRanks" :key="rank" class="min-w-[60px] px-2 py-2 border-l border-gray-200 dark:border-gray-700 text-xs font-semibold bg-gray-50 dark:bg-gray-800/50">{{ rank }}</th>
+              <th v-for="rank in individualRanks" :key="rank" class="min-w-[60px] px-2 py-2 border-l border-gray-200 dark:border-gray-700 text-xs font-semibold bg-gray-50 dark:bg-gray-800/50">{{ rank }}</th>
             </tr>
           </template>
 
           <!-- Table Body -->
           <template #body>
-            <tr v-for="row in filteredReportData" :key="row.unit_name" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-              <td class="font-bold text-gray-900 dark:text-gray-100 whitespace-nowrap">{{ row.unit_name }}</td>
-              
-              <!-- Officers -->
-              <td v-for="rank in officerRanks" :key="rank" class="text-center">
+            <tr v-for="(row, idx) in filteredReportData" :key="idx" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border-b border-gray-200 dark:border-gray-700">
+              <td class="px-4 py-3 font-medium text-right border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 whitespace-nowrap">{{ row.unit_name }}</td>
+              <td v-for="rank in officerRanks" :key="rank" class="px-2 py-3 border-l border-gray-200 dark:border-gray-700" :class="{'text-gray-300 dark:text-gray-700': !row.ranks[rank]}">
                 {{ row.ranks[rank] || '-' }}
               </td>
-              
-              <!-- Individuals -->
-              <td v-for="rank in individualRanks" :key="rank" class="text-center">
+              <td v-for="rank in individualRanks" :key="rank" class="px-2 py-3 border-l border-gray-200 dark:border-gray-700" :class="{'text-gray-300 dark:text-gray-700': !row.ranks[rank]}">
                 {{ row.ranks[rank] || '-' }}
               </td>
-              
-              <!-- Row Total -->
-              <td class="text-center font-bold bg-gray-50 dark:bg-gray-800/50">{{ row.total }}</td>
+              <td class="px-4 py-3 font-bold bg-gray-50 dark:bg-gray-800/50 border-l border-gray-200 dark:border-gray-700">{{ row.total }}</td>
             </tr>
           </template>
 
@@ -131,13 +127,13 @@ const officerRanks = ['عميد', 'عقيد', 'مقدم', 'رائد', 'نقيب'
 const individualRanks = ['مساعد ١', 'مساعد ٢', 'مساعد', 'رقيب ١', 'رقيب ٢', 'عريف', 'جندي']
 
 const levels = [
-  { id: 'central', name: 'الإدارات المركزية (ديوان)' },
-  { id: 'branch', name: 'الفروع الميدانية' },
-  { id: 'district', name: 'أمن المديريات' },
-  { id: 'security_admin', name: 'الإدارات الأمنية (المحافظات)' },
+  { id: 'all', name: 'الكل' },
+  { id: 'central', name: 'الإدارات المركزية' },
+  { id: 'branch', name: 'الفروع' },
+  { id: 'district', name: 'شرطات المديريات' },
 ]
 
-const currentLevel = ref('central')
+const currentLevel = ref('all')
 const currentLevelName = computed(() => levels.find(l => l.id === currentLevel.value)?.name || '')
 
 const loading = ref(false)

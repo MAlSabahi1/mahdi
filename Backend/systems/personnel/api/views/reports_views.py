@@ -24,23 +24,59 @@ class WorkforceSummaryReportView(APIView):
             'security_admin': 'security_admin__name',
         }
         
-        if level not in level_field_map:
-            raise ValidationError({"error": "Invalid level specified. Choose from: central, branch, district, security_admin"})
+        if level not in level_field_map and level != 'all':
+            raise ValidationError({"error": "Invalid level specified. Choose from: central, branch, district, security_admin, all"})
             
-        group_field = level_field_map[level]
+        from django.db.models.functions import Coalesce
+        from core.models.organization import CentralDepartment, Branch, DistrictPolice, SecurityAdministration
         
-        # الفلترة الأساسية: القوة العاملة الفعلية (بالخدمة)
+        # Pre-fill data_map with all active units to ensure 0-count units appear
+        data_map = {}
+        if level == 'all':
+            units_central = list(CentralDepartment.objects.filter(is_active=True).values_list('name', flat=True))
+            units_branch = list(Branch.objects.filter(is_active=True).values_list('name', flat=True))
+            units_district = list(DistrictPolice.objects.filter(is_active=True).values_list('name', flat=True))
+            units = units_central + units_branch + units_district
+        elif level == 'central':
+            units = CentralDepartment.objects.filter(is_active=True).values_list('name', flat=True)
+        elif level == 'branch':
+            units = Branch.objects.filter(is_active=True).values_list('name', flat=True)
+        elif level == 'district':
+            units = DistrictPolice.objects.filter(is_active=True).values_list('name', flat=True)
+        else:
+            units = SecurityAdministration.objects.filter(is_active=True).values_list('name', flat=True)
+            
+        for u in units:
+            data_map[u] = {
+                "unit_name": u,
+                "ranks": {},
+                "total": 0
+            }
+            
+        # الفلترة الأساسية: القوة العاملة الفعلية
         qs = PersonnelMaster.objects.filter(
-            current_status__name='بالخدمة'
-        ).values(
-            group_field, 
-            'current_rank__name'
-        ).annotate(
-            count=Count('military_number')
+            current_status__classification__startswith='active'
         )
         
-        # تجميع ومعالجة البيانات لتناسب شكل التقرير
-        data_map = {}
+        if level == 'all':
+            qs = qs.annotate(
+                unit_name=Coalesce('central_department__name', 'branch__name', 'district_police__name')
+            ).values(
+                'unit_name', 
+                'current_rank__name'
+            ).annotate(
+                count=Count('military_number')
+            )
+            group_field = 'unit_name'
+        else:
+            group_field = level_field_map[level]
+            qs = qs.filter(**{f"{group_field.split('__')[0]}__isnull": False}).values(
+                group_field, 
+                'current_rank__name'
+            ).annotate(
+                count=Count('military_number')
+            )
+        
         grand_totals = {}
         
         for row in qs:

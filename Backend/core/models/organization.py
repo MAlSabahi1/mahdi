@@ -149,11 +149,11 @@ class Branch(TimeStampedModel):
 
 class DistrictPolice(TimeStampedModel):
     """
-    أمن مديرية — يتبع إدارة أمن المحافظة ومرتبط بمديرية جغرافية.
-    مثال: أمن مديرية الجوبة
+    شرطة مديرية — يتبع إدارة أمن المحافظة ومرتبط بمديرية جغرافية.
+    مثال: شرطة مديرية الجوبة
 
     يُنشأ تلقائياً من yemen-info.json لكل مديرية جغرافية تابعة للمحافظة.
-    الاسم يُولّد تلقائياً: "أمن مديرية " + geo_district.name_ar
+    الاسم يُولّد تلقائياً: "شرطة مديرية " + geo_district.name_ar
     """
     security_admin = models.ForeignKey(
         SecurityAdministration,
@@ -170,7 +170,7 @@ class DistrictPolice(TimeStampedModel):
     name = models.CharField(
         max_length=200,
         verbose_name=_('الاسم'),
-        help_text=_('يُولّد تلقائياً: أمن مديرية + اسم المديرية'),
+        help_text=_('يُولّد تلقائياً: شرطة مديرية + اسم المديرية'),
     )
     code = models.CharField(
         max_length=20, blank=True, null=True,
@@ -181,7 +181,7 @@ class DistrictPolice(TimeStampedModel):
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='headed_district_police',
-        verbose_name=_('مدير أمن المديرية'),
+        verbose_name=_('مدير شرطة المديرية'),
     )
     head_position = models.CharField(
         max_length=100, blank=True,
@@ -192,14 +192,14 @@ class DistrictPolice(TimeStampedModel):
 
     class Meta:
         db_table = 'district_police'
-        verbose_name = _('أمن مديرية')
-        verbose_name_plural = _('أمن المديريات')
+        verbose_name = _('شرطة مديرية')
+        verbose_name_plural = _('شرطات المديريات')
         ordering = ['security_admin', 'order', 'name']
 
     def save(self, *args, **kwargs):
         # توليد الاسم تلقائياً من المديرية الجغرافية
         if self.geo_district_id and not self.name:
-            self.name = f"أمن مديرية {self.geo_district.name_ar}"
+            self.name = f"شرطة مديرية {self.geo_district.name_ar}"
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -215,7 +215,7 @@ class Division(TimeStampedModel):
     القسم — يتبع واحداً فقط من:
     - إدارة مركزية (CentralDepartment)
     - فرع (Branch)
-    - أمن مديرية (DistrictPolice)
+    - شرطة مديرية (DistrictPolice)
 
     يُفرض بـ CHECK constraint أن واحداً فقط من الثلاثة يكون مملوءاً.
     """
@@ -238,7 +238,7 @@ class Division(TimeStampedModel):
         on_delete=models.CASCADE,
         null=True, blank=True,
         related_name='divisions',
-        verbose_name=_('أمن المديرية'),
+        verbose_name=_('شرطة المديرية'),
     )
     name = models.CharField(max_length=200, verbose_name=_('اسم القسم'))
     code = models.CharField(
@@ -296,12 +296,12 @@ class Division(TimeStampedModel):
         filled = sum(1 for p in parents if p is not None)
         if filled != 1:
             raise ValidationError(
-                _('يجب ربط القسم بواحد فقط من: إدارة مركزية، فرع، أو أمن مديرية.')
+                _('يجب ربط القسم بواحد فقط من: إدارة مركزية، فرع، أو شرطة مديرية.')
             )
 
     @property
     def parent(self):
-        """إرجاع الوحدة الأب (إدارة أو فرع أو أمن مديرية)."""
+        """إرجاع الوحدة الأب (إدارة أو فرع أو شرطة مديرية)."""
         return self.central_department or self.branch or self.district_police
 
     @property

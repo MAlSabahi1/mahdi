@@ -206,6 +206,24 @@
           <p class="text-gray-500 text-theme-sm dark:text-gray-400 font-mono">{{ value }}</p>
         </template>
 
+        <!-- ── Custom Cell: Sub Administration ───────────────── -->
+        <template #cell-sub_administration="{ row }">
+          <p class="text-gray-800 text-theme-sm dark:text-white/90 font-medium">
+            <template v-if="row.central_department_name">
+              {{ row.central_department_name }}
+            </template>
+            <template v-else-if="row.branch_name">
+              {{ row.branch_name }}
+            </template>
+            <template v-else-if="row.district_police_name">
+              {{ row.district_police_name }}
+            </template>
+            <template v-else>
+              <span class="text-gray-400">—</span>
+            </template>
+          </p>
+        </template>
+
         <!-- ── Custom Cell: National ID ──────────────────────── -->
         <template #cell-national_id="{ value }">
           <p class="text-gray-500 text-theme-sm dark:text-gray-400 font-mono">{{ value || '—' }}</p>
@@ -292,7 +310,7 @@ const tableColumns = computed<DataTableColumn[]>(() => [
   { key: 'rank_name', label: t('personnel.rank') || 'الرتبة' },
   { key: 'position_name', label: t('personnel.position') || 'المنصب' },
   { key: 'security_admin_name', label: t('personnel.administration') || 'الإدارة' },
-  { key: 'branch_name', label: t('personnel.branch') || 'الفرع' },
+  { key: 'sub_administration', label: t('personnel.branch') || 'الفرع/الإدارة التابعة' },
   { key: 'status_classification', label: t('personnel.classification') || 'التصنيف' },
   { key: 'status_name', label: t('personnel.status_type') || 'نوع الحالة' },
   { key: 'qualification_name', label: t('personnel.qualification') || 'المؤهل' },

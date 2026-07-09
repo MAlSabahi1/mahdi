@@ -19,7 +19,8 @@ class BaseDetailedReportView(APIView):
             'current_status', 
             'central_department', 
             'branch', 
-            'district_police'
+            'district_police',
+            'qualification'
         ).filter(is_deleted=False)
 
     def get_unit_name(self, p):
@@ -63,7 +64,9 @@ class ActiveForceReportView(BaseDetailedReportView):
         data_list = []
         for idx, p in enumerate(qs, start=1):
             row = self.format_base_data(p, idx)
-            row["position"] = p.position.name if p.position else "بدون منصب"
+            row["service_type"] = p.current_status.name if p.current_status else "قوة عاملة"
+            row["national_id"] = p.national_id
+            row["qualification"] = p.qualification.name if p.qualification else "بدون مؤهل"
             data_list.append(row)
 
         return Response({
@@ -151,11 +154,10 @@ class PermInactiveReportsView(BaseDetailedReportView):
         qs = self.get_queryset().filter(current_status__classification='inactive_perm')
 
         status_map = {
-            'report_12': 'كبير سن',
-            'report_13': 'إنهاء خدمة',
+            'report_12': 'بلوغ السن',
+            'report_13': 'إنهاء المدة',
             'report_14': 'مرشح تقاعد',
-            'report_15': 'عجز طبي',
-            'report_16': 'شهيد',
+            'report_15': 'عدم لياقة',
             'report_17': 'متقاعد'
         }
         
@@ -164,7 +166,7 @@ class PermInactiveReportsView(BaseDetailedReportView):
         if target_status:
             qs = qs.filter(current_status__name__contains=target_status)
         elif report_id == 'report_16':
-            qs = qs.filter(Q(current_status__name__contains='شهيد') | Q(current_status__name__contains='متوفى'))
+            qs = qs.filter(Q(current_status__name__contains='شهيد') | Q(current_status__name__contains='شهداء') | Q(current_status__name__contains='متوفى') | Q(current_status__name__contains='وفيات'))
 
         data_list = []
         for idx, p in enumerate(qs, start=1):
@@ -210,11 +212,32 @@ class AuditMovementReportsView(BaseDetailedReportView):
     """
     def get(self, request, *args, **kwargs):
         report_id = request.query_params.get('report_id')
-        # Here we don't strictly filter by classification, since movements can happen to anyone.
-        qs = self.get_queryset()
+        
+        # Only fetch personnel with audit_movement_details
+        qs = self.get_queryset().filter(audit_movement_details__isnull=False)
+
+        # Apply specific filters based on report_id by checking for required keys
+        if report_id == 'report_18':
+            qs = qs.filter(audit_movement_details__has_key='arrived_from')
+        elif report_id == 'report_19':
+            qs = qs.filter(audit_movement_details__has_key='transfer_reason')
+        elif report_id == 'report_20':
+            qs = qs.filter(audit_movement_details__has_key='new_directed_workplace')
+        elif report_id == 'report_21':
+            qs = qs.filter(audit_movement_details__has_key='salary_source')
+        elif report_id == 'report_22':
+            qs = qs.filter(audit_movement_details__has_key='external_delegate_target')
+        elif report_id == 'report_23':
+            qs = qs.filter(audit_movement_details__has_key='wrong_name')
+        elif report_id == 'report_24a':
+            qs = qs.filter(audit_movement_details__has_key='absence_days')
+        elif report_id == 'report_24b':
+            qs = qs.filter(audit_movement_details__has_key='continuous_absence_duration')
+        elif report_id == 'report_25':
+            qs = qs.filter(audit_movement_details__has_key='reporter_entity')
 
         data_list = []
-        for idx, p in enumerate(qs[:50], start=1):  # Limit to 50 for demo if we don't have exact filters
+        for idx, p in enumerate(qs, start=1):
             row = self.format_base_data(p, idx)
             audit_details = p.audit_movement_details or {}
             

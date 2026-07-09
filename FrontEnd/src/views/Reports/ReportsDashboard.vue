@@ -27,7 +27,7 @@
       <!-- Tabs Navigation -->
       <div class="sticky top-0 z-10 bg-gray-50/90 backdrop-blur-md border-b border-gray-200 dark:bg-gray-900/90 dark:border-gray-800 px-6">
         <div class="mx-auto max-w-7xl">
-          <nav class="-mb-px flex space-x-8 rtl:space-x-reverse overflow-x-auto custom-scrollbar">
+          <nav class="-mb-px flex gap-8 overflow-x-auto custom-scrollbar">
             <button
               v-for="tab in tabs"
               :key="tab.id"
@@ -36,7 +36,7 @@
                 activeTab === tab.id
                   ? 'border-brand-500 text-brand-600 dark:border-brand-400 dark:text-brand-400 font-bold'
                   : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-300 font-medium',
-                'whitespace-nowrap border-b-2 py-4 px-1 text-theme-sm transition-colors'
+                'whitespace-nowrap border-b-2 py-4 px-4 text-sm font-medium transition-colors'
               ]"
             >
               {{ tab.name }}
