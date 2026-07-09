@@ -140,6 +140,7 @@ class ExcelExportService:
         protected_columns: Optional[List[str]] = None,
         editable_columns: Optional[List[str]] = None,
         raw_columns: Optional[List[str]] = None,
+        ordered_columns: Optional[List[str]] = None,
         security_admin=None,
         central_department=None,
     ):
@@ -167,6 +168,7 @@ class ExcelExportService:
         self.protected_columns = protected_columns if protected_columns is not None else DEFAULT_PROTECTED_COLUMNS
         self.editable_columns = editable_columns if editable_columns is not None else DEFAULT_EDITABLE_COLUMNS
         self.raw_columns = raw_columns if raw_columns is not None else []
+        self.ordered_columns = ordered_columns
 
         # يُملأ أثناء التوليد
         self.export_id = uuid.uuid4()
@@ -216,11 +218,26 @@ class ExcelExportService:
             
             # Extract additional raw columns if provided
             from datetime import date
+            from datetime import date
             if self.raw_columns:
-                all_arabic = self.protected_columns + self.editable_columns
+                all_arabic = self.ordered_columns if getattr(self, 'ordered_columns', None) else (self.protected_columns + self.editable_columns)
                 for i, raw_col in enumerate(self.raw_columns):
                     if i < len(all_arabic):
-                        val = getattr(person, raw_col, '')
+                        if raw_col == '__UNIT__':
+                            val = person.security_admin.name if getattr(person, 'security_admin', None) else ''
+                        elif raw_col == '__DEPT_BRANCH__':
+                            val = person.central_department.name if getattr(person, 'central_department', None) else (
+                                person.branch.name if getattr(person, 'branch', None) else (
+                                    person.district_police.name if getattr(person, 'district_police', None) else ''
+                                )
+                            )
+                        elif raw_col == '__DISTRICT_DIVISION__':
+                            val = person.division.name if getattr(person, 'division', None) else ''
+                        elif raw_col == '__STATUS_TYPE__':
+                            val = person.current_status.get_classification_display() if getattr(person, 'current_status', None) else ''
+                        else:
+                            val = getattr(person, raw_col, '')
+
                         if val is None:
                             val = ''
                         elif hasattr(val, 'name'):
@@ -304,6 +321,12 @@ class ExcelExportService:
                 'align': 'center', 'valign': 'vcenter', 'font_size': 14, 'bold': True, 
                 'font_name': font,
             }),
+            'inactive_perm': workbook.add_format({
+                'locked': True, 'align': 'center', 'valign': 'vcenter', 
+                'font_size': 11, 'font_name': font,
+                'bg_color': '#E8E8E8', 'font_color': '#555555',
+                'border': 1, 'border_color': '#A6A6A6',
+            }),
         }
 
     def _write_sheet(
@@ -369,47 +392,56 @@ class ExcelExportService:
                 'الرتبة':         person.get('rank', ''),
                 'الرقم الوطني':   person.get('national_id', ''),
             })
+            
+            is_permanently_inactive = person.get('classification', '') == 'inactive_perm'
 
             for col_idx, header in enumerate(all_cols):
+                is_protected = (header in self.protected_columns) or is_permanently_inactive
+                
+                if is_permanently_inactive:
+                    cell_fmt = fmts['inactive_perm']
+                else:
+                    cell_fmt = fmts['protected'] if is_protected else fmts['editable']
+                
                 if header == '__UUID__':
                     worksheet.write(row, col_idx, person.get('row_uuid', ''), fmts['hidden'])
-
-                elif header in self.protected_columns:
-                    if header == 'الاسم الكامل':
-                        name_fmt = workbook.add_format({
-                            'locked': True, 'align': 'right', 'valign': 'vcenter', 
-                            'font_size': 11, 'font_name': 'Cairo', 
-                            'border': 1, 'border_color': '#A6A6A6', 'indent': 1
-                        })
-                        worksheet.write(row, col_idx, row_data_map.get(header, ''), name_fmt)
-                    elif header == 'الحالة':
-                        # معادلة VLOOKUP لجلب تصنيف الحالة بناء على اختيار "نوع الحالة"
-                        type_col_idx = all_cols.index('نوع الحالة') if 'نوع الحالة' in all_cols else -1
-                        if type_col_idx >= 0:
-                            type_cell = xlsxwriter.utility.xl_rowcol_to_cell(row, type_col_idx)
-                            formula = f'=IFERROR(VLOOKUP({type_cell}, SystemData!$A$1:$B$500, 2, FALSE), "")'
-                            
-                            classification_val = person.get('classification', '')
-                            classification_display = ''
-                            for name, code in STATUS_CLASSIFICATIONS.items():
-                                if code == classification_val:
-                                    classification_display = name
-                                    break
-                            worksheet.write_formula(row, col_idx, formula, fmts['protected'], classification_display)
-                        else:
-                            worksheet.write(row, col_idx, '', fmts['protected'])
-                            
+                
+                elif header == 'الاسم الكامل':
+                    name_fmt = workbook.add_format({
+                        'locked': is_protected, 'align': 'right', 'valign': 'vcenter', 
+                        'font_size': 11, 'font_name': 'Cairo', 
+                        'border': 1, 'border_color': '#A6A6A6', 'indent': 1,
+                        'bg_color': '#E8E8E8' if is_permanently_inactive else None,
+                        'font_color': '#555555' if is_permanently_inactive else None,
+                    })
+                    worksheet.write(row, col_idx, row_data_map.get(header, ''), name_fmt)
+                    
+                elif header == 'الحالة':
+                    # معادلة VLOOKUP لجلب تصنيف الحالة بناء على اختيار "نوع الحالة"
+                    type_col_idx = all_cols.index('نوع الحالة') if 'نوع الحالة' in all_cols else -1
+                    if type_col_idx >= 0:
+                        type_cell = xlsxwriter.utility.xl_rowcol_to_cell(row, type_col_idx)
+                        formula = f'=IFERROR(VLOOKUP({type_cell}, SystemData!$A$1:$B$500, 2, FALSE), "")'
+                        
+                        classification_val = person.get('classification', '')
+                        classification_display = ''
+                        for name, code in STATUS_CLASSIFICATIONS.items():
+                            if code == classification_val:
+                                classification_display = name
+                                break
+                        worksheet.write_formula(row, col_idx, formula, cell_fmt, classification_display)
                     else:
-                        worksheet.write(row, col_idx, row_data_map.get(header, ''), fmts['protected'])
-
+                        worksheet.write(row, col_idx, '', cell_fmt)
+                        
                 elif header == 'نوع الحالة':
-                    worksheet.write(row, col_idx, person.get('current_status', ''), fmts['editable'])
-
-                elif header in ['ملاحظات', 'المتغير الشهري']:
-                    worksheet.write(row, col_idx, '', fmts['notes_editable'])
-
+                    worksheet.write(row, col_idx, person.get('current_status', ''), cell_fmt)
+                    
+                elif header in ['ملاحظات', 'المتغير الشهري', 'متغيرات الشهر'] or header.startswith('متغيرات '):
+                    notes_fmt = fmts['inactive_perm'] if is_permanently_inactive else (fmts['notes_editable'] if not is_protected else fmts['protected'])
+                    worksheet.write(row, col_idx, '', notes_fmt)
+                    
                 else:
-                    worksheet.write(row, col_idx, row_data_map.get(header, ''), fmts['editable'])
+                    worksheet.write(row, col_idx, row_data_map.get(header, ''), cell_fmt)
 
         # ── تحويل البيانات إلى Native Excel Table ──
         if persons:
@@ -433,10 +465,20 @@ class ExcelExportService:
                             'error_message': 'يجب اختيار نوع الحالة من القائمة المنسدلة حصراً. يرجى الضغط على السهم بجانب الخلية.',
                             'error_type':    'stop',
                             'show_error':    True,
-                            'input_title':   'المرفقات المطلوبة',
-                            'input_message': 'تذكر: في حال تغيير الحالة (كالفرار، الانتداب، السجناء، وغيرها) يجب أن يتم إرفاق المستندات الداعمة مع الكشف الورقي أثناء رفعه (مثل بلاغ الانقطاع، قرارات اللجان، الأحكام القضائية).',
-                            'show_input':    True,
                             'ignore_blank':  False, # منع الكتابة اليدوية العشوائية
+                        }
+                    )
+                elif header == 'الحالة':
+                    worksheet.data_validation(
+                        first_data_row, col_idx, last_data_row, col_idx,
+                        {
+                            'validate':      'list',
+                            'source':        self.meta_ranges['classifications'],
+                            'error_title':   'قيمة غير مسموحة',
+                            'error_message': 'يجب اختيار الحالة من القائمة المنسدلة.',
+                            'error_type':    'stop',
+                            'show_error':    True,
+                            'ignore_blank':  False,
                         }
                     )
 
@@ -513,8 +555,18 @@ class ExcelExportService:
             meta_ws.write(i, 0, status_obj['detailed'])
             meta_ws.write(i, 1, status_obj['classification'])
             
+        classifications = [
+            'قوة عاملة فعلية',
+            'قوة عاملة غير فعلية',
+            'قوة غير عاملة مؤقتاً',
+            'قوة غير عاملة نهائياً'
+        ]
+        for i, c in enumerate(classifications):
+            meta_ws.write(i, 2, c)
+            
         self.meta_ranges = {
-            'detailed': f"='SystemData'!$A$1:$A${len(all_detailed_statuses) or 1}"
+            'detailed': f"='SystemData'!$A$1:$A${len(all_detailed_statuses) or 1}",
+            'classifications': f"='SystemData'!$C$1:$C${len(classifications)}"
         }
 
         if self.mode == 'single':

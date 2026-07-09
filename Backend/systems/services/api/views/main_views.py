@@ -134,22 +134,30 @@ class ExportView(BaseViewSet):
             locked_columns_str = request.query_params.get('locked_columns', '')
             
             def get_field_label(field_name):
+                mapping = {
+                    'qualification': 'المؤهل الدراسي',
+                    'current_rank': 'الرتبة',
+                    'current_status': 'الحالة',
+                    'force_classification': 'تصنيف القوة',
+                    'job_title': 'نوع العمل',
+                    'notes': 'ملاحظات',
+                    'military_number': 'الرقم العسكري',
+                    'full_name': 'الاسم الكامل',
+                    'national_id': 'الرقم الوطني',
+                    'category': 'الفئة',
+                    'position': 'المنصب',
+                    'phone_number': 'رقم التليفون',
+                    'expense_status': 'حالة النفقات',
+                }
+                if field_name in mapping:
+                    return mapping[field_name]
+                    
+                from django.apps import apps
                 PersonnelMaster = apps.get_model('personnel', 'PersonnelMaster')
                 try:
                     return str(PersonnelMaster._meta.get_field(field_name).verbose_name)
                 except Exception:
-                    mapping = {
-                        'qualification': 'المؤهل الدراسي',
-                        'current_rank': 'الرتبة',
-                        'current_status': 'الحالة',
-                        'force_classification': 'تصنيف القوة',
-                        'job_title': 'نوع العمل',
-                        'notes': 'ملاحظات',
-                        'military_number': 'الرقم العسكري',
-                        'full_name': 'الاسم الكامل',
-                        'national_id': 'الرقم الوطني',
-                    }
-                    return mapping.get(field_name, field_name)
+                    return field_name
             
             # Parse custom columns requested by frontend
             protected_arabic = None
@@ -162,15 +170,6 @@ class ExportView(BaseViewSet):
                 if selected_cols:
                     raw_columns = list(selected_cols)
                     
-                    # Force inclusion of mandatory operational columns for the import engine
-                    if 'pseudo_status_type' not in raw_columns and 'current_status' not in raw_columns:
-                        # Fallback if UI doesn't send it, but UI now sends pseudo_status_type
-                        raw_columns.append('pseudo_status_type')
-                    if 'pseudo_monthly_var' not in raw_columns:
-                        raw_columns.append('pseudo_monthly_var')
-                    if 'notes' not in raw_columns and 'pseudo_notes' not in raw_columns:
-                        raw_columns.append('pseudo_notes')
-                        
                     # Map correctly
                     protected_arabic = []
                     editable_arabic = []
@@ -180,18 +179,32 @@ class ExportView(BaseViewSet):
                     for c in raw_columns:
                         is_locked = c in locked_cols
                         
-                        if c == 'pseudo_status_type':
+                        if c == 'security_admin':
+                            lbl = 'الوحدة'
+                            final_raw.append('__UNIT__')
+                        elif c == 'central_department_or_branch':
+                            lbl = 'الإدارة_السرية'
+                            final_raw.append('__DEPT_BRANCH__')
+                        elif c == 'district_police_or_division':
+                            lbl = 'القسم_فرع السرية'
+                            final_raw.append('__DISTRICT_DIVISION__')
+                        elif c == 'pseudo_status_type':
+                            lbl = 'الحالة'
+                            final_raw.append('__STATUS_TYPE__')
+                        elif c == 'current_status':
                             lbl = 'نوع الحالة'
-                            is_locked = False
-                            final_raw.append('__EMPTY__')
+                            final_raw.append(c)
                         elif c == 'pseudo_monthly_var':
-                            lbl = 'المتغير الشهري'
-                            is_locked = False
+                            # Get month dynamically from query param or default to current
+                            service_month = request.query_params.get('service_month', '')
+                            lbl = f'متغيرات {service_month}' if service_month else 'متغيرات الشهر'
                             final_raw.append('__EMPTY__')
                         elif c == 'pseudo_notes':
                             lbl = 'ملاحظات'
-                            is_locked = False
                             final_raw.append('notes')
+                        elif c == 'full_name':
+                            lbl = 'الأسم'
+                            final_raw.append(c)
                         else:
                             lbl = get_field_label(c)
                             final_raw.append(c)

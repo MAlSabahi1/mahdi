@@ -213,7 +213,7 @@
               <template v-else-if="previewData.length > 0">
                 <tr v-for="(row, idx) in previewData" :key="idx" class="bg-white dark:bg-gray-900 border-b border-gray-150 dark:border-gray-850 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <td v-for="col in exportableColumns" :key="col.field" class="border-l border-gray-150 dark:border-gray-850 p-3 text-center text-[11px] font-bold text-gray-700 dark:text-gray-300">
-                    <span v-if="col.field.startsWith('pseudo_')" class="text-gray-300 dark:text-gray-600 font-normal">--</span>
+                    <span v-if="col.field.startsWith('pseudo_') && col.field !== 'pseudo_status_type'" class="text-gray-300 dark:text-gray-600 font-normal">--</span>
                     <span v-else>{{ getPreviewValue(row, col.field) }}</span>
                   </td>
                 </tr>
@@ -415,9 +415,85 @@ watch([selectedSecurityAdminId, selectedSubUnitId, selectedSubUnitType], () => {
 })
 
 function getPreviewValue(row: any, field: string) {
-  if (field.startsWith('pseudo_')) return ''
-  const val = row[field]
+  if (field === 'security_admin') {
+    if (row.security_admin && typeof row.security_admin === 'object') return row.security_admin.name;
+    const found = coreStore.securityAdmins?.find(i => i.id === row.security_admin);
+    return found ? found.name : '—';
+  }
+  if (field === 'central_department_or_branch') {
+    if (row.central_department_name) return row.central_department_name;
+    if (row.branch_name) return row.branch_name;
+    if (row.district_police_name) return row.district_police_name;
+    
+    if (row.central_department) {
+      if (typeof row.central_department === 'object') return row.central_department.name;
+      const found = coreStore.centralDepartments?.find(i => i.id === row.central_department);
+      if (found) return found.name;
+    }
+    if (row.branch) {
+      if (typeof row.branch === 'object') return row.branch.name;
+      const found = coreStore.branches?.find(i => i.id === row.branch);
+      if (found) return found.name;
+    }
+    if (row.district_police) {
+      if (typeof row.district_police === 'object') return row.district_police.name;
+      const found = coreStore.districtPolices?.find(i => i.id === row.district_police);
+      if (found) return found.name;
+    }
+    return '—';
+  }
+  if (field === 'district_police_or_division') {
+    if (row.division_name) return row.division_name;
+
+    if (row.division) {
+      if (typeof row.division === 'object') return row.division.name;
+      const found = coreStore.divisions?.find(i => i.id === row.division);
+      if (found) return found.name;
+    }
+    return '—';
+  }
+  
+  let val = row[field]
+  
   if (val && typeof val === 'object' && val.name) return val.name
+  
+  // Map IDs to names
+  if (field === 'current_rank') {
+    const found = coreStore.ranks?.find(i => i.id === val)
+    if (found) return found.name
+  }
+  if (field === 'category') {
+    const found = coreStore.jobCategories?.find(i => i.id === val)
+    if (found) return found.name
+  }
+  if (field === 'qualification') {
+    const found = coreStore.qualifications?.find(i => i.id === val)
+    if (found) return found.name
+  }
+  if (field === 'position') {
+    const found = coreStore.positions?.find(i => i.id === val)
+    if (found) return found.name
+  }
+  if (field === 'job_title') {
+    const found = coreStore.jobTitles?.find(i => i.id === val)
+    if (found) return found.name
+  }
+  if (field === 'force_classification') {
+    const found = coreStore.forceTypes?.find(i => i.id === val)
+    if (found) return found.name
+  }
+  if (field === 'current_status') {
+    const found = coreStore.statuses?.find(i => i.id === val)
+    if (found) return found.name
+  }
+  if (field === 'pseudo_status_type') {
+    if (row.status_classification === 'active_full') return 'قوة عاملة فعلية'
+    if (row.status_classification === 'active_part') return 'قوة عاملة غير فعلية'
+    if (row.status_classification === 'inactive_temp') return 'قوة غير عاملة مؤقتاً'
+    if (row.status_classification === 'inactive_perm') return 'قوة غير عاملة نهائياً'
+    return row.status_classification || '—'
+  }
+  
   return val || '—'
 }
 
@@ -502,51 +578,7 @@ async function fetchExportFields() {
     const response = await api.get('/personnel/export-fields/')
     if (response.data && response.data.groups) {
       columns.value = response.data.groups
-      
-      // Update custom labels to match corrected terminology
-      const renameFieldLabel = (fieldList: ColumnConfig[], fieldName: string, newLabel: string) => {
-        const found = fieldList.find(c => c.field === fieldName)
-        if (found) found.label = newLabel
-      }
-      renameFieldLabel(columns.value.structure, 'security_admin', 'إدارة أمن المحافظة')
-      renameFieldLabel(columns.value.structure, 'central_department', 'الإدارة المركزية')
-      renameFieldLabel(columns.value.structure, 'branch', 'الفرع')
-      renameFieldLabel(columns.value.structure, 'branch', 'الفرع')
-      renameFieldLabel(columns.value.structure, 'district_police', 'أمن المديرية')
-      
-      // Inject mandatory operation columns so the user can visualize them in the Live Table preview
-      if (!columns.value.statusAndDecisions.some(c => c.field === 'pseudo_status_type')) {
-        columns.value.statusAndDecisions.push({
-          field: 'pseudo_status_type',
-          label: 'نوع الحالة (مدخل للإكسل)',
-          exportable: true,
-          alwaysExportable: true,
-          locked: false,
-          alwaysLocked: true
-        })
-      }
-      if (!columns.value.statusAndDecisions.some(c => c.field === 'pseudo_monthly_var')) {
-        columns.value.statusAndDecisions.push({
-          field: 'pseudo_monthly_var',
-          label: 'المتغير الشهري',
-          exportable: true,
-          alwaysExportable: true,
-          locked: false,
-          alwaysLocked: true
-        })
-      }
-      if (!columns.value.statusAndDecisions.some(c => c.field === 'pseudo_notes')) {
-        columns.value.statusAndDecisions.push({
-          field: 'pseudo_notes',
-          label: 'ملاحظات',
-          exportable: true,
-          alwaysExportable: false,
-          locked: false,
-          alwaysLocked: true
-        })
-      }
     }
-
   } catch (err) {
     console.error('Failed to fetch export fields:', err)
   } finally {
@@ -564,7 +596,7 @@ async function triggerExport() {
     const lockedFields: string[] = []
     
     allFlatColumns.value.forEach(c => {
-      if (c.exportable && !c.field.startsWith('pseudo_')) {
+      if (c.exportable) {
         exportFields.push(c.field)
         if (c.locked) {
           lockedFields.push(c.field)
