@@ -192,8 +192,8 @@ const exportExcel = () => {
 <style scoped>
 @media print {
   @page {
-    size: A4 landscape;
-    margin: 0.5cm;
+    size: A4 landscape !important;
+    margin: 0.5cm !important;
   }
   body * {
     visibility: hidden;
@@ -216,8 +216,8 @@ const exportExcel = () => {
     border: 2px solid black !important;
   }
   :deep(th), :deep(td) {
-    padding: 6px 4px !important;
-    font-size: 13px !important;
+    padding: 2px 2px !important;
+    font-size: 10px !important;
     border: 1px solid black !important;
     color: black !important;
   }

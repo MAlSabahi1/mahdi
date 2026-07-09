@@ -1,5 +1,5 @@
 <template>
-  <div class="hidden print:block mt-8 pt-6">
+  <div class="hidden print:block mt-8 pt-6 print:break-inside-avoid" style="page-break-inside: avoid; break-inside: avoid;">
     <div class="grid grid-cols-3 gap-8 text-sm font-bold text-gray-900 text-center">
       
       <!-- Right: Preparer -->

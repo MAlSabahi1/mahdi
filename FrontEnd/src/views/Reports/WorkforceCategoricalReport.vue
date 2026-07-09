@@ -198,8 +198,8 @@ const exportExcel = () => {
 <style scoped>
 @media print {
   @page {
-    size: A4 portrait;
-    margin: 0.5cm;
+    size: A4 portrait !important;
+    margin: 0.5cm !important;
   }
   body * {
     visibility: hidden;

@@ -59,50 +59,46 @@
         >
           <!-- Table Header -->
           <template #header>
-            <tr class="border-b border-gray-200 dark:border-gray-700">
-              <th rowspan="2" class="w-40 min-w-[160px] p-0 border-l border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 relative align-middle overflow-hidden">
-                <svg class="absolute inset-0 w-full h-full text-gray-300 dark:text-gray-600" preserveAspectRatio="none" viewBox="0 0 100 100">
-                  <line x1="0" y1="100" x2="100" y2="0" stroke="currentColor" stroke-width="1.5"></line>
+            <tr class="border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 print:text-black">
+              <th rowspan="2" class="w-40 p-0 border-l border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 relative align-middle overflow-hidden print:border-black print:border-2">
+                <svg class="absolute inset-0 w-full h-full text-gray-400 dark:text-gray-600 print:text-black" preserveAspectRatio="none" viewBox="0 0 100 100">
+                  <line x1="0" y1="0" x2="100" y2="100" stroke="currentColor" stroke-width="1.5"></line>
                 </svg>
                 <div class="relative w-full h-full min-h-[70px]">
-                  <span class="absolute top-3 left-10 text-sm font-bold text-gray-700 dark:text-gray-300">محل الخدمة</span>
-                  <span class="absolute bottom-3 right-10 text-sm font-bold text-gray-900 dark:text-gray-100">الرتبة</span>
+                  <span class="absolute top-2 right-2 text-sm font-bold text-gray-700 dark:text-gray-300 print:text-black max-w-[70%] text-right leading-tight">محل الخدمة</span>
+                  <span class="absolute bottom-2 left-2 text-sm font-bold text-gray-900 dark:text-gray-100 print:text-black">الرتبة</span>
                 </div>
               </th>
-              <th :colspan="officerRanks.length" class="px-4 py-2 border-b border-l border-gray-200 dark:border-gray-700 font-bold bg-brand-50/50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300">الضباط</th>
-              <th :colspan="individualRanks.length" class="px-4 py-2 border-b border-l border-gray-200 dark:border-gray-700 font-bold bg-blue-50/50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">الأفراد</th>
-              <th rowspan="2" class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 font-bold align-middle bg-gray-100 dark:bg-gray-800">الإجمالي</th>
+              <th :colspan="officerRanks.length" class="px-2 py-2 border-b border-l border-gray-200 dark:border-gray-700 font-bold bg-gray-100 dark:bg-gray-800 print:border-black print:border-2">الضباط</th>
+              <th :colspan="individualRanks.length" class="px-2 py-2 border-b border-l border-gray-200 dark:border-gray-700 font-bold bg-gray-100 dark:bg-gray-800 print:border-black print:border-2">الأفراد</th>
+              <th rowspan="2" class="px-2 py-2 border-b border-gray-200 dark:border-gray-700 font-bold align-middle bg-gray-100 dark:bg-gray-800 print:border-black print:border-2">الإجمالي</th>
             </tr>
-            <tr class="border-b border-gray-200 dark:border-gray-700">
-              <th v-for="rank in officerRanks" :key="rank" class="min-w-[60px] px-2 py-2 border-l border-gray-200 dark:border-gray-700 text-xs font-semibold bg-gray-50 dark:bg-gray-800/50">{{ rank }}</th>
-              <th v-for="rank in individualRanks" :key="rank" class="min-w-[60px] px-2 py-2 border-l border-gray-200 dark:border-gray-700 text-xs font-semibold bg-gray-50 dark:bg-gray-800/50">{{ rank }}</th>
+            <tr class="border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 print:text-black">
+              <th v-for="rank in officerRanks" :key="rank" class="min-w-[40px] px-1 py-2 border-l border-gray-200 dark:border-gray-700 text-xs font-semibold bg-gray-50 dark:bg-gray-800/50 print:border-black print:border-2">{{ rank }}</th>
+              <th v-for="rank in individualRanks" :key="rank" class="min-w-[40px] px-1 py-2 border-l border-gray-200 dark:border-gray-700 text-xs font-semibold bg-gray-50 dark:bg-gray-800/50 print:border-black print:border-2">{{ rank }}</th>
             </tr>
           </template>
 
           <!-- Table Body -->
           <template #body>
-            <tr v-for="(row, idx) in filteredReportData" :key="idx" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border-b border-gray-200 dark:border-gray-700">
-              <td class="px-4 py-3 font-medium text-right border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 whitespace-nowrap">{{ row.unit_name }}</td>
-              <td v-for="rank in officerRanks" :key="rank" class="px-2 py-3 border-l border-gray-200 dark:border-gray-700" :class="{'text-gray-300 dark:text-gray-700': !row.ranks[rank]}">
+            <tr v-for="(row, idx) in filteredReportData" :key="idx" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border-b border-gray-200 dark:border-gray-700 print:border-black print:border-2 text-gray-900 dark:text-gray-100 print:text-black">
+              <td class="px-2 py-2 font-bold text-right border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 break-words print:border-black print:border-2">{{ row.unit_name }}</td>
+              <td v-for="rank in officerRanks" :key="rank" class="px-1 py-2 text-center border-l border-gray-200 dark:border-gray-700 print:border-black print:border-2" :class="{'text-gray-300 dark:text-gray-700 print:text-transparent': !row.ranks[rank]}">
                 {{ row.ranks[rank] || '-' }}
               </td>
-              <td v-for="rank in individualRanks" :key="rank" class="px-2 py-3 border-l border-gray-200 dark:border-gray-700" :class="{'text-gray-300 dark:text-gray-700': !row.ranks[rank]}">
+              <td v-for="rank in individualRanks" :key="rank" class="px-1 py-2 text-center border-l border-gray-200 dark:border-gray-700 print:border-black print:border-2" :class="{'text-gray-300 dark:text-gray-700 print:text-transparent': !row.ranks[rank]}">
                 {{ row.ranks[rank] || '-' }}
               </td>
-              <td class="px-4 py-3 font-bold bg-gray-50 dark:bg-gray-800/50 border-l border-gray-200 dark:border-gray-700">{{ row.total }}</td>
+              <td class="px-2 py-2 font-bold text-center border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 print:border-black print:border-2">{{ row.total }}</td>
             </tr>
           </template>
 
           <!-- Table Footer (Totals) -->
           <template #footer>
-            <tr class="bg-gray-100 dark:bg-gray-800 font-bold">
-              <td class="text-right text-brand-600 dark:text-brand-400">الإجمالي العام</td>
-              
-              <td v-for="rank in [...officerRanks, ...individualRanks]" :key="rank" class="text-center text-brand-600 dark:text-brand-400">
-                {{ grandTotals[rank] || 0 }}
-              </td>
-              
-              <td class="text-center text-brand-600 dark:text-brand-400 text-lg">{{ overallTotal }}</td>
+            <tr class="border-t-2 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 print:text-black">
+              <td class="px-2 py-3 text-right font-bold border-l border-gray-200 dark:border-gray-700 print:border-black print:border-2">الإجمالي الكلي</td>
+              <td v-for="rank in [...officerRanks, ...individualRanks]" :key="rank" class="px-1 py-3 text-center font-bold border-l border-gray-200 dark:border-gray-700 print:border-black print:border-2">{{ grandTotals[rank] || '-' }}</td>
+              <td class="px-2 py-3 text-center font-black text-lg border-l border-gray-200 dark:border-gray-700 print:border-black print:border-2">{{ overallTotal }}</td>
             </tr>
           </template>
         </ReportTable>
@@ -189,8 +185,8 @@ const exportExcel = () => {
 <style scoped>
 @media print {
   @page {
-    size: A4 portrait;
-    margin: 1cm;
+    size: A4 landscape !important;
+    margin: 0.5cm !important;
   }
   body * {
     visibility: hidden;
@@ -205,6 +201,33 @@ const exportExcel = () => {
     width: 100%;
     border: none !important;
     box-shadow: none !important;
+  }
+  /* Perfect Print Grid */
+  :deep(table) {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    border: 2px solid black !important;
+  }
+  :deep(th), :deep(td) {
+    padding: 2px 2px !important;
+    font-size: 10px !important;
+    border: 1px solid black !important;
+    color: black !important;
+  }
+  :deep(th) {
+    background-color: #f3f4f6 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  :deep(tr) {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  :deep(thead) {
+    display: table-header-group !important;
+  }
+  :deep(tfoot) {
+    display: table-row-group !important;
   }
 }
 .bg-group-1 {
