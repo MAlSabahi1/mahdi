@@ -27,6 +27,7 @@ class CategoricalWorkforceReportView(APIView):
             
         from django.db.models.functions import Coalesce
         from core.models.organization import CentralDepartment, Branch, DistrictPolice, SecurityAdministration
+        from core.models.personnel_refs import JobCategory
         
         data_map = {}
         if level == 'all':
@@ -96,10 +97,14 @@ class CategoricalWorkforceReportView(APIView):
         data_list = list(data_map.values())
         data_list.sort(key=lambda x: x['unit_name'])
         
+        # Get active job categories sorted by sort_order
+        ordered_categories = list(JobCategory.objects.filter(is_active=True).order_by('sort_order', 'name').values_list('name', flat=True))
+        
         return Response({
             "level": level,
             "data": data_list,
-            "totals": grand_totals
+            "totals": grand_totals,
+            "categories": ordered_categories
         })
 
 

@@ -118,6 +118,26 @@
             @request-export="requestExport('report_4', 'النموذج 4: كشف القوة العاملة فعليًا')"
             @download="downloadReport(requests['report_4'])"
           />
+          <ReportCard
+            title="ب1 - قوة متواجدة بدون عمل"
+            description="كشف الأفراد التابعين للوحدة والمتواجدين بدون عمل."
+            reportType="كشف تفصيلي"
+            :hasExportPermission="hasPermission"
+            :exportRequestStatus="requests['report_4b1']?.status"
+            @view="viewReport('4b1')"
+            @request-export="requestExport('report_4b1', 'النموذج 4ب1: متواجدة بدون عمل')"
+            @download="downloadReport(requests['report_4b1'])"
+          />
+          <ReportCard
+            title="ب2 - قوة الإحتياط"
+            description="كشف الأفراد التابعين للوحدة في قوات الاحتياط."
+            reportType="كشف تفصيلي"
+            :hasExportPermission="hasPermission"
+            :exportRequestStatus="requests['report_4b2']?.status"
+            @view="viewReport('4b2')"
+            @request-export="requestExport('report_4b2', 'النموذج 4ب2: قوة الاحتياط')"
+            @download="downloadReport(requests['report_4b2'])"
+          />
         </div>
 
         <!-- Tab 3: Temp Inactive Force -->

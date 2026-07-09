@@ -309,17 +309,20 @@ const router = createRouter({
       }
     },
     {
-      path: "/reports/view/11",
-      name: "MissingPersonnelReport",
-      component: () => import("@/views/Reports/MissingPersonnelReport.vue"),
-      meta: { title: "كشف مفقودين", requiresAuth: true }
+      path: "/reports/view/:id(4b1|4b2)",
+      name: "InactiveActualForceReport",
+      component: () => import("@/views/Reports/InactiveActualForceReport.vue"),
+      meta: {
+        title: "القوة العاملة الغير فعلية",
+        requiresAuth: true
+      }
     },
     {
-      path: "/reports/view/:id(5|6|7|8|9|10)",
-      name: "TempInactiveReports",
-      component: () => import("@/views/Reports/TempInactiveReports.vue"),
+      path: "/reports/view/:id(5|6|7|8|9|10|11)",
+      name: "UnifiedListReport",
+      component: () => import("@/views/Reports/UnifiedListReport.vue"),
       meta: {
-        title: "كشف القوة غير العاملة مؤقتاً",
+        title: "كشوفات القوة غير العاملة مؤقتاً",
         requiresAuth: true
       }
     },

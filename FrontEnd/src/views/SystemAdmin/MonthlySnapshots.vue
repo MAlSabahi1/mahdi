@@ -122,7 +122,7 @@ import { ref, onMounted } from 'vue'
 import api from '@/lib/api'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 
-const snapshots = ref([])
+const snapshots = ref<any[]>([])
 const loading = ref(false)
 const isGenerating = ref(false)
 const message = ref('')
