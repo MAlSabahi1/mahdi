@@ -1,8 +1,8 @@
 <template>
-  <div class="relative overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+  <div class="relative overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] print:border-none print:rounded-none print:bg-transparent">
     
     <!-- ─── Report Toolbar ─────────────────────────────── -->
-    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 px-5 py-4 border-b border-gray-200 dark:border-gray-800">
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 px-5 py-4 border-b border-gray-200 dark:border-gray-800 print:hidden">
       <!-- Left Side: Title / Custom Tools -->
       <div class="flex-1 w-full md:w-auto">
         <slot name="toolbar-left"></slot>

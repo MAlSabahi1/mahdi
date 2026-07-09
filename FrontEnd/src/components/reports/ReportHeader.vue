@@ -1,6 +1,7 @@
 <template>
-  <div class="hidden print:flex flex-col mb-6 border-b-2 border-gray-900 pb-4">
-    <div class="flex justify-between items-center text-sm font-bold text-gray-900">
+  <div class="hidden print:flex flex-col mb-6">
+    <!-- Header Frame -->
+    <div class="border-2 border-gray-900 rounded-xl p-4 pt-5 pb-3 flex justify-between items-center text-sm font-bold text-gray-900 relative">
       
       <!-- Right: Logo/Republic Info -->
       <div class="text-right w-1/3 space-y-1 pr-2 leading-tight">
@@ -11,25 +12,27 @@
         <p>لجنة بناء الامتدادات</p>
       </div>
       
-      <!-- Center: Emblem Image -->
-      <div class="text-center w-1/3 flex justify-center">
-        <!-- Assuming logoBase.svg is the republic emblem -->
-        <img src="/images/logo/logoBase.svg" alt="شعار الجمهورية" class="h-24 w-24 object-contain" style="filter: grayscale(100%);" />
+      <!-- Center: Emblem Image & Bismillah -->
+      <div class="text-center w-1/3 flex flex-col justify-center items-center gap-2">
+        <h1 class="text-lg font-bold text-gray-900" style="font-family: 'Amiri', 'Traditional Arabic', 'KFGQPC Uthman Taha Naskh', serif;">بسم الله الرحمن الرحيم</h1>
+        <img src="/images/logo/yemen_logo_clean.png" alt="شعار الجمهورية" class="h-32 w-auto max-w-full object-contain print:h-32" />
       </div>
       
       <!-- Left: Document Info -->
-      <div class="text-left w-1/3 space-y-2 pl-2 leading-tight" dir="rtl">
-        <div class="flex justify-start">
-          <span class="w-16">الرقم:</span>
-          <span>(....................)</span>
-        </div>
-        <div class="flex justify-start">
-          <span class="w-16">التاريخ:</span>
-          <span>{{ formattedDate }}</span>
-        </div>
-        <div class="flex justify-start">
-          <span class="w-16">المرفقات:</span>
-          <span>(....................)</span>
+      <div class="w-1/3 flex justify-end pl-2">
+        <div class="space-y-1 text-base leading-tight">
+          <div class="flex items-center gap-1">
+            <span class="w-16 text-right font-bold">الرقم:</span>
+            <span class="text-right tracking-widest">(....................)</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="w-16 text-right font-bold">التاريخ:</span>
+            <span class="text-right">{{ formattedDate }}</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="w-16 text-right font-bold">المرفقات:</span>
+            <span class="text-right tracking-widest">(....................)</span>
+          </div>
         </div>
       </div>
       

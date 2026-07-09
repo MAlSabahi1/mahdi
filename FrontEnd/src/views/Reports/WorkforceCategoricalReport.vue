@@ -80,7 +80,7 @@
           <!-- Table Body -->
           <template #body>
             <tr v-for="(row, idx) in filteredReportData" :key="idx" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border-b border-gray-200 dark:border-gray-700">
-              <td class="px-4 py-3 font-medium text-right bg-gray-50 dark:bg-gray-800/30 border-l border-gray-200 dark:border-gray-700 whitespace-nowrap">{{ row.unit_name }}</td>
+              <td class="px-4 py-3 font-medium text-right bg-gray-50 dark:bg-gray-800/30 border-l border-gray-200 dark:border-gray-700 break-words">{{ row.unit_name }}</td>
               <td v-for="cat in categories" :key="cat" class="px-4 py-3 border-l border-gray-200 dark:border-gray-700" :class="{'text-gray-300 dark:text-gray-700': !row.categories[cat]}">
                 {{ row.categories[cat] || '-' }}
               </td>
@@ -90,14 +90,10 @@
 
           <!-- Table Footer (Totals) -->
           <template #footer>
-            <tr class="bg-gray-100 dark:bg-gray-800 font-bold">
-              <td class="text-right text-brand-600 dark:text-brand-400">الإجمالي العام</td>
-              
-              <td v-for="cat in categories" :key="cat" class="text-center text-brand-600 dark:text-brand-400">
-                {{ grandTotals[cat] || 0 }}
-              </td>
-              
-              <td class="text-center text-brand-600 dark:text-brand-400 text-lg">{{ overallTotal }}</td>
+            <tr class="border-t-2 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 print:text-black">
+              <td class="px-4 py-3 text-right font-bold border-l border-gray-200 dark:border-gray-700 print:border-black print:border-2">الإجمالي الكلي</td>
+              <td v-for="cat in categories" :key="cat" class="px-2 py-3 text-center font-bold border-l border-gray-200 dark:border-gray-700 print:border-black print:border-2">{{ grandTotals[cat] || '-' }}</td>
+              <td class="px-4 py-3 text-center font-black text-lg border-l border-gray-200 dark:border-gray-700 print:border-black print:border-2">{{ overallTotal }}</td>
             </tr>
           </template>
         </ReportTable>
@@ -158,16 +154,23 @@ const fetchReport = async () => {
     reportData.value = res.data.data
     grandTotals.value = res.data.totals
     
-    // Extract unique categories from data
-    const cats = new Set<string>()
+    // Extract unique categories from data but keep standard ones
+    const standardCats = ['إدارية', 'ميدانية', 'فنية', 'تخصصية', 'حرفية']
+    const cats = new Set<string>(standardCats)
+    
     reportData.value.forEach(row => {
       Object.keys(row.categories).forEach(c => cats.add(c))
     })
-    categories.value = Array.from(cats).sort()
     
-    if (categories.value.length === 0) {
-        categories.value = ['إدارية', 'ميدانية', 'فنية', 'تخصصية', 'حرفية']
-    }
+    // Sort standard categories first, then others
+    categories.value = Array.from(cats).sort((a, b) => {
+      const idxA = standardCats.indexOf(a)
+      const idxB = standardCats.indexOf(b)
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB
+      if (idxA !== -1) return -1
+      if (idxB !== -1) return 1
+      return a.localeCompare(b)
+    })
   } catch (error) {
     console.error('Error fetching report:', error)
   } finally {
@@ -196,7 +199,7 @@ const exportExcel = () => {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 1cm;
+    margin: 0.5cm;
   }
   body * {
     visibility: hidden;
@@ -211,6 +214,33 @@ const exportExcel = () => {
     width: 100%;
     border: none !important;
     box-shadow: none !important;
+  }
+  /* Perfect Print Grid */
+  :deep(table) {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    border: 2px solid black !important;
+  }
+  :deep(th), :deep(td) {
+    padding: 6px 4px !important;
+    font-size: 13px !important;
+    border: 1px solid black !important;
+    color: black !important;
+  }
+  :deep(th) {
+    background-color: #f3f4f6 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  :deep(tr) {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  :deep(thead) {
+    display: table-header-group !important;
+  }
+  :deep(tfoot) {
+    display: table-row-group !important;
   }
 }
 .bg-group-1 {
