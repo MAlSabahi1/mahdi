@@ -2,178 +2,155 @@
   <admin-layout>
     <PageBreadcrumb pageTitle="دليل الخدمات والاستمارات المعتمدة" />
 
-    <div class="space-y-8 text-start animate-fade-in" dir="rtl">
-
-      <!-- Modern Hero Panel -->
-      <div
-        class="relative overflow-hidden rounded-3xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-gray-900 via-gray-950 to-brand-950 p-8 text-white shadow-xl">
-        <div
-          class="absolute -right-20 -top-20 w-72 h-72 bg-brand-500/10 rounded-full blur-3xl pointer-events-none animate-pulse">
-        </div>
-        <div class="absolute left-10 bottom-0 w-60 h-60 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none">
-        </div>
-        <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6 z-10">
-          <div class="flex items-center gap-5">
-            <div class="p-4 bg-white/10 backdrop-blur-md text-brand-400 rounded-2xl border border-white/10 shadow-lg">
-              <LayoutGrid class="h-8 w-8 stroke-[1.5]" />
-            </div>
-            <div>
-              <span
-                class="text-[10px] font-bold tracking-widest text-brand-400 uppercase bg-brand-500/10 px-3 py-1 rounded-full border border-brand-500/20">
-                بوابة الخدمات الرسمية
-              </span>
-              <h1 class="text-2xl font-black text-white mt-2">دليل الخدمات والاستمارات المعتمدة</h1>
-              <p class="text-xs text-gray-400 mt-1 max-w-xl leading-relaxed">
-                يضم جميع الخدمات والاستمارات والمعاملات المعتمدة رسمياً في النظام، مصنفة حسب النوع مع إمكانية تقديم الطلبات ومتابعتها.
-              </p>
-            </div>
-          </div>
+    <div class="space-y-5 text-start pb-20" dir="rtl">
+      
+      <!-- Stats Row -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div v-for="stat in stats" :key="stat.label" class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03] flex items-center justify-between">
+          <p class="text-xs font-bold text-gray-500 dark:text-gray-400">{{ stat.label }}</p>
+          <p class="text-xl font-bold text-brand-600 dark:text-brand-400">{{ stat.value }}</p>
         </div>
       </div>
 
-      <!-- Stats Grid -->
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <div v-for="stat in stats" :key="stat.label"
-          class="relative overflow-hidden bg-white dark:bg-gray-900 p-4 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 group">
-          <div class="relative flex items-center justify-between">
-            <div>
-              <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 mb-1 uppercase tracking-wider">{{ stat.label }}</p>
-              <p class="text-xl font-black text-gray-900 dark:text-white font-mono leading-none">{{ stat.value }}</p>
-            </div>
-            <div :class="[stat.colorClass]" class="p-2.5 rounded-xl border transition-all duration-300 group-hover:scale-110">
-              <component :is="stat.icon" class="w-5 h-5" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tabs + Search Control Panel -->
-      <div
-        class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-gray-200 dark:border-gray-800 rounded-2xl p-4 shadow-sm flex flex-col gap-4 relative z-20">
+      <!-- Control Bar: Tabs & Search -->
+      <div class="flex flex-col lg:flex-row gap-4 items-center justify-between rounded-xl border border-gray-200 bg-white p-2 dark:border-gray-800 dark:bg-white/[0.03]">
+        
         <!-- Tabs -->
-        <div class="flex flex-wrap gap-2">
-          <button v-for="tab in tabs" :key="tab.id" @click="selectedTab = tab.id" :class="[
-            selectedTab === tab.id
-              ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20 border-brand-500/10'
-              : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-750 border-gray-200/40 dark:border-gray-700/40'
-          ]" class="px-4 py-2.5 text-xs font-black rounded-xl transition-all cursor-pointer border flex items-center gap-2">
-            <component :is="tab.icon" class="w-3.5 h-3.5" />
+        <nav class="flex gap-1 overflow-x-auto custom-scrollbar w-full lg:w-auto">
+          <button
+            v-for="tab in tabs"
+            :key="tab.id"
+            @click="selectedTab = tab.id"
+            :class="[
+              selectedTab === tab.id
+                ? 'bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400 font-bold'
+                : 'text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 font-medium',
+              'whitespace-nowrap rounded-lg px-4 py-2 text-sm transition-colors flex items-center gap-2'
+            ]"
+          >
+            <component :is="tab.icon" class="w-4 h-4" />
             {{ tab.label }}
-            <span v-if="tab.count > 0" class="text-[9px] opacity-70">({{ tab.count }})</span>
+            <span v-if="tab.count > 0" class="rounded bg-white dark:bg-gray-700 px-1.5 py-0.5 text-[10px] font-bold border border-gray-100 dark:border-gray-600">{{ tab.count }}</span>
           </button>
-        </div>
+        </nav>
 
         <!-- Search -->
-        <div class="relative w-full md:w-96 group">
-          <span class="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none text-gray-400 group-focus-within:text-brand-500 transition-colors">
+        <div class="relative w-full lg:w-80 shrink-0">
+          <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
             <Search class="h-4 w-4" />
           </span>
-          <input v-model="searchQuery" type="text" placeholder="البحث بالاسم أو الرقم أو وصف الخدمة..."
-            class="w-full text-xs pr-10 pl-4 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50/50 dark:bg-gray-850 text-gray-700 dark:text-gray-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 focus:bg-white dark:focus:bg-gray-900 transition-all outline-none" />
+          <input v-model="searchQuery" type="text" placeholder="البحث بالاسم أو الوصف..."
+            class="w-full text-sm pr-10 pl-4 py-2 rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors outline-none" />
           <button v-if="searchQuery" @click="searchQuery = ''"
-            class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 hover:text-gray-600">×</button>
+            class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 hover:text-gray-600">×</button>
         </div>
       </div>
 
-      <!-- Cards Grid -->
-      <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <!-- Clean Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         <div v-for="card in filteredCards" :key="card.id"
-          class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 shadow-sm hover:shadow-xl hover:shadow-brand-500/5 hover:-translate-y-1 transition-all duration-500 ease-out group relative overflow-hidden flex flex-col h-full">
-          <!-- Side color bar -->
-          <div class="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-12 rounded-l-full transition-all duration-500 group-hover:h-20"
-            :class="getTypeColor(card.service_type, 'bar')"></div>
-
-          <!-- Hover orb -->
-          <div class="absolute -right-10 -bottom-10 w-24 h-24 rounded-full blur-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none"
-            :class="getTypeColor(card.service_type, 'orb')"></div>
-
-          <!-- Header -->
-          <div class="flex justify-between items-start mb-4 relative z-10">
-            <div class="w-12 h-12 rounded-2xl flex items-center justify-center border transition-all duration-300 group-hover:scale-105"
-              :class="getTypeColor(card.service_type, 'icon')">
-              <component :is="card.icon" class="w-5 h-5 stroke-[1.5]" />
+          class="group flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-300 ease-out hover:border-gray-300 hover:shadow-lg hover:shadow-gray-200/40 hover:-translate-y-1 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600 dark:hover:shadow-gray-900/50 min-h-[250px]">
+          
+          <!-- Header: Icon & Status -->
+          <div class="flex items-start justify-between p-5 pb-0">
+            <!-- Icon Box -->
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400 transition-transform duration-300 group-hover:scale-110">
+              <component :is="card.icon" class="h-6 w-6 stroke-[1.5]" />
             </div>
-            <div class="flex flex-col items-end gap-1.5">
-              <!-- Status badge -->
-              <span v-if="card.is_locked" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400 flex items-center gap-1">
-                <Lock class="w-2.5 h-2.5" /> مقفلة
+            
+            <!-- Code & Status -->
+            <div class="flex flex-col items-end gap-1.5 rtl:text-left text-left">
+              <span class="text-[10px] font-mono font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{{ card.code }}</span>
+              <span v-if="card.is_locked" class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 flex items-center gap-1">
+                <Lock class="w-3 h-3" /> مقفلة
               </span>
-              <span v-else-if="card.is_active" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> نشطة
+              <span v-else-if="card.is_active" class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400 flex items-center gap-1">
+                <span class="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span> نشطة
               </span>
-              <span v-else class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-500">غير نشطة</span>
-              <!-- Service type label -->
-              <span class="text-[9px] font-bold px-2 py-0.5 rounded-full" :class="getTypeColor(card.service_type, 'badge')">
-                {{ card.service_type_display }}
-              </span>
+              <span v-else class="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-50 text-gray-500 dark:bg-gray-800 dark:text-gray-400">غير نشطة</span>
             </div>
           </div>
 
-          <!-- Body -->
-          <div class="flex-1 relative z-10 flex flex-col justify-between">
-            <div class="space-y-1.5">
-              <h3 class="font-black text-sm text-gray-950 dark:text-white group-hover:text-brand-650 dark:group-hover:text-brand-400 transition-colors duration-300">
-                {{ card.title }}
-              </h3>
-              <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-2">{{ card.desc }}</p>
+          <!-- Body: Title & Desc -->
+          <div class="flex-1 p-5 pt-3 text-start">
+            <div class="mb-3 inline-flex items-center rounded-md bg-gray-50 px-2 py-0.5 text-[10px] font-bold text-gray-500 border border-gray-100 dark:border-gray-700 dark:bg-gray-700/50 dark:text-gray-400">
+              {{ card.service_type_display }}
             </div>
+            <h3 class="mb-2 text-base font-bold text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors duration-300 leading-snug">{{ card.title }}</h3>
+            <p class="text-[13px] text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed" :title="card.desc">{{ card.desc }}</p>
+          </div>
 
-            <!-- Meta Pills -->
-            <div class="flex flex-wrap gap-1.5 mt-4 pt-3 border-t border-gray-100 dark:border-gray-850">
-              <!-- Approval type -->
-              <div class="flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-bold"
-                :class="card.approval_type === 'external' ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400' : card.approval_type === 'internal' ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400' : 'bg-gray-50 text-gray-500 dark:bg-gray-800 dark:text-gray-500'">
-                <ExternalLink v-if="card.approval_type === 'external'" class="w-2.5 h-2.5" />
-                <UserCheck v-else-if="card.approval_type === 'internal'" class="w-2.5 h-2.5" />
-                {{ card.approval_type === 'external' ? 'موافقة خارجية' : card.approval_type === 'internal' ? 'موافقة داخلية' : 'بدون موافقة' }}
+          <!-- Footer: Meta & Actions -->
+          <div class="px-5 pb-5 mt-auto">
+            
+            <!-- Info Box -->
+            <div class="mb-4 space-y-2 rounded-lg bg-gray-50 p-3 text-xs text-gray-600 border border-gray-100 dark:bg-gray-800/50 dark:border-gray-700/50 dark:text-gray-300">
+              <div class="flex items-center justify-between">
+                <span class="text-gray-500 dark:text-gray-400">آلية الموافقة:</span>
+                <span class="font-bold flex items-center gap-1.5 text-gray-700 dark:text-gray-200">
+                  <ExternalLink v-if="card.approval_type === 'external'" class="w-3.5 h-3.5 text-amber-500" />
+                  <UserCheck v-else-if="card.approval_type === 'internal'" class="w-3.5 h-3.5 text-blue-500" />
+                  <CheckCircle v-else class="w-3.5 h-3.5 text-emerald-500" />
+                  {{ card.approval_type === 'external' ? 'خارجية' : card.approval_type === 'internal' ? 'داخلية' : 'تلقائية' }}
+                </span>
               </div>
-              <!-- Repeatable -->
-              <div class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-gray-50 dark:bg-gray-800/40 text-[9px] text-gray-500 dark:text-gray-400">
-                <Repeat v-if="card.is_repeatable" class="w-2.5 h-2.5" />
-                <Hash v-else class="w-2.5 h-2.5" />
-                {{ card.is_repeatable ? 'متكررة' : 'مرة واحدة' }}
+              <div class="flex items-center justify-between">
+                <span class="text-gray-500 dark:text-gray-400">طبيعة الخدمة:</span>
+                <span class="font-bold flex items-center gap-1.5 text-gray-700 dark:text-gray-200">
+                  <Repeat v-if="card.is_repeatable" class="w-3.5 h-3.5 text-gray-400" />
+                  <Hash v-else class="w-3.5 h-3.5 text-gray-400" />
+                  {{ card.is_repeatable ? 'متكررة' : 'مرة واحدة' }}
+                </span>
               </div>
             </div>
-          </div>
 
-          <!-- Footer -->
-          <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between relative z-10">
-            <!-- My Requests icon -->
-            <button v-if="card.form_type" @click="$router.push(`/services/requests?type=${card.form_type}`)"
-              class="flex items-center gap-1 text-[10px] text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors cursor-pointer" title="طلباتي">
-              <ListFilter class="w-3.5 h-3.5" />
-              <span>طلباتي</span>
-            </button>
-            <span v-else></span>
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-2">
+              <button
+                v-if="card.form_type"
+                @click="$router.push(`/services/requests?type=${card.form_type}`)"
+                class="flex items-center justify-center h-10 w-12 shrink-0 rounded-xl border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-brand-600 hover:border-brand-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition-all duration-300"
+                title="سجل الطلبات"
+              >
+                <ListFilter class="h-4 w-4" />
+              </button>
 
-            <!-- Request button -->
-            <RouterLink v-if="card.form_type && card.is_active && !card.is_locked" :to="getServiceRoute(card)"
-              class="relative overflow-hidden inline-flex items-center gap-1.5 px-4 py-2 text-xs font-black rounded-xl border transition-all duration-300 cursor-pointer"
-              :class="getTypeColor(card.service_type, 'btn')">
-              <span>طلب الخدمة</span>
-              <ArrowLeft class="w-3.5 h-3.5 transition-transform duration-300 group-hover:-translate-x-1" />
-            </RouterLink>
-            <div v-else-if="card.is_locked"
-              class="inline-flex items-center gap-1.5 px-3 py-2 text-[10px] font-bold rounded-xl bg-red-50 text-red-500 border border-red-100 dark:bg-red-950/20 dark:border-red-900 cursor-not-allowed"
-              :title="card.lock_reason || 'مقفلة'">
-              <Lock class="w-3 h-3" /> مقفلة
-            </div>
-            <div v-else
-              class="inline-flex items-center gap-1.5 px-3 py-2 text-[10px] font-bold rounded-xl bg-gray-50 text-gray-400 border border-gray-200 dark:bg-gray-800 dark:text-gray-500 dark:border-gray-700 cursor-not-allowed">
-              قيد التطوير
+              <RouterLink
+                v-if="card.form_type && card.is_active && !card.is_locked"
+                :to="getServiceRoute(card)"
+                class="flex flex-1 items-center justify-center gap-2 h-10 rounded-xl bg-brand-600 px-4 text-sm font-bold text-white hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-all duration-300 shadow-sm shadow-brand-500/20"
+              >
+                طلب الخدمة
+              </RouterLink>
+              
+              <button
+                v-else-if="card.is_locked"
+                disabled
+                class="flex flex-1 items-center justify-center gap-2 h-10 rounded-xl bg-red-50 text-sm font-bold text-red-500 border border-red-100 dark:bg-red-900/20 dark:border-red-900 dark:text-red-400 cursor-not-allowed"
+              >
+                <Lock class="h-4 w-4" /> مقفلة
+              </button>
+              
+              <button
+                v-else
+                disabled
+                class="flex flex-1 items-center justify-center gap-2 h-10 rounded-xl bg-gray-50 border border-gray-200 text-sm font-bold text-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-500 cursor-not-allowed"
+              >
+                قيد التطوير
+              </button>
             </div>
           </div>
+          
         </div>
       </div>
 
       <!-- Empty State -->
-      <div v-if="filteredCards.length === 0"
-        class="flex flex-col items-center justify-center py-20 text-center border rounded-2xl bg-white dark:bg-gray-900 border-dashed dark:border-gray-800">
-        <div class="w-16 h-16 rounded-full bg-brand-500/10 text-brand-600 flex items-center justify-center mb-4">
-          <LayoutGrid class="w-8 h-8 opacity-80" />
+      <div v-if="filteredCards.length === 0" class="flex flex-col items-center justify-center py-20 text-center rounded-xl border border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-700">
+        <div class="h-12 w-12 rounded bg-gray-100 dark:bg-gray-700 text-gray-400 flex items-center justify-center mb-4">
+          <LayoutGrid class="h-6 w-6" />
         </div>
-        <h3 class="text-lg font-black mb-2 text-gray-900 dark:text-white">لا توجد خدمات تطابق البحث</h3>
-        <p class="text-xs text-gray-400 max-w-sm">جرب تغيير التبويب أو كتابة كلمة أخرى في شريط البحث.</p>
+        <h3 class="text-base font-bold text-gray-900 dark:text-white mb-1">لا توجد نتائج مطابقة</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">لم نتمكن من العثور على أي خدمات تطابق بحثك الحالي.</p>
       </div>
 
     </div>
@@ -185,7 +162,7 @@ import { ref, computed, onMounted } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import {
-  Search, ArrowLeft, LayoutGrid, ListFilter, Lock,
+  Search, LayoutGrid, ListFilter, Lock, CheckCircle,
   UserCheck, ExternalLink, Repeat, Hash,
   // Service icons
   Award, TrendingUp, LogOut, PauseCircle, MapPin, Percent, Activity,
@@ -268,12 +245,12 @@ function getServiceRoute(card: ServiceCard) {
   return `/services/request?type=${card.form_type}&category=${card.service_type}`
 }
 
-// Tabs matching m.md exactly
+// Tabs matching logic
 const tabs = computed(() => {
   const cards = serviceCards.value
   return [
-    { id: 'all', label: 'الكل', icon: LayoutGrid, count: cards.length },
-    { id: 'form', label: 'الاستمارات', icon: Layers, count: cards.filter(c => c.service_type === 'form').length },
+    { id: 'all', label: 'كافة الخدمات', icon: LayoutGrid, count: cards.length },
+    { id: 'form', label: 'الاستمارات الرسمية', icon: Layers, count: cards.filter(c => c.service_type === 'form').length },
     { id: 'correction', label: 'تصحيح البيانات', icon: FileEdit, count: cards.filter(c => c.service_type === 'correction').length },
     { id: 'rank_settlement', label: 'الترقيات والتسويات', icon: ChevronUp, count: cards.filter(c => c.service_type === 'rank_settlement').length },
     { id: 'security', label: 'المزامنة والأمان', icon: ShieldOff, count: cards.filter(c => c.service_type === 'security').length },
@@ -295,60 +272,12 @@ const filteredCards = computed(() => {
 const stats = computed(() => {
   const cards = serviceCards.value
   return [
-    { label: 'إجمالي الخدمات', value: cards.length, icon: LayoutGrid, colorClass: 'bg-brand-500/10 text-brand-650 border-brand-500/20 dark:bg-brand-500/5 dark:text-brand-400 dark:border-brand-500/10' },
-    { label: 'الاستمارات', value: cards.filter(c => c.service_type === 'form').length, icon: Layers, colorClass: 'bg-blue-500/10 text-blue-600 border-blue-500/20 dark:bg-blue-500/5 dark:text-blue-400 dark:border-blue-500/10' },
-    { label: 'تصحيح البيانات', value: cards.filter(c => c.service_type === 'correction').length, icon: FileEdit, colorClass: 'bg-violet-500/10 text-violet-600 border-violet-500/20 dark:bg-violet-500/5 dark:text-violet-400 dark:border-violet-500/10' },
-    { label: 'الترقيات', value: cards.filter(c => c.service_type === 'rank_settlement').length, icon: ChevronUp, colorClass: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:bg-emerald-500/5 dark:text-emerald-400 dark:border-emerald-500/10' },
-    { label: 'الأمان', value: cards.filter(c => c.service_type === 'security').length, icon: ShieldOff, colorClass: 'bg-amber-500/10 text-amber-600 border-amber-500/20 dark:bg-amber-500/5 dark:text-amber-400 dark:border-amber-500/10' },
-    { label: 'الجزاءات', value: cards.filter(c => c.service_type === 'disciplinary').length, icon: Gavel, colorClass: 'bg-rose-500/10 text-rose-600 border-rose-500/20 dark:bg-rose-500/5 dark:text-rose-400 dark:border-rose-500/10' },
+    { label: 'إجمالي الخدمات', value: cards.length },
+    { label: 'الاستمارات', value: cards.filter(c => c.service_type === 'form').length },
+    { label: 'تصحيح البيانات', value: cards.filter(c => c.service_type === 'correction').length },
+    { label: 'الترقيات', value: cards.filter(c => c.service_type === 'rank_settlement').length },
+    { label: 'الأمان', value: cards.filter(c => c.service_type === 'security').length },
+    { label: 'الجزاءات', value: cards.filter(c => c.service_type === 'disciplinary').length },
   ]
 })
-
-function getTypeColor(type: string, variant: 'bar' | 'orb' | 'icon' | 'badge' | 'btn') {
-  const colors: Record<string, Record<string, string>> = {
-    form: {
-      bar: 'bg-blue-600 dark:bg-blue-500',
-      orb: 'bg-blue-500',
-      icon: 'bg-gradient-to-br from-blue-50 to-blue-100/50 border-blue-200/60 text-blue-600 dark:from-blue-950/20 dark:to-blue-900/5 dark:border-blue-900/40 dark:text-blue-400',
-      badge: 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
-      btn: 'bg-blue-500/5 border-blue-500/10 text-blue-600 dark:text-blue-450 hover:bg-blue-600 hover:text-white hover:border-transparent hover:shadow-lg hover:shadow-blue-500/20',
-    },
-    correction: {
-      bar: 'bg-violet-600 dark:bg-violet-500',
-      orb: 'bg-violet-500',
-      icon: 'bg-gradient-to-br from-violet-50 to-violet-100/50 border-violet-200/60 text-violet-600 dark:from-violet-950/20 dark:to-violet-900/5 dark:border-violet-900/40 dark:text-violet-400',
-      badge: 'bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300',
-      btn: 'bg-violet-500/5 border-violet-500/10 text-violet-600 dark:text-violet-450 hover:bg-violet-600 hover:text-white hover:border-transparent hover:shadow-lg hover:shadow-violet-500/20',
-    },
-    rank_settlement: {
-      bar: 'bg-emerald-600 dark:bg-emerald-500',
-      orb: 'bg-emerald-500',
-      icon: 'bg-gradient-to-br from-emerald-50 to-emerald-100/50 border-emerald-200/60 text-emerald-600 dark:from-emerald-950/20 dark:to-emerald-900/5 dark:border-emerald-900/40 dark:text-emerald-400',
-      badge: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
-      btn: 'bg-emerald-500/5 border-emerald-500/10 text-emerald-600 dark:text-emerald-450 hover:bg-emerald-600 hover:text-white hover:border-transparent hover:shadow-lg hover:shadow-emerald-500/20',
-    },
-    security: {
-      bar: 'bg-amber-600 dark:bg-amber-500',
-      orb: 'bg-amber-500',
-      icon: 'bg-gradient-to-br from-amber-50 to-amber-100/50 border-amber-200/60 text-amber-600 dark:from-amber-950/20 dark:to-amber-900/5 dark:border-amber-900/40 dark:text-amber-400',
-      badge: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300',
-      btn: 'bg-amber-500/5 border-amber-500/10 text-amber-600 dark:text-amber-450 hover:bg-amber-600 hover:text-white hover:border-transparent hover:shadow-lg hover:shadow-amber-500/20',
-    },
-    disciplinary: {
-      bar: 'bg-rose-600 dark:bg-rose-500',
-      orb: 'bg-rose-500',
-      icon: 'bg-gradient-to-br from-rose-50 to-rose-100/50 border-rose-200/60 text-rose-600 dark:from-rose-950/20 dark:to-rose-900/5 dark:border-rose-900/40 dark:text-rose-400',
-      badge: 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300',
-      btn: 'bg-rose-500/5 border-rose-500/10 text-rose-600 dark:text-rose-450 hover:bg-rose-600 hover:text-white hover:border-transparent hover:shadow-lg hover:shadow-rose-500/20',
-    },
-    other: {
-      bar: 'bg-gray-500 dark:bg-gray-400',
-      orb: 'bg-gray-500',
-      icon: 'bg-gradient-to-br from-gray-50 to-gray-100/50 border-gray-200/60 text-gray-600 dark:from-gray-950/20 dark:to-gray-900/5 dark:border-gray-900/40 dark:text-gray-400',
-      badge: 'bg-gray-50 text-gray-700 dark:bg-gray-950/40 dark:text-gray-300',
-      btn: 'bg-gray-500/5 border-gray-500/10 text-gray-600 dark:text-gray-450 hover:bg-gray-600 hover:text-white hover:border-transparent hover:shadow-lg hover:shadow-gray-500/20',
-    },
-  }
-  return colors[type]?.[variant] || colors.other[variant]
-}
 </script>
