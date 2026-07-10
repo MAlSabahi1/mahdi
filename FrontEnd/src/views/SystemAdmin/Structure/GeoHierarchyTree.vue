@@ -58,7 +58,7 @@
                   
                   <div class="mr-auto flex items-center gap-2">
                     <span class="text-xs font-mono text-gray-500 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded-md">{{ region.code }}</span>
-                    <button class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors cursor-pointer" title="تعديل">
+                    <button @click.stop="handleEditRegion(region)" class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors cursor-pointer" title="تعديل">
                       <Settings2 class="w-4 h-4" />
                     </button>
                   </div>
@@ -70,6 +70,11 @@
                     <div class="absolute right-[-32px] top-5 w-8 h-0.5 bg-gray-100 dark:bg-gray-800"></div>
                     
                     <div class="flex items-center gap-2 p-2.5 rounded-xl bg-gray-50/50 dark:bg-gray-800/20 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700 group">
+                      <button v-if="district.children && district.children.length > 0" @click="district.expanded = !district.expanded" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer">
+                        <ChevronDown v-if="district.expanded" class="w-4 h-4 text-emerald-500" />
+                        <ChevronLeft v-else class="w-4 h-4 text-gray-400" />
+                      </button>
+                      <div v-else class="w-6 h-6"></div> <!-- Spacer -->
                       <Building2 class="w-4 h-4 text-gray-400" />
                       <span class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ district.name }}</span>
                       
@@ -78,8 +83,19 @@
                           <Users class="w-3 h-3" /> {{ district.population }}
                         </span>
                         <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                          <button class="p-1 text-gray-400 hover:text-emerald-600 rounded cursor-pointer" title="إضافة فرع"><Plus class="w-3.5 h-3.5" /></button>
-                          <button class="p-1 text-gray-400 hover:text-blue-600 rounded cursor-pointer" title="إعدادات"><Settings2 class="w-3.5 h-3.5" /></button>
+                          <button @click.stop="handleAddSubDistrict(district)" class="p-1 text-gray-400 hover:text-emerald-600 rounded cursor-pointer" title="إضافة عزلة"><Plus class="w-3.5 h-3.5" /></button>
+                          <button @click.stop="handleEditDistrict(district)" class="p-1 text-gray-400 hover:text-blue-600 rounded cursor-pointer" title="إعدادات"><Settings2 class="w-3.5 h-3.5" /></button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Level 4: Sub-Districts -->
+                    <div v-show="district.expanded" class="pr-8 mt-2 space-y-2 border-r-2 border-gray-100 dark:border-gray-800">
+                      <div v-for="sub in district.children" :key="sub.id" class="relative">
+                        <div class="absolute right-[-32px] top-4 w-8 h-0.5 bg-gray-100 dark:bg-gray-800"></div>
+                        <div class="flex items-center gap-2 p-2 rounded-xl bg-gray-50/30 dark:bg-gray-800/10 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors">
+                          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                          <span class="text-sm text-gray-600 dark:text-gray-400">{{ sub.name }}</span>
                         </div>
                       </div>
                     </div>
@@ -97,75 +113,84 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import { Network, Search, ChevronDown, ChevronLeft, Globe2, MapPin, Building2, Users, Settings2, Plus } from 'lucide-vue-next'
+import Swal from 'sweetalert2'
+import api from '@/lib/api'
 
 const { t } = useI18n()
 const searchQuery = ref('')
+const isLoading = ref(true)
 
-const treeData = ref([
-  {
-    id: 'root-1',
-    name: 'الجمهورية اليمنية',
-    expanded: true,
-    children: [
-      {
-        id: 'reg-1',
-        name: 'أمانة العاصمة',
-        code: 'YE-SA',
-        expanded: true,
-        children: [
-          { id: 'dist-101', name: 'مديرية السبعين', population: 1250 },
-          { id: 'dist-102', name: 'مديرية الوحدة', population: 840 },
-          { id: 'dist-103', name: 'مديرية شعوب', population: 920 },
-        ]
-      },
-      {
-        id: 'reg-2',
-        name: 'محافظة صنعاء',
-        code: 'YE-SN',
+const treeData = ref<any[]>([])
+
+const fetchTree = async () => {
+  isLoading.value = true
+  try {
+    const res = await api.get('/dictionaries/geo/governorates/tree/')
+    const govs = res.data.data || res.data.results || res.data || []
+    
+    treeData.value = [{
+      id: 'root-1',
+      name: 'الجمهورية اليمنية',
+      expanded: true,
+      children: govs.map((gov: any) => ({
+        id: `gov-${gov.id}`,
+        db_id: gov.id,
+        name: gov.name_ar,
+        code: gov.name_en || '-',
         expanded: false,
-        children: [
-          { id: 'dist-201', name: 'مديرية سنحان', population: 450 },
-          { id: 'dist-202', name: 'مديرية بني حشيش', population: 320 },
-        ]
-      },
-      {
-        id: 'reg-3',
-        name: 'محافظة عدن',
-        code: 'YE-AD',
-        expanded: false,
-        children: [
-          { id: 'dist-301', name: 'مديرية صيرة', population: 600 },
-        ]
-      }
-    ]
+        children: (gov.districts || []).map((dist: any) => ({
+          id: dist.id,
+          name: dist.name_ar,
+          population: 0,
+          expanded: false,
+          children: (dist.sub_districts || []).map((sub: any) => ({
+            id: sub.id,
+            name: sub.name_ar
+          }))
+        }))
+      }))
+    }]
+  } catch (error) {
+    console.error('Error fetching geo tree', error)
+  } finally {
+    isLoading.value = false
   }
-])
+}
 
-// Basic deep filter implementation for mock tree
+onMounted(() => {
+  fetchTree()
+})
+
+// Basic deep filter implementation
 const filteredTree = computed(() => {
   if (!searchQuery.value) return treeData.value
 
   const q = searchQuery.value.toLowerCase()
   
-  // Clone and filter
   return treeData.value.map(country => {
     if (country.name.toLowerCase().includes(q)) return { ...country, expanded: true }
     
-    const filteredRegions = country.children.filter(region => {
-      if (region.name.toLowerCase().includes(q) || region.code.toLowerCase().includes(q)) return true
-      return region.children?.some(dist => dist.name.toLowerCase().includes(q))
-    }).map(region => {
+    const filteredRegions = country.children.filter((region: any) => {
+      if (region.name.toLowerCase().includes(q) || (region.code && region.code.toLowerCase().includes(q))) return true
+      return region.children?.some((dist: any) => dist.name.toLowerCase().includes(q) || dist.children?.some((sub: any) => sub.name.toLowerCase().includes(q)))
+    }).map((region: any) => {
       return {
         ...region,
-        expanded: true, // Auto expand on search match
-        children: region.children?.filter(dist => 
-          region.name.toLowerCase().includes(q) || region.code.toLowerCase().includes(q) || dist.name.toLowerCase().includes(q)
-        )
+        expanded: true,
+        children: region.children?.filter((dist: any) => 
+          region.name.toLowerCase().includes(q) || dist.name.toLowerCase().includes(q) || dist.children?.some((sub: any) => sub.name.toLowerCase().includes(q))
+        ).map((dist: any) => ({
+          ...dist,
+          expanded: true,
+          children: dist.children?.filter((sub: any) => 
+            region.name.toLowerCase().includes(q) || dist.name.toLowerCase().includes(q) || sub.name.toLowerCase().includes(q)
+          )
+        }))
       }
     })
 
@@ -175,5 +200,102 @@ const filteredTree = computed(() => {
     return null
   }).filter(Boolean) as any[]
 })
+
+const handleAddSubDistrict = (district: any) => {
+  Swal.fire({
+    title: `إضافة عزلة جديدة في ${district.name}`,
+    input: 'text',
+    inputPlaceholder: 'اسم العزلة',
+    showCancelButton: true,
+    confirmButtonText: 'إضافة',
+    cancelButtonText: 'إلغاء',
+    confirmButtonColor: '#10b981',
+    showLoaderOnConfirm: true,
+    inputValidator: (value) => {
+      if (!value) return 'اسم العزلة مطلوب!'
+    },
+    preConfirm: async (name_ar: string) => {
+      try {
+        await api.post('/dictionaries/geo/sub-districts/', {
+          name_ar,
+          district: district.id
+        })
+        return true
+      } catch (e: any) {
+        Swal.showValidationMessage(e.response?.data?.name_ar?.[0] || 'حدث خطأ أثناء الإضافة')
+        return false
+      }
+    },
+    allowOutsideClick: () => !Swal.isLoading()
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetchTree()
+      Swal.fire('تمت الإضافة', 'تم إضافة العزلة بنجاح', 'success')
+    }
+  })
+}
+
+const handleEditDistrict = (district: any) => {
+  Swal.fire({
+    title: 'تعديل اسم المديرية',
+    input: 'text',
+    inputValue: district.name,
+    showCancelButton: true,
+    confirmButtonText: 'تحديث',
+    cancelButtonText: 'إلغاء',
+    confirmButtonColor: '#3b82f6',
+    showLoaderOnConfirm: true,
+    inputValidator: (value) => {
+      if (!value) return 'اسم المديرية مطلوب!'
+    },
+    preConfirm: async (name_ar: string) => {
+      try {
+        await api.patch(`/dictionaries/geo/districts/${district.id}/`, { name_ar })
+        return true
+      } catch (e: any) {
+        Swal.showValidationMessage('حدث خطأ أثناء التحديث')
+        return false
+      }
+    },
+    allowOutsideClick: () => !Swal.isLoading()
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetchTree()
+      Swal.fire('تم التحديث', 'تم تحديث اسم المديرية', 'success')
+    }
+  })
+}
+
+const handleEditRegion = (region: any) => {
+  Swal.fire({
+    title: 'تعديل بيانات المحافظة',
+    html: `
+      <input id="swal-input1" class="swal2-input" value="${region.name}" placeholder="اسم المحافظة" dir="rtl">
+    `,
+    focusConfirm: false,
+    showCancelButton: true,
+    confirmButtonText: 'تحديث',
+    cancelButtonText: 'إلغاء',
+    confirmButtonColor: '#3b82f6',
+    showLoaderOnConfirm: true,
+    preConfirm: async () => {
+      const name_ar = (document.getElementById('swal-input1') as HTMLInputElement).value
+      if (!name_ar) { Swal.showValidationMessage('اسم المحافظة مطلوب'); return false }
+      try {
+        await api.patch(`/dictionaries/geo/governorates/${region.db_id}/`, { name_ar })
+        return true
+      } catch (e: any) {
+        Swal.showValidationMessage('حدث خطأ أثناء التحديث')
+        return false
+      }
+    },
+    allowOutsideClick: () => !Swal.isLoading()
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetchTree()
+      Swal.fire('تم التحديث', 'تم تحديث بيانات المحافظة', 'success')
+    }
+  })
+}
 
 </script>

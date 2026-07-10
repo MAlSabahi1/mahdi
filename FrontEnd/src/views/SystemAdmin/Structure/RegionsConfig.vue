@@ -127,67 +127,65 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import Swal from 'sweetalert2'
 import { Map, Plus, Search, MapPin, Hash, Users, Edit, Trash2, Building2, Shield } from 'lucide-vue-next'
+import api from '@/lib/api'
 
 const { t } = useI18n()
 
-// Mock Data
-const regions = ref([
-  { 
-    id: 1, 
-    name: 'أمانة العاصمة', 
-    code: 'YE-SA',
-    population: '2.5M',
-    districts: [
-      { id: 101, name: 'مديرية السبعين', personnelCount: 1250, sectors: 4 },
-      { id: 102, name: 'مديرية الوحدة', personnelCount: 840, sectors: 3 },
-      { id: 103, name: 'مديرية شعوب', personnelCount: 920, sectors: 3 },
-      { id: 104, name: 'مديرية الثورة', personnelCount: 750, sectors: 2 }
-    ]
-  },
-  { 
-    id: 2, 
-    name: 'محافظة صنعاء', 
-    code: 'YE-SN',
-    population: '1.2M',
-    districts: [
-      { id: 201, name: 'مديرية سنحان', personnelCount: 450, sectors: 2 },
-      { id: 202, name: 'مديرية بني حشيش', personnelCount: 320, sectors: 1 },
-      { id: 203, name: 'مديرية خولان', personnelCount: 410, sectors: 2 }
-    ]
-  },
-  { 
-    id: 3, 
-    name: 'محافظة عدن', 
-    code: 'YE-AD',
-    population: '1.8M',
-    districts: [
-      { id: 301, name: 'مديرية صيرة', personnelCount: 600, sectors: 2 },
-      { id: 302, name: 'مديرية خور مكسر', personnelCount: 550, sectors: 2 }
-    ]
-  },
-  { 
-    id: 4, 
-    name: 'محافظة تعز', 
-    code: 'YE-TA',
-    population: '3.1M',
-    districts: [
-      { id: 401, name: 'مديرية المظفر', personnelCount: 800, sectors: 3 },
-      { id: 402, name: 'مديرية القاهرة', personnelCount: 750, sectors: 3 },
-      { id: 403, name: 'مديرية صالة', personnelCount: 620, sectors: 2 }
-    ]
-  },
-  { id: 5, name: 'محافظة مأرب', code: 'YE-MA', population: '800K', districts: [] },
-  { id: 6, name: 'محافظة حضرموت', code: 'YE-HD', population: '1.5M', districts: [] },
-])
-
+const regions = ref<any[]>([])
+const isLoading = ref(true)
 const searchQuery = ref('')
-const selectedRegion = ref(regions.value[0])
+const selectedRegion = ref<any>(null)
+
+const fetchRegions = async () => {
+  isLoading.value = true
+  try {
+    const res = await api.get('/dictionaries/geo/governorates/')
+    const govs = res.data.results || res.data || []
+    
+    // For each governorate, fetch its districts
+    const regionsWithDistricts = await Promise.all(govs.map(async (gov: any) => {
+      let districts: any[] = []
+      try {
+        const distRes = await api.get(`/dictionaries/geo/districts/?governorate=${gov.id}`)
+        const distData = distRes.data.results || distRes.data || []
+        districts = distData.map((d: any) => ({
+          id: d.id,
+          name: d.name_ar,
+          personnelCount: 0,
+          sectors: 0
+        }))
+      } catch (e) {
+        // Districts fetch failed silently
+      }
+      return {
+        id: gov.id,
+        name: gov.name_ar,
+        code: gov.phone_numbering_plan || '-',
+        population: gov.capital_name_ar || '-',
+        districts
+      }
+    }))
+    
+    regions.value = regionsWithDistricts
+    if (regions.value.length > 0 && !selectedRegion.value) {
+      selectedRegion.value = regions.value[0]
+    }
+  } catch (error) {
+    console.error('Error fetching regions', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchRegions()
+})
 
 const filteredRegions = computed(() => {
   if (!searchQuery.value) return regions.value
@@ -200,31 +198,30 @@ const handleAddRegion = () => {
     title: 'إضافة محافظة جديدة',
     html: `
       <input id="swal-input1" class="swal2-input" placeholder="اسم المحافظة (مثال: الحديدة)" dir="rtl">
-      <input id="swal-input2" class="swal2-input" placeholder="الكود (مثال: YE-HU)" dir="ltr">
+      <input id="swal-input2" class="swal2-input" placeholder="الاسم بالإنجليزي (اختياري)" dir="ltr">
     `,
     focusConfirm: false,
     showCancelButton: true,
     confirmButtonText: 'حفظ',
     cancelButtonText: 'إلغاء',
     confirmButtonColor: '#3b82f6',
-    preConfirm: () => {
-      const name = (document.getElementById('swal-input1') as HTMLInputElement).value
-      const code = (document.getElementById('swal-input2') as HTMLInputElement).value
-      if (!name) Swal.showValidationMessage('اسم المحافظة مطلوب')
-      return { name, code }
-    }
+    showLoaderOnConfirm: true,
+    preConfirm: async () => {
+      const name_ar = (document.getElementById('swal-input1') as HTMLInputElement).value
+      const name_en = (document.getElementById('swal-input2') as HTMLInputElement).value
+      if (!name_ar) { Swal.showValidationMessage('اسم المحافظة مطلوب'); return false }
+      try {
+        await api.post('/dictionaries/geo/governorates/', { name_ar, name_en })
+        return true
+      } catch (e: any) {
+        Swal.showValidationMessage(e.response?.data?.name_ar?.[0] || 'حدث خطأ أثناء الحفظ')
+        return false
+      }
+    },
+    allowOutsideClick: () => !Swal.isLoading()
   }).then((result) => {
     if (result.isConfirmed) {
-      const newId = Math.max(...regions.value.map(r => r.id)) + 1
-      const newRegion = {
-        id: newId,
-        name: result.value.name,
-        code: result.value.code || `YE-${newId}`,
-        population: '0',
-        districts: []
-      }
-      regions.value.push(newRegion)
-      selectedRegion.value = newRegion
+      fetchRegions()
       Swal.fire('تمت الإضافة', 'تم إضافة المحافظة بنجاح', 'success')
     }
   })
@@ -235,23 +232,28 @@ const handleEditRegion = (region: any) => {
     title: 'تعديل بيانات المحافظة',
     html: `
       <input id="swal-input1" class="swal2-input" value="${region.name}" placeholder="اسم المحافظة" dir="rtl">
-      <input id="swal-input2" class="swal2-input" value="${region.code}" placeholder="الكود" dir="ltr">
     `,
     focusConfirm: false,
     showCancelButton: true,
     confirmButtonText: 'تحديث',
     cancelButtonText: 'إلغاء',
     confirmButtonColor: '#3b82f6',
-    preConfirm: () => {
-      const name = (document.getElementById('swal-input1') as HTMLInputElement).value
-      const code = (document.getElementById('swal-input2') as HTMLInputElement).value
-      if (!name) Swal.showValidationMessage('اسم المحافظة مطلوب')
-      return { name, code }
-    }
+    showLoaderOnConfirm: true,
+    preConfirm: async () => {
+      const name_ar = (document.getElementById('swal-input1') as HTMLInputElement).value
+      if (!name_ar) { Swal.showValidationMessage('اسم المحافظة مطلوب'); return false }
+      try {
+        await api.patch(`/dictionaries/geo/governorates/${region.id}/`, { name_ar })
+        return true
+      } catch (e: any) {
+        Swal.showValidationMessage('حدث خطأ أثناء التحديث')
+        return false
+      }
+    },
+    allowOutsideClick: () => !Swal.isLoading()
   }).then((result) => {
     if (result.isConfirmed) {
-      region.name = result.value.name
-      region.code = result.value.code
+      fetchRegions()
       Swal.fire('تم التحديث', 'تم تحديث بيانات المحافظة', 'success')
     }
   })
@@ -266,19 +268,31 @@ const handleDeleteRegion = (id: number) => {
     confirmButtonColor: '#ef4444',
     cancelButtonColor: '#d1d5db',
     confirmButtonText: 'نعم، احذف',
-    cancelButtonText: 'إلغاء'
+    cancelButtonText: 'إلغاء',
+    showLoaderOnConfirm: true,
+    preConfirm: async () => {
+      try {
+        await api.delete(`/dictionaries/geo/governorates/${id}/`)
+        return true
+      } catch (e: any) {
+        Swal.showValidationMessage('لا يمكن حذف هذه المحافظة — قد تكون مرتبطة بسجلات أخرى')
+        return false
+      }
+    },
+    allowOutsideClick: () => !Swal.isLoading()
   }).then((result) => {
     if (result.isConfirmed) {
-      regions.value = regions.value.filter(r => r.id !== id)
       if (selectedRegion.value?.id === id) {
-        selectedRegion.value = regions.value[0] || null
+        selectedRegion.value = null
       }
+      fetchRegions()
       Swal.fire('تم الحذف', 'تم حذف المحافظة بنجاح.', 'success')
     }
   })
 }
 
 const handleAddDistrict = () => {
+  if (!selectedRegion.value) return
   Swal.fire({
     title: 'إضافة مديرية جديدة',
     input: 'text',
@@ -287,16 +301,28 @@ const handleAddDistrict = () => {
     confirmButtonText: 'إضافة',
     cancelButtonText: 'إلغاء',
     confirmButtonColor: '#10b981',
+    showLoaderOnConfirm: true,
     inputValidator: (value) => {
       if (!value) return 'اسم المديرية مطلوب!'
-    }
+    },
+    preConfirm: async (name_ar: string) => {
+      try {
+        await api.post('/dictionaries/geo/districts/', {
+          name_ar,
+          governorate: selectedRegion.value.id
+        })
+        return true
+      } catch (e: any) {
+        Swal.showValidationMessage(e.response?.data?.name_ar?.[0] || 'حدث خطأ أثناء الإضافة')
+        return false
+      }
+    },
+    allowOutsideClick: () => !Swal.isLoading()
   }).then((result) => {
-    if (result.isConfirmed && selectedRegion.value) {
-      selectedRegion.value.districts.push({
-        id: Date.now(),
-        name: result.value,
-        personnelCount: 0,
-        sectors: 0
+    if (result.isConfirmed) {
+      const selectedId = selectedRegion.value?.id
+      fetchRegions().then(() => {
+        selectedRegion.value = regions.value.find(r => r.id === selectedId) || regions.value[0]
       })
       Swal.fire('تمت الإضافة', 'تم إضافة المديرية بنجاح', 'success')
     }
@@ -312,12 +338,26 @@ const handleEditDistrict = (district: any) => {
     confirmButtonText: 'تحديث',
     cancelButtonText: 'إلغاء',
     confirmButtonColor: '#3b82f6',
+    showLoaderOnConfirm: true,
     inputValidator: (value) => {
       if (!value) return 'اسم المديرية مطلوب!'
-    }
+    },
+    preConfirm: async (name_ar: string) => {
+      try {
+        await api.patch(`/dictionaries/geo/districts/${district.id}/`, { name_ar })
+        return true
+      } catch (e: any) {
+        Swal.showValidationMessage('حدث خطأ أثناء التحديث')
+        return false
+      }
+    },
+    allowOutsideClick: () => !Swal.isLoading()
   }).then((result) => {
     if (result.isConfirmed) {
-      district.name = result.value
+      const selectedId = selectedRegion.value?.id
+      fetchRegions().then(() => {
+        selectedRegion.value = regions.value.find(r => r.id === selectedId) || regions.value[0]
+      })
       Swal.fire('تم التحديث', 'تم تحديث اسم المديرية', 'success')
     }
   })
@@ -332,10 +372,24 @@ const handleDeleteDistrict = (id: number) => {
     confirmButtonColor: '#ef4444',
     cancelButtonColor: '#d1d5db',
     confirmButtonText: 'نعم، احذف',
-    cancelButtonText: 'إلغاء'
+    cancelButtonText: 'إلغاء',
+    showLoaderOnConfirm: true,
+    preConfirm: async () => {
+      try {
+        await api.delete(`/dictionaries/geo/districts/${id}/`)
+        return true
+      } catch (e: any) {
+        Swal.showValidationMessage('لا يمكن حذف هذه المديرية — قد تكون مرتبطة بسجلات أخرى')
+        return false
+      }
+    },
+    allowOutsideClick: () => !Swal.isLoading()
   }).then((result) => {
-    if (result.isConfirmed && selectedRegion.value) {
-      selectedRegion.value.districts = selectedRegion.value.districts.filter(d => d.id !== id)
+    if (result.isConfirmed) {
+      const selectedId = selectedRegion.value?.id
+      fetchRegions().then(() => {
+        selectedRegion.value = regions.value.find(r => r.id === selectedId) || regions.value[0]
+      })
       Swal.fire('تم الحذف', 'تم حذف المديرية بنجاح.', 'success')
     }
   })

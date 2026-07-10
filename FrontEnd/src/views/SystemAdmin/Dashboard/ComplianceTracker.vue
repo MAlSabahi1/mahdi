@@ -13,22 +13,22 @@
         </div>
         <div class="shrink-0 text-center">
           <div class="inline-flex items-center justify-center w-32 h-32 rounded-full border-8 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400">
-            <span class="text-3xl font-black">85%</span>
+            <span class="text-3xl font-black">{{ totalScore }}%</span>
           </div>
           <p class="text-sm font-bold text-gray-500 dark:text-gray-400 mt-3">نسبة الإنجاز</p>
         </div>
         <div class="shrink-0 flex flex-col gap-3 border-r border-gray-100 dark:border-gray-800 pr-6">
           <div class="flex items-center gap-3">
             <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
-            <span class="text-sm text-gray-700 dark:text-gray-300">17 محافظة ملتزمة</span>
+            <span class="text-sm text-gray-700 dark:text-gray-300">{{ compliantCount }} محافظة ملتزمة</span>
           </div>
           <div class="flex items-center gap-3">
             <div class="w-3 h-3 rounded-full bg-amber-500"></div>
-            <span class="text-sm text-gray-700 dark:text-gray-300">2 محافظة متأخرة</span>
+            <span class="text-sm text-gray-700 dark:text-gray-300">{{ warningCount }} محافظة متأخرة</span>
           </div>
           <div class="flex items-center gap-3">
             <div class="w-3 h-3 rounded-full bg-red-500"></div>
-            <span class="text-sm text-gray-700 dark:text-gray-300">1 محافظة حرجة</span>
+            <span class="text-sm text-gray-700 dark:text-gray-300">{{ criticalCount }} محافظة حرجة</span>
           </div>
         </div>
       </div>
@@ -92,13 +92,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import DataTable from '@/components/tables/DataTable.vue'
 import Swal from 'sweetalert2'
 import { ListChecks, CheckCircle, Clock, AlertOctagon, BellRing, Eye } from 'lucide-vue-next'
+import api from '@/lib/api'
 
 const { t } = useI18n()
 
@@ -109,14 +110,47 @@ const columns = ref([
   { key: 'status', label: 'حالة الالتزام', sortable: true }
 ])
 
-const complianceData = ref([
-  { id: 1, name: 'محافظة صنعاء', lastUpdate: '2026-07-09', dataQuality: 98, status: 'compliant' },
-  { id: 2, name: 'أمانة العاصمة', lastUpdate: '2026-07-08', dataQuality: 95, status: 'compliant' },
-  { id: 3, name: 'محافظة عدن', lastUpdate: '2026-07-07', dataQuality: 92, status: 'compliant' },
-  { id: 4, name: 'محافظة تعز', lastUpdate: '2026-06-30', dataQuality: 75, status: 'warning' },
-  { id: 5, name: 'محافظة مأرب', lastUpdate: '2026-06-25', dataQuality: 60, status: 'critical' },
-  { id: 6, name: 'محافظة حضرموت', lastUpdate: '2026-07-01', dataQuality: 80, status: 'warning' },
-])
+const complianceData = ref<any[]>([])
+const totalScore = ref(0)
+const compliantCount = ref(0)
+const warningCount = ref(0)
+const criticalCount = ref(0)
+
+const fetchCompliance = async () => {
+  try {
+    const res = await api.get('/personnel/dashboard/compliance/')
+    if (res.data.compliance_by_region) {
+      complianceData.value = res.data.compliance_by_region.map((r: any, idx: number) => {
+        const quality = Math.round(r.avg_score || 0)
+        let status = 'compliant'
+        if (quality < 70) status = 'critical'
+        else if (quality < 90) status = 'warning'
+        
+        return {
+          id: idx,
+          name: r.region || 'غير محدد',
+          lastUpdate: 'اليوم',
+          dataQuality: quality,
+          status: status
+        }
+      })
+
+      if (complianceData.value.length > 0) {
+        const total = complianceData.value.reduce((acc, curr) => acc + curr.dataQuality, 0)
+        totalScore.value = Math.round(total / complianceData.value.length)
+        compliantCount.value = complianceData.value.filter(r => r.status === 'compliant').length
+        warningCount.value = complianceData.value.filter(r => r.status === 'warning').length
+        criticalCount.value = complianceData.value.filter(r => r.status === 'critical').length
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching compliance data', error)
+  }
+}
+
+onMounted(() => {
+  fetchCompliance()
+})
 
 const sendReminder = (row: any) => {
   Swal.fire({

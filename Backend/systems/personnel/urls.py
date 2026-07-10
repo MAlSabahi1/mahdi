@@ -78,8 +78,13 @@ router.register(r'rank-settlements', views.RankSettlementViewSet, basename='rank
 router.register(r'', views.PersonnelViewSet, basename='personnel')
 
 from .api.views.snapshot_views import MonthlySnapshotView
+from .api.dashboard_views import DashboardStatsView, DashboardAnalyticsView, DashboardAlertsView, DashboardComplianceView
 
 urlpatterns = [
+    path('dashboard/stats/', DashboardStatsView.as_view(), name='dashboard-stats'),
+    path('dashboard/analytics/', DashboardAnalyticsView.as_view(), name='dashboard-analytics'),
+    path('dashboard/alerts/', DashboardAlertsView.as_view(), name='dashboard-alerts'),
+    path('dashboard/compliance/', DashboardComplianceView.as_view(), name='dashboard-compliance'),
     path('snapshots/', MonthlySnapshotView.as_view(), name='monthly-snapshots'),
     path('reports/workforce-summary/', WorkforceSummaryReportView.as_view(), name='reports-workforce-summary'),
     path('legacy-import/', views.LegacyImportView.as_view(), name='legacy-import'),

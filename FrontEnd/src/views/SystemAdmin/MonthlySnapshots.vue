@@ -16,7 +16,7 @@
           </p>
         </div>
         <div class="flex items-center gap-3">
-          <button class="bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shrink-0 cursor-pointer">
+          <button @click="openScheduleSettings" class="bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shrink-0 cursor-pointer">
             <Settings class="w-4 h-4" /> إعدادات الجدولة
           </button>
           <button 
@@ -91,13 +91,13 @@
 
           <template #cell-actions="{ row }">
             <div class="flex items-center gap-2">
-              <button class="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg transition-colors cursor-pointer" title="تنزيل نسخة Excel">
+              <button @click="downloadSnapshot(row)" class="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg transition-colors cursor-pointer" title="تنزيل نسخة Excel">
                 <Download class="w-4 h-4" />
               </button>
-              <button class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors cursor-pointer" title="استعراض البيانات">
+              <button @click="viewSnapshot(row)" class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors cursor-pointer" title="استعراض البيانات">
                 <Eye class="w-4 h-4" />
               </button>
-              <button class="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-lg transition-colors cursor-pointer" title="إعدادات اللقطة">
+              <button @click="snapshotSettings(row)" class="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-lg transition-colors cursor-pointer" title="إعدادات اللقطة">
                 <Settings2 class="w-4 h-4" />
               </button>
             </div>
@@ -105,19 +105,114 @@
         </DataTable>
       </div>
 
+      <!-- Schedule Settings Modal -->
+      <div v-if="isScheduleModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 sm:p-6">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 w-full max-w-md overflow-hidden transform transition-all">
+          <div class="p-5 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/20">
+            <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <Settings class="w-5 h-5 text-gray-500" />
+              إعدادات الجدولة التلقائية
+            </h3>
+            <button @click="closeScheduleSettings" class="text-gray-400 hover:text-red-500 transition-colors">
+              <X class="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div class="p-5 space-y-5">
+            <!-- Toggle Enable -->
+            <label class="flex items-center justify-between cursor-pointer">
+              <div>
+                <span class="block text-sm font-bold text-gray-900 dark:text-white">تفعيل الأرشفة التلقائية</span>
+                <span class="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">سيقوم النظام بأخذ اللقطات دورياً دون تدخل بشري</span>
+              </div>
+              <div class="relative inline-flex items-center">
+                <input type="checkbox" v-model="scheduleConfig.enabled" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
+              </div>
+            </label>
+
+            <!-- Day Selection -->
+            <div>
+              <label class="block text-sm font-bold text-gray-900 dark:text-white mb-2">يوم التنفيذ من كل شهر</label>
+              <input type="number" min="1" max="28" v-model="scheduleConfig.schedule_day" :disabled="!scheduleConfig.enabled" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 disabled:opacity-50 disabled:cursor-not-allowed">
+              <p class="mt-1 text-xs text-gray-500">اختر يوماً بين 1 و 28</p>
+            </div>
+
+            <!-- Time Selection -->
+            <div>
+              <label class="block text-sm font-bold text-gray-900 dark:text-white mb-2">وقت التنفيذ</label>
+              <input type="time" v-model="scheduleConfig.schedule_time" :disabled="!scheduleConfig.enabled" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 disabled:opacity-50 disabled:cursor-not-allowed">
+            </div>
+          </div>
+
+          <div class="p-4 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3 bg-gray-50/50 dark:bg-gray-800/20">
+            <button @click="closeScheduleSettings" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 transition-colors">
+              إلغاء
+            </button>
+            <button @click="saveScheduleSettings" :disabled="isSavingSchedule" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 transition-colors disabled:opacity-70 disabled:cursor-not-allowed">
+              <Loader2 v-if="isSavingSchedule" class="w-4 h-4 animate-spin" />
+              حفظ الإعدادات
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Snapshot Details Modal -->
+      <div v-if="isDetailsModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 sm:p-6">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 w-full max-w-5xl max-h-[85vh] flex flex-col overflow-hidden transform transition-all">
+          <div class="p-5 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/20 shrink-0">
+            <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <Eye class="w-5 h-5 text-blue-500" />
+              تفاصيل الأفراد - {{ selectedSnapshot?.snapshot_name }}
+            </h3>
+            <button @click="isDetailsModalOpen = false" class="text-gray-400 hover:text-red-500 transition-colors">
+              <X class="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div class="flex-1 overflow-hidden p-5">
+            <div v-if="isLoadingDetails" class="flex flex-col items-center justify-center h-full">
+              <Loader2 class="w-8 h-8 text-blue-500 animate-spin mb-4" />
+              <p class="text-gray-500 dark:text-gray-400 font-bold">جاري تحميل بيانات اللقطة...</p>
+            </div>
+            <div v-else class="h-full border border-gray-100 dark:border-gray-800 rounded-xl overflow-auto">
+              <table class="w-full text-start text-sm text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400 sticky top-0 z-10">
+                  <tr>
+                    <th scope="col" class="px-6 py-3" v-for="col in detailsColumns" :key="col.key">
+                      {{ col.label }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="row in snapshotDetails" :key="row.id" class="bg-white border-b dark:bg-gray-900 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <td class="px-6 py-4" v-for="col in detailsColumns" :key="col.key">
+                      {{ row[col.key] || '—' }}
+                    </td>
+                  </tr>
+                  <tr v-if="snapshotDetails.length === 0">
+                    <td :colspan="detailsColumns.length" class="px-6 py-8 text-center text-gray-500">لا توجد بيانات للعرض</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </AdminLayout>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import DataTable from '@/components/tables/DataTable.vue'
 import Swal from 'sweetalert2'
+import api from '@/lib/api'
 import { 
-  DatabaseBackup, Camera, Settings, Archive, HardDrive, CalendarClock, History, CheckCircle, Loader2, Download, Eye, Settings2
+  DatabaseBackup, Camera, Settings, Archive, HardDrive, CalendarClock, History, CheckCircle, Loader2, Download, Eye, Settings2, X
 } from 'lucide-vue-next'
 
 const { t } = useI18n()
@@ -133,18 +228,182 @@ const columns = ref([
   { key: 'actions', label: 'الإجراءات', sortable: false },
 ])
 
-const snapshots = ref([
-  { id: 1, snapshot_name: 'أرشيف شهر يونيو 2026', snapshot_date: '2026-06-30', total_personnel: '25,430', size: '245 MB', status: 'completed' },
-  { id: 2, snapshot_name: 'أرشيف شهر مايو 2026', snapshot_date: '2026-05-31', total_personnel: '25,210', size: '242 MB', status: 'completed' },
-  { id: 3, snapshot_name: 'أرشيف شهر أبريل 2026', snapshot_date: '2026-04-30', total_personnel: '24,800', size: '238 MB', status: 'completed' },
-  { id: 4, snapshot_name: 'أرشيف شهر مارس 2026', snapshot_date: '2026-03-31', total_personnel: '24,750', size: '236 MB', status: 'completed' },
-  { id: 5, snapshot_name: 'أرشيف شهر فبراير 2026', snapshot_date: '2026-02-28', total_personnel: '24,500', size: '232 MB', status: 'completed' },
+const snapshots = ref<any[]>([])
+
+const isScheduleModalOpen = ref(false)
+const isSavingSchedule = ref(false)
+const scheduleSettingId = ref<number | null>(null)
+
+const isDetailsModalOpen = ref(false)
+const isLoadingDetails = ref(false)
+const selectedSnapshot = ref<any>(null)
+const snapshotDetails = ref<any[]>([])
+
+const detailsColumns = ref([
+  { key: 'military_number', label: 'الرقم العسكري', sortable: true },
+  { key: 'name', label: 'الاسم', sortable: true },
+  { key: 'rank', label: 'الرتبة', sortable: true },
+  { key: 'status', label: 'الحالة', sortable: true },
+  { key: 'unit', label: 'الجهة', sortable: true }
 ])
+const scheduleConfig = ref({
+  enabled: false,
+  schedule_day: 28,
+  schedule_time: '23:59'
+})
+
+const openScheduleSettings = async () => {
+  isScheduleModalOpen.value = true
+  try {
+    const res = await api.get('/settings/')
+    const setting = res.data?.results?.find((s: any) => s.key === 'snapshot_schedule_config') || res.data?.find?.((s: any) => s.key === 'snapshot_schedule_config')
+    if (setting) {
+      scheduleSettingId.value = setting.id
+      scheduleConfig.value = setting.value
+    } else {
+      scheduleSettingId.value = null
+      scheduleConfig.value = { enabled: false, schedule_day: 28, schedule_time: '23:59' }
+    }
+  } catch(e) {
+    console.error('Failed to load schedule settings', e)
+  }
+}
+
+const closeScheduleSettings = () => {
+  isScheduleModalOpen.value = false
+}
+
+const saveScheduleSettings = async () => {
+  isSavingSchedule.value = true
+  try {
+    const payload = {
+      key: 'snapshot_schedule_config',
+      value: scheduleConfig.value,
+      category: 'general',
+      description: 'إعدادات الجدولة التلقائية للقطات الشهرية'
+    }
+    
+    if (scheduleSettingId.value) {
+      await api.put(`/settings/${scheduleSettingId.value}/`, payload)
+    } else {
+      const res = await api.post('/settings/', payload)
+      scheduleSettingId.value = res.data.id
+    }
+    
+    Swal.fire({
+      icon: 'success',
+      title: 'تم الحفظ',
+      text: 'تم تحديث إعدادات الجدولة التلقائية بنجاح',
+      toast: true,
+      position: 'top-end',
+      timer: 3000,
+      showConfirmButton: false
+    })
+    closeScheduleSettings()
+  } catch(e) {
+    Swal.fire('خطأ', 'حدث خطأ أثناء حفظ الإعدادات', 'error')
+  } finally {
+    isSavingSchedule.value = false
+  }
+}
+
+const downloadSnapshot = async (row: any) => {
+  Swal.fire({
+    title: 'جاري تحضير الملف',
+    text: `يتم الآن توليد ملف Excel لـ ${row.snapshot_name}، يرجى الانتظار...`,
+    icon: 'info',
+    showConfirmButton: false,
+    allowOutsideClick: false
+  })
+  
+  try {
+    const response = await api.get(`/personnel/snapshots/?action=export&month=${row.snapshot_date}`, {
+      responseType: 'blob'
+    })
+    
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `snapshot_${row.snapshot_date}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    Swal.fire({
+      title: 'تم التنزيل بنجاح',
+      icon: 'success',
+      toast: true,
+      position: 'top-end',
+      timer: 3000,
+      showConfirmButton: false
+    })
+  } catch (error) {
+    Swal.fire('خطأ', 'حدث خطأ أثناء تنزيل الملف', 'error')
+  }
+}
+
+const viewSnapshot = async (row: any) => {
+  selectedSnapshot.value = row
+  isDetailsModalOpen.value = true
+  isLoadingDetails.value = true
+  
+  try {
+    const res = await api.get(`/personnel/snapshots/?action=details&month=${row.snapshot_date}`)
+    snapshotDetails.value = res.data
+  } catch (error) {
+    Swal.fire('خطأ', 'حدث خطأ أثناء تحميل تفاصيل اللقطة', 'error')
+  } finally {
+    isLoadingDetails.value = false
+  }
+}
+
+const snapshotSettings = (row: any) => {
+  Swal.fire({
+    title: 'إدارة اللقطة',
+    text: `هل أنت متأكد من رغبتك في حذف ${row.snapshot_name} نهائياً؟`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: 'نعم، احذف اللقطة',
+    cancelButtonText: 'إلغاء'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        await api.delete(`/personnel/snapshots/?month=${row.snapshot_date}`)
+        Swal.fire('تم الحذف', 'تم حذف اللقطة بنجاح', 'success')
+        fetchSnapshots()
+      } catch(e: any) {
+        Swal.fire('خطأ', e.response?.data?.error || 'حدث خطأ أثناء الحذف', 'error')
+      }
+    }
+  })
+}
+
+const fetchSnapshots = async () => {
+  try {
+    const res = await api.get('/personnel/snapshots/')
+    snapshots.value = res.data.map((s: any, idx: number) => ({
+      id: idx + 1,
+      snapshot_name: `أرشيف شهر ${s.snapshot_date}`,
+      snapshot_date: s.snapshot_date,
+      total_personnel: s.total_personnel,
+      size: '---', // Not provided by the current API grouping
+      status: 'completed'
+    }))
+  } catch (e) {
+    console.error('Error fetching snapshots', e)
+  }
+}
+
+onMounted(() => {
+  fetchSnapshots()
+})
 
 const generateSnapshot = () => {
   Swal.fire({
     title: 'تأكيد أخذ اللقطة',
-    text: 'هل أنت متأكد من أخذ لقطة لتجميد بيانات القوة الحالية؟ (هذه العملية قد تستغرق بعض الوقت وتستهلك موارد النظام)',
+    text: 'هل أنت متأكد من أخذ لقطة لتجميد بيانات القوة الحالية؟ ستعمل العملية في الخلفية ولن تعيق استخدامك للنظام.',
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#10b981',
@@ -155,26 +414,38 @@ const generateSnapshot = () => {
     if (result.isConfirmed) {
       isGenerating.value = true
       
-      // Simulate API call
-      setTimeout(() => {
-        snapshots.value.unshift({
-          id: Date.now(),
-          snapshot_name: 'لقطة استثنائية - يوليو 2026',
-          snapshot_date: new Date().toISOString().split('T')[0],
-          total_personnel: '25,600',
-          size: '250 MB',
-          status: 'completed'
+      // Start API call in background
+      api.post('/personnel/snapshots/')
+        .then(() => {
+          isGenerating.value = false
+          fetchSnapshots()
+          Swal.fire({
+            title: 'اكتملت اللقطة بنجاح',
+            text: 'تم أرشفة لقطة الشهر الحالي في قاعدة البيانات.',
+            icon: 'success',
+            toast: true,
+            position: 'top-end',
+            timer: 4000,
+            showConfirmButton: false
+          })
         })
-        isGenerating.value = false
-        
-        Swal.fire({
-          title: 'تم بنجاح',
-          text: 'تم إنشاء اللقطة وأرشفتها بنجاح.',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
+        .catch(err => {
+          isGenerating.value = false
+          Swal.fire({
+            title: 'خطأ',
+            text: err.response?.data?.error || 'حدث خطأ أثناء أخذ اللقطة',
+            icon: 'error'
+          })
         })
-      }, 3000)
+
+      // Notify user immediately that it started
+      Swal.fire({
+        title: 'جاري العمل في الخلفية',
+        text: 'تم بدء أخذ اللقطة، سيتم إشعارك فور اكتمالها.',
+        icon: 'info',
+        timer: 3000,
+        showConfirmButton: false
+      })
     }
   })
 }

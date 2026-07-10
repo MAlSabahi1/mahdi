@@ -39,7 +39,7 @@
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ currentTab.description }}</p>
           </div>
           
-          <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shrink-0 cursor-pointer">
+          <button @click="handleAddRecord" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shrink-0 cursor-pointer">
             <Plus class="w-4 h-4" /> إضافة سجل جديد
           </button>
         </div>
@@ -65,10 +65,10 @@
             
             <template #cell-actions="{ row }">
               <div class="flex items-center gap-2">
-                <button class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors cursor-pointer" title="تعديل">
+                <button @click="handleEditRecord(row)" class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors cursor-pointer" title="تعديل">
                   <Edit class="w-4 h-4" />
                 </button>
-                <button class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors cursor-pointer" title="حذف">
+                <button @click="handleDeleteRecord(row)" class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors cursor-pointer" title="حذف">
                   <Trash2 class="w-4 h-4" />
                 </button>
               </div>
@@ -82,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
@@ -91,6 +91,8 @@ import {
   Plus, Edit, Trash2, 
   ShieldCheck, UserCheck, Briefcase, Award, Settings2 
 } from 'lucide-vue-next'
+import api from '@/lib/api'
+import Swal from 'sweetalert2'
 
 const { t } = useI18n()
 
@@ -106,80 +108,304 @@ const tabs = [
 
 const currentTab = computed(() => tabs.find(t => t.id === activeTab.value) || tabs[0])
 
-// Mock Data & Columns for Each Tab
-const tablesConfig = {
+// Columns config per tab
+const tabColumns: Record<string, any[]> = {
+  ranks: [
+    { key: 'badge', label: 'الشارة', sortable: false },
+    { key: 'name', label: 'اسم الرتبة', sortable: true },
+    { key: 'order', label: 'المستوى (الترتيب)', sortable: true },
+    { key: 'type', label: 'التصنيف', sortable: true },
+  ],
+  statuses: [
+    { key: 'name', label: 'اسم الحالة', sortable: true },
+    { key: 'classification_display', label: 'التصنيف', sortable: true },
+    { key: 'badge', label: 'الحالة النظامية', sortable: false },
+    { key: 'salary', label: 'يستحق راتب', sortable: false },
+  ],
+  categories: [
+    { key: 'name', label: 'اسم الفئة', sortable: true },
+    { key: 'job_titles_count', label: 'عدد المسميات', sortable: true },
+  ],
+  titles: [
+    { key: 'name', label: 'المسمى القيادي', sortable: true },
+    { key: 'level', label: 'المستوى الإداري', sortable: true },
+    { key: 'requires_rank_name', label: 'الرتبة كحد أدنى', sortable: true },
+  ]
+}
+
+const tabData = ref<any[]>([])
+const isLoading = ref(false)
+
+const apiEndpoints: Record<string, string> = {
+  ranks: '/dictionaries/ranks/',
+  statuses: '/dictionaries/statuses/',
+  categories: '/dictionaries/job-categories/',
+  titles: '/dictionaries/positions/',
+}
+
+const fetchTabData = async () => {
+  isLoading.value = true
+  try {
+    const endpoint = apiEndpoints[activeTab.value]
+    const res = await api.get(endpoint)
+    const items = res.data.results || res.data || []
+    
+    if (activeTab.value === 'ranks') {
+      tabData.value = items.map((r: any) => ({
+        ...r,
+        id: r.id,
+        name: r.name,
+        order: r.order,
+        type: r.is_officer ? 'ضباط' : 'أفراد',
+        is_active: true
+      }))
+    } else if (activeTab.value === 'statuses') {
+      tabData.value = items.map((s: any) => ({
+        ...s,
+        id: s.id,
+        name: s.name,
+        classification_display: s.classification_display || s.classification,
+        is_active: !s.is_permanent_deactivation,
+        salary: s.receives_salary ? 'نعم' : 'لا'
+      }))
+    } else if (activeTab.value === 'categories') {
+      tabData.value = items.map((c: any) => ({
+        ...c,
+        id: c.id,
+        name: c.name,
+        job_titles_count: c.job_titles_count || 0
+      }))
+    } else if (activeTab.value === 'titles') {
+      tabData.value = items.map((p: any) => ({
+        ...p,
+        id: p.id,
+        name: p.name,
+        level: p.level || '-',
+        requires_rank_name: p.requires_rank_name || '-'
+      }))
+    }
+  } catch (error) {
+    console.error('Error fetching tab data', error)
+    tabData.value = []
+  } finally {
+    isLoading.value = false
+  }
+}
+
+watch(activeTab, () => {
+  fetchTabData()
+})
+
+onMounted(() => {
+  fetchTabData()
+})
+
+const currentColumns = computed(() => {
+  const baseColumns = tabColumns[activeTab.value] || []
+  return [...baseColumns, { key: 'actions', label: 'الإجراءات', sortable: false }]
+})
+
+const currentData = computed(() => tabData.value)
+
+// Add forms config per tab
+type FormField = { id: string; label: string; type?: string; options?: {value: string, label: string}[] }
+const addFormConfig: Record<string, { title: string; fields: FormField[] }> = {
   ranks: {
-    columns: [
-      { key: 'badge', label: 'الشارة', sortable: false },
-      { key: 'name', label: 'اسم الرتبة', sortable: true },
-      { key: 'code', label: 'الاختصار', sortable: true },
-      { key: 'level', label: 'المستوى (الترتيب)', sortable: true },
-      { key: 'type', label: 'التصنيف', sortable: true },
-    ],
-    data: [
-      { id: 1, name: 'لواء', code: 'MG', level: 1, type: 'ضباط' },
-      { id: 2, name: 'عميد', code: 'BG', level: 2, type: 'ضباط' },
-      { id: 3, name: 'عقيد', code: 'COL', level: 3, type: 'ضباط' },
-      { id: 4, name: 'مقدم', code: 'LTC', level: 4, type: 'ضباط' },
-      { id: 5, name: 'رائد', code: 'MAJ', level: 5, type: 'ضباط' },
-      { id: 6, name: 'نقيب', code: 'CPT', level: 6, type: 'ضباط' },
-      { id: 7, name: 'ملازم أول', code: '1LT', level: 7, type: 'ضباط' },
-      { id: 8, name: 'ملازم', code: '2LT', level: 8, type: 'ضباط' },
-      { id: 9, name: 'مساعد أول', code: 'WO1', level: 9, type: 'ضباط صف' },
-      { id: 10, name: 'رقيب أول', code: 'SFC', level: 10, type: 'ضباط صف' },
+    title: 'إضافة رتبة جديدة',
+    fields: [
+      { id: 'name', label: 'اسم الرتبة' },
+      { id: 'order', label: 'الترتيب', type: 'number' },
     ]
   },
   statuses: {
-    columns: [
-      { key: 'name', label: 'اسم الحالة', sortable: true },
-      { key: 'code', label: 'الرمز', sortable: true },
-      { key: 'badge', label: 'الحالة النظامية', sortable: false },
-      { key: 'description', label: 'الوصف', sortable: false },
-    ],
-    data: [
-      { id: 1, name: 'على رأس العمل', code: 'ACTIVE', is_active: true, description: 'متواجد بالخدمة الفعلية' },
-      { id: 2, name: 'إجازة سنوية', code: 'LEAVE_ANNUAL', is_active: true, description: 'في إجازة رسمية' },
-      { id: 3, name: 'منتدب', code: 'DEPUTED', is_active: true, description: 'منتدب لجهة أخرى' },
-      { id: 4, name: 'متقاعد', code: 'RETIRED', is_active: false, description: 'منهى خدمته بالتقاعد' },
-      { id: 5, name: 'شهيد', code: 'MARTYR', is_active: false, description: 'استشهد أثناء الواجب' },
-      { id: 6, name: 'هارب', code: 'AWOL', is_active: false, description: 'منقطع عن العمل بغير عذر' },
+    title: 'إضافة حالة وظيفية',
+    fields: [
+      { id: 'name', label: 'اسم الحالة' },
+      { id: 'classification', label: 'التصنيف', type: 'select', options: [
+        { value: 'active_full', label: 'قوة عاملة فعلية' },
+        { value: 'active_part', label: 'قوة عاملة غير فعلية' },
+        { value: 'inactive_temp', label: 'قوة غير عاملة مؤقتاً' },
+        { value: 'inactive_perm', label: 'قوة غير عاملة نهائياً' }
+      ]}
     ]
   },
   categories: {
-    columns: [
-      { key: 'name', label: 'اسم الفئة', sortable: true },
-      { key: 'code', label: 'الرمز', sortable: true },
-      { key: 'members_count', label: 'عدد المنتسبين', sortable: true },
-    ],
-    data: [
-      { id: 1, name: 'قوة قتالية', code: 'COMBAT', members_count: '15,200' },
-      { id: 2, name: 'قوة إدارية', code: 'ADMIN', members_count: '2,450' },
-      { id: 3, name: 'قوة فنية', code: 'TECH', members_count: '1,800' },
-      { id: 4, name: 'طاقم طبي', code: 'MEDICAL', members_count: '420' },
+    title: 'إضافة فئة وظيفية',
+    fields: [
+      { id: 'name', label: 'اسم الفئة' },
     ]
   },
   titles: {
-    columns: [
-      { key: 'name', label: 'المسمى القيادي', sortable: true },
-      { key: 'level', label: 'المستوى الإداري', sortable: true },
-      { key: 'min_rank', label: 'الرتبة كحد أدنى', sortable: true },
-    ],
-    data: [
-      { id: 1, name: 'قائد قطاع', level: 'القيادة العليا', min_rank: 'عميد' },
-      { id: 2, name: 'مدير عام', level: 'الإدارة العامة', min_rank: 'عقيد' },
-      { id: 3, name: 'رئيس شعبة', level: 'الإدارة الفرعية', min_rank: 'مقدم' },
-      { id: 4, name: 'مدير إدارة', level: 'الإدارة التنفيذية', min_rank: 'رائد' },
-      { id: 5, name: 'رئيس قسم', level: 'الأقسام', min_rank: 'نقيب' },
+    title: 'إضافة مسمى قيادي',
+    fields: [
+      { id: 'name', label: 'المسمى القيادي' },
+      { id: 'level', label: 'المستوى الإداري' },
     ]
   }
 }
 
-const currentColumns = computed(() => {
-  const baseColumns = tablesConfig[activeTab.value as keyof typeof tablesConfig].columns
-  // Add actions column at the end
-  return [...baseColumns, { key: 'actions', label: 'الإجراءات', sortable: false }]
-})
+const handleAddRecord = () => {
+  const config = addFormConfig[activeTab.value]
+  if (!config) return
 
-const currentData = computed(() => tablesConfig[activeTab.value as keyof typeof tablesConfig].data)
+  const htmlFields = config.fields.map(f => {
+    if (f.type === 'select') {
+      const opts = f.options?.map(o => `<option value="${o.value}">${o.label}</option>`).join('')
+      return `<select id="swal-${f.id}" class="swal2-input" dir="rtl"><option value="" disabled selected>${f.label}</option>${opts}</select>`
+    }
+    return `<input id="swal-${f.id}" class="swal2-input" placeholder="${f.label}" type="${f.type || 'text'}" dir="rtl">`
+  }).join('')
+
+  Swal.fire({
+    title: config.title,
+    html: htmlFields,
+    focusConfirm: false,
+    showCancelButton: true,
+    confirmButtonText: 'حفظ',
+    cancelButtonText: 'إلغاء',
+    confirmButtonColor: '#3b82f6',
+    showLoaderOnConfirm: true,
+    preConfirm: async () => {
+      const data: Record<string, any> = {}
+      for (const f of config.fields) {
+        const inputEl = document.getElementById(`swal-${f.id}`) as HTMLInputElement | HTMLSelectElement
+        const val = inputEl.value
+        if (!val && (f.id === 'name' || f.id === 'classification')) {
+          Swal.showValidationMessage(`${f.label} مطلوب`)
+          return false
+        }
+        data[f.id] = f.type === 'number' ? parseInt(val) || 0 : val
+      }
+      try {
+        const endpoint = apiEndpoints[activeTab.value]
+        await api.post(endpoint, data)
+        return true
+      } catch (e: any) {
+        const errData = e.response?.data
+        let msg = 'حدث خطأ أثناء الحفظ'
+        
+        if (errData?.error?.detail) {
+          const detail = errData.error.detail
+          const firstKey = Object.keys(detail)[0]
+          if (firstKey && Array.isArray(detail[firstKey]) && detail[firstKey].length > 0) {
+            msg = detail[firstKey][0]
+          } else if (typeof detail === 'string') {
+            msg = detail
+          }
+        } else if (errData?.name?.[0]) {
+          msg = errData.name[0]
+        } else if (errData?.detail) {
+          msg = errData.detail
+        }
+        
+        Swal.showValidationMessage(msg)
+        return false
+      }
+    },
+    allowOutsideClick: () => !Swal.isLoading()
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetchTabData()
+      Swal.fire('تمت الإضافة', 'تم إضافة السجل بنجاح', 'success')
+    }
+  })
+}
+
+const handleEditRecord = (row: any) => {
+  const config = addFormConfig[activeTab.value]
+  if (!config) return
+
+  const htmlFields = config.fields.map(f => {
+    const val = row[f.id] !== undefined ? row[f.id] : ''
+    if (f.type === 'select') {
+      const opts = f.options?.map(o => `<option value="${o.value}" ${o.value === val ? 'selected' : ''}>${o.label}</option>`).join('')
+      return `<select id="swal-edit-${f.id}" class="swal2-input" dir="rtl"><option value="" disabled>${f.label}</option>${opts}</select>`
+    }
+    return `<input id="swal-edit-${f.id}" class="swal2-input" placeholder="${f.label}" type="${f.type || 'text'}" value="${val}" dir="rtl">`
+  }).join('')
+
+  Swal.fire({
+    title: config.title.replace('إضافة', 'تعديل').replace('جديدة', ''),
+    html: htmlFields,
+    focusConfirm: false,
+    showCancelButton: true,
+    confirmButtonText: 'تحديث',
+    cancelButtonText: 'إلغاء',
+    confirmButtonColor: '#3b82f6',
+    showLoaderOnConfirm: true,
+    preConfirm: async () => {
+      const data: Record<string, any> = {}
+      for (const f of config.fields) {
+        const inputEl = document.getElementById(`swal-edit-${f.id}`) as HTMLInputElement | HTMLSelectElement
+        const val = inputEl.value
+        if (!val && (f.id === 'name' || f.id === 'classification')) {
+          Swal.showValidationMessage(`${f.label} مطلوب`)
+          return false
+        }
+        data[f.id] = f.type === 'number' ? parseInt(val) || 0 : val
+      }
+      try {
+        const endpoint = apiEndpoints[activeTab.value]
+        await api.patch(`${endpoint}${row.id}/`, data)
+        return true
+      } catch (e: any) {
+        const errData = e.response?.data
+        let msg = 'حدث خطأ أثناء التحديث'
+        if (errData?.error?.detail) {
+          const detail = errData.error.detail
+          const firstKey = Object.keys(detail)[0]
+          if (firstKey && Array.isArray(detail[firstKey]) && detail[firstKey].length > 0) {
+            msg = detail[firstKey][0]
+          } else if (typeof detail === 'string') {
+            msg = detail
+          }
+        } else if (errData?.name?.[0]) {
+          msg = errData.name[0]
+        } else if (errData?.detail) {
+          msg = errData.detail
+        }
+        Swal.showValidationMessage(msg)
+        return false
+      }
+    },
+    allowOutsideClick: () => !Swal.isLoading()
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetchTabData()
+      Swal.fire('تم التحديث', 'تم تحديث السجل بنجاح', 'success')
+    }
+  })
+}
+
+const handleDeleteRecord = (row: any) => {
+  Swal.fire({
+    title: 'تأكيد الحذف',
+    text: `هل أنت متأكد من حذف "${row.name}"؟ لا يمكن التراجع عن هذا الإجراء!`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#9ca3af',
+    confirmButtonText: 'نعم، احذف',
+    cancelButtonText: 'إلغاء',
+    showLoaderOnConfirm: true,
+    preConfirm: async () => {
+      try {
+        const endpoint = apiEndpoints[activeTab.value]
+        await api.delete(`${endpoint}${row.id}/`)
+        return true
+      } catch (error: any) {
+        let errorMsg = error.response?.data?.error?.message || error.response?.data?.detail || 'حدث خطأ أثناء الحذف، ربما السجل مرتبط ببيانات أخرى'
+        Swal.showValidationMessage(errorMsg)
+        return false
+      }
+    },
+    allowOutsideClick: () => !Swal.isLoading()
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetchTabData()
+      Swal.fire('تم الحذف!', 'تم حذف السجل بنجاح', 'success')
+    }
+  })
+}
 
 </script>

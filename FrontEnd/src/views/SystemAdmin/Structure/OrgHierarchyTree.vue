@@ -22,7 +22,7 @@
             >
             <Search class="w-4 h-4 text-gray-400 absolute top-3 right-3" />
           </div>
-          <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shrink-0 cursor-pointer">
+          <button @click="handleAddSector" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shrink-0 cursor-pointer">
             <Plus class="w-4 h-4" /> إضافة قطاع
           </button>
         </div>
@@ -54,8 +54,8 @@
               </div>
 
               <div class="flex items-center gap-2 shrink-0">
-                <button class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors cursor-pointer" title="تعديل"><Edit class="w-4 h-4" /></button>
-                <button class="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg transition-colors cursor-pointer" title="إضافة إدارة عامة"><Plus class="w-4 h-4" /></button>
+                <button @click.stop="handleEditNode(sector)" class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors cursor-pointer" title="تعديل"><Edit class="w-4 h-4" /></button>
+                <button @click.stop="handleAddDept(sector)" class="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg transition-colors cursor-pointer" title="إضافة إدارة عامة"><Plus class="w-4 h-4" /></button>
               </div>
             </div>
 
@@ -79,8 +79,8 @@
                         {{ dept.name }}
                       </h4>
                       <div class="flex items-center gap-1 opacity-0 hover:opacity-100 transition-opacity" :class="{'opacity-100': dept.expanded}">
-                        <button class="p-1 text-gray-400 hover:text-blue-600 rounded cursor-pointer" title="تعديل"><Edit class="w-3.5 h-3.5" /></button>
-                        <button class="p-1 text-gray-400 hover:text-emerald-600 rounded cursor-pointer" title="إضافة إدارة فرعية"><Plus class="w-3.5 h-3.5" /></button>
+                        <button @click.stop="handleEditNode(dept)" class="p-1 text-gray-400 hover:text-blue-600 rounded cursor-pointer" title="تعديل"><Edit class="w-3.5 h-3.5" /></button>
+                        <button @click.stop="handleAddDivision(dept)" class="p-1 text-gray-400 hover:text-emerald-600 rounded cursor-pointer" title="إضافة إدارة فرعية"><Plus class="w-3.5 h-3.5" /></button>
                       </div>
                     </div>
                     
@@ -99,8 +99,7 @@
                         <div class="flex items-center gap-3 text-xs text-gray-500">
                           <span>قوة: {{ subDept.personnelCount }}</span>
                           <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                            <button class="p-1 text-gray-400 hover:text-blue-600 rounded cursor-pointer"><Edit class="w-3.5 h-3.5" /></button>
-                            <button class="p-1 text-gray-400 hover:text-emerald-600 rounded cursor-pointer"><Plus class="w-3.5 h-3.5" /></button>
+                            <button @click.stop="handleEditNode(subDept)" class="p-1 text-gray-400 hover:text-blue-600 rounded cursor-pointer"><Edit class="w-3.5 h-3.5" /></button>
                           </div>
                         </div>
                       </div>
@@ -120,68 +119,119 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import { ShieldAlert, Search, Plus, ChevronDown, ChevronLeft, Shield, UserCheck, Users, Edit, Briefcase, Layers } from 'lucide-vue-next'
+import Swal from 'sweetalert2'
+import api from '@/lib/api'
 
 const { t } = useI18n()
 const searchQuery = ref('')
+const isLoading = ref(true)
 
-const treeData = ref([
-  {
-    id: 'sec-1',
-    name: 'قطاع الموارد البشرية والمالية',
-    manager: 'اللواء/ أحمد عبدالله',
-    personnelCount: 450,
-    expanded: true,
-    children: [
-      {
-        id: 'dept-101',
-        name: 'الإدارة العامة لشؤون الأفراد',
-        manager: 'العميد/ صالح محمد',
-        code: 'HR-PR',
-        expanded: true,
-        children: [
-          { id: 'sub-1011', name: 'إدارة السجلات والتوثيق', personnelCount: 15 },
-          { id: 'sub-1012', name: 'إدارة الترقيات والعلاوات', personnelCount: 12 },
-          { id: 'sub-1013', name: 'إدارة الإجازات والتنقلات', personnelCount: 18 }
-        ]
-      },
-      {
-        id: 'dept-102',
-        name: 'الإدارة العامة للشؤون المالية',
-        manager: 'العقيد/ خالد سعيد',
-        code: 'FI-MN',
-        expanded: false,
-        children: [
-          { id: 'sub-1021', name: 'إدارة الرواتب والأجور', personnelCount: 22 },
-          { id: 'sub-1022', name: 'إدارة الموازنة والمشتريات', personnelCount: 14 }
-        ]
+const treeData = ref<any[]>([])
+
+const fetchOrgTree = async () => {
+  isLoading.value = true
+  try {
+    const res = await api.get('/dictionaries/security-admins/tree/')
+    const admins = res.data.data || res.data.results || res.data || []
+    
+    treeData.value = admins.map((admin: any) => {
+      // Merge central_departments, branches, and district_police_units as children
+      const children: any[] = []
+      
+      if (admin.central_departments) {
+        admin.central_departments.forEach((dept: any) => {
+          children.push({
+            id: `dept-${dept.id}`,
+            db_id: dept.id,
+            type: 'central-departments',
+            name: dept.name,
+            manager: dept.head || '-',
+            code: dept.code || '-',
+            expanded: false,
+            children: (dept.divisions || []).map((div: any) => ({
+              id: `div-${div.id}`,
+              db_id: div.id,
+              type: 'divisions',
+              name: div.name,
+              personnelCount: (div.units || []).length
+            }))
+          })
+        })
       }
-    ]
-  },
-  {
-    id: 'sec-2',
-    name: 'قطاع العمليات والتدريب',
-    manager: 'اللواء/ قاسم يحيى',
-    personnelCount: 820,
-    expanded: false,
-    children: [
-      {
-        id: 'dept-201',
-        name: 'الإدارة العامة للتدريب والتأهيل',
-        manager: 'العميد/ سعد مبارك',
-        code: 'OP-TR',
-        expanded: false,
-        children: [
-          { id: 'sub-2011', name: 'إدارة التخطيط التدريبي', personnelCount: 8 }
-        ]
+      
+      if (admin.branches) {
+        admin.branches.forEach((branch: any) => {
+          children.push({
+            id: `branch-${branch.id}`,
+            db_id: branch.id,
+            type: 'branches',
+            name: branch.name,
+            manager: branch.head || '-',
+            code: branch.code || '-',
+            expanded: false,
+            children: (branch.divisions || []).map((div: any) => ({
+              id: `div-${div.id}`,
+              db_id: div.id,
+              type: 'divisions',
+              name: div.name,
+              personnelCount: (div.units || []).length
+            }))
+          })
+        })
       }
-    ]
+      
+      if (admin.district_police_units) {
+        admin.district_police_units.forEach((dp: any) => {
+          children.push({
+            id: `dp-${dp.id}`,
+            db_id: dp.id,
+            type: 'district-police',
+            name: dp.name,
+            manager: dp.head || '-',
+            code: dp.code || '-',
+            expanded: false,
+            children: (dp.divisions || []).map((div: any) => ({
+              id: `div-${div.id}`,
+              db_id: div.id,
+              type: 'divisions',
+              name: div.name,
+              personnelCount: (div.units || []).length
+            }))
+          })
+        })
+      }
+
+      return {
+        id: `sec-${admin.id}`,
+        db_id: admin.id,
+        type: 'security-admins',
+        name: admin.name,
+        manager: admin.head || '-',
+        personnelCount: children.length,
+        expanded: false,
+        children
+      }
+    })
+    
+    // Auto-expand first item
+    if (treeData.value.length > 0) {
+      treeData.value[0].expanded = true
+    }
+  } catch (error) {
+    console.error('Error fetching org tree', error)
+  } finally {
+    isLoading.value = false
   }
-])
+}
+
+onMounted(() => {
+  fetchOrgTree()
+})
 
 const filteredTree = computed(() => {
   if (!searchQuery.value) return treeData.value
@@ -191,14 +241,14 @@ const filteredTree = computed(() => {
   return treeData.value.map(sector => {
     if (sector.name.toLowerCase().includes(q) || sector.manager.toLowerCase().includes(q)) return { ...sector, expanded: true }
     
-    const filteredDepts = sector.children.filter(dept => {
+    const filteredDepts = sector.children.filter((dept: any) => {
       if (dept.name.toLowerCase().includes(q) || dept.manager.toLowerCase().includes(q) || dept.code.toLowerCase().includes(q)) return true
-      return dept.children?.some(sub => sub.name.toLowerCase().includes(q))
-    }).map(dept => {
+      return dept.children?.some((sub: any) => sub.name.toLowerCase().includes(q))
+    }).map((dept: any) => {
       return {
         ...dept,
         expanded: true,
-        children: dept.children?.filter(sub => 
+        children: dept.children?.filter((sub: any) => 
           dept.name.toLowerCase().includes(q) || sub.name.toLowerCase().includes(q)
         )
       }
@@ -210,5 +260,196 @@ const filteredTree = computed(() => {
     return null
   }).filter(Boolean) as any[]
 })
+
+const handleAddSector = async () => {
+  // Fetch governorates for select
+  let govOptions = ''
+  try {
+    const govRes = await api.get('/dictionaries/geo/governorates/')
+    const govs = govRes.data.results || govRes.data || []
+    govOptions = govs.map((g: any) => `<option value="${g.id}">${g.name_ar}</option>`).join('')
+  } catch (e) {
+    // fallback
+  }
+
+  Swal.fire({
+    title: 'إضافة إدارة أمن محافظة جديدة',
+    html: `
+      <input id="swal-name" class="swal2-input" placeholder="اسم إدارة الأمن" dir="rtl">
+      <input id="swal-code" class="swal2-input" placeholder="الكود (اختياري)" dir="ltr">
+      <select id="swal-gov" class="swal2-select" style="width:100%;padding:10px;margin-top:8px;border:1px solid #ddd;border-radius:8px;">
+        <option value="">— اختر المحافظة الجغرافية —</option>
+        ${govOptions}
+      </select>
+    `,
+    focusConfirm: false,
+    showCancelButton: true,
+    confirmButtonText: 'حفظ',
+    cancelButtonText: 'إلغاء',
+    confirmButtonColor: '#3b82f6',
+    showLoaderOnConfirm: true,
+    preConfirm: async () => {
+      const name = (document.getElementById('swal-name') as HTMLInputElement).value
+      const code = (document.getElementById('swal-code') as HTMLInputElement).value
+      const geo_governorate = (document.getElementById('swal-gov') as HTMLSelectElement).value
+      if (!name) { Swal.showValidationMessage('اسم إدارة الأمن مطلوب'); return false }
+      if (!geo_governorate) { Swal.showValidationMessage('المحافظة الجغرافية مطلوبة'); return false }
+      try {
+        await api.post('/dictionaries/security-admins/', { name, code: code || undefined, geo_governorate })
+        return true
+      } catch (e: any) {
+        const msg = e.response?.data?.name?.[0] || e.response?.data?.geo_governorate?.[0] || 'حدث خطأ أثناء الحفظ'
+        Swal.showValidationMessage(msg)
+        return false
+      }
+    },
+    allowOutsideClick: () => !Swal.isLoading()
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetchOrgTree()
+      Swal.fire('تمت الإضافة', 'تم إضافة إدارة الأمن بنجاح', 'success')
+    }
+  })
+}
+
+const handleEditNode = (node: any) => {
+  Swal.fire({
+    title: 'تعديل التسمية',
+    input: 'text',
+    inputValue: node.name,
+    showCancelButton: true,
+    confirmButtonText: 'تحديث',
+    cancelButtonText: 'إلغاء',
+    confirmButtonColor: '#3b82f6',
+    showLoaderOnConfirm: true,
+    inputValidator: (value) => {
+      if (!value) return 'الاسم مطلوب!'
+    },
+    preConfirm: async (name: string) => {
+      try {
+        await api.patch(`/dictionaries/${node.type}/${node.db_id}/`, { name })
+        return true
+      } catch (e: any) {
+        const errData = e.response?.data
+        let msg = 'حدث خطأ أثناء التحديث'
+        if (errData?.error?.detail) {
+          const detail = errData.error.detail
+          const firstKey = Object.keys(detail)[0]
+          if (firstKey && Array.isArray(detail[firstKey])) msg = detail[firstKey][0]
+        } else if (errData?.name?.[0]) {
+          msg = errData.name[0]
+        }
+        Swal.showValidationMessage(msg)
+        return false
+      }
+    },
+    allowOutsideClick: () => !Swal.isLoading()
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetchOrgTree()
+      Swal.fire('تم التحديث', 'تم تحديث الاسم بنجاح', 'success')
+    }
+  })
+}
+
+const handleAddDept = (sector: any) => {
+  Swal.fire({
+    title: `إضافة إدارة عامة في ${sector.name}`,
+    html: `
+      <input id="swal-dept-name" class="swal2-input" placeholder="اسم الإدارة العامة" dir="rtl">
+      <input id="swal-dept-code" class="swal2-input" placeholder="الكود" dir="ltr">
+    `,
+    focusConfirm: false,
+    showCancelButton: true,
+    confirmButtonText: 'إضافة',
+    cancelButtonText: 'إلغاء',
+    confirmButtonColor: '#10b981',
+    showLoaderOnConfirm: true,
+    preConfirm: async () => {
+      const name = (document.getElementById('swal-dept-name') as HTMLInputElement).value
+      const code = (document.getElementById('swal-dept-code') as HTMLInputElement).value
+      if (!name) { Swal.showValidationMessage('اسم الإدارة مطلوب!'); return false }
+      if (!code) { Swal.showValidationMessage('الكود مطلوب!'); return false }
+
+      try {
+        await api.post('/dictionaries/central-departments/', {
+          name,
+          code,
+          security_admin: sector.db_id
+        })
+        return true
+      } catch (e: any) {
+        const errData = e.response?.data
+        let msg = 'حدث خطأ أثناء الإضافة'
+        if (errData?.error?.detail) {
+          const detail = errData.error.detail
+          const firstKey = Object.keys(detail)[0]
+          if (firstKey && Array.isArray(detail[firstKey])) msg = detail[firstKey][0]
+        } else if (errData?.name?.[0] || errData?.code?.[0]) {
+          msg = errData.name?.[0] || errData.code?.[0]
+        }
+        Swal.showValidationMessage(msg)
+        return false
+      }
+    },
+    allowOutsideClick: () => !Swal.isLoading()
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetchOrgTree()
+      Swal.fire('تمت الإضافة', 'تم إضافة الإدارة العامة بنجاح', 'success')
+    }
+  })
+}
+
+const handleAddDivision = (dept: any) => {
+  Swal.fire({
+    title: `إضافة إدارة فرعية في ${dept.name}`,
+    html: `
+      <input id="swal-div-name" class="swal2-input" placeholder="اسم الإدارة الفرعية" dir="rtl">
+      <input id="swal-div-code" class="swal2-input" placeholder="الكود" dir="ltr">
+    `,
+    focusConfirm: false,
+    showCancelButton: true,
+    confirmButtonText: 'إضافة',
+    cancelButtonText: 'إلغاء',
+    confirmButtonColor: '#10b981',
+    showLoaderOnConfirm: true,
+    preConfirm: async () => {
+      const name = (document.getElementById('swal-div-name') as HTMLInputElement).value
+      const code = (document.getElementById('swal-div-code') as HTMLInputElement).value
+      if (!name) { Swal.showValidationMessage('اسم الإدارة الفرعية مطلوب!'); return false }
+      if (!code) { Swal.showValidationMessage('الكود مطلوب!'); return false }
+
+      try {
+        const payload: any = { name, code }
+        // Depending on dept type, map the correct foreign key
+        if (dept.type === 'central-departments') payload.central_department = dept.db_id
+        if (dept.type === 'branches') payload.branch = dept.db_id
+        if (dept.type === 'district-police') payload.district_police = dept.db_id
+        
+        await api.post('/dictionaries/divisions/', payload)
+        return true
+      } catch (e: any) {
+        const errData = e.response?.data
+        let msg = 'حدث خطأ أثناء الإضافة'
+        if (errData?.error?.detail) {
+          const detail = errData.error.detail
+          const firstKey = Object.keys(detail)[0]
+          if (firstKey && Array.isArray(detail[firstKey])) msg = detail[firstKey][0]
+        } else if (errData?.name?.[0] || errData?.code?.[0]) {
+          msg = errData.name?.[0] || errData.code?.[0]
+        }
+        Swal.showValidationMessage(msg)
+        return false
+      }
+    },
+    allowOutsideClick: () => !Swal.isLoading()
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetchOrgTree()
+      Swal.fire('تمت الإضافة', 'تم إضافة الإدارة الفرعية بنجاح', 'success')
+    }
+  })
+}
 
 </script>

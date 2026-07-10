@@ -9,7 +9,7 @@
         <div class="rounded-2xl border border-red-100 bg-red-50 p-5 dark:border-red-900/30 dark:bg-red-950/20 flex items-center justify-between">
           <div>
             <p class="text-sm font-bold text-red-600 dark:text-red-400">تنبيهات حرجة</p>
-            <h3 class="text-3xl font-black text-red-700 dark:text-red-300 mt-1">3</h3>
+            <h3 class="text-3xl font-black text-red-700 dark:text-red-300 mt-1">{{ stats.critical_alerts }}</h3>
           </div>
           <div class="h-14 w-14 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center text-red-600 dark:text-red-400">
             <AlertOctagon class="w-7 h-7 animate-pulse" />
@@ -19,7 +19,7 @@
         <div class="rounded-2xl border border-amber-100 bg-amber-50 p-5 dark:border-amber-900/30 dark:bg-amber-950/20 flex items-center justify-between">
           <div>
             <p class="text-sm font-bold text-amber-600 dark:text-amber-400">طلبات معلقة</p>
-            <h3 class="text-3xl font-black text-amber-700 dark:text-amber-300 mt-1">12</h3>
+            <h3 class="text-3xl font-black text-amber-700 dark:text-amber-300 mt-1">{{ stats.pending_requests_count }}</h3>
           </div>
           <div class="h-14 w-14 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center text-amber-600 dark:text-amber-400">
             <Clock class="w-7 h-7" />
@@ -29,7 +29,7 @@
         <div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-5 dark:border-emerald-900/30 dark:bg-emerald-950/20 flex items-center justify-between">
           <div>
             <p class="text-sm font-bold text-emerald-600 dark:text-emerald-400">تمت المعالجة اليوم</p>
-            <h3 class="text-3xl font-black text-emerald-700 dark:text-emerald-300 mt-1">45</h3>
+            <h3 class="text-3xl font-black text-emerald-700 dark:text-emerald-300 mt-1">{{ stats.processed_today }}</h3>
           </div>
           <div class="h-14 w-14 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 class="w-7 h-7" />
@@ -48,7 +48,7 @@
           >
             <ShieldAlert class="w-4 h-4" />
             التنبيهات الأمنية والنظامية
-            <span v-if="activeTab !== 'alerts'" class="bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400 px-2 py-0.5 rounded-md text-[10px]">3</span>
+            <span v-if="activeTab !== 'alerts' && alerts.length > 0" class="bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400 px-2 py-0.5 rounded-md text-[10px]">{{ alerts.length }}</span>
           </button>
           <button 
             @click="activeTab = 'requests'"
@@ -57,7 +57,7 @@
           >
             <FileEdit class="w-4 h-4" />
             الطلبات الإدارية المعلقة
-            <span v-if="activeTab !== 'requests'" class="bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400 px-2 py-0.5 rounded-md text-[10px]">12</span>
+            <span v-if="activeTab !== 'requests' && requests.length > 0" class="bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400 px-2 py-0.5 rounded-md text-[10px]">{{ requests.length }}</span>
           </button>
         </div>
 
@@ -136,27 +136,62 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import Swal from 'sweetalert2'
 import { AlertOctagon, AlertTriangle, Clock, CheckCircle2, ShieldAlert, FileEdit, FileText } from 'lucide-vue-next'
+import api from '@/lib/api'
 
 const { t } = useI18n()
 const activeTab = ref('alerts')
 
-const alerts = ref([
-  { id: 1, title: 'محاولة تسجيل دخول فاشلة متكررة', description: 'تم رصد 5 محاولات تسجيل دخول خاطئة لحساب مدير النظام في غضون دقيقتين.', severity: 'critical', time: 'منذ 5 دقائق', ip: '192.168.1.45', user: 'admin_master' },
-  { id: 2, title: 'تعديل صلاحيات غير مصرح به', description: 'حاول مستخدم من مجموعة (المدراء الإقليميين) تعديل سياسة عليا تتجاوز صلاحياته الجغرافية.', severity: 'critical', time: 'منذ 14 دقيقة', ip: '10.0.0.12', user: 'ahmed_region1' },
-  { id: 3, title: 'انقطاع الاتصال بخادم النسخ الاحتياطي', description: 'لم يتمكن النظام من الوصول إلى خادم النسخ الاحتياطي المجدول لليوم.', severity: 'warning', time: 'منذ ساعتين', ip: 'Server-Node-02', user: 'SYSTEM' }
-])
+const alerts = ref<any[]>([])
+const requests = ref<any[]>([])
+const stats = ref({
+  critical_alerts: 0,
+  pending_requests_count: 0,
+  processed_today: 0
+})
 
-const requests = ref([
-  { id: 101, title: 'طلب استثناء استيراد بيانات', description: 'طلب استيراد كشف يضم 150 فرد مع تجاوز قيد (رقم الهوية الإلزامي) لغرض التسوية.', time: 'منذ 45 دقيقة', requester: 'محمد عبدالله', department: 'شؤون الأفراد - أمانة العاصمة' },
-  { id: 102, title: 'طلب تفويض صلاحيات مؤقت', description: 'طلب تفويض صلاحية (اعتماد الرواتب) للموظف النائب بسبب إجازة مرضية.', time: 'منذ 3 ساعات', requester: 'العقيد/ سالم صالح', department: 'المالية المركزية' },
-  { id: 103, title: 'طلب إعادة تعيين كلمة مرور', description: 'طلب استعادة الوصول لحساب مدير محافظة تعز بعد نسيان كلمة المرور وفقدان المصادق الثنائي.', time: 'منذ 5 ساعات', requester: 'فهد الغازي', department: 'إدارة أمن تعز' }
-])
+const fetchAlerts = async () => {
+  try {
+    const res = await api.get('/personnel/dashboard/alerts/')
+    if (res.data.data_quality_alerts) {
+      alerts.value = res.data.data_quality_alerts.map((a: any) => ({
+        id: a.military_number,
+        title: 'تدني جودة بيانات الفرد',
+        description: `الاسم: ${a.full_name} | نسبة الجودة: ${a.data_quality_score}% — يتطلب تحديث البيانات أو استكمال المرفقات.`,
+        severity: a.data_quality_score < 50 ? 'critical' : 'warning',
+        time: 'مستمر',
+        ip: 'فحص آلي',
+        user: a.military_number
+      }))
+    }
+    
+    if (res.data.pending_requests) {
+      requests.value = res.data.pending_requests.map((r: any) => ({
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        time: new Date(r.time).toLocaleString(),
+        requester: r.requester,
+        department: r.department
+      }))
+    }
+    
+    if (res.data.stats) {
+      stats.value = res.data.stats
+    }
+  } catch (error) {
+    console.error('Error fetching alerts', error)
+  }
+}
+
+onMounted(() => {
+  fetchAlerts()
+})
 
 const handleAction = (action: string, id: number) => {
   let title = ''
@@ -175,8 +210,8 @@ const handleAction = (action: string, id: number) => {
     confirmColor = '#ef4444'
     icon = 'warning'
   } else if (action === 'investigate') {
-    title = 'بدء التحقيق في التنبيه'
-    text = 'سيتم تجميد الحسابات المرتبطة مؤقتاً حتى انتهاء التحقيق.'
+    title = 'مراجعة السجل'
+    text = 'سيتم توجيهك إلى شاشة الفرد لإكمال البيانات الناقصة.'
     confirmColor = '#3b82f6'
     icon = 'info'
   } else if (action === 'dismiss') {

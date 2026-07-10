@@ -16,9 +16,59 @@ class MonthlySnapshotView(views.APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        """
-        List summary of all snapshots available (grouped by month).
-        """
+        action = request.query_params.get('action')
+        month = request.query_params.get('month')
+        
+        if action == 'export' and month:
+            from django.http import HttpResponse
+            import csv
+            
+            snapshots = MonthlySnapshot.objects.filter(snapshot_date=month)
+            if not snapshots.exists():
+                return Response({"error": "اللقطة غير موجودة"}, status=status.HTTP_404_NOT_FOUND)
+                
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = f'attachment; filename="snapshot_{month}.csv"'
+            response.write(u'\ufeff'.encode('utf8')) # BOM for Excel UTF-8 compatibility
+            
+            writer = csv.writer(response)
+            
+            # Extract headers from the first record
+            first_record = snapshots.first()
+            if first_record and first_record.snapshot_data:
+                keys = list(first_record.snapshot_data.keys())
+            else:
+                keys = []
+                
+            headers = ['تاريخ اللقطة', 'الرتبة', 'الحالة', 'الجهة'] + keys
+            writer.writerow(headers)
+            
+            for s in snapshots:
+                row = [s.snapshot_date, s.rank, s.status_name, s.unit_name]
+                for key in keys:
+                    row.append(str(s.snapshot_data.get(key, '')))
+                writer.writerow(row)
+                
+            return response
+            
+        elif action == 'details' and month:
+            snapshots = MonthlySnapshot.objects.filter(snapshot_date=month)
+            data = []
+            for s in snapshots:
+                name = s.snapshot_data.get('full_name', '') or ''
+                military_number = s.snapshot_data.get('military_number', '') or s.personnel_id
+                data.append({
+                    'id': s.id,
+                    'personnel_id': s.personnel_id,
+                    'name': name,
+                    'rank': s.rank,
+                    'status': s.status_name,
+                    'unit': s.unit_name,
+                    'military_number': str(military_number)
+                })
+            return Response(data)
+
+        # Default behavior: list summary
         # We group by snapshot_date and count
         from django.db.models import Count
         snapshots = MonthlySnapshot.objects.values('snapshot_date').annotate(
@@ -26,6 +76,20 @@ class MonthlySnapshotView(views.APIView):
         ).order_by('-snapshot_date')
         
         return Response(snapshots)
+
+    def delete(self, request, *args, **kwargs):
+        """
+        Delete a specific monthly snapshot.
+        """
+        month = request.query_params.get('month')
+        if not month:
+            return Response({"error": "يرجى تحديد الشهر المراد حذفه"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        deleted_count, _ = MonthlySnapshot.objects.filter(snapshot_date=month).delete()
+        if deleted_count == 0:
+            return Response({"error": "اللقطة غير موجودة أو تم حذفها مسبقاً"}, status=status.HTTP_404_NOT_FOUND)
+            
+        return Response({"message": f"تم حذف لقطة شهر {month} بنجاح"})
 
     def post(self, request, *args, **kwargs):
         """

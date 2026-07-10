@@ -4,15 +4,16 @@
     
     <div class="space-y-6 text-start" dir="rtl">
       <!-- Top Stats Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div v-if="isLoading" class="flex justify-center p-10"><div class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div>
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <!-- Stat Card 1 -->
         <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 flex items-center justify-between group hover:border-blue-500/30 transition-colors">
           <div>
             <p class="text-sm font-medium text-gray-500 dark:text-gray-400">إجمالي القوة البشرية</p>
-            <h3 class="text-2xl font-black text-gray-900 dark:text-white mt-1">14,250</h3>
+            <h3 class="text-2xl font-black text-gray-900 dark:text-white mt-1">{{ stats.total_personnel.toLocaleString() }}</h3>
             <div class="flex items-center gap-1 text-xs text-emerald-600 mt-2 font-bold">
               <TrendingUp class="w-3 h-3" />
-              <span>+2.4% هذا الشهر</span>
+              <span>الإجمالي العام</span>
             </div>
           </div>
           <div class="h-12 w-12 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400 flex items-center justify-center transition-transform group-hover:scale-110">
@@ -23,11 +24,11 @@
         <!-- Stat Card 2 -->
         <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 flex items-center justify-between group hover:border-emerald-500/30 transition-colors">
           <div>
-            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">المستخدمين النشطين (الآن)</p>
-            <h3 class="text-2xl font-black text-gray-900 dark:text-white mt-1">842</h3>
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">الفروع والإدارات النشطة</p>
+            <h3 class="text-2xl font-black text-gray-900 dark:text-white mt-1">{{ stats.active_branches }}</h3>
             <div class="flex items-center gap-1 text-xs text-emerald-600 mt-2 font-bold">
               <Zap class="w-3 h-3" />
-              <span>أداء مستقر</span>
+              <span>فروع مفعلة</span>
             </div>
           </div>
           <div class="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 flex items-center justify-center transition-transform group-hover:scale-110">
@@ -38,11 +39,11 @@
         <!-- Stat Card 3 -->
         <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 flex items-center justify-between group hover:border-purple-500/30 transition-colors">
           <div>
-            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">معدل معالجة البيانات</p>
-            <h3 class="text-2xl font-black text-gray-900 dark:text-white mt-1">1.2K/s</h3>
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">البيانات المكتملة والسليمة</p>
+            <h3 class="text-2xl font-black text-gray-900 dark:text-white mt-1">{{ stats.completed_profiles.toLocaleString() }}</h3>
             <div class="flex items-center gap-1 text-xs text-emerald-600 mt-2 font-bold">
               <TrendingUp class="w-3 h-3" />
-              <span>+14% استجابة</span>
+              <span>موثوقية كاملة</span>
             </div>
           </div>
           <div class="h-12 w-12 rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/30 dark:text-purple-400 flex items-center justify-center transition-transform group-hover:scale-110">
@@ -53,11 +54,11 @@
         <!-- Stat Card 4 -->
         <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 flex items-center justify-between group hover:border-amber-500/30 transition-colors">
           <div>
-            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">التنبيهات الأمنية المعلقة</p>
-            <h3 class="text-2xl font-black text-gray-900 dark:text-white mt-1">14</h3>
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">السجلات الحرجة (جودة منخفضة)</p>
+            <h3 class="text-2xl font-black text-gray-900 dark:text-white mt-1">{{ stats.critical_alerts }}</h3>
             <div class="flex items-center gap-1 text-xs text-amber-600 mt-2 font-bold">
               <AlertTriangle class="w-3 h-3" />
-              <span>تحتاج مراجعة</span>
+              <span>تحتاج مراجعة فورية</span>
             </div>
           </div>
           <div class="h-12 w-12 rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400 flex items-center justify-center transition-transform group-hover:scale-110">
@@ -107,14 +108,14 @@
                 <span class="w-3 h-3 rounded-full bg-blue-500"></span>
                 قاعدة البيانات
               </div>
-              <span class="font-bold text-gray-900 dark:text-white">78%</span>
+              <span class="font-bold text-gray-900 dark:text-white">{{ stats.storage_usage?.database || 0 }}%</span>
             </div>
             <div class="flex items-center justify-between text-sm">
               <div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                 <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
                 مساحة الملفات
               </div>
-              <span class="font-bold text-gray-900 dark:text-white">45%</span>
+              <span class="font-bold text-gray-900 dark:text-white">{{ stats.storage_usage?.files || 0 }}%</span>
             </div>
           </div>
         </div>
@@ -124,15 +125,18 @@
       <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <h3 class="font-bold text-gray-900 dark:text-white mb-6">أحدث الأنشطة الحساسة</h3>
         <div class="space-y-4">
-          <div v-for="i in 4" :key="i" class="flex items-start gap-4 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border border-transparent hover:border-gray-100 dark:hover:border-gray-800 cursor-pointer">
+          <div v-for="(activity, index) in stats.recent_activities" :key="index" class="flex items-start gap-4 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border border-transparent hover:border-gray-100 dark:hover:border-gray-800 cursor-pointer">
             <div class="h-10 w-10 shrink-0 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
               <User class="w-5 h-5 text-gray-500 dark:text-gray-400" />
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-bold text-gray-900 dark:text-white">تعديل بيانات رتبة عسكرية (ترقية)</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">تم بواسطة: أحمد محمد عبدالله - إدارة الموارد البشرية</p>
+              <p class="text-sm font-bold text-gray-900 dark:text-white">إضافة / تحديث بيانات فرد</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">تمت معالجة الرقم العسكري: {{ activity.military_number }} - {{ activity.full_name }}</p>
             </div>
-            <div class="text-xs font-mono text-gray-400 shrink-0">منذ 10 دقائق</div>
+            <div class="text-xs font-mono text-gray-400 shrink-0">{{ new Date(activity.created_at).toLocaleDateString() }}</div>
+          </div>
+          <div v-if="!stats.recent_activities || stats.recent_activities.length === 0" class="text-center text-sm text-gray-500">
+            لا توجد أنشطة حديثة
           </div>
         </div>
       </div>
@@ -147,6 +151,63 @@ import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import VueApexCharts from 'vue3-apexcharts'
 import { Users, Activity, TrendingUp, Zap, Server, ShieldAlert, AlertTriangle, User } from 'lucide-vue-next'
+import api from '@/lib/api'
+
+const isLoading = ref(true)
+const stats = ref({
+  total_personnel: 0,
+  active_branches: 0,
+  completed_profiles: 0,
+  critical_alerts: 0,
+  storage_usage: { database: 0, files: 0 },
+  recent_activities: [] as any[],
+  system_activity: [] as any[]
+})
+
+// Chart Data: System Activity (Area)
+const areaChartSeries = ref([
+  { name: 'عمليات الإدخال', data: [0, 0, 0, 0, 0, 0, 0] }
+])
+
+// Chart Data: Storage (RadialBar)
+const radialChartSeries = ref([0, 0])
+
+const fetchStats = async () => {
+  try {
+    const res = await api.get('/personnel/dashboard/stats/')
+    stats.value = res.data
+    
+    // Process System Activity
+    if (res.data.system_activity && res.data.system_activity.length > 0) {
+      areaChartSeries.value = [{
+        name: 'التسجيل اليومي',
+        data: res.data.system_activity.map((t: any) => t.count)
+      }]
+      areaChartOptions.value = {
+        ...areaChartOptions.value,
+        xaxis: {
+          ...areaChartOptions.value.xaxis,
+          categories: res.data.system_activity.map((t: any) => {
+            return t.date ? t.date.split('T')[0] : '-'
+          })
+        }
+      }
+    }
+    
+    // Process Storage
+    if (res.data.storage_usage) {
+      radialChartSeries.value = [res.data.storage_usage.database || 0, res.data.storage_usage.files || 0]
+    }
+  } catch (error) {
+    console.error('Error fetching dashboard stats', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchStats()
+})
 
 const { t } = useI18n()
 
@@ -160,12 +221,6 @@ const ClientOnly = defineComponent({
     return () => (isMounted.value && slots.default ? slots.default() : h('div', { class: 'h-full w-full bg-gray-50 dark:bg-gray-800 animate-pulse rounded-xl' }))
   }
 })
-
-// Chart Data: System Activity (Area)
-const areaChartSeries = ref([
-  { name: 'عمليات الإدخال', data: [31, 40, 28, 51, 42, 109, 100] },
-  { name: 'عمليات الاستعلام', data: [11, 32, 45, 32, 34, 52, 41] }
-])
 
 const areaChartOptions = ref({
   chart: { 
@@ -183,7 +238,7 @@ const areaChartOptions = ref({
     gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 90, 100] }
   },
   xaxis: {
-    categories: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
+    categories: ['-', '-', '-', '-', '-', '-', '-'],
     axisBorder: { show: false },
     axisTicks: { show: false },
     labels: {
@@ -210,8 +265,6 @@ const areaChartOptions = ref({
   }
 })
 
-// Chart Data: Storage (RadialBar)
-const radialChartSeries = ref([78, 45])
 const radialChartOptions = ref({
   chart: { 
     type: 'radialBar', 
@@ -228,10 +281,10 @@ const radialChartOptions = ref({
         value: { fontSize: '24px', fontWeight: '900', color: '#111827' },
         total: {
           show: true,
-          label: 'الإجمالي',
+          label: 'قيد الاستخدام',
           color: '#6b7280',
           formatter: function () {
-            return '61.5%'
+            return 'تلقائي'
           }
         }
       }

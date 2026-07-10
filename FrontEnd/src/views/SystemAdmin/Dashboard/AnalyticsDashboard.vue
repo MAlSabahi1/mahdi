@@ -94,12 +94,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineComponent, h, onMounted } from 'vue'
+import { ref, defineComponent, h, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import VueApexCharts from 'vue3-apexcharts'
 import { Filter, Search } from 'lucide-vue-next'
+import api from '@/lib/api'
 
 const { t } = useI18n()
 
@@ -114,17 +115,16 @@ const ClientOnly = defineComponent({
   }
 })
 
-// Bar Chart (Geographical)
+// Bar Chart (Trend/Growth instead of Geographical for now)
 const barChartSeries = ref([
-  { name: 'عامل', data: [4500, 3200, 2100, 1500, 900] },
-  { name: 'احتياط', data: [1200, 800, 600, 400, 200] }
+  { name: 'تسجيل جديد', data: [0, 0, 0, 0, 0] }
 ])
 const barChartOptions = ref({
-  chart: { type: 'bar', stacked: true, fontFamily: 'Tajawal, sans-serif', toolbar: { show: false }, background: 'transparent' },
-  colors: ['#3b82f6', '#94a3b8'],
+  chart: { type: 'bar', stacked: false, fontFamily: 'Tajawal, sans-serif', toolbar: { show: false }, background: 'transparent' },
+  colors: ['#3b82f6'],
   plotOptions: { bar: { borderRadius: 4, horizontal: false, columnWidth: '40%' } },
   xaxis: {
-    categories: ['صنعاء', 'عدن', 'مأرب', 'تعز', 'حضرموت'],
+    categories: ['-', '-', '-', '-', '-'],
     labels: { style: { fontFamily: 'Tajawal, sans-serif', colors: '#9ca3af' } }
   },
   yaxis: { labels: { style: { colors: '#9ca3af' } } },
@@ -133,12 +133,12 @@ const barChartOptions = ref({
   legend: { position: 'top', fontFamily: 'Tajawal, sans-serif', labels: { colors: '#6b7280' } }
 })
 
-// Donut Chart (Status)
-const donutChartSeries = ref([65, 15, 10, 5, 5])
+// Donut Chart (Force Distribution)
+const donutChartSeries = ref([10, 10, 10])
 const donutChartOptions = ref({
   chart: { type: 'donut', fontFamily: 'Tajawal, sans-serif', background: 'transparent' },
-  labels: ['عامل', 'مجاز', 'منتدب', 'موقوف', 'فرار'],
-  colors: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#6b7280'],
+  labels: ['-', '-', '-'],
+  colors: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#6b7280', '#8b5cf6'],
   plotOptions: {
     pie: {
       donut: {
@@ -157,7 +157,7 @@ const donutChartOptions = ref({
   legend: { position: 'bottom', fontFamily: 'Tajawal, sans-serif', labels: { colors: '#6b7280' } }
 })
 
-// Radar Chart (Readiness)
+// Radar Chart (Readiness) - Static mock for now
 const radarChartSeries = ref([
   { name: 'الأمن العام', data: [80, 90, 70, 85, 60] },
   { name: 'القوات الخاصة', data: [95, 85, 90, 80, 85] }
@@ -174,7 +174,7 @@ const radarChartOptions = ref({
   legend: { position: 'bottom', fontFamily: 'Tajawal, sans-serif', labels: { colors: '#6b7280' } }
 })
 
-// Horizontal Bar (Ranks)
+// Horizontal Bar (Ranks) - Static mock for now
 const horizontalBarSeries = ref([{ name: 'العدد', data: [120, 300, 850, 1500, 3200, 6000] }])
 const horizontalBarOptions = ref({
   chart: { type: 'bar', fontFamily: 'Tajawal, sans-serif', toolbar: { show: false }, background: 'transparent' },
@@ -189,5 +189,63 @@ const horizontalBarOptions = ref({
   },
   yaxis: { labels: { style: { fontFamily: 'Tajawal, sans-serif', colors: '#6b7280' } } },
   grid: { borderColor: 'rgba(156, 163, 175, 0.1)', strokeDashArray: 4 },
+})
+
+const fetchAnalytics = async () => {
+  try {
+    const res = await api.get('/personnel/dashboard/analytics/')
+    
+    // Process Geographic Distribution (Bar Chart)
+    const geographics = res.data.geographic_distribution || []
+    if (geographics.length) {
+      barChartSeries.value = [{ name: 'التعداد', data: geographics.map((g: any) => g.value) }]
+      barChartOptions.value = {
+        ...barChartOptions.value,
+        xaxis: {
+          ...barChartOptions.value.xaxis,
+          categories: geographics.map((g: any) => g.name || 'غير محدد')
+        }
+      }
+    }
+    
+    // Process Status Distribution (Donut Chart)
+    const statuses = res.data.status_distribution || []
+    if (statuses.length) {
+      donutChartSeries.value = statuses.map((s: any) => s.value)
+      donutChartOptions.value = {
+        ...donutChartOptions.value,
+        labels: statuses.map((s: any) => s.name || 'غير محدد')
+      }
+    }
+
+    // Process Force Distribution (Radar Chart - map to one series for now)
+    const forces = res.data.force_distribution || []
+    if (forces.length) {
+      radarChartSeries.value = [{ name: 'القوات', data: forces.map((f: any) => f.value) }]
+      radarChartOptions.value = {
+        ...radarChartOptions.value,
+        labels: forces.map((f: any) => f.name || 'غير محدد')
+      }
+    }
+
+    // Process Rank Distribution (Horizontal Bar)
+    const ranks = res.data.rank_distribution || []
+    if (ranks.length) {
+      horizontalBarSeries.value = [{ name: 'العدد', data: ranks.map((r: any) => r.value) }]
+      horizontalBarOptions.value = {
+        ...horizontalBarOptions.value,
+        xaxis: {
+          ...horizontalBarOptions.value.xaxis,
+          categories: ranks.map((r: any) => r.name || 'غير محدد')
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching analytics', error)
+  }
+}
+
+onMounted(() => {
+  fetchAnalytics()
 })
 </script>
