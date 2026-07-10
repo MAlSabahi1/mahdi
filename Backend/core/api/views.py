@@ -37,6 +37,7 @@ from rest_framework.response import Response
 class DictionaryViewSetMixin:
     """Mixin مشترك لجميع القواميس"""
     idempotent_actions = ['create', 'update']
+    pagination_class = None
 
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):

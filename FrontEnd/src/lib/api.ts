@@ -147,7 +147,7 @@ api.interceptors.response.use(
         }
 
         // Advanced formatting for 400 or other validation errors
-        let messages: string[] = [];
+        const messages: string[] = [];
 
         // Helper to extract messages from nested objects/arrays
         const extractMessages = (obj: any) => {

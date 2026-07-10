@@ -453,7 +453,7 @@ function getPreviewValue(row: any, field: string) {
     return '—';
   }
   
-  let val = row[field]
+  const val = row[field]
   
   if (val && typeof val === 'object' && val.name) return val.name
   

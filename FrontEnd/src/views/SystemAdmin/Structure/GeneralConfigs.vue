@@ -394,7 +394,7 @@ const handleDeleteRecord = (row: any) => {
         await api.delete(`${endpoint}${row.id}/`)
         return true
       } catch (error: any) {
-        let errorMsg = error.response?.data?.error?.message || error.response?.data?.detail || 'حدث خطأ أثناء الحذف، ربما السجل مرتبط ببيانات أخرى'
+        const errorMsg = error.response?.data?.error?.message || error.response?.data?.detail || 'حدث خطأ أثناء الحذف، ربما السجل مرتبط ببيانات أخرى'
         Swal.showValidationMessage(errorMsg)
         return false
       }

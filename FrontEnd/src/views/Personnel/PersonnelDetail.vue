@@ -215,9 +215,9 @@
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ $t('personnel.military_number') || 'الرقم العسكري' }}</dt>
                     <dd class="text-sm font-bold text-gray-900 dark:text-white">{{ person.military_number || 'غير متوفر' }}</dd>
                   </div>
-                  <div>
+                  <div v-if="person.old_military_number">
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ $t('personnel.old_military_number') || 'الرقم العسكري القديم' }}</dt>
-                    <dd class="text-sm font-bold text-gray-900 dark:text-white">{{ person.old_military_number || $t('personnel.unspecified') || 'غير متوفر' }}</dd>
+                    <dd class="text-sm font-bold text-gray-900 dark:text-white">{{ person.old_military_number }}</dd>
                   </div>
                   <div>
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ $t('personnel.rank') || 'الرتبة' }}</dt>
@@ -303,8 +303,10 @@
                     </dd>
                   </div>
                   <div>
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ $t('personnel.expense_status') || 'حالة الصرف' }}</dt>
-                    <dd class="text-sm font-bold text-gray-900 dark:text-white">{{ person.expense_status || $t('personnel.unspecified') || 'غير متوفر' }}</dd>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ $t('personnel.expense_status') || 'حالة النفقات' }}</dt>
+                    <dd class="text-sm font-bold text-gray-900 dark:text-white">
+                      {{ person.expense_status_display || 'غير متوفر' }}
+                    </dd>
                   </div>
                   <div class="sm:col-span-2">
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ $t('personnel.appointment_info') || 'معلومات التعيين' }}</dt>

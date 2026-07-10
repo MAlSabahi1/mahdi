@@ -567,6 +567,10 @@ class SuggestedCorrectionViewSet(BaseModelViewSet):
         if correction.status != 'pending':
             return Response({'success': False, 'error': 'الطلب ليس في حالة الانتظار'}, status=status.HTTP_400_BAD_REQUEST)
         
+        approval_doc_id = request.data.get('approval_document_id')
+        if not approval_doc_id:
+            return Response({'success': False, 'error': 'يجب إرفاق مستند الموافقة (مذكرة الوزارة) لاعتماد الطلب'}, status=status.HTTP_400_BAD_REQUEST)
+            
         personnel = correction.personnel
         if personnel:
             from systems.personnel.services import PersonnelService
@@ -612,9 +616,17 @@ class SuggestedCorrectionViewSet(BaseModelViewSet):
             except Exception as e:
                 return Response({'success': False, 'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
             
-        approval_doc_id = request.data.get('approval_document_id')
-        if approval_doc_id:
-            correction.approval_document_id = approval_doc_id
+        correction.approval_document_id = approval_doc_id
+        
+        # ربط المرفق بطلب التصحيح وتثبيته
+        from systems.services.attachment_service import AttachmentService
+        AttachmentService.link_to_context(
+            document_ids=[approval_doc_id],
+            context_type='SuggestedCorrection',
+            context_id=correction.pk,
+            related_field='approval_document'
+        )
+        AttachmentService.commit_documents([approval_doc_id])
             
         correction.status = 'approved'
         correction.reviewed_by = request.user
@@ -1011,11 +1023,19 @@ class RankSettlementViewSet(BaseModelViewSet):
     def perform_create(self, serializer):
         """حفظ الطالب + from_rank تلقائياً من الفرد"""
         personnel = serializer.validated_data['personnel']
-        serializer.save(
+        settlement = serializer.save(
             requested_by=self.request.user,
             from_rank=personnel.current_rank,
             status='pending',
         )
+        
+        # ربط المرفق بالطالب والفرد
+        if settlement.supporting_document:
+            doc = settlement.supporting_document
+            doc.context_type = 'RankSettlement'
+            doc.context_id = str(settlement.pk)
+            doc.personnel = personnel
+            doc.save(update_fields=['context_type', 'context_id', 'personnel'])
     
     @action(detail=True, methods=['post'])
     def apply(self, request, pk=None):

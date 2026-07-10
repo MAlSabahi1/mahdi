@@ -1,5 +1,5 @@
 <template>
-  <div class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+  <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] relative z-10 overflow-visible">
 
     <!-- ─── DataTable Toolbar ─────────────────────────────── -->
     <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 px-5 py-4 border-b border-gray-200 dark:border-gray-800">
@@ -215,7 +215,7 @@
 
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
             <tr
-              v-for="row in data"
+              v-for="(row, index) in data"
               :key="row[rowKey]"
               class="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
             >
@@ -226,7 +226,7 @@
                   :class="['border-e border-gray-200 dark:border-gray-700 px-5 py-4 max-w-[150px] sm:max-w-[250px] truncate', col.tdClass || '']"
                   :title="row[col.key] ? String(row[col.key]) : ''"
                 >
-                  <slot :name="`cell-${col.key}`" :row="row" :value="row[col.key]">
+                  <slot :name="`cell-${col.key}`" :row="row" :value="row[col.key]" :index="index">
                     <p class="text-gray-500 text-theme-sm dark:text-gray-400 truncate">{{ row[col.key] ?? '—' }}</p>
                   </slot>
                 </td>

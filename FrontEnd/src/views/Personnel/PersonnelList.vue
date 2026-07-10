@@ -188,6 +188,13 @@
           </button>
         </template>
 
+        <!-- ── Custom Cell: Serial ────────────────────────────── -->
+        <template #cell-serial="{ index }">
+          <p class="text-gray-500 text-theme-sm dark:text-gray-400 font-mono text-center">
+            {{ (personnelStore.currentPage - 1) * pageSize + index + 1 }}
+          </p>
+        </template>
+
         <!-- ── Custom Cell: Full Name ────────────────────────── -->
         <template #cell-full_name="{ row }">
           <div class="flex items-center gap-3">
@@ -224,6 +231,18 @@
           </p>
         </template>
 
+        <!-- ── Custom Cell: Division ─────────────────────────── -->
+        <template #cell-division_name="{ row }">
+          <p class="text-gray-800 text-theme-sm dark:text-white/90 font-medium">
+            <template v-if="row.division_name">
+              {{ row.division_name }}
+            </template>
+            <template v-else>
+              <span class="text-gray-400">—</span>
+            </template>
+          </p>
+        </template>
+
         <!-- ── Custom Cell: National ID ──────────────────────── -->
         <template #cell-national_id="{ value }">
           <p class="text-gray-500 text-theme-sm dark:text-gray-400 font-mono">{{ value || '—' }}</p>
@@ -241,20 +260,9 @@
 
         <!-- ── Custom Cell: Status Classification ────────────── -->
         <template #cell-status_classification="{ row }">
-          <span
-            :class="[
-              'rounded-full px-2 py-0.5 text-theme-xs font-medium inline-flex items-center gap-1.5',
-              row.status_classification === 'active'
-                ? 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-500'
-                : 'bg-error-50 text-error-700 dark:bg-error-500/15 dark:text-error-500',
-            ]"
-          >
-            <span
-              class="h-1.5 w-1.5 rounded-full"
-              :class="row.status_classification === 'active' ? 'bg-success-500' : 'bg-error-500'"
-            ></span>
-            {{ row.status_classification === 'active' ? ($t?.('personnel.active') || 'موجود') : ($t?.('personnel.inactive') || 'غير موجود') }}
-          </span>
+          <p class="text-gray-800 text-theme-sm dark:text-white/90 font-medium">
+            {{ row.status_classification_display || 'غير متوفر' }}
+          </p>
         </template>
 
         <!-- ── Custom Cell: Quality Score ─────────────────────── -->
@@ -274,6 +282,13 @@
         <!-- ── Custom Cell: Join Date ─────────────────────────── -->
         <template #cell-join_date="{ value }">
           <p class="text-gray-500 text-theme-sm dark:text-gray-400 font-mono">{{ value || '—' }}</p>
+        </template>
+
+        <!-- ── Custom Cell: Expense Status ───────────────────── -->
+        <template #cell-expense_status="{ row }">
+          <p class="text-gray-800 text-theme-sm dark:text-white/90 font-medium">
+            {{ row.expense_status_display || 'غير متوفر' }}
+          </p>
         </template>
       </DataTable>
 
@@ -303,17 +318,27 @@ const searchText = ref('')
 
 // ── Table Column Definitions ───────────────────────────────
 const tableColumns = computed<DataTableColumn[]>(() => [
-  { key: 'full_name', label: t('personnel.full_name') || 'الاسم الكامل' },
+  { key: 'serial', label: 'م' },
+  { key: 'rank_name', label: t('personnel.rank') || 'الرتبة' },
   { key: 'military_number', label: t('personnel.military_number') || 'الرقم العسكري' },
   { key: 'national_id', label: t('personnel.national_id') || 'الرقم الوطني' },
-  { key: 'phone_number', label: t('personnel.phone_number') || 'رقم الهاتف' },
-  { key: 'rank_name', label: t('personnel.rank') || 'الرتبة' },
+  { key: 'full_name', label: t('personnel.full_name') || 'الاسم الكامل' },
+  { key: 'security_admin_name', label: t('personnel.administration') || 'الوحدة' },
+  { key: 'sub_administration', label: 'السرية / الإدارة / المديرية' },
+  { key: 'division_name', label: 'القسم_فرع السرية' },
+  { key: 'unit_name', label: t('personnel.unit') || 'الوحدة التابعة' },
   { key: 'position_name', label: t('personnel.position') || 'المنصب' },
-  { key: 'security_admin_name', label: t('personnel.administration') || 'الإدارة' },
-  { key: 'sub_administration', label: t('personnel.branch') || 'الفرع/الإدارة التابعة' },
-  { key: 'status_classification', label: t('personnel.classification') || 'التصنيف' },
+  { key: 'job_title_name', label: t('personnel.job_title') || 'المسمى الوظيفي' },
+  { key: 'category_name', label: t('personnel.category') || 'الفئة' },
+  { key: 'status_classification', label: t('personnel.classification') || 'الحالة' },
   { key: 'status_name', label: t('personnel.status_type') || 'نوع الحالة' },
+  { key: 'force_classification_name', label: t('personnel.force_classification') || 'تصنيف القوة' },
   { key: 'qualification_name', label: t('personnel.qualification') || 'المؤهل' },
+  { key: 'phone_number', label: t('personnel.phone_number') || 'رقم الهاتف' },
+  // باقي الأعمدة
+  { key: 'old_military_number', label: t('personnel.old_military_number') || 'الرقم العسكري القديم' },
+  { key: 'expense_status', label: t('personnel.expense_status') || 'حالة النفقات' },
+  { key: 'appointment_info', label: t('personnel.appointment_info') || 'معلومات التعيين' },
   { key: 'data_quality_score', label: t('personnel.quality') || 'الجودة' },
   { key: 'join_date', label: t('personnel.join_date') || 'تاريخ الالتحاق' },
 ])

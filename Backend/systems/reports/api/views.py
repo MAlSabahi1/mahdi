@@ -31,18 +31,18 @@ class CategoricalWorkforceReportView(APIView):
         
         data_map = {}
         if level == 'all':
-            units_central = list(CentralDepartment.objects.filter(is_active=True).values_list('name', flat=True))
-            units_branch = list(Branch.objects.filter(is_active=True).values_list('name', flat=True))
-            units_district = list(DistrictPolice.objects.filter(is_active=True).values_list('name', flat=True))
+            units_central = list(CentralDepartment.objects.values_list('name', flat=True))
+            units_branch = list(Branch.objects.values_list('name', flat=True))
+            units_district = list(DistrictPolice.objects.values_list('name', flat=True))
             units = units_central + units_branch + units_district
         elif level == 'central':
-            units = CentralDepartment.objects.filter(is_active=True).values_list('name', flat=True)
+            units = CentralDepartment.objects.values_list('name', flat=True)
         elif level == 'branch':
-            units = Branch.objects.filter(is_active=True).values_list('name', flat=True)
+            units = Branch.objects.values_list('name', flat=True)
         elif level == 'district':
-            units = DistrictPolice.objects.filter(is_active=True).values_list('name', flat=True)
+            units = DistrictPolice.objects.values_list('name', flat=True)
         else:
-            units = SecurityAdministration.objects.filter(is_active=True).values_list('name', flat=True)
+            units = SecurityAdministration.objects.values_list('name', flat=True)
             
         for u in units:
             data_map[u] = {
@@ -98,7 +98,7 @@ class CategoricalWorkforceReportView(APIView):
         data_list.sort(key=lambda x: x['unit_name'])
         
         # Get active job categories sorted by sort_order
-        ordered_categories = list(JobCategory.objects.filter(is_active=True).order_by('sort_order', 'name').values_list('name', flat=True))
+        ordered_categories = list(JobCategory.objects.order_by('sort_order', 'name').values_list('name', flat=True))
         
         return Response({
             "level": level,

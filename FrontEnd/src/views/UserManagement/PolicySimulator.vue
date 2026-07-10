@@ -194,7 +194,7 @@ async function runSimulation() {
   try {
     let status = 'ALLOWED'
     let message = 'المستخدم يمتلك الصلاحية المطلوبة للقيام بهذا الإجراء.'
-    let steps = [
+    const steps = [
       { title: 'التحقق من الهوية', detail: 'المستهدف موجود ونشط', passed: true },
       { title: 'التحقق من الدور الوظيفي', detail: 'تم العثور على دور مرتبط يغطي الوحدة المطلوبة', passed: true }
     ]

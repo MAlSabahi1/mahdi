@@ -18,6 +18,7 @@ class StagingRecord(TimeStampedModel):
 
     STATUS_CHOICES = [
         ('pending',  _('قيد المراجعة')),
+        ('pending_external', _('في انتظار اعتماد الوزارة')),
         ('approved', _('موافق عليه')),
         ('rejected', _('مرفوض')),
     ]
@@ -47,7 +48,7 @@ class StagingRecord(TimeStampedModel):
     proposed_change = models.JSONField(verbose_name=_('التغيير المقترح'))
     notes = models.TextField(blank=True, verbose_name=_('ملاحظات'))
     status = models.CharField(
-        max_length=10,
+        max_length=20,
         choices=STATUS_CHOICES,
         default='pending',
         verbose_name=_('الحالة')

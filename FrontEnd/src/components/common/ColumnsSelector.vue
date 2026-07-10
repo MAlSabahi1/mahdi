@@ -17,7 +17,7 @@
     <!-- Columns Selection Dropdown Menu -->
     <div
       v-if="isOpen"
-      class="absolute end-0 mt-2 w-56 rounded-xl border border-gray-150 bg-white p-3 shadow-lg z-50 dark:border-gray-800 dark:bg-gray-900 text-start"
+      class="absolute start-0 mt-2 w-56 rounded-xl border border-gray-150 bg-white p-3 shadow-lg z-50 dark:border-gray-800 dark:bg-gray-900 text-start"
     >
       <div class="text-xs font-bold text-gray-400 mb-2 select-none px-2">{{ $t?.('common.displayed_columns') || 'الأعمدة المعروضة' }}</div>
       <div class="space-y-1 max-h-64 overflow-y-auto pe-1">

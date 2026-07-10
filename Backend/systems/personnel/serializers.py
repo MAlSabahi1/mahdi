@@ -21,6 +21,12 @@ class PersonnelListSerializer(serializers.ModelSerializer):
     status_classification = serializers.CharField(
         source='current_status.classification', read_only=True
     )
+    status_classification_display = serializers.CharField(
+        source='current_status.get_classification_display', read_only=True
+    )
+    expense_status_display = serializers.CharField(
+        source='get_expense_status_display', read_only=True
+    )
     # الهيكل التنظيمي الأمني
     security_admin_name = serializers.CharField(
         source='security_admin.name', read_only=True, default=None
@@ -74,7 +80,7 @@ class PersonnelListSerializer(serializers.ModelSerializer):
             'national_id', 'national_id_status', 'national_id_status_display',
             'current_rank', 'rank_name',
             'pending_rank', 'pending_rank_name',
-            'current_status', 'status_name', 'status_classification',
+            'current_status', 'status_name', 'status_classification', 'status_classification_display',
             # الهيكل التنظيمي الأمني
             'security_admin', 'security_admin_name',
             'central_department', 'central_department_name',
@@ -90,7 +96,7 @@ class PersonnelListSerializer(serializers.ModelSerializer):
             'qualification', 'qualification_name',
             # بيانات أخرى
             'phone_number', 'birth_date', 'join_date',
-            'expense_status', 'appointment_info', 'notes',
+            'expense_status', 'expense_status_display', 'appointment_info', 'notes',
             'is_complete', 'is_data_clean', 'data_quality_score',
             'has_pending_correction',
             'updated_at',
@@ -112,6 +118,12 @@ class PersonnelDetailSerializer(serializers.ModelSerializer):
     )
     geo_location_name = serializers.CharField(
         source='geo_location.name_ar', read_only=True, default=None
+    )
+    status_classification_display = serializers.CharField(
+        source='current_status.get_classification_display', read_only=True
+    )
+    expense_status_display = serializers.CharField(
+        source='get_expense_status_display', read_only=True
     )
     # الهيكل التنظيمي الأمني
     security_admin_name = serializers.CharField(
@@ -168,7 +180,7 @@ class PersonnelDetailSerializer(serializers.ModelSerializer):
             'age', 'service_years',
             # الحالة
             'current_rank', 'rank', 'pending_rank', 'pending_rank_name',
-            'current_status', 'status',
+            'current_status', 'status', 'status_classification_display',
             # الهيكل التنظيمي الأمني
             'security_admin', 'security_admin_name',
             'central_department', 'central_department_name',
@@ -186,7 +198,7 @@ class PersonnelDetailSerializer(serializers.ModelSerializer):
             'qualification', 'qualification_detail',
             'geo_location', 'geo_location_name',
             'photo', 'fingerprint_hash',
-            'expense_status', 'appointment_info',
+            'expense_status', 'expense_status_display', 'appointment_info',
             'is_complete', 'is_data_clean',
             'data_quality_score', 'notes',
             'recent_events', 'pending_corrections', 'documents',
@@ -204,10 +216,23 @@ class PersonnelDetailSerializer(serializers.ModelSerializer):
     def get_documents(self, obj):
         """المرفقات المثبّتة المرتبطة بالفرد (صور بطاقة، قرارات ترقية، إلخ)"""
         from infra.storage.models import Document
+        from django.db.models import Q
+        
+        request = self.context.get('request')
+        
+        correction_ids = list(obj.suggested_corrections.values_list('id', flat=True))
+        settlement_ids = list(obj.rank_settlements.values_list('id', flat=True))
+        
+        query = Q(personnel=obj)
+        if correction_ids:
+            query |= Q(context_type='SuggestedCorrection', context_id__in=[str(cid) for cid in correction_ids])
+        if settlement_ids:
+            query |= Q(context_type='RankSettlement', context_id__in=[str(sid) for sid in settlement_ids])
+            
         docs = Document.objects.filter(
-            personnel=obj,
+            query,
             status='committed',
-        ).order_by('-created_at')[:20]
+        ).order_by('-created_at')[:40]
         return [
             {
                 'id': d.id,
@@ -215,8 +240,10 @@ class PersonnelDetailSerializer(serializers.ModelSerializer):
                 'document_type_display': d.get_document_type_display(),
                 'description': d.description,
                 'related_field': d.related_field,
+                'context_type': d.context_type,
+                'context_id': d.context_id,
                 'source_method': d.source_method,
-                'file_url': d.file.url if d.file else None,
+                'file_url': request.build_absolute_uri(d.file.url) if request and d.file else (d.file.url if d.file else None),
                 'file_hash': d.file_hash,
                 'version': d.version,
                 'created_at': d.created_at.isoformat() if d.created_at else None,

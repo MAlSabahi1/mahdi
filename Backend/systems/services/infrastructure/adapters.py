@@ -168,4 +168,12 @@ class DjangoAttachmentCommitter:
         form = StatusChangeForm.objects.get(id=form_id)
         doc_ids = list(form.attachments.values_list('id', flat=True))
         if doc_ids:
+            # ربط المرفقات بالسياق (رقم الاستمارة) لكي تظهر في الـ Timeline
+            AttachmentService.link_to_context(
+                document_ids=doc_ids,
+                context_type='StatusChangeForm',
+                context_id=form.id,
+                personnel=form.personnel
+            )
+            # تثبيت المرفقات (هذا سينادي أيضاً دالة الأرشفة التلقائية)
             AttachmentService.commit_documents(doc_ids)

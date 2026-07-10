@@ -803,6 +803,55 @@ class ReportViewSet(IdempotencyMixin, BaseViewSet):
     def generate(self, request):
         serializer = ReportGenerateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        return Response({'success': True, 'message': 'Not implemented yet'})
+        
+    @extend_schema(
+        summary='توليد كشف PDF مع المرفقات للإدارة',
+        tags=['reports'],
+    )
+    @action(detail=False, methods=['get'], url_path='monthly_pdf')
+    def monthly_pdf(self, request):
+        month = request.query_params.get('month')
+        if not month:
+            return Response({'success': False, 'error': 'month parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            from systems.services.application.services.pdf_export_service import PdfExportService
+            from systems.personnel.models import PersonnelMaster
+            
+            # مجرد بيانات تجريبية لاختبار عمل المحرك
+            test_personnel = list(PersonnelMaster.objects.all()[:5].values('id', 'military_number', 'full_name', 'current_rank__name'))
+            for p in test_personnel:
+                p['rank'] = p.pop('current_rank__name', '')
+                p['status_notes'] = 'اختبار المحرك'
+                
+            svc = PdfExportService(service_month=month)
+            
+            # جلب مرفقات اختبارية أو استمارات
+            file_bytes = svc.export_form_with_attachments(
+                form_title='كشف اختباري لعمليات الدمج (PDF)',
+                personnel_list=test_personnel,
+                context_types=['StatusChangeForm', 'General']
+            )
+            
+            filename = f"monthly_report_{month}.pdf"
+            resp = FileResponse(
+                file_bytes,
+                content_type='application/pdf',
+                as_attachment=True,
+                filename=filename
+            )
+            resp['X-Export-Filename'] = filename
+            return resp
+        except Exception as e:
+            return Response(
+                {'success': False, 'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    @action(detail=False, methods=['post'])
+    def generate(self, request):
+        serializer = ReportGenerateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         
         template_slug = serializer.validated_data['template_slug']
         filters = serializer.validated_data.get('filters', {})

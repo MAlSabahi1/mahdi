@@ -993,7 +993,7 @@ function fromEscapeSequence(match, codePoint4, codePoint6) {
   switch (match) {
     case `\\\\`:
       return `\\`;
-    // eslint-disable-next-line no-useless-escape
+     
     case `\\'`:
       return `'`;
     default: {
@@ -1652,7 +1652,7 @@ var generate = (ast, options = {}) => {
     ast,
     code,
     map: map ? map.toJSON() : void 0
-    // eslint-disable-line @typescript-eslint/no-explicit-any
+     
   };
 };
 function baseCompile(source, options = {}) {
@@ -2663,7 +2663,7 @@ function datetime(context, ...args) {
   const locale = getLocale(context, options);
   const locales = localeFallbacker(
     context,
-    // eslint-disable-line @typescript-eslint/no-explicit-any
+     
     fallbackLocale,
     locale
   );
@@ -2811,7 +2811,7 @@ function number(context, ...args) {
   const locale = getLocale(context, options);
   const locales = localeFallbacker(
     context,
-    // eslint-disable-line @typescript-eslint/no-explicit-any
+     
     fallbackLocale,
     locale
   );
@@ -3174,7 +3174,7 @@ function resolveMessageFormat(context, key, locale, fallbackLocale, fallbackWarn
     if (!isImplicitFallback(targetLocale, locales)) {
       const missingRet = handleMissing(
         context,
-        // eslint-disable-line @typescript-eslint/no-explicit-any
+         
         key,
         targetLocale,
         missingWarn,
@@ -4037,7 +4037,7 @@ async function enableDevTools(app, i18n) {
         logo: "https://vue-i18n.intlify.dev/vue-i18n-devtools-logo.png",
         componentStateTypes: [VUE_I18N_COMPONENT_TYPES],
         app
-        // eslint-disable-line @typescript-eslint/no-explicit-any
+         
       }, (api) => {
         devtoolsApi = api;
         api.on.visitComponentTree(({ componentInstance, treeNode }) => {
@@ -4772,7 +4772,7 @@ function getFragmentableTag() {
   return Fragment;
 }
 var TranslationImpl = defineComponent({
-  /* eslint-disable */
+   
   name: "i18n-t",
   props: assign({
     keypath: {
@@ -4784,8 +4784,8 @@ var TranslationImpl = defineComponent({
       validator: (val) => isNumber(val) || !isNaN(val)
     }
   }, baseFormatProps),
-  /* eslint-enable */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
+   
   setup(props, context) {
     const { slots, attrs } = context;
     const i18n = props.i18n || useI18n({
@@ -4852,7 +4852,7 @@ function renderFormatter(props, context, slotKeys, partFormatter) {
   };
 }
 var NumberFormatImpl = defineComponent({
-  /* eslint-disable */
+   
   name: "i18n-n",
   props: assign({
     value: {
@@ -4863,15 +4863,15 @@ var NumberFormatImpl = defineComponent({
       type: [String, Object]
     }
   }, baseFormatProps),
-  /* eslint-enable */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
+   
   setup(props, context) {
     const i18n = props.i18n || useI18n({
       useScope: props.scope,
       __useComponent: true
     });
     return renderFormatter(props, context, NUMBER_FORMAT_OPTIONS_KEYS, (...args) => (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       i18n[NumberPartsSymbol](...args)
     ));
   }
@@ -4879,7 +4879,7 @@ var NumberFormatImpl = defineComponent({
 var NumberFormat = NumberFormatImpl;
 var I18nN = NumberFormat;
 var DatetimeFormatImpl = defineComponent({
-  /* eslint-disable */
+   
   name: "i18n-d",
   props: assign({
     value: {
@@ -4890,15 +4890,15 @@ var DatetimeFormatImpl = defineComponent({
       type: [String, Object]
     }
   }, baseFormatProps),
-  /* eslint-enable */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
+   
   setup(props, context) {
     const i18n = props.i18n || useI18n({
       useScope: props.scope,
       __useComponent: true
     });
     return renderFormatter(props, context, DATETIME_FORMAT_OPTIONS_KEYS, (...args) => (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       i18n[DatetimePartsSymbol](...args)
     ));
   }
@@ -5234,7 +5234,7 @@ function injectGlobalFields(app, composer) {
       get() {
         return desc.value.value;
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       set(val) {
         desc.value.value = val;
       }

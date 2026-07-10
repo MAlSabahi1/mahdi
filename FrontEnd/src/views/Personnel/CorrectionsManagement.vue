@@ -170,11 +170,24 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <div class="mt-1">
+            <div class="mt-1 w-full">
               <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ $t('personnel.confirm_approval') || 'تأكيد الموافقة' }}</h3>
               <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
                 {{ $t('personnel.approve_confirmation_msg') || 'هل أنت متأكد من الموافقة على هذا التعديل؟ سيتم تغيير بيانات الفرد مباشرة.' }}
               </p>
+              
+              <div class="mt-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {{ $t('corrections.approval_doc_id') || 'رقم/معرّف وثيقة الموافقة' }} <span class="text-error-500">*</span>
+                </label>
+                <input
+                  v-model="singleApprovalDocId"
+                  type="text"
+                  class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-success-500 focus:ring-success-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  :placeholder="$t('corrections.memo_doc_placeholder') || 'مثال: DOC-2026-001'"
+                />
+                <p v-if="singleApproveError" class="mt-1 text-xs text-error-500">{{ singleApproveError }}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -441,7 +454,9 @@ const selectAll = computed({
 const rejectionReason = ref('')
 const rejectError = ref('')
 const memoDocumentId = ref('')
+const singleApprovalDocId = ref('')
 const approveError = ref('')
+const singleApproveError = ref('')
 const actionLoading = ref(false)
 
 async function loadCorrections(page: number | Event = 1) {
@@ -493,6 +508,8 @@ function formatDate(dateStr: string): string {
 // Actions
 function openApproveModal(req: any) {
   selectedRequest.value = req
+  singleApprovalDocId.value = ''
+  singleApproveError.value = ''
   showApproveModal.value = true
 }
 
@@ -516,9 +533,14 @@ function openBatchRejectModal() {
 
 async function confirmApprove() {
   if (!selectedRequest.value) return
+  if (!singleApprovalDocId.value.trim()) {
+    singleApproveError.value = t('corrections.memo_required') || 'الرجاء إدخال رقم/معرّف المذكرة'
+    return
+  }
+
   actionLoading.value = true
   try {
-    await store.approveCorrection(selectedRequest.value.id)
+    await store.approveCorrection(selectedRequest.value.id, parseInt(singleApprovalDocId.value.trim()))
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: t('corrections.approve_success') || 'تم اعتماد التصحيح وتحديث بيانات الفرد بنجاح', showConfirmButton: false, timer: 3000 })
     showApproveModal.value = false
     requests.value = requests.value.filter(r => r.id !== selectedRequest.value.id)

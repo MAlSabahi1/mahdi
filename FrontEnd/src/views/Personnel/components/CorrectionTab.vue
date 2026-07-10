@@ -41,6 +41,7 @@
               <th class="px-5 py-3 text-start text-sm font-medium text-gray-500 dark:text-gray-400">{{ $t('corrections.field') }}</th>
               <th class="px-5 py-3 text-start text-sm font-medium text-gray-500 dark:text-gray-400">{{ $t('corrections.old_value') }}</th>
               <th class="px-5 py-3 text-start text-sm font-medium text-gray-500 dark:text-gray-400">{{ $t('corrections.new_value') }}</th>
+              <th class="px-5 py-3 text-start text-sm font-medium text-gray-500 dark:text-gray-400">المرفق</th>
               <th class="px-5 py-3 text-start text-sm font-medium text-gray-500 dark:text-gray-400">Status</th>
             </tr>
           </thead>
@@ -50,6 +51,13 @@
               <td class="px-5 py-4 whitespace-nowrap font-medium">{{ $t(`corrections.fields.${req.field}`) }}</td>
               <td class="px-5 py-4 whitespace-nowrap text-gray-500 line-through">{{ req.old_value || '-' }}</td>
               <td class="px-5 py-4 whitespace-nowrap text-brand-600 dark:text-brand-400 font-medium">{{ req.new_value }}</td>
+              <td class="px-5 py-4 whitespace-nowrap">
+                <a v-if="req.approval_document_url" :href="getFullUrl(req.approval_document_url)" target="_blank" class="inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-500 dark:text-brand-400">
+                  <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                  عرض موافقة الوزارة
+                </a>
+                <span v-else class="text-xs text-gray-400">-</span>
+              </td>
               <td class="px-5 py-4 whitespace-nowrap">
                 <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold" :class="getStatusClass(req.status)">
                   {{ getStatusText(req.status) }}
@@ -112,5 +120,12 @@ function getStatusText(status: string) {
   if (s === 'approved') return t('corrections.status_approved')
   if (s === 'rejected') return t('corrections.status_rejected')
   return t('corrections.status_pending')
+}
+
+function getFullUrl(url: string) {
+  if (!url) return ''
+  if (url.startsWith('http')) return url
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
+  return `${baseUrl}${url}`
 }
 </script>

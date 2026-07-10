@@ -5,7 +5,7 @@ from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_serializer
 from systems.personnel.models import PersonnelMaster, SuggestedCorrection, HistoricalMonthlyVariables, RankSettlement
 from systems.services.models import ServiceEventLog
-from core.serializers import (
+from core.api.serializers import (
     RankSerializer, ServiceStatusSerializer,
     QualificationSerializer,
 )
@@ -20,6 +20,12 @@ class PersonnelListSerializer(serializers.ModelSerializer):
     )
     status_classification = serializers.CharField(
         source='current_status.classification', read_only=True
+    )
+    status_classification_display = serializers.CharField(
+        source='current_status.get_classification_display', read_only=True
+    )
+    expense_status_display = serializers.CharField(
+        source='get_expense_status_display', read_only=True
     )
     # الهيكل التنظيمي الأمني
     security_admin_name = serializers.CharField(
@@ -74,7 +80,7 @@ class PersonnelListSerializer(serializers.ModelSerializer):
             'national_id', 'national_id_status', 'national_id_status_display',
             'current_rank', 'rank_name',
             'pending_rank', 'pending_rank_name',
-            'current_status', 'status_name', 'status_classification',
+            'current_status', 'status_name', 'status_classification', 'status_classification_display',
             # الهيكل التنظيمي الأمني
             'security_admin', 'security_admin_name',
             'central_department', 'central_department_name',
@@ -90,7 +96,7 @@ class PersonnelListSerializer(serializers.ModelSerializer):
             'qualification', 'qualification_name',
             # بيانات أخرى
             'phone_number', 'birth_date', 'join_date',
-            'expense_status', 'appointment_info', 'notes',
+            'expense_status', 'expense_status_display', 'appointment_info', 'notes',
             'is_complete', 'is_data_clean', 'data_quality_score',
             'has_pending_correction',
             'updated_at',
@@ -109,6 +115,9 @@ class PersonnelDetailSerializer(serializers.ModelSerializer):
     )
     qualification_detail = QualificationSerializer(
         source='qualification', read_only=True
+    )
+    expense_status_display = serializers.CharField(
+        source='get_expense_status_display', read_only=True
     )
     geo_location_name = serializers.CharField(
         source='geo_location.name_ar', read_only=True, default=None
@@ -240,7 +249,7 @@ class PersonnelCreateSerializer(serializers.ModelSerializer):
             'district_police', 'division', 'unit',
 
             'category', 'job_title', 'position', 'force_classification',
-            'qualification', 'geo_location', 'notes',
+            'qualification', 'geo_location', 'expense_status', 'notes',
         ]
     
     def validate_military_number(self, value):
@@ -272,7 +281,7 @@ class PersonnelUpdateSerializer(serializers.ModelSerializer):
             'district_police', 'division', 'unit',
 
             'category', 'job_title', 'position', 'force_classification',
-            'qualification', 'geo_location',
+            'qualification', 'geo_location', 'expense_status',
             'pending_rank', 'is_complete', 'notes',
         ]
     

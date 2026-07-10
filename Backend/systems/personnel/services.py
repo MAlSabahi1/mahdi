@@ -179,15 +179,17 @@ class PersonnelService:
         AttachmentService.commit_documents(document_ids)
 
         # 6. سجل الأحداث
-        ServiceEventLog.objects.create(
+        ServiceEventLog.objects.update_or_create(
             personnel=personnel,
-            security_admin=personnel.security_admin,
             event_date=date.today(),
             service_month=date.today().strftime('%Y-%m'),
             field_name='national_id',
-            old_value=old_national_id,
-            new_value=new_national_id,
-            created_by=user,
+            defaults={
+                'security_admin': personnel.security_admin,
+                'old_value': old_national_id,
+                'new_value': new_national_id,
+                'created_by': user,
+            }
         )
 
         # 7. سجل التدقيق
@@ -314,16 +316,18 @@ class PersonnelService:
             AttachmentService.commit_documents([document.id])
 
         # سجل الحدث
-        ServiceEventLog.objects.create(
+        ServiceEventLog.objects.update_or_create(
             personnel=personnel,
-            security_admin=personnel.security_admin,
             event_date=date.today(),
             service_month=date.today().strftime('%Y-%m'),
             field_name='full_name',
-            old_value=old_name,
-            new_value=new_name,
-            order_document=document,
-            created_by=user,
+            defaults={
+                'security_admin': personnel.security_admin,
+                'old_value': old_name,
+                'new_value': new_name,
+                'order_document': document,
+                'created_by': user,
+            }
         )
 
         AuditLog.objects.create(
@@ -677,16 +681,18 @@ class PersonnelService:
 
         new_target = filled[0]
 
-        ServiceEventLog.objects.create(
+        ServiceEventLog.objects.update_or_create(
             personnel=personnel,
-            security_admin=personnel.security_admin,
             event_date=date.today(),
             service_month=date.today().strftime('%Y-%m'),
             field_name='work_location',
-            old_value=str(old_target) if old_target else '',
-            new_value=str(new_target),
-            order_document=document,
-            created_by=user,
+            defaults={
+                'security_admin': personnel.security_admin,
+                'old_value': str(old_target) if old_target else '',
+                'new_value': str(new_target),
+                'order_document': document,
+                'created_by': user,
+            }
         )
 
         AuditLog.objects.create(
@@ -729,16 +735,18 @@ class PersonnelService:
         personnel.pending_rank = None
         personnel.save(update_fields=['current_rank', 'pending_rank', 'updated_at'])
 
-        ServiceEventLog.objects.create(
+        ServiceEventLog.objects.update_or_create(
             personnel=personnel,
-            security_admin=personnel.security_admin,
             event_date=date.today(),
             service_month=date.today().strftime('%Y-%m'),
             field_name='current_rank',
-            old_value=str(old_rank),
-            new_value=str(new_rank),
-            order_document=document,
-            created_by=user,
+            defaults={
+                'security_admin': personnel.security_admin,
+                'old_value': str(old_rank),
+                'new_value': str(new_rank),
+                'order_document': document,
+                'created_by': user,
+            }
         )
 
         AuditLog.objects.create(
@@ -803,16 +811,26 @@ class PersonnelService:
             AttachmentService.commit_documents([settlement.supporting_document_id])
 
         # سجل الأحداث
-        ServiceEventLog.objects.create(
+        ServiceEventLog.objects.update_or_create(
             personnel=personnel,
-            security_admin=personnel.security_admin,
             event_date=settlement.decision_date or date.today(),
             service_month=date.today().strftime('%Y-%m'),
-            field_name='current_rank',
-            old_value=str(old_rank),
-            new_value=str(settlement.to_rank),
-            order_document=settlement.supporting_document,
-            created_by=user,
+            field_name='current_rank' if settlement.settlement_type != 'personnel_to_officer' else 'personnel_to_officer',
+            defaults={
+                'security_admin': personnel.security_admin,
+                'old_value': str(old_rank),
+                'new_value': str(settlement.to_rank),
+                'order_document': settlement.supporting_document,
+                'created_by': user,
+            }
+        )
+        
+        from systems.personnel.models import PersonnelEvent
+        PersonnelEvent.objects.create(
+            personnel=personnel,
+            event_type='promotion' if settlement.settlement_type != 'demotion' else 'status_change',
+            event_date=settlement.decision_date or date.today(),
+            description=f"{'ترقية/تسوية رتبة' if settlement.settlement_type != 'demotion' else 'تنزيل رتبة'} من {old_rank.name if old_rank else '—'} إلى {settlement.to_rank.name}. قرار رقم {settlement.decision_number or 'بدون'}"
         )
 
         AuditLog.objects.create(

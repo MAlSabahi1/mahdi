@@ -345,7 +345,36 @@ class AttachmentService:
             id__in=document_ids,
             status='temp',
         ).update(status='committed')
+        
+        # أرشفة تلقائية للنسخ القديمة بناءً على نوع المرفق والفرد
+        AttachmentService._auto_archive_old_versions(document_ids)
+        
         return count
+
+    @staticmethod
+    def _auto_archive_old_versions(new_document_ids):
+        """
+        أرشفة المرفقات القديمة التي تشارك نفس الحقل (related_field)
+        ونفس النوع لنفس الفرد، لكي لا تتراكم وتختلط في أرشيف الفرد.
+        """
+        from infra.storage.models import Document
+        
+        new_docs = Document.objects.filter(id__in=new_document_ids, status='committed')
+        for doc in new_docs:
+            if not doc.personnel_id or not doc.related_field:
+                continue
+                
+            # جلب كل المرفقات القديمة لنفس الفرد ونفس الحقل
+            # ما عدا المرفق الجديد نفسه
+            old_docs = Document.objects.filter(
+                personnel_id=doc.personnel_id,
+                related_field=doc.related_field,
+                document_type=doc.document_type,
+                status='committed'
+            ).exclude(id=doc.id)
+            
+            if old_docs.exists():
+                old_docs.update(status='archived')
 
     @staticmethod
     def archive_documents(document_ids):

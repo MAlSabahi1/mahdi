@@ -944,10 +944,11 @@ async function validateAndGoToStep3() {
     const userSection = schema.value.sections?.find((s: any) => s.source === 'user_input')
     if (userSection) {
       const missing = userSection.fields.filter((f: any) => {
-        if (type === 'rank_demotion' && (f.key === 'to_rank' || f.key === 'demotion_reason')) return false; // Handled in table
-        if (f.key === 'new_military_number') {
-          return formData.value.settlement_type === 'personnel_to_officer' && !formData.value[f.key]
+        if (isRankSettlement.value) {
+          const tableFields = ['to_rank', 'decision_number', 'decision_date', 'notes', 'reason', 'demotion_reason', 'new_military_number', 'university_degree_type'];
+          if (tableFields.includes(f.key)) return false;
         }
+        
         return f.required && !formData.value[f.key]
       })
       if (missing.length > 0) {
@@ -1186,6 +1187,10 @@ async function submitBulk() {
   const userSection = schema.value.sections?.find((s:any) => s.source === 'user_input')
   if (userSection && type !== 'rank_demotion') {
     for (const f of userSection.fields) {
+      if (isRankSettlement.value) {
+        const tableFields = ['to_rank', 'decision_number', 'decision_date', 'notes', 'reason', 'demotion_reason', 'new_military_number', 'university_degree_type'];
+        if (tableFields.includes(f.key)) continue;
+      }
       const val = formData.value[f.key]
       
       // 1. Required Check
@@ -1255,8 +1260,27 @@ async function submitBulk() {
         const supportDoc = isRankSettlement.value && perPersonData[person.military_number]?.document_id ? perPersonData[person.military_number].document_id : (documentIds.value?.length > 0 ? documentIds.value[0] : null)
         
         let mappedType = formData.value.settlement_type || type
-        if (mappedType === 'rank_demotion') mappedType = 'demotion'
-        if (mappedType === 'rank_promotion') mappedType = 'promotion'
+        
+        if (mappedType === 'rank_demotion' || mappedType === 'تنزيل رتبة' || mappedType === 'demotion') {
+            mappedType = 'demotion'
+        } else if (mappedType === 'rank_promotion' || mappedType === 'ترقية اعتيادية' || mappedType === 'same_class_promotion') {
+            mappedType = 'same_class_promotion'
+        } else if (mappedType === 'personnel_to_officer' || mappedType === 'تسوية وضع') {
+            mappedType = 'personnel_to_officer'
+        }
+        
+        let safeDecisionDate = perPersonData[person.military_number]?.decision_date || formData.value.decision_date || new Date().toISOString().split('T')[0]
+        if (safeDecisionDate && safeDecisionDate.includes('/')) {
+            // just in case it is DD/MM/YYYY
+            const parts = safeDecisionDate.split('/')
+            if (parts.length === 3) {
+                if (parts[2].length >= 4) {
+                    safeDecisionDate = `${parts[2]}-${parts[1]}-${parts[0]}`
+                } else if (parts[0].length >= 4) {
+                    safeDecisionDate = `${parts[0]}-${parts[1]}-${parts[2]}`
+                }
+            }
+        }
 
         await rankSettlementStore.createSettlement({
           personnel: person.military_number,
@@ -1265,7 +1289,7 @@ async function submitBulk() {
           to_rank: toRank,
           new_military_number: newMilNum || null,
           decision_number: perPersonData[person.military_number]?.decision_number || formData.value.decision_number || 'بدون رقم',
-          decision_date: perPersonData[person.military_number]?.decision_date || formData.value.decision_date || new Date().toISOString().split('T')[0],
+          decision_date: safeDecisionDate,
           due_date: formData.value.due_date || null,
           notes: notes,
           supporting_document: supportDoc

@@ -13,7 +13,7 @@
             </svg>
           </div>
           <div>
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white">تحديث الرقم الوطني (آمن)</h3>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white">إضافة / تصحيح الرقم الوطني (آمن)</h3>
             <p class="text-xs text-gray-500 mt-0.5">يرجى توخي الدقة وإرفاق صور واضحة للبطاقة</p>
           </div>
         </div>
@@ -34,34 +34,18 @@
           <p class="text-sm text-error-700 dark:text-error-300">{{ globalError }}</p>
         </div>
 
-        <!-- National ID Inputs -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الرقم الوطني الجديد <span class="text-error-500">*</span></label>
-            <input 
-              v-model="nationalId" 
-              type="text" 
-              maxlength="11" 
-              class="block w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:text-white dark:focus:border-brand-500" 
-              :class="{'border-error-500 focus:border-error-500': errors.nationalId}"
-              placeholder="مثال: 01010101010"
-              @input="validateInputs"
-            >
-            <p v-if="errors.nationalId" class="mt-1 text-xs text-error-500">{{ errors.nationalId }}</p>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">تأكيد الرقم الوطني <span class="text-error-500">*</span></label>
-            <input 
-              v-model="confirmNationalId" 
-              type="text" 
-              maxlength="11" 
-              class="block w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:text-white dark:focus:border-brand-500" 
-              :class="{'border-error-500 focus:border-error-500': errors.confirmNationalId}"
-              placeholder="أعد إدخال الرقم..."
-              @input="validateInputs"
-            >
-            <p v-if="errors.confirmNationalId" class="mt-1 text-xs text-error-500">{{ errors.confirmNationalId }}</p>
-          </div>
+        <!-- National ID Wizard Component -->
+        <div>
+          <NationalIdWizard 
+            v-model="nationalId"
+            label="الرقم الوطني الجديد"
+            :required="true"
+            :error="errors.nationalId"
+            :autofocus="true"
+            :checkDuplicateFn="checkDuplicateNationalId"
+            @complete="onNationalIdComplete"
+            @mismatch="onNationalIdMismatch"
+          />
         </div>
 
         <hr class="border-gray-100 dark:border-gray-800">
@@ -150,7 +134,7 @@
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
             </svg>
-            {{ isSubmitting ? 'جاري التحديث...' : 'تحديث واعتماد' }}
+            {{ isSubmitting ? 'جاري التنفيذ...' : (canDirectUpdate ? 'إضافة واعتماد' : 'تقديم طلب تصحيح') }}
           </button>
         </div>
       </div>
@@ -159,9 +143,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 import { useDocumentStore } from '@/stores/document'
 import { usePersonnelStore } from '@/stores/personnel'
+import { useCorrectionStore } from '@/stores/correction'
+import NationalIdWizard from '@/components/common/NationalIdWizard.vue'
 
 const props = defineProps<{
   militaryNumber: string
@@ -169,11 +156,19 @@ const props = defineProps<{
 
 const emit = defineEmits(['close', 'success'])
 
+const authStore = useAuthStore()
 const documentStore = useDocumentStore()
 const personnelStore = usePersonnelStore()
+const correctionStore = useCorrectionStore()
 
-const nationalId = ref('')
-const confirmNationalId = ref('')
+// Determine if user has direct update permission
+const canDirectUpdate = computed(() => {
+  return authStore.isAdmin || authStore.hasPermission('personnel.update_national_id') || authStore.hasPermission('personnel.update_all')
+})
+
+const nationalId = ref<string | null>(null)
+const isValidatingNid = ref(false)
+const duplicateErrorMsg = ref('')
 const frontFile = ref<File | null>(null)
 const backFile = ref<File | null>(null)
 
@@ -184,7 +179,6 @@ const isSubmitting = ref(false)
 const globalError = ref('')
 const errors = ref({
   nationalId: '',
-  confirmNationalId: '',
   frontFile: '',
   backFile: ''
 })
@@ -193,6 +187,28 @@ function closeModal() {
   if (!isSubmitting.value) {
     emit('close')
   }
+}
+
+async function checkDuplicateNationalId(val: string): Promise<string | null> {
+  const result = await personnelStore.checkNationalId(val)
+  if (result.exists) {
+    if (result.owner) {
+      return `مسجل مسبقاً للفرد: ${result.owner.full_name} (${result.owner.military_number})`
+    }
+    return 'هذا الرقم الوطني مسجل مسبقاً في النظام'
+  }
+  return null
+}
+
+function onNationalIdComplete(val: string) {
+  nationalId.value = val
+  duplicateErrorMsg.value = ''
+  errors.value.nationalId = ''
+}
+
+function onNationalIdMismatch() {
+  nationalId.value = null
+  duplicateErrorMsg.value = ''
 }
 
 function triggerFrontFile() {
@@ -233,16 +249,15 @@ function handleFileSelect(event: Event, side: 'front' | 'back') {
 
 function validateInputs(): boolean {
   let isValid = true
-  errors.value = { nationalId: '', confirmNationalId: '', frontFile: '', backFile: '' }
+  errors.value = { nationalId: '', frontFile: '', backFile: '' }
   globalError.value = ''
 
-  if (!nationalId.value || nationalId.value.length < 11 || !/^\d+$/.test(nationalId.value)) {
-    errors.value.nationalId = 'الرقم الوطني يجب أن يتكون من 11 رقماً'
+  if (!nationalId.value || nationalId.value.length < 11) {
+    errors.value.nationalId = 'يرجى إكمال خطوات إدخال وتأكيد الرقم الوطني.'
     isValid = false
   }
-
-  if (nationalId.value !== confirmNationalId.value) {
-    errors.value.confirmNationalId = 'الرقمان غير متطابقين'
+  
+  if (duplicateErrorMsg.value) {
     isValid = false
   }
 
@@ -265,24 +280,36 @@ async function submitUpdate() {
   isSubmitting.value = true
   try {
     // 1. Check if national ID already exists first (to prevent uploading files unnecessarily)
+    if (!nationalId.value) return
     const checkResult = await personnelStore.checkNationalId(nationalId.value)
     if (checkResult.exists) {
-      errors.value.nationalId = 'هذا الرقم الوطني مسجل مسبقاً في النظام'
+      duplicateErrorMsg.value = 'هذا الرقم الوطني مسجل مسبقاً في النظام'
       isSubmitting.value = false
       return
     }
 
     // 2. Upload Documents
-    // Using id_card document type
+    // Using backend expected document types for NationalIdUpdate
     const [frontDoc, backDoc] = await Promise.all([
-      documentStore.uploadDocument(props.militaryNumber, frontFile.value!, 'id_card', 'بطاقة شخصية (أمام)'),
-      documentStore.uploadDocument(props.militaryNumber, backFile.value!, 'id_card', 'بطاقة شخصية (خلف)')
+      documentStore.uploadDocument(props.militaryNumber, frontFile.value!, 'national_id_front', 'بطاقة شخصية (أمام)', 'temp'),
+      documentStore.uploadDocument(props.militaryNumber, backFile.value!, 'national_id_back', 'بطاقة شخصية (خلف)', 'temp')
     ])
 
     const documentIds = [frontDoc.id, backDoc.id]
 
-    // 3. Call update endpoint
-    await personnelStore.updateNationalId(props.militaryNumber, nationalId.value, documentIds)
+    // 3. Call endpoint based on permissions
+    if (canDirectUpdate.value) {
+      await personnelStore.updateNationalId(props.militaryNumber, nationalId.value, documentIds)
+    } else {
+      await correctionStore.submitCorrection({
+        military_number: props.militaryNumber,
+        field: 'national_id_correction',
+        old_value: '',
+        new_value: nationalId.value,
+        reason: 'طلب إضافة/تصحيح الرقم الوطني من النظام',
+        document_ids: documentIds
+      })
+    }
 
     // Emit success
     emit('success')

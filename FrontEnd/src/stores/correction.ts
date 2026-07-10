@@ -11,6 +11,7 @@ export interface CorrectionRequest {
   reason: string
   status: 'pending' | 'approved' | 'rejected'
   requested_at: string
+  approval_document_url?: string
 }
 
 export const useCorrectionStore = defineStore('correction', () => {
@@ -31,7 +32,8 @@ export const useCorrectionStore = defineStore('correction', () => {
         new_value: item.new_value,
         reason: item.notes,
         status: item.status,
-        requested_at: item.requested_at
+        requested_at: item.requested_at,
+        approval_document_url: item.approval_document_url
       }))
       return corrections.value
     } catch (err) {
@@ -121,7 +123,8 @@ export const useCorrectionStore = defineStore('correction', () => {
         new_value: newRequest.new_value,
         reason: newRequest.notes,
         status: newRequest.status,
-        requested_at: newRequest.requested_at
+        requested_at: newRequest.requested_at,
+        approval_document_url: newRequest.approval_document_url
       }
       
       corrections.value.unshift(mappedRequest)
@@ -135,9 +138,11 @@ export const useCorrectionStore = defineStore('correction', () => {
   }
 
   // Admin actions
-  async function approveCorrection(id: string) {
+  async function approveCorrection(id: string, approvalDocumentId: number) {
     try {
-      await api.post(`/personnel/corrections/${id}/approve/`)
+      await api.post(`/personnel/corrections/${id}/approve/`, {
+        approval_document_id: approvalDocumentId
+      })
       const req = corrections.value.find(c => String(c.id) === String(id))
       if (req) {
         req.status = 'approved'

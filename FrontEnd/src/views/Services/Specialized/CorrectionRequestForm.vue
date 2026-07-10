@@ -278,8 +278,16 @@
                     <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center font-mono font-bold text-red-500 line-through decoration-red-500/40">
                       {{ person.national_id || 'غير مسجل' }}
                     </td>
-                    <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center">
-                      <input v-model="formData.new_values[person.military_number]" type="text" placeholder="11 رقم" maxlength="11" class="w-full text-xs p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 outline-none font-mono text-center" />
+                    <td class="p-3 border-b border-l border-gray-200 dark:border-gray-800 text-center" style="min-width: 320px;" dir="rtl">
+                      <NationalIdWizard 
+                        v-model="formData.new_values[person.military_number]"
+                        :label="''"
+                        :required="false"
+                        :isValidating="nidState[person.military_number]?.isValidating"
+                        :duplicateError="nidState[person.military_number]?.error"
+                        @complete="(val) => verifyNidDuplicate(person.military_number, val)"
+                        @update:modelValue="clearNidError(person.military_number)"
+                      />
                     </td>
                     <td class="p-3 border-b border-gray-200 dark:border-gray-800 text-center">
                       <textarea v-model="formData.notes[person.military_number]" rows="1" placeholder="أسباب التصحيح..." class="w-full text-xs p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 outline-none resize-none"></textarea>
@@ -438,6 +446,7 @@ import { useDisciplinaryStore } from '@/stores/disciplinary'
 import { useCoreStore } from '@/stores/core'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/lib/api'
+import NationalIdWizard from '@/components/common/NationalIdWizard.vue'
 
 const authStore = useAuthStore()
 const coreStore = useCoreStore()
@@ -777,6 +786,38 @@ function updateFullName() {
   formData.value.new_value = generatedFullName.value
 }
 
+// National ID duplicate verification state
+const nidState = ref<Record<string, { isValidating: boolean, error: string }>>({})
+
+async function verifyNidDuplicate(militaryNumber: string, val: string) {
+  if (!nidState.value[militaryNumber]) {
+    nidState.value[militaryNumber] = { isValidating: false, error: '' }
+  }
+  nidState.value[militaryNumber].isValidating = true
+  nidState.value[militaryNumber].error = ''
+  
+  try {
+    const res = await personnelStore.checkNationalId(val)
+    if (res.exists) {
+      nidState.value[militaryNumber].error = `الرقم مسجل مسبقاً للفرد (${res.personnel?.full_name || res.personnel_name})`
+      formData.value.new_values[militaryNumber] = null // invalid
+    } else if (!res.valid_format) {
+      nidState.value[militaryNumber].error = 'تنسيق الرقم غير صحيح أو يحتوي على قيم غير مسموحة'
+      formData.value.new_values[militaryNumber] = null
+    }
+  } catch (err) {
+    nidState.value[militaryNumber].error = 'حدث خطأ أثناء فحص التكرار السحابي'
+  } finally {
+    nidState.value[militaryNumber].isValidating = false
+  }
+}
+
+function clearNidError(militaryNumber: string) {
+  if (nidState.value[militaryNumber]) {
+    nidState.value[militaryNumber].error = ''
+  }
+}
+
 onMounted(async () => {
   if (coreStore.governorates.length === 0) {
     await coreStore.fetchAllReferences()
@@ -1012,12 +1053,16 @@ async function validateAndGoToStep3() {
       for (const person of selectedPersonnelList.value) {
         const val = formData.value.new_values?.[person.military_number]
         const note = formData.value.notes?.[person.military_number]
-        if (!val || !note) {
-          Swal.fire({ icon: 'warning', title: 'بيانات ناقصة', text: 'الرجاء تعبئة جميع الحقول الإلزامية للفرد ' + person.full_name })
+        if (!val || val.length !== 11) {
+          Swal.fire({ icon: 'warning', title: 'بيانات ناقصة', text: 'الرجاء كتابة الرقم الوطني الصحيح بالكامل (11 رقم) للفرد ' + person.full_name })
           return
         }
-        if (val.length !== 11 || !/^\d+$/.test(val)) {
-          Swal.fire({ icon: 'warning', title: 'رقم وطني غير صالح', text: 'الرقم الوطني الجديد للفرد ' + person.full_name + ' يجب أن يتكون من 11 رقماً.' })
+        if (nidState.value[person.military_number]?.error) {
+          Swal.fire({ icon: 'error', title: 'رقم وطني غير صالح', text: `يوجد خطأ في الرقم الوطني للفرد ${person.full_name}: ${nidState.value[person.military_number].error}` })
+          return
+        }
+        if (!note || note.trim().length < 5) {
+          Swal.fire({ icon: 'warning', title: 'ملاحظات ناقصة', text: 'الرجاء إدخال أسباب التصحيح بشكل واضح للفرد ' + person.full_name })
           return
         }
       }
