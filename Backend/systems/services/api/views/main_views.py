@@ -456,10 +456,10 @@ class StagingViewSet(IdempotencyMixin, BaseReadOnlyViewSet):
         qs = StagingRecord.objects.select_related(
             'personnel', 'personnel__central_department',
         ).all()
-        qs = filter_by_department_scope(
-            self.request.user, qs, 'personnel__central_department'
+        from infra.authorization.services.permission_service import PermissionService
+        return PermissionService.get_scoped_queryset(
+            self.request.user, qs, 'personnel.view.*'
         )
-        return qs
     
     @extend_schema(
         request=ApproveSerializer,
@@ -614,8 +614,9 @@ class RejectionViewSet(BaseReadOnlyViewSet):
         qs = RejectionLog.objects.select_related(
             'personnel', 'central_department', 'rejected_by', 'staging_record'
         ).all()
-        return filter_by_department_scope(
-            self.request.user, qs, 'central_department'
+        from infra.authorization.services.permission_service import PermissionService
+        return PermissionService.get_scoped_queryset(
+            self.request.user, qs, 'personnel.view.*'
         )
     
     @extend_schema(
@@ -930,8 +931,9 @@ class ComplianceViewSet(BaseReadOnlyViewSet):
 
     def get_queryset(self):
         qs = DirectorateCompliance.objects.select_related('central_department').all()
-        return filter_by_department_scope(
-            self.request.user, qs, 'central_department'
+        from infra.authorization.services.permission_service import PermissionService
+        return PermissionService.get_scoped_queryset(
+            self.request.user, qs, 'personnel.view.*'
         )
 
 

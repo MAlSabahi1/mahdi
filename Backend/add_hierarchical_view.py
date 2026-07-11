@@ -1,126 +1,8 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import ValidationError
-from django.db.models import Count
-from systems.personnel.models import PersonnelMaster
+import os
 
-class WorkforceSummaryReportView(APIView):
-    """
-    تقرير خلاصة القوة العاملة بحسب الرتبة.
-    يسمح بالتجميع بناءً على مستوى الهيكل التنظيمي المحدد في ?level=
-    Levels: 'central', 'branch', 'district', 'security_admin'
-    """
-    permission_classes = [IsAuthenticated]
+file_path = 'systems/personnel/api/views/reports_views.py'
 
-    def get(self, request, *args, **kwargs):
-        level = request.query_params.get('level', 'central')
-        
-        # خريطة لربط المستوى بالحقل المناسب في قاعدة البيانات
-        level_field_map = {
-            'central': 'central_department__name',
-            'branch': 'branch__name',
-            'district': 'district_police__name',
-            'security_admin': 'security_admin__name',
-        }
-        
-        if level not in level_field_map and level != 'all':
-            raise ValidationError({"error": "Invalid level specified. Choose from: central, branch, district, security_admin, all"})
-            
-        from django.db.models.functions import Coalesce
-        from core.models.organization import CentralDepartment, Branch, DistrictPolice, SecurityAdministration
-        
-        sa_ids = None
-        if not request.user.is_superuser:
-            try:
-                sa_ids = request.user.authz_profile.get_accessible_security_admin_ids()
-            except Exception:
-                sa_ids = []
-
-        def get_scoped_units(model_class):
-            qs = model_class.objects.filter(is_active=True)
-            if sa_ids is not None:
-                if model_class.__name__ in ['CentralDepartment', 'Branch', 'DistrictPolice']:
-                    qs = qs.filter(security_admin_id__in=sa_ids)
-                elif model_class.__name__ == 'SecurityAdministration':
-                    qs = qs.filter(id__in=sa_ids)
-            return list(qs.values_list('name', flat=True))
-
-        # Pre-fill data_map with all active units to ensure 0-count units appear
-        data_map = {}
-        if level == 'all':
-            units = get_scoped_units(CentralDepartment) + get_scoped_units(Branch) + get_scoped_units(DistrictPolice)
-        elif level == 'central':
-            units = get_scoped_units(CentralDepartment)
-        elif level == 'branch':
-            units = get_scoped_units(Branch)
-        elif level == 'district':
-            units = get_scoped_units(DistrictPolice)
-        else:
-            units = get_scoped_units(SecurityAdministration)
-            
-        for u in units:
-            data_map[u] = {
-                "unit_name": u,
-                "ranks": {},
-                "total": 0
-            }
-            
-        # الفلترة الأساسية: القوة العاملة الفعلية مع تصفية الصلاحيات ABAC
-        from infra.authorization.services.permission_service import PermissionService
-        qs = PermissionService.get_scoped_queryset(
-            request.user, PersonnelMaster.objects.all(), 'personnel.view.*'
-        ).filter(current_status__classification__startswith='active')
-        
-        if level == 'all':
-            qs = qs.annotate(
-                unit_name=Coalesce('central_department__name', 'branch__name', 'district_police__name')
-            ).values(
-                'unit_name', 
-                'current_rank__name'
-            ).annotate(
-                count=Count('military_number')
-            )
-            group_field = 'unit_name'
-        else:
-            group_field = level_field_map[level]
-            qs = qs.filter(**{f"{group_field.split('__')[0]}__isnull": False}).values(
-                group_field, 
-                'current_rank__name'
-            ).annotate(
-                count=Count('military_number')
-            )
-        
-        grand_totals = {}
-        
-        for row in qs:
-            unit = row[group_field] or 'غير محدد'
-            rank = row['current_rank__name'] or 'غير محدد'
-            count = row['count']
-            
-            # تهيئة الوحدة إذا لم تكن موجودة
-            if unit not in data_map:
-                data_map[unit] = {
-                    "unit_name": unit,
-                    "ranks": {},
-                    "total": 0
-                }
-                
-            # إضافة العدد للرتبة
-            data_map[unit]["ranks"][rank] = data_map[unit]["ranks"].get(rank, 0) + count
-            data_map[unit]["total"] += count
-            
-            # الإجمالي العام للرتبة
-            grand_totals[rank] = grand_totals.get(rank, 0) + count
-            
-        data_list = list(data_map.values())
-        
-        return Response({
-            "level": level,
-            "data": data_list,
-            "totals": grand_totals
-        })
-
+new_view = """
 from openpyxl import Workbook
 from django.http import HttpResponse
 
@@ -261,3 +143,9 @@ class HierarchicalWorkforceView(APIView):
         response['Content-Disposition'] = 'attachment; filename="workforce_tree.xlsx"'
         wb.save(response)
         return response
+"""
+
+with open(file_path, 'a', encoding='utf-8') as f:
+    f.write(new_view)
+
+print("View added successfully!")

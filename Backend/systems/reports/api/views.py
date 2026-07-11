@@ -29,20 +29,33 @@ class CategoricalWorkforceReportView(APIView):
         from core.models.organization import CentralDepartment, Branch, DistrictPolice, SecurityAdministration
         from core.models.personnel_refs import JobCategory
         
+        sa_ids = None
+        if not request.user.is_superuser:
+            try:
+                sa_ids = request.user.authz_profile.get_accessible_security_admin_ids()
+            except Exception:
+                sa_ids = []
+
+        def get_units(model_class):
+            qs = model_class.objects.all()
+            if sa_ids is not None:
+                if model_class.__name__ in ['CentralDepartment', 'Branch', 'DistrictPolice']:
+                    qs = qs.filter(security_admin_id__in=sa_ids)
+                elif model_class.__name__ == 'SecurityAdministration':
+                    qs = qs.filter(id__in=sa_ids)
+            return list(qs.values_list('name', flat=True))
+
         data_map = {}
         if level == 'all':
-            units_central = list(CentralDepartment.objects.values_list('name', flat=True))
-            units_branch = list(Branch.objects.values_list('name', flat=True))
-            units_district = list(DistrictPolice.objects.values_list('name', flat=True))
-            units = units_central + units_branch + units_district
+            units = get_units(CentralDepartment) + get_units(Branch) + get_units(DistrictPolice)
         elif level == 'central':
-            units = CentralDepartment.objects.values_list('name', flat=True)
+            units = get_units(CentralDepartment)
         elif level == 'branch':
-            units = Branch.objects.values_list('name', flat=True)
+            units = get_units(Branch)
         elif level == 'district':
-            units = DistrictPolice.objects.values_list('name', flat=True)
+            units = get_units(DistrictPolice)
         else:
-            units = SecurityAdministration.objects.values_list('name', flat=True)
+            units = get_units(SecurityAdministration)
             
         for u in units:
             data_map[u] = {
@@ -51,9 +64,14 @@ class CategoricalWorkforceReportView(APIView):
                 "total": 0
             }
         
+        from infra.authorization.services.permission_service import PermissionService
+        
         # تجميع البيانات: فقط لمن هم "بالخدمة" حسب الفئة
         qs = PersonnelMaster.objects.filter(
             current_status__classification__startswith='active'
+        )
+        qs = PermissionService.get_scoped_queryset(
+            self.request.user, qs, 'personnel.view.*'
         )
         
         if level == 'all':
@@ -95,7 +113,6 @@ class CategoricalWorkforceReportView(APIView):
             grand_totals[category] = grand_totals.get(category, 0) + count
             
         data_list = list(data_map.values())
-        data_list.sort(key=lambda x: x['unit_name'])
         
         # Get active job categories sorted by sort_order
         ordered_categories = list(JobCategory.objects.order_by('sort_order', 'name').values_list('name', flat=True))
@@ -135,9 +152,14 @@ class NonWorkforceReportView(APIView):
         
         dynamic_statuses = list(db_statuses)
         
+        from infra.authorization.services.permission_service import PermissionService
+        
         # القوة غير العاملة فقط بحسب الحالات المسحوبة من قاعدة البيانات
         qs = PersonnelMaster.objects.filter(
             current_status__name__in=dynamic_statuses
+        )
+        qs = PermissionService.get_scoped_queryset(
+            self.request.user, qs, 'personnel.view.*'
         )
         
         # فلترة بناءً على المستوى المطلوب (إذا لم يكن 'all')

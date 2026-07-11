@@ -7,28 +7,52 @@ from datetime import timedelta
 from core.models import Branch, SecurityAdministration, GeoGovernorate, Rank, ForceType
 from systems.personnel.models import PersonnelMaster
 from django.db.models.functions import TruncDate
+from infra.authorization.services.permission_service import PermissionService
+
+
+def _scoped_personnel(user):
+    """إرجاع QuerySet للأفراد مُقيَّد بنطاق المحافظة الخاص بالمستخدم."""
+    qs = PersonnelMaster.objects.all()
+    return PermissionService.get_scoped_queryset(user, qs, 'personnel.view.*')
+
+
+def _scoped_branches(user):
+    """إرجاع عدد الفروع ضمن نطاق المحافظة."""
+    if user.is_superuser:
+        return Branch.objects.count()
+    try:
+        sa_ids = user.authz_profile.get_accessible_security_admin_ids()
+        return Branch.objects.filter(security_admin_id__in=sa_ids).count()
+    except Exception:
+        return 0
+
 
 class DashboardStatsView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        total_personnel = PersonnelMaster.objects.count()
-        active_branches = Branch.objects.count()
-        completed = PersonnelMaster.objects.filter(is_complete=True).count()
-        critical_alerts = PersonnelMaster.objects.filter(data_quality_score__lt=50).count()
+        qs = _scoped_personnel(request.user)
+
+        total_personnel = qs.count()
+        active_branches = _scoped_branches(request.user)
+        completed = qs.filter(is_complete=True).count()
+        critical_alerts = qs.filter(data_quality_score__lt=50).count()
         
         # System Activity (Last 30 Days trend)
         thirty_days_ago = timezone.now() - timedelta(days=30)
-        system_activity = list(PersonnelMaster.objects.filter(created_at__gte=thirty_days_ago)
-                               .annotate(date=TruncDate('created_at'))
-                               .values('date')
-                               .annotate(count=Count('military_number'))
-                               .order_by('date'))
+        system_activity = list(
+            qs.filter(created_at__gte=thirty_days_ago)
+            .annotate(date=TruncDate('created_at'))
+            .values('date')
+            .annotate(count=Count('military_number'))
+            .order_by('date')
+        )
         
         # Recent Activities (Last 4 additions)
-        recent_activities = list(PersonnelMaster.objects.order_by('-created_at')[:4].values(
-            'military_number', 'full_name', 'created_at'
-        ))
+        recent_activities = list(
+            qs.order_by('-created_at')[:4]
+            .values('military_number', 'full_name', 'created_at')
+        )
         
         return Response({
             "total_personnel": total_personnel,
@@ -43,51 +67,97 @@ class DashboardStatsView(APIView):
             "recent_activities": recent_activities
         })
 
+
 class DashboardAnalyticsView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
+        qs = _scoped_personnel(request.user)
+
         # 1. Force Distribution
-        force_distribution = list(PersonnelMaster.objects.exclude(force_classification__isnull=True).values(
-            name=F('force_classification__name')
-        ).annotate(value=Count('military_number')))
+        force_distribution = list(
+            qs.exclude(force_classification__isnull=True)
+            .values(name=F('force_classification__name'))
+            .annotate(value=Count('military_number'))
+        )
         
-        # 2. Geographic Distribution
-        geographic_distribution = list(PersonnelMaster.objects.exclude(geo_location__isnull=True).values(
-            name=F('geo_location__name_ar')
-        ).annotate(value=Count('military_number')).order_by('-value')[:10])
+        # 2. Geographic Distribution (by security_admin for provincial admins)
+        geographic_distribution = list(
+            qs.exclude(security_admin__isnull=True)
+            .values(name=F('security_admin__name'))
+            .annotate(value=Count('military_number'))
+            .order_by('-value')[:10]
+        )
 
         # 3. Status Distribution
-        status_distribution = list(PersonnelMaster.objects.exclude(current_status__isnull=True).values(
-            name=F('current_status__name')
-        ).annotate(value=Count('military_number')).order_by('-value'))
+        status_distribution = list(
+            qs.exclude(current_status__isnull=True)
+            .values(name=F('current_status__name'))
+            .annotate(value=Count('military_number'))
+            .order_by('-value')
+        )
 
         # 4. Rank Distribution
-        rank_distribution = list(PersonnelMaster.objects.exclude(current_rank__isnull=True).values(
-            name=F('current_rank__name')
-        ).annotate(value=Count('military_number')).order_by('-value')[:15])
+        rank_distribution = list(
+            qs.exclude(current_rank__isnull=True)
+            .values(name=F('current_rank__name'))
+            .annotate(value=Count('military_number'))
+            .order_by('-value')[:15]
+        )
 
         # 5. Trend (Last 7 Days)
         seven_days_ago = timezone.now() - timedelta(days=7)
-        trend = list(PersonnelMaster.objects.filter(created_at__gte=seven_days_ago)
-                     .annotate(date=TruncDate('created_at'))
-                     .values('date')
-                     .annotate(count=Count('military_number'))
-                     .order_by('date'))
+        trend = list(
+            qs.filter(created_at__gte=seven_days_ago)
+            .annotate(date=TruncDate('created_at'))
+            .values('date')
+            .annotate(count=Count('military_number'))
+            .order_by('date')
+        )
                      
         if not trend:
-            trend = list(PersonnelMaster.objects.annotate(date=TruncDate('created_at'))
-                     .values('date')
-                     .annotate(count=Count('military_number'))
-                     .order_by('-date')[:7])
+            trend = list(
+                qs.annotate(date=TruncDate('created_at'))
+                .values('date')
+                .annotate(count=Count('military_number'))
+                .order_by('-date')[:7]
+            )
+            
+        # 6. Qualification Distribution
+        qualification_distribution = list(
+            qs.exclude(qualification__isnull=True)
+            .values(name=F('qualification__name'))
+            .annotate(value=Count('military_number'))
+            .order_by('-value')
+        )
+        
+        # 7. Expense Status Distribution
+        expense_distribution = list(
+            qs.exclude(expense_status__isnull=True)
+            .values(name=F('expense_status'))
+            .annotate(value=Count('military_number'))
+        )
+        
+        # 8. Data Quality Distribution
+        data_quality_stats = {
+            "clean_data": qs.filter(is_data_clean=True).count(),
+            "unclean_data": qs.filter(is_data_clean=False).count(),
+            "complete_profiles": qs.filter(is_complete=True).count(),
+            "incomplete_profiles": qs.filter(is_complete=False).count(),
+            "average_score": qs.aggregate(avg=Avg('data_quality_score'))['avg'] or 0
+        }
                      
         return Response({
             "force_distribution": force_distribution,
             "geographic_distribution": geographic_distribution,
             "status_distribution": status_distribution,
             "rank_distribution": rank_distribution,
-            "trend": trend
+            "trend": trend,
+            "qualification_distribution": qualification_distribution,
+            "expense_distribution": expense_distribution,
+            "data_quality_stats": data_quality_stats
         })
+
 
 from systems.personnel.models import PersonnelMaster, SuggestedCorrection, RankSettlement
 
@@ -95,17 +165,33 @@ class DashboardAlertsView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        # 1. Data Quality Alerts
-        alerts = PersonnelMaster.objects.filter(data_quality_score__lt=70).values(
+        qs = _scoped_personnel(request.user)
+
+        # 1. Data Quality Alerts — مُقيَّد بنطاق المحافظة
+        alerts = qs.filter(data_quality_score__lt=70).values(
             'military_number', 'full_name', 'data_quality_score'
         ).order_by('data_quality_score')[:15]
         
-        # 2. Pending Requests
+        # 2. Pending Requests — مُقيَّد بنطاق المحافظة
         pending_requests = []
-        
+
+        # جلب sa_ids لتصفية الطلبات
+        sa_ids = None
+        if not request.user.is_superuser:
+            try:
+                sa_ids = request.user.authz_profile.get_accessible_security_admin_ids()
+            except Exception:
+                sa_ids = []
+
         # Suggested Corrections
-        corrections = SuggestedCorrection.objects.filter(status='pending').select_related('personnel', 'personnel__security_admin', 'requested_by')[:10]
-        for c in corrections:
+        corrections_qs = SuggestedCorrection.objects.filter(status='pending').select_related(
+            'personnel', 'personnel__security_admin', 'requested_by'
+        )
+        if sa_ids is not None:
+            corrections_qs = corrections_qs.filter(personnel__security_admin_id__in=sa_ids)
+        corrections_qs = corrections_qs[:10]
+
+        for c in corrections_qs:
             pending_requests.append({
                 "id": f"corr_{c.id}",
                 "title": f"طلب تصحيح بيانات: {c.get_correction_type_display()}",
@@ -116,8 +202,14 @@ class DashboardAlertsView(APIView):
             })
             
         # Rank Settlements
-        settlements = RankSettlement.objects.filter(status='pending').select_related('personnel', 'personnel__security_admin')[:10]
-        for s in settlements:
+        settlements_qs = RankSettlement.objects.filter(status='pending').select_related(
+            'personnel', 'personnel__security_admin'
+        )
+        if sa_ids is not None:
+            settlements_qs = settlements_qs.filter(personnel__security_admin_id__in=sa_ids)
+        settlements_qs = settlements_qs[:10]
+
+        for s in settlements_qs:
             pending_requests.append({
                 "id": f"rank_{s.id}",
                 "title": f"طلب تسوية رتبة: {s.get_settlement_type_display()}",
@@ -127,19 +219,21 @@ class DashboardAlertsView(APIView):
                 "department": s.personnel.security_admin.name if s.personnel and s.personnel.security_admin else "غير محدد"
             })
             
-        # Sort pending_requests by time descending
         pending_requests.sort(key=lambda x: x['time'], reverse=True)
         
-        # 3. Processed Today
+        # 3. Processed Today — مُقيَّد بنطاق المحافظة
         today = timezone.now().date()
-        processed_corrections = SuggestedCorrection.objects.filter(
-            reviewed_at__date=today,
-            status__in=['approved', 'rejected']
-        ).count()
-        processed_settlements = RankSettlement.objects.filter(
-            updated_at__date=today,
-            status__in=['approved', 'rejected', 'applied']
-        ).count()
+
+        corrections_filter = {'reviewed_at__date': today, 'status__in': ['approved', 'rejected']}
+        if sa_ids is not None:
+            corrections_filter['personnel__security_admin_id__in'] = sa_ids
+        processed_corrections = SuggestedCorrection.objects.filter(**corrections_filter).count()
+
+        settlements_filter = {'updated_at__date': today, 'status__in': ['approved', 'rejected', 'applied']}
+        if sa_ids is not None:
+            settlements_filter['personnel__security_admin_id__in'] = sa_ids
+        processed_settlements = RankSettlement.objects.filter(**settlements_filter).count()
+
         processed_today = processed_corrections + processed_settlements
         
         return Response({
@@ -152,16 +246,22 @@ class DashboardAlertsView(APIView):
             }
         })
 
+
 class DashboardComplianceView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        compliance = list(PersonnelMaster.objects.exclude(security_admin__isnull=True).values(
-            region=F('security_admin__name')
-        ).annotate(
-            avg_score=Avg('data_quality_score'),
-            total_personnel=Count('military_number')
-        ).order_by('-avg_score'))
+        qs = _scoped_personnel(request.user)
+
+        compliance = list(
+            qs.exclude(security_admin__isnull=True)
+            .values(region=F('security_admin__name'))
+            .annotate(
+                avg_score=Avg('data_quality_score'),
+                total_personnel=Count('military_number')
+            )
+            .order_by('-avg_score')
+        )
         
         return Response({
             "compliance_by_region": compliance

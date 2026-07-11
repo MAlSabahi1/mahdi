@@ -12,15 +12,27 @@
             </p>
           </div>
           
-          <button
-            @click="exportMonthlySnapshot"
-            class="flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-500/30 hover:bg-brand-700 hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-          >
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            تصدير اللقطة الشهرية الشاملة
-          </button>
+          <div class="flex gap-3">
+            <button
+              @click="$router.push('/reports/graphical')"
+              class="flex items-center gap-2 rounded-xl bg-white border border-brand-200 px-6 py-3 text-sm font-bold text-brand-600 shadow-sm hover:bg-brand-50 hover:border-brand-300 transition-all focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 dark:bg-gray-800 dark:border-gray-700 dark:text-brand-400 dark:hover:bg-gray-700 dark:focus:ring-offset-gray-900"
+            >
+              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+              </svg>
+              التقارير الرسومية
+            </button>
+            <button
+              @click="exportMonthlySnapshot"
+              class="flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-500/30 hover:bg-brand-700 hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+            >
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              تصدير اللقطة الشهرية الشاملة
+            </button>
+          </div>
         </div>
       </div>
 
@@ -54,7 +66,7 @@
             title="خلاصة القوة العاملة بحسب الرتبة"
             description="خلاصة عددية للقوة العاملة موزعة بحسب الرتب والجهات التنظيمية."
             reportType="خلاصة عددية"
-            :totalRecords="12054"
+            :totalRecords="personnelStore.totalCount"
             recordsLabel="فرد بالخدمة"
             :hasExportPermission="hasPermission"
             :exportRequestStatus="requests['report_1']?.status"
@@ -71,8 +83,6 @@
             title="خلاصة فئوية للقوة العاملة"
             description="خلاصة للفئات الوظيفية (تخصصي، ميداني، إداري، إلخ)."
             reportType="خلاصة فئوية"
-            :totalRecords="84"
-            recordsLabel="تصنيف"
             :isReady="true"
             :hasExportPermission="hasPermission"
             :exportRequestStatus="requests['report_2']?.status"
@@ -89,8 +99,6 @@
             title="خلاصة القوة غير العاملة"
             description="خلاصة عددية للقوة غير العاملة بحسب الرتبة وأسباب عدم العمل."
             reportType="خلاصة عددية"
-            :totalRecords="312"
-            recordsLabel="فرد غير عامل"
             :isReady="true"
             :hasExportPermission="hasPermission"
             :exportRequestStatus="requests['report_3']?.status"
@@ -102,6 +110,7 @@
               <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
             </template>
           </ReportCard>
+
         </div>
 
         <!-- Tab 2: Active Force -->
@@ -250,14 +259,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/lib/api'
+import { usePersonnelStore } from '@/stores/personnel'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import ReportCard from '@/components/reports/ReportCard.vue'
 import ExportRequestModal from '@/components/reports/ExportRequestModal.vue'
 
 const router = useRouter()
+const personnelStore = usePersonnelStore()
 
 // Temporary Auth Mock: Toggle this to test the Data Export Approval Workflow
 const hasPermission = ref(false) 
@@ -280,8 +291,6 @@ const isModalOpen = ref(false)
 const currentModalReportId = ref('')
 const currentModalReportName = ref('')
 
-import { onMounted } from 'vue'
-
 const fetchRequests = async () => {
   try {
     const res = await api.get('/reports/export-requests/')
@@ -299,8 +308,13 @@ const fetchRequests = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   fetchRequests()
+  try {
+    await personnelStore.fetchPersonnel({ page: 1 })
+  } catch (err) {
+    console.error('Failed to fetch personnel count:', err)
+  }
 })
 
 const viewReport = (id: number | string) => {

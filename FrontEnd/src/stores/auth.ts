@@ -48,7 +48,12 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Getters
   const isAuthenticated = computed(() => !!accessToken.value)
-  const isAdmin = computed(() => user.value?.is_staff || user.value?.is_superuser || false)
+  const isAdmin = computed(() => {
+    if (!user.value) return false
+    if (user.value.is_staff || user.value.is_superuser) return true
+    const roleCode = user.value.authz_profile?.role_code
+    return roleCode === 'governorate_admin' || roleCode === 'SYSTEM_ADMIN'
+  })
   const displayName = computed(() => user.value?.display_name || user.value?.full_name || user.value?.username || '')
 
   // Permission helper — الدالة الرئيسية لفحص الصلاحيات في الـ UI

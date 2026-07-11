@@ -53,13 +53,13 @@ class PersonnelViewSet(BaseModelViewSet):
     
     # صلاحيات حسب الإجراء
     required_permission = {
-        'list': 'view_personnel',
-        'retrieve': 'view_personnel',
-        'create': 'edit_personnel_basic',
-        'update': 'edit_personnel_basic',
-        'partial_update': 'edit_personnel_basic',
-        'destroy': 'delete_personnel',
-        'history': 'view_personnel',
+        'list': ['personnel.view.all', 'personnel.view.security_admin', 'personnel.view.own'],
+        'retrieve': ['personnel.view.all', 'personnel.view.security_admin', 'personnel.view.own'],
+        'create': ['personnel.create.all', 'personnel.create.security_admin'],
+        'update': ['personnel.edit.all', 'personnel.edit.security_admin'],
+        'partial_update': ['personnel.edit.all', 'personnel.edit.security_admin'],
+        'destroy': ['personnel.delete.all', 'personnel.delete.security_admin'],
+        'history': ['personnel.view.all', 'personnel.view.security_admin'],
     }
     
     filterset_fields = [
@@ -80,10 +80,12 @@ class PersonnelViewSet(BaseModelViewSet):
             'qualification',
         ).all()
 
-        # ABAC: تصفية حسب نطاق المستخدم
-        qs = filter_by_department_scope(
-            self.request.user, qs, 'central_department'
+        # ABAC: تصفية حسب نطاق المستخدم (استخدام .* للبحث عن أعلى صلاحية يمتلكها)
+        from infra.authorization.services.permission_service import PermissionService
+        qs = PermissionService.get_scoped_queryset(
+            self.request.user, qs, 'personnel.view.*'
         )
+        print(f"[DEBUG] After scoped queryset: {qs.count()}")
         
         # فلتر حالة الرقم الوطني (missing/valid/invalid_format/invalid_length)
         nid_status = self.request.query_params.get('national_id_status')
@@ -94,6 +96,7 @@ class PersonnelViewSet(BaseModelViewSet):
             qs = qs.filter(national_id__regex=r'^\d{11}$')
         elif nid_status == 'invalid':
             qs = qs.exclude(national_id__isnull=True).exclude(national_id='').exclude(national_id__regex=r'^\d{11}$')
+        print(f"[DEBUG] After nid filter: {qs.count()}")
         
         return qs
     

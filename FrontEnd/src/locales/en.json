@@ -642,8 +642,12 @@
     "general_configs": "General Configurations",
     "system_group": "System Health & Seeding",
     "initial_seeding": "Initial Seeding Wizard",
+    "snapshots": "Archive & Monthly Snapshots",
     "system_telemetry": "System Telemetry & Tasks"
   },
+  "services.export_config": "Form Export Configuration",
+  "services.monthly_exports": "Monthly Consolidated Reports",
+  "services.official_reports": "Official Reports & Sheets",
   "blank_page": {
     "title": "Page Under Development",
     "card_title": "This page is under construction",

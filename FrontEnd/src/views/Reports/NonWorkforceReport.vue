@@ -77,12 +77,12 @@
                 </div>
               </th>
               <th :colspan="officerRanks.length" class="px-2 py-2 border-b border-l border-gray-200 dark:border-gray-700 font-bold bg-gray-100 dark:bg-gray-800 print:border-black print:border-2">الضباط</th>
-              <th :colspan="individualRanks.length" class="px-2 py-2 border-b border-l border-gray-200 dark:border-gray-700 font-bold bg-gray-100 dark:bg-gray-800 print:border-black print:border-2">الأفراد</th>
+              <th :colspan="ncoRanks.length" class="px-2 py-2 border-b border-l border-gray-200 dark:border-gray-700 font-bold bg-gray-100 dark:bg-gray-800 print:border-black print:border-2">الأفراد</th>
               <th rowspan="2" class="px-2 py-2 border-b border-gray-200 dark:border-gray-700 font-bold align-middle bg-gray-100 dark:bg-gray-800 print:border-black print:border-2">الإجمالي</th>
             </tr>
             <tr class="border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 print:text-black">
               <th v-for="rank in officerRanks" :key="rank" class="min-w-[40px] px-1 py-2 border-l border-gray-200 dark:border-gray-700 text-xs font-semibold bg-gray-50 dark:bg-gray-800/50 print:border-black print:border-2">{{ rank }}</th>
-              <th v-for="rank in individualRanks" :key="rank" class="min-w-[40px] px-1 py-2 border-l border-gray-200 dark:border-gray-700 text-xs font-semibold bg-gray-50 dark:bg-gray-800/50 print:border-black print:border-2">{{ rank }}</th>
+              <th v-for="rank in ncoRanks" :key="rank" class="min-w-[40px] px-1 py-2 border-l border-gray-200 dark:border-gray-700 text-xs font-semibold bg-gray-50 dark:bg-gray-800/50 print:border-black print:border-2">{{ rank }}</th>
             </tr>
           </template>
 
@@ -93,7 +93,7 @@
               <td v-for="rank in officerRanks" :key="rank" class="px-1 py-2 text-center border-l border-gray-200 dark:border-gray-700 print:border-black print:border-2" :class="{'text-gray-300 dark:text-gray-700 print:text-transparent': !row.ranks[rank]}">
                 {{ row.ranks[rank] || '-' }}
               </td>
-              <td v-for="rank in individualRanks" :key="rank" class="px-1 py-2 text-center border-l border-gray-200 dark:border-gray-700 print:border-black print:border-2" :class="{'text-gray-300 dark:text-gray-700 print:text-transparent': !row.ranks[rank]}">
+              <td v-for="rank in ncoRanks" :key="rank" class="px-1 py-2 text-center border-l border-gray-200 dark:border-gray-700 print:border-black print:border-2" :class="{'text-gray-300 dark:text-gray-700 print:text-transparent': !row.ranks[rank]}">
                 {{ row.ranks[rank] || '-' }}
               </td>
               <td class="px-2 py-2 font-bold text-center border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 print:border-black print:border-2">{{ row.total }}</td>
@@ -104,7 +104,7 @@
           <template #footer>
             <tr class="border-t-2 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 print:text-black">
               <td class="px-2 py-3 text-right font-bold border-l border-gray-200 dark:border-gray-700 print:border-black print:border-2">الإجمالي الكلي</td>
-              <td v-for="rank in [...officerRanks, ...individualRanks]" :key="rank" class="px-1 py-3 text-center font-bold border-l border-gray-200 dark:border-gray-700 print:border-black print:border-2">{{ grandTotals[rank] || '-' }}</td>
+              <td v-for="rank in [...officerRanks, ...ncoRanks]" :key="rank" class="px-1 py-3 text-center font-bold border-l border-gray-200 dark:border-gray-700 print:border-black print:border-2">{{ grandTotals[rank] || '-' }}</td>
               <td class="px-2 py-3 text-center font-black text-lg border-l border-gray-200 dark:border-gray-700 print:border-black print:border-2">{{ overallTotal }}</td>
             </tr>
           </template>
@@ -127,7 +127,7 @@ import ReportHeader from '@/components/reports/ReportHeader.vue'
 import ReportFooter from '@/components/reports/ReportFooter.vue'
 
 const officerRanks = ['عميد', 'عقيد', 'مقدم', 'رائد', 'نقيب', 'ملازم أول', 'ملازم ثاني']
-const individualRanks = ['مساعد ١', 'مساعد ٢', 'مساعد', 'رقيب ١', 'رقيب ٢', 'عريف', 'جندي']
+const ncoRanks = ['مساعد 1', 'مساعد 2', 'مساعد', 'رقيب 1', 'رقيب 2', 'عريف', 'جندي', 'حارس', 'مدني']
 
 const levels = [
   { id: 'all', name: 'الكل' },

@@ -238,7 +238,7 @@ const menuGroups = computed(() => {
                 path: "/admin/system/seeding",
               },
               {
-                name: "الأرشيف واللقطة الشهرية",
+                name: "admin.snapshots",
                 path: "/admin/snapshots",
               },
               {
@@ -360,15 +360,15 @@ const menuGroups = computed(() => {
                 path: "/services/rejections",
               },
               {
-                name: "إعداد وتصدير النماذج",
+                name: "services.export_config",
                 path: "/services/export-config",
               },
               {
-                name: "التقارير الشهرية الموحدة",
+                name: "services.monthly_exports",
                 path: "/services/monthly-exports",
               },
               {
-                name: "التقارير والكشوفات الرسمية",
+                name: "services.official_reports",
                 path: "/services/official-reports",
               }
             ]
@@ -435,6 +435,10 @@ const menuGroups = computed(() => {
                 path: "/reports/dashboard",
               },
               {
+                name: "التقارير الرسومية",
+                path: "/reports/graphical",
+              },
+              {
                 name: "نافذة طلبات التصدير",
                 path: "/reports/export-requests",
               }
@@ -473,6 +477,10 @@ const menuGroups = computed(() => {
               {
                 name: "سجل التدقيق والمراجعة",
                 path: "/reports/admin/audit",
+              },
+              {
+                name: "الهيكل التنظيمي والقوة الفعلية",
+                path: "/reports/hierarchical",
               }
             ]
           }

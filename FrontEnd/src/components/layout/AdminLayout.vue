@@ -3,7 +3,7 @@
     <app-sidebar class="print:hidden" />
     <Backdrop class="print:hidden" />
     <div
-      class="flex-1 transition-all duration-300 ease-in-out print:ms-0 print:block"
+      class="flex-1 transition-all duration-300 ease-in-out print:!ms-0 print:block"
       :class="[isExpanded || isHovered ? 'lg:ms-[290px]' : 'lg:ms-[90px]']"
     >
       <app-header class="print:hidden" />

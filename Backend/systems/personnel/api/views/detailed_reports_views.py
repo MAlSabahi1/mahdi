@@ -14,7 +14,8 @@ class BaseDetailedReportView(APIView):
     permission_classes = [IsAuthenticated] # Should be BaseReportPermission in production
 
     def get_queryset(self):
-        return PersonnelMaster.objects.select_related(
+        from infra.authorization.services.permission_service import PermissionService
+        qs = PersonnelMaster.objects.select_related(
             'current_rank', 
             'current_status', 
             'central_department', 
@@ -22,6 +23,9 @@ class BaseDetailedReportView(APIView):
             'district_police',
             'qualification'
         ).filter(is_deleted=False)
+        return PermissionService.get_scoped_queryset(
+            self.request.user, qs, 'personnel.view.*'
+        )
 
     def get_unit_name(self, p):
         if p.central_department:

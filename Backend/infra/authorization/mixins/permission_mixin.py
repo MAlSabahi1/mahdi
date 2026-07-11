@@ -38,6 +38,19 @@ class ServicePermission(permissions.BasePermission):
 
         if required is None:
             return True  # لا صلاحية مطلوبة
+            
+        # إذا كان المطلوب .all ، نسمح بأي نطاق (security_admin أو own)
+        if required.endswith('.all'):
+            base = required[:-4]
+            if PermissionService.has_any_permission(
+                request.user, 
+                f"{base}.all", 
+                f"{base}.security_admin", 
+                f"{base}.own",
+                f"{base}.department",
+                f"{base}.governorate"
+            ):
+                return True
 
         return PermissionService.has_permission(request.user, required)
 

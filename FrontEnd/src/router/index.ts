@@ -274,11 +274,29 @@ const router = createRouter({
       }
     },
     {
+      path: "/reports/graphical",
+      name: "GraphicalReports",
+      component: () => import("@/views/Reports/GraphicalReports.vue"),
+      meta: {
+        title: "التقارير الرسومية",
+        requiresAuth: true
+      }
+    },
+    {
       path: "/reports/view/1",
       name: "WorkforceSummaryReport",
       component: () => import("@/views/Reports/WorkforceSummaryReport.vue"),
       meta: {
         title: "خلاصة القوة العاملة",
+        requiresAuth: true
+      }
+    },
+    {
+      path: "/reports/hierarchical",
+      name: "HierarchicalReport",
+      component: () => import("@/views/Reports/HierarchicalReport.vue"),
+      meta: {
+        title: "الهيكل التنظيمي والقوة الفعلية",
         requiresAuth: true
       }
     },

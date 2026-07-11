@@ -7,9 +7,17 @@
       <div class="text-right w-1/3 space-y-1 pr-2 leading-tight">
         <p class="text-base">الجمهورية اليمنية</p>
         <p class="text-base">وزارة الداخلية</p>
-        <p>وكيل قطاع الموارد البشرية</p>
-        <p>الإدارة العامة للقوى البشرية</p>
-        <p>لجنة بناء الامتدادات</p>
+        
+        <template v-if="isCentralAdmin">
+          <p>وكيل قطاع الموارد البشرية</p>
+          <p>الإدارة العامة للقوى البشرية</p>
+          <p>لجنة بناء الامتدادات</p>
+        </template>
+        
+        <template v-else>
+          <p>شرطة م / {{ governorateName }}</p>
+          <p>إدارة القوى البشرية</p>
+        </template>
       </div>
       
       <!-- Center: Emblem Image & Bismillah -->
@@ -49,6 +57,46 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
+
+// Determine if the user is a central admin (Ministry level)
+const isCentralAdmin = computed(() => {
+  const user = authStore.user as any
+  if (!user) return false
+  if (user.is_superuser) return true
+  
+  const roleCode = user.role?.code || user.authz_profile?.role_code
+  const supervisesAll = user.supervises_all || user.authz_profile?.supervises_all
+  
+  return roleCode === 'SYSTEM_ADMIN' || supervisesAll
+})
+
+// Extract the governorate name from the role (e.g. "مدير أمن محافظة مأرب") or fallback to city
+const governorateName = computed(() => {
+  const user = authStore.user as any
+  if (!user) return '............'
+  
+  if (user.city) return user.city
+
+  const roleName = user.role?.name || user.authz_profile?.role_name || ''
+  const displayName = authStore.displayName || ''
+  
+  // Clean up common prefixes from either roleName or displayName
+  const textToParse = displayName.includes('أمن') || displayName.includes('محافظة') ? displayName : roleName
+  
+  if (textToParse) {
+    if (textToParse.includes('محافظة')) {
+      return textToParse.split('محافظة')[1].trim()
+    } else if (textToParse.includes('أمن')) {
+      return textToParse.split('أمن')[1].trim()
+    }
+    return textToParse
+  }
+  
+  return '............'
+})
 
 defineProps<{
   title: string

@@ -180,7 +180,15 @@ class ABACPermission(drf_permissions.BasePermission):
             perm = required.get(action)
             if perm is None:
                 return True
+            if isinstance(perm, (list, tuple, set)):
+                from infra.authorization.services.permission_service import PermissionService
+                return PermissionService.has_any_permission(request.user, *perm)
             return has_permission(request.user, perm)
+        
+        if isinstance(required, (list, tuple, set)):
+            from infra.authorization.services.permission_service import PermissionService
+            return PermissionService.has_any_permission(request.user, *required)
+            
         return has_permission(request.user, required)
 
     def has_object_permission(self, request, view, obj):

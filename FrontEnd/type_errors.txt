@@ -1,0 +1,44 @@
+
+> admin-dashboard@2.3.0 type-check
+> vue-tsc --build
+
+src/views/Reports/GraphicalReports.vue(291,37): error TS2339: Property 'geoSeries' does not exist on type 'CreateComponentPublicInstanceWithMixins<ToResolvedProps<{}, {}>, { AdminLayout: DefineComponent<{}, {}, any>; loading: Ref<boolean, boolean>; loadingAnalytics: Ref<boolean, boolean>; ... 27 more ...; dqChartOptions: ComputedRef<...>; }, ... 23 more ..., {}>'.
+src/views/Reports/GraphicalReports.vue(291,138): error TS2339: Property 'geoSeries' does not exist on type 'CreateComponentPublicInstanceWithMixins<ToResolvedProps<{}, {}>, { AdminLayout: DefineComponent<{}, {}, any>; loading: Ref<boolean, boolean>; loadingAnalytics: Ref<boolean, boolean>; ... 27 more ...; dqChartOptions: ComputedRef<...>; }, ... 23 more ..., {}>'.
+src/views/Reports/GraphicalReports.vue(311,37): error TS2339: Property 'dqSeries' does not exist on type 'CreateComponentPublicInstanceWithMixins<ToResolvedProps<{}, {}>, { AdminLayout: DefineComponent<{}, {}, any>; loading: Ref<boolean, boolean>; loadingAnalytics: Ref<boolean, boolean>; ... 27 more ...; dqChartOptions: ComputedRef<...>; }, ... 23 more ..., {}>'.
+src/views/Reports/GraphicalReports.vue(311,132): error TS2339: Property 'dqSeries' does not exist on type 'CreateComponentPublicInstanceWithMixins<ToResolvedProps<{}, {}>, { AdminLayout: DefineComponent<{}, {}, any>; loading: Ref<boolean, boolean>; loadingAnalytics: Ref<boolean, boolean>; ... 27 more ...; dqChartOptions: ComputedRef<...>; }, ... 23 more ..., {}>'.
+src/views/Reports/GraphicalReports.vue(331,37): error TS2339: Property 'qualSeries' does not exist on type 'CreateComponentPublicInstanceWithMixins<ToResolvedProps<{}, {}>, { AdminLayout: DefineComponent<{}, {}, any>; loading: Ref<boolean, boolean>; loadingAnalytics: Ref<boolean, boolean>; ... 27 more ...; dqChartOptions: ComputedRef<...>; }, ... 23 more ..., {}>'.
+src/views/Reports/GraphicalReports.vue(331,132): error TS2339: Property 'qualSeries' does not exist on type 'CreateComponentPublicInstanceWithMixins<ToResolvedProps<{}, {}>, { AdminLayout: DefineComponent<{}, {}, any>; loading: Ref<boolean, boolean>; loadingAnalytics: Ref<boolean, boolean>; ... 27 more ...; dqChartOptions: ComputedRef<...>; }, ... 23 more ..., {}>'.
+src/views/Reports/GraphicalReports.vue(351,37): error TS2339: Property 'expSeries' does not exist on type 'CreateComponentPublicInstanceWithMixins<ToResolvedProps<{}, {}>, { AdminLayout: DefineComponent<{}, {}, any>; loading: Ref<boolean, boolean>; loadingAnalytics: Ref<boolean, boolean>; ... 27 more ...; dqChartOptions: ComputedRef<...>; }, ... 23 more ..., {}>'.
+src/views/Reports/GraphicalReports.vue(351,128): error TS2339: Property 'expSeries' does not exist on type 'CreateComponentPublicInstanceWithMixins<ToResolvedProps<{}, {}>, { AdminLayout: DefineComponent<{}, {}, any>; loading: Ref<boolean, boolean>; loadingAnalytics: Ref<boolean, boolean>; ... 27 more ...; dqChartOptions: ComputedRef<...>; }, ... 23 more ..., {}>'.
+src/views/Reports/GraphicalReports.vue(525,11): error TS2304: Cannot find name 'a'.
+src/views/Reports/GraphicalReports.vue(525,40): error TS2304: Cannot find name 'a'.
+src/views/Reports/GraphicalReports.vue(526,9): error TS2304: Cannot find name 'geoLabels'.
+src/views/Reports/GraphicalReports.vue(526,27): error TS2304: Cannot find name 'a'.
+src/views/Reports/GraphicalReports.vue(527,9): error TS2304: Cannot find name 'geoSeries'.
+src/views/Reports/GraphicalReports.vue(527,53): error TS2304: Cannot find name 'a'.
+src/views/Reports/GraphicalReports.vue(530,11): error TS2304: Cannot find name 'a'.
+src/views/Reports/GraphicalReports.vue(530,43): error TS2304: Cannot find name 'a'.
+src/views/Reports/GraphicalReports.vue(531,9): error TS2304: Cannot find name 'qualLabels'.
+src/views/Reports/GraphicalReports.vue(531,28): error TS2304: Cannot find name 'a'.
+src/views/Reports/GraphicalReports.vue(532,9): error TS2304: Cannot find name 'qualSeries'.
+src/views/Reports/GraphicalReports.vue(532,28): error TS2304: Cannot find name 'a'.
+src/views/Reports/GraphicalReports.vue(535,11): error TS2304: Cannot find name 'a'.
+src/views/Reports/GraphicalReports.vue(535,37): error TS2304: Cannot find name 'a'.
+src/views/Reports/GraphicalReports.vue(541,9): error TS2304: Cannot find name 'expLabels'.
+src/views/Reports/GraphicalReports.vue(541,27): error TS2304: Cannot find name 'a'.
+src/views/Reports/GraphicalReports.vue(542,9): error TS2304: Cannot find name 'expSeries'.
+src/views/Reports/GraphicalReports.vue(542,27): error TS2304: Cannot find name 'a'.
+src/views/Reports/GraphicalReports.vue(545,11): error TS2304: Cannot find name 'a'.
+src/views/Reports/GraphicalReports.vue(546,20): error TS2304: Cannot find name 'a'.
+src/views/Reports/GraphicalReports.vue(550,9): error TS2304: Cannot find name 'dqSeries'.
+src/views/Reports/GraphicalReports.vue(850,24): error TS2304: Cannot find name 'geoLabels'.
+src/views/Reports/GraphicalReports.vue(859,11): error TS2304: Cannot find name 'qualLabels'.
+src/views/Reports/GraphicalReports.vue(871,11): error TS2304: Cannot find name 'expLabels'.
+src/views/SystemAdmin/Dashboard/ComplianceTracker.vue(48,10): error TS2345: Argument of type '{ columns: { key: string; label: string; sortable: boolean; }[]; data: any[]; searchPlaceholder: string; }' is not assignable to parameter of type '{ readonly columns: DataTableColumn[]; readonly columnGroups?: DataTableColumnGroup[] | undefined; readonly data: any[]; readonly rowKey: string; ... 18 more ...; readonly onExport?: (() => any) | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps & Record<...>'.
+  Property 'rowKey' is missing in type '{ columns: { key: string; label: string; sortable: boolean; }[]; data: any[]; searchPlaceholder: string; }' but required in type '{ readonly columns: DataTableColumn[]; readonly columnGroups?: DataTableColumnGroup[] | undefined; readonly data: any[]; readonly rowKey: string; ... 18 more ...; readonly onExport?: (() => any) | undefined; }'.
+src/views/SystemAdmin/MonthlySnapshots.vue(76,10): error TS2345: Argument of type '{ columns: { key: string; label: string; sortable: boolean; }[]; data: any[]; searchPlaceholder: string; }' is not assignable to parameter of type '{ readonly columns: DataTableColumn[]; readonly columnGroups?: DataTableColumnGroup[] | undefined; readonly data: any[]; readonly rowKey: string; ... 18 more ...; readonly onExport?: (() => any) | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps & Record<...>'.
+  Property 'rowKey' is missing in type '{ columns: { key: string; label: string; sortable: boolean; }[]; data: any[]; searchPlaceholder: string; }' but required in type '{ readonly columns: DataTableColumn[]; readonly columnGroups?: DataTableColumnGroup[] | undefined; readonly data: any[]; readonly rowKey: string; ... 18 more ...; readonly onExport?: (() => any) | undefined; }'.
+src/views/SystemAdmin/Structure/GeneralConfigs.vue(49,12): error TS2345: Argument of type '{ columns: any[]; data: any[]; searchPlaceholder: string; }' is not assignable to parameter of type '{ readonly columns: DataTableColumn[]; readonly columnGroups?: DataTableColumnGroup[] | undefined; readonly data: any[]; readonly rowKey: string; ... 18 more ...; readonly onExport?: (() => any) | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps & Record<...>'.
+  Property 'rowKey' is missing in type '{ columns: any[]; data: any[]; searchPlaceholder: string; }' but required in type '{ readonly columns: DataTableColumn[]; readonly columnGroups?: DataTableColumnGroup[] | undefined; readonly data: any[]; readonly rowKey: string; ... 18 more ...; readonly onExport?: (() => any) | undefined; }'.
+src/views/SystemAdmin/System/SystemTelemetry.vue(116,14): error TS2345: Argument of type '{ columns: { key: string; label: string; sortable: boolean; }[]; data: { id: string; name: string; type: string; status: string; progress: number; time: string; }[]; searchPlaceholder: string; }' is not assignable to parameter of type '{ readonly columns: DataTableColumn[]; readonly columnGroups?: DataTableColumnGroup[] | undefined; readonly data: any[]; readonly rowKey: string; ... 18 more ...; readonly onExport?: (() => any) | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps & Record<...>'.
+  Property 'rowKey' is missing in type '{ columns: { key: string; label: string; sortable: boolean; }[]; data: { id: string; name: string; type: string; status: string; progress: number; time: string; }[]; searchPlaceholder: string; }' but required in type '{ readonly columns: DataTableColumn[]; readonly columnGroups?: DataTableColumnGroup[] | undefined; readonly data: any[]; readonly rowKey: string; ... 18 more ...; readonly onExport?: (() => any) | undefined; }'.

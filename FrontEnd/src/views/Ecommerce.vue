@@ -555,35 +555,46 @@ const dashboardCards = computed(() => {
 async function fetchDashboardStats() {
   loading.value = true
   try {
-    // 1. Fetch Users total count
-    const usersRes = await api.get('/users/', { params: { page_size: 1 } })
-    totalUsers.value = usersRes.data.count || 0
-
-    // 2. Fetch Roles total count
-    const rolesRes = await api.get('/roles/')
-    totalRoles.value = rolesRes.data.results?.length || rolesRes.data.count || 0
-
-    // 3. Fetch Telemetry Stats
-    let telRes = await api.get('/telemetry/dashboard/')
-    let telData = telRes.data?.data || {}
-
-    // Check if snapshot is completely empty. If so, trigger collect snapshot once to populate DB
-    const isSnapshotEmpty = !telData.system_health || Object.keys(telData.system_health).length === 0
-    if (isSnapshotEmpty) {
-      console.log('Telemetry snapshot is empty. Triggering automated collection...')
-      await api.post('/telemetry/collect/')
-      telRes = await api.get('/telemetry/dashboard/')
-      telData = telRes.data?.data || {}
+    // 1. Fetch Users total count — only if user has admin permission
+    try {
+      const usersRes = await api.get('/users/', { params: { page_size: 1 } })
+      totalUsers.value = usersRes.data.count || 0
+    } catch {
+      totalUsers.value = 0  // graceful fallback — مدير محافظة لا يملك صلاحية users
     }
 
-    activeSessionsCount.value = telData.active_sessions?.active_count || 1
-    pendingDualAuthCount.value = telData.pending_dual_auth?.pending_count || 0
-    totalPersonnelCount.value = telData.system_health?.total_personnel || 0
-    totalAuditLogsCount.value = telData.system_health?.total_audit_logs || 0
-    dbSize.value = telData.system_health?.db_size || '—'
+    // 2. Fetch Roles total count
+    try {
+      const rolesRes = await api.get('/roles/')
+      totalRoles.value = rolesRes.data.results?.length || rolesRes.data.count || 0
+    } catch {
+      totalRoles.value = 0
+    }
+
+    // 3. Fetch Telemetry Stats
+    try {
+      let telRes = await api.get('/telemetry/dashboard/')
+      let telData = telRes.data?.data || {}
+
+      // Check if snapshot is completely empty
+      const isSnapshotEmpty = !telData.system_health || Object.keys(telData.system_health).length === 0
+      if (isSnapshotEmpty) {
+        await api.post('/telemetry/collect/')
+        telRes = await api.get('/telemetry/dashboard/')
+        telData = telRes.data?.data || {}
+      }
+
+      activeSessionsCount.value = telData.active_sessions?.active_count || 1
+      pendingDualAuthCount.value = telData.pending_dual_auth?.pending_count || 0
+      totalPersonnelCount.value = telData.system_health?.total_personnel || 0
+      totalAuditLogsCount.value = telData.system_health?.total_audit_logs || 0
+      dbSize.value = telData.system_health?.db_size || '—'
+    } catch {
+      // telemetry not accessible — use defaults
+    }
 
   } catch (err) {
-    console.error('Failed to load telemetry stats:', err)
+    console.error('Failed to load dashboard stats:', err)
   } finally {
     loading.value = false
   }
@@ -617,8 +628,11 @@ async function fetchRecentLogs() {
   try {
     const res = await api.get('/audit/logs/', { params: { page_size: 5 } })
     recentAuditLogs.value = res.data.results || []
-  } catch (err) {
-    console.error('Failed to load recent logs:', err)
+  } catch (err: any) {
+    if (err?.response?.status !== 403) {
+      console.error('Failed to load recent logs:', err)
+    }
+    recentAuditLogs.value = []
   } finally {
     loadingLogs.value = false
   }

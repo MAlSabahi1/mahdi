@@ -99,9 +99,10 @@ class PersonnelViewSet(PermissionRequiredMixin, BaseModelViewSet):
             'qualification',
         ).all()
 
-        # ABAC: تصفية حسب نطاق المستخدم
-        qs = filter_by_department_scope(
-            self.request.user, qs, 'central_department'
+        # ABAC: تصفية حسب نطاق المستخدم (استخدام security_admin)
+        from infra.authorization.services.permission_service import PermissionService
+        qs = PermissionService.get_scoped_queryset(
+            self.request.user, qs, 'personnel.view.*'
         )
         
         # فلتر حالة الرقم الوطني (missing/valid/invalid_format/invalid_length)

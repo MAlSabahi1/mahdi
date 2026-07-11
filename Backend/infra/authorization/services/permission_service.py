@@ -219,14 +219,28 @@ class PermissionService:
 
         مثال:
             qs = PermissionService.get_scoped_queryset(
-                user, Personnel.objects.all(), Perms.PERSONNEL_VIEW
+                user, Personnel.objects.all(), 'personnel.view.*'
             )
         """
         if user.is_superuser:
             return queryset
 
-        parts = permission_code.split('.')
-        scope = parts[2] if len(parts) >= 3 else 'all'
+        scope = 'all'
+        
+        # إذا تم تمرير .* نبحث عن أعلى صلاحية يمتلكها المستخدم
+        if permission_code.endswith('.*'):
+            base = permission_code[:-2]
+            if PermissionService.has_permission(user, f'{base}.all'):
+                scope = 'all'
+            elif PermissionService.has_permission(user, f'{base}.security_admin'):
+                scope = 'security_admin'
+            elif PermissionService.has_permission(user, f'{base}.own'):
+                scope = 'own'
+            else:
+                return queryset.none()
+        else:
+            parts = permission_code.split('.')
+            scope = parts[2] if len(parts) >= 3 else 'all'
 
         if scope == 'all':
             return queryset
