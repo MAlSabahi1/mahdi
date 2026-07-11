@@ -23,7 +23,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'Dashboard',
-      component: () => import('../views/Ecommerce.vue'),
+      component: () => import('@/views/SystemAdmin/Dashboard/StatsDashboard.vue'),
       meta: {
         title: 'Dashboard',
         requiresAuth: true,
@@ -183,7 +183,7 @@ const router = createRouter({
     {
       path: '/users/settings',
       name: 'security-settings',
-      component: () => import('../views/Pages/BlankPage.vue'),
+      component: () => import('../views/Errors/FourZeroFour.vue'),
       meta: {
         title: 'الإعدادات الأمنية للنظام',
         requiresAuth: true,
@@ -432,38 +432,38 @@ const router = createRouter({
     {
       path: "/reports/secretariat/correspondences",
       name: "SecretariatCorrespondencesReport",
-      component: () => import("../views/Pages/BlankPage.vue"),
+      component: () => import("../views/Errors/FourZeroFour.vue"),
       meta: { title: "تقرير المراسلات الواردة والصادرة", requiresAuth: true }
     },
     {
       path: "/reports/secretariat/tasks",
       name: "SecretariatTasksReport",
-      component: () => import("../views/Pages/BlankPage.vue"),
+      component: () => import("../views/Errors/FourZeroFour.vue"),
       meta: { title: "تقرير إنجاز المهام", requiresAuth: true }
     },
     {
       path: "/reports/secretariat/meetings",
       name: "SecretariatMeetingsReport",
-      component: () => import("../views/Pages/BlankPage.vue"),
+      component: () => import("../views/Errors/FourZeroFour.vue"),
       meta: { title: "تقرير الاجتماعات", requiresAuth: true }
     },
     // Placeholder routes for Administration Reports
     {
       path: "/reports/admin/stats",
       name: "AdminStatsReport",
-      component: () => import("../views/Pages/BlankPage.vue"),
+      component: () => import("../views/Errors/FourZeroFour.vue"),
       meta: { title: "الإحصائيات العامة للنظام", requiresAuth: true }
     },
     {
       path: "/reports/admin/users-activity",
       name: "AdminUsersActivityReport",
-      component: () => import("../views/Pages/BlankPage.vue"),
+      component: () => import("../views/Errors/FourZeroFour.vue"),
       meta: { title: "تقرير نشاط المستخدمين", requiresAuth: true }
     },
     {
       path: "/reports/admin/audit",
       name: "AdminAuditReport",
-      component: () => import("../views/Pages/BlankPage.vue"),
+      component: () => import("../views/Errors/FourZeroFour.vue"),
       meta: { title: "سجل التدقيق والمراجعة", requiresAuth: true }
     },
     {
@@ -858,7 +858,7 @@ const router = createRouter({
     {
       path: '/blank',
       name: 'Blank',
-      component: () => import('../views/Pages/BlankPage.vue'),
+      component: () => import('../views/Errors/FourZeroFour.vue'),
       meta: {
         title: 'Blank',
         requiresAuth: true,
