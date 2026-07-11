@@ -3,158 +3,156 @@
     <PageBreadcrumb pageTitle="الطلبات الخارجية" />
 
     <div class="space-y-6 text-start" dir="rtl">
-      <!-- Header -->
-      <div class="relative overflow-hidden rounded-2xl border border-amber-200 dark:border-amber-900/40 bg-gradient-to-br from-amber-50 to-white dark:from-amber-950/10 dark:to-gray-900 p-6 shadow-sm">
-        <div class="absolute -left-10 -top-10 w-40 h-40 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="relative flex items-center justify-between gap-4 flex-wrap">
-          <div class="flex items-center gap-4">
-            <div class="p-3 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl border border-amber-200/60 dark:border-amber-800">
+
+      <!-- Premium Page Header -->
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-theme-xs">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            <div class="p-2.5 bg-warning-50 dark:bg-warning-500/10 rounded-xl text-warning-600 dark:text-warning-400">
               <ExternalLink class="h-6 w-6" />
             </div>
-            <div>
-              <h1 class="text-xl font-black text-gray-900 dark:text-white">الطلبات الخارجية (الوزارية)</h1>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 max-w-xl">
-                الطلبات السيادية والاستمارات الرسمية التي يتم طباعتها وتجميعها لرفعها للوزارة شهرياً ثم تسجيل موافقتها الرسمية.
-              </p>
+            الطلبات الخارجية (الوزارية)
+          </h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 font-medium leading-relaxed">
+            الطلبات السيادية والاستمارات الرسمية التي يتم طباعتها وتجميعها لرفعها للوزارة شهرياً ثم تسجيل موافقتها الرسمية.
+          </p>
+        </div>
+
+        <!-- Live Counters -->
+        <div class="flex gap-4 flex-shrink-0 flex-wrap">
+          <div v-for="stat in headerStats" :key="stat.label" class="rounded-2xl border p-4 shadow-theme-xs text-center min-w-[110px]"
+            :class="stat.borderClass">
+            <div class="flex items-center gap-3">
+              <div class="flex h-10 w-10 items-center justify-center rounded-full" :class="stat.iconClass">
+                <component :is="stat.icon" class="h-5 w-5" />
+              </div>
+              <div class="text-start">
+                <p class="text-xs font-medium" :class="stat.labelClass">{{ stat.label }}</p>
+                <h3 class="text-xl font-bold" :class="stat.valueClass">{{ stat.value }}</h3>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Workflow Timeline Steps -->
-      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 shadow-sm">
-        <h3 class="text-xs font-bold text-gray-450 dark:text-gray-500 mb-4 flex items-center gap-1.5">
-          <Info class="w-4 h-4 text-amber-500" />
-          خطوات سير العمل الدورة الخارجية:
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
-          <div v-for="(step, idx) in workflowSteps" :key="idx" 
-            class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800/80">
-            <span class="w-7 h-7 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-black shadow-sm flex-shrink-0">
-              {{ idx + 1 }}
-            </span>
-            <div class="text-[11px] font-bold text-gray-700 dark:text-gray-300 leading-tight">
-              {{ step }}
+      <div class="rounded-2xl border border-gray-200 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+        <div class="border-b border-gray-100 bg-gray-50/80 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/40 flex items-center gap-3">
+          <Info class="w-4.5 h-4.5 text-warning-500" />
+          <span class="text-xs font-bold text-gray-700 dark:text-gray-300">خطوات سير العمل للدورة الخارجية:</span>
+        </div>
+        <div class="p-5">
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+            <div v-for="(step, idx) in workflowSteps" :key="idx" 
+              class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800">
+              <span class="w-8 h-8 rounded-lg bg-warning-500 text-white flex items-center justify-center text-xs font-bold shadow-sm flex-shrink-0">
+                {{ idx + 1 }}
+              </span>
+              <div class="text-[11px] font-bold text-gray-700 dark:text-gray-300 leading-tight">
+                {{ step }}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Tab Filters -->
-      <div class="flex flex-wrap gap-2 items-center justify-between">
-        <div class="flex gap-1.5 flex-wrap">
-          <button v-for="tab in tabs" :key="tab.value"
-            @click="activeTab = tab.value"
-            :class="activeTab === tab.value
-              ? 'bg-amber-600 text-white border-amber-500 shadow-md shadow-amber-500/20'
-              : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:bg-gray-50'"
-            class="px-4 py-2 text-xs font-bold rounded-xl border transition-all flex items-center gap-2 cursor-pointer">
-            <component :is="tab.icon" class="w-3.5 h-3.5" />
-            {{ tab.label }}
-            <span class="bg-black/20 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full" v-if="tabCounts[tab.value] > 0">
-              {{ tabCounts[tab.value] }}
-            </span>
+      <!-- Data Table -->
+      <DataTable
+        :columns="columns"
+        :data="displayedRequests"
+        rowKey="id"
+        :loading="loading"
+        searchPlaceholder="بحث بالاسم أو الرقم العسكري..."
+        @search="val => searchText = val"
+        @refresh="fetchRequests"
+        emptyTitle="لا توجد طلبات خارجية"
+        emptyDescription="لا توجد طلبات خارجية في هذا التبويب حالياً"
+        actionsWidth="230px"
+      >
+        <!-- Toolbar Actions: Tabs -->
+        <template #toolbar-actions>
+          <div class="flex gap-1.5 flex-wrap">
+            <button v-for="tab in tabs" :key="tab.value"
+              @click="activeTab = tab.value"
+              :class="activeTab === tab.value
+                ? 'bg-warning-600 text-white border-warning-500 shadow-md shadow-warning-500/20'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'"
+              class="px-4 py-2.5 text-xs font-bold rounded-lg border transition-all flex items-center gap-2 cursor-pointer">
+              <component :is="tab.icon" class="w-3.5 h-3.5" />
+              {{ tab.label }}
+              <span v-if="tabCounts[tab.value] > 0"
+                :class="activeTab === tab.value ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'"
+                class="text-[9px] font-bold px-1.5 py-0.5 rounded-md">
+                {{ tabCounts[tab.value] }}
+              </span>
+            </button>
+          </div>
+        </template>
+
+        <template #cell-id="{ row }">
+          <template v-if="row.isCorrection">
+            <RouterLink :to="`/services/print/model-23/${row.rawId}?personnelId=${row.personnel_military_number}&old_value=${row.old_value}&new_value=${row.new_value}&reason=${row.reason}`" class="text-warning-600 hover:underline font-mono font-bold">#{{ String(row.rawId).padStart(5, '0') }}</RouterLink>
+          </template>
+          <template v-else>
+            <RouterLink :to="`/services/forms/${row.id}`" class="text-warning-600 hover:underline font-mono font-bold">#{{ String(row.id).padStart(5, '0') }}</RouterLink>
+          </template>
+        </template>
+
+        <template #cell-service_type="{ row }">
+          <span class="font-bold text-gray-800 dark:text-gray-200">{{ row.form_type_display || row.form_type }}</span>
+        </template>
+
+        <template #cell-personnel="{ row }">
+          <span class="text-gray-600 dark:text-gray-300">{{ row.personnel_name || '—' }}</span>
+        </template>
+
+        <template #cell-military_number="{ row }">
+          <span class="font-mono text-gray-500 dark:text-gray-400">{{ row.personnel_military_number || '—' }}</span>
+        </template>
+
+        <template #cell-status="{ row }">
+          <span :class="getStatusStyle(row)" class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold border">
+            <span :class="getStatusDot(row)" class="h-1.5 w-1.5 rounded-full"></span>
+            {{ getStatusLabel(row) }}
+          </span>
+        </template>
+
+        <template #cell-date="{ row }">
+          <span class="font-mono text-gray-500 dark:text-gray-400 text-[11px]">{{ row.submitted_at ? new Date(row.submitted_at).toLocaleDateString('en-GB') : '-' }}</span>
+        </template>
+
+        <template #actions="{ row }">
+          <button v-if="row.status === 'in_progress' && !row.is_printed" @click="printRequest(row)"
+            class="bg-warning-50 hover:bg-warning-100 text-warning-700 border border-warning-200 dark:bg-warning-500/10 dark:text-warning-400 dark:border-warning-500/20 text-[10px] font-bold px-2.5 py-1.5 rounded-lg cursor-pointer transition-all flex items-center gap-1">
+            <Printer class="w-3 h-3" />
+            طباعة
           </button>
-        </div>
 
-        <!-- Search -->
-        <div class="relative">
-          <Search class="absolute right-2.5 top-2.5 h-4 w-4 text-gray-400" />
-          <input v-model="searchText" type="text" placeholder="بحث بالاسم أو الرقم العسكري..."
-            class="text-xs border border-gray-200 dark:border-gray-800 rounded-lg py-2 pr-9 pl-4 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 w-64 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500" />
-        </div>
-      </div>
+          <button v-if="row.status === 'in_progress' && row.is_printed" @click="registerApproval(row)"
+            class="bg-success-600 hover:bg-success-700 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg cursor-pointer transition-all flex items-center gap-1 shadow-sm">
+            <FileCheck class="w-3 h-3" />
+            موافقة الوزارة
+          </button>
 
-      <!-- Table / list -->
-      <div class="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800 rounded-2xl shadow-theme-xs overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-right border-collapse text-xs">
-            <thead>
-              <tr class="border-b border-gray-200 dark:border-gray-800 text-[10px] font-bold text-gray-450 bg-gray-50/50 dark:bg-gray-950/20">
-                <th class="px-4 py-3">رقم الطلب</th>
-                <th class="px-4 py-3">نوع الخدمة</th>
-                <th class="px-4 py-3">الفرد</th>
-                <th class="px-4 py-3">الرقم العسكري</th>
-                <th class="px-4 py-3">الحالة الحالية</th>
-                <th class="px-4 py-3">تاريخ التقديم</th>
-                <th class="px-4 py-3 text-center w-[230px]">الإجراءات</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-150 dark:divide-gray-850">
-              <tr v-if="loading">
-                <td colspan="7" class="px-4 py-12 text-center text-gray-400">
-                  <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto"></div>
-                </td>
-              </tr>
-              <tr v-else-if="displayedRequests.length === 0">
-                <td colspan="7" class="px-4 py-12 text-center text-gray-400 dark:text-gray-500">
-                  لا توجد طلبات خارجية في هذا التبويب حالياً.
-                </td>
-              </tr>
-              <tr v-for="req in displayedRequests" :key="req.id" class="hover:bg-gray-50/50 dark:hover:bg-gray-950/30">
-                <td class="px-4 py-3 font-mono font-bold">
-                  <template v-if="req.isCorrection">
-                    <RouterLink :to="`/services/print/model-23/${req.rawId}?personnelId=${req.personnel_military_number}&old_value=${req.old_value}&new_value=${req.new_value}&reason=${req.reason}`" class="text-amber-600 hover:underline">#{{ String(req.rawId).padStart(5, '0') }}</RouterLink>
-                  </template>
-                  <template v-else>
-                    <RouterLink :to="`/services/forms/${req.id}`" class="text-amber-600 hover:underline">#{{ String(req.id).padStart(5, '0') }}</RouterLink>
-                  </template>
-                </td>
-                <td class="px-4 py-3 font-bold text-gray-800 dark:text-gray-200">
-                  {{ req.form_type_display || req.form_type }}
-                </td>
-                <td class="px-4 py-3">{{ req.personnel_name || '—' }}</td>
-                <td class="px-4 py-3 font-mono">{{ req.personnel_military_number || '—' }}</td>
-                <td class="px-4 py-3">
-                  <span :class="getStatusStyle(req)" class="inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-[10px] font-bold">
-                    <span :class="getStatusDot(req)" class="h-1.5 w-1.5 rounded-full"></span>
-                    {{ getStatusLabel(req) }}
-                  </span>
-                </td>
-                <td class="px-4 py-3 font-mono text-gray-450">
-                  {{ req.submitted_at ? new Date(req.submitted_at).toLocaleDateString('en-GB') : '-' }}
-                </td>
-                <td class="px-4 py-3">
-                  <div class="flex items-center justify-center gap-1.5">
-                    <!-- Step 1: Print -->
-                    <button v-if="req.status === 'in_progress' && !req.is_printed" @click="printRequest(req)"
-                      class="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-[10px] font-bold px-2 py-1 rounded-lg cursor-pointer transition-all flex items-center gap-1">
-                      <Printer class="w-3 h-3" />
-                      طباعة
-                    </button>
+          <button v-if="row.status === 'in_progress'" @click="rejectRequest(row)"
+            class="bg-error-50 hover:bg-error-100 text-error-600 border border-error-200 dark:bg-error-500/10 dark:text-error-400 dark:border-error-500/20 text-[10px] font-bold px-2.5 py-1.5 rounded-lg cursor-pointer transition-all">
+            رفض
+          </button>
 
-                    <!-- Step 2: Register Ministry Approval -->
-                    <button v-if="req.status === 'in_progress' && req.is_printed" @click="registerApproval(req)"
-                      class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-all flex items-center gap-1 shadow-sm shadow-emerald-500/10">
-                      <FileCheck class="w-3 h-3" />
-                      موافقة الوزارة
-                    </button>
-
-                    <!-- Reject -->
-                    <button v-if="req.status === 'in_progress'" @click="rejectRequest(req)"
-                      class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[10px] font-bold px-2 py-1 rounded-lg cursor-pointer transition-all">
-                      رفض
-                    </button>
-
-                    <template v-if="req.isCorrection">
-                      <RouterLink :to="`/services/print/model-23/${req.rawId}?personnelId=${req.personnel_military_number}&old_value=${req.old_value}&new_value=${req.new_value}&reason=${req.reason}`"
-                        class="text-gray-500 hover:text-gray-700 text-[10px] font-bold hover:underline px-1">
-                        عرض
-                      </RouterLink>
-                    </template>
-                    <template v-else>
-                      <RouterLink :to="`/services/forms/${req.id}`"
-                        class="text-gray-500 hover:text-gray-700 text-[10px] font-bold hover:underline px-1">
-                        عرض
-                      </RouterLink>
-                    </template>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+          <template v-if="row.isCorrection">
+            <RouterLink :to="`/services/print/model-23/${row.rawId}?personnelId=${row.personnel_military_number}&old_value=${row.old_value}&new_value=${row.new_value}&reason=${row.reason}`"
+              class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-[10px] font-bold hover:underline px-1">
+              عرض
+            </RouterLink>
+          </template>
+          <template v-else>
+            <RouterLink :to="`/services/forms/${row.id}`"
+              class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-[10px] font-bold hover:underline px-1">
+              عرض
+            </RouterLink>
+          </template>
+        </template>
+      </DataTable>
     </div>
   </admin-layout>
 </template>
@@ -163,10 +161,20 @@
 import { ref, computed, onMounted } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
+import DataTable from '@/components/tables/DataTable.vue'
 import { ExternalLink, Search, Printer, FileCheck, Info, FileClock, CheckCircle, XCircle } from 'lucide-vue-next'
 import { useServicesStore } from '@/stores/services'
 import Swal from 'sweetalert2'
 import api from '@/lib/api'
+
+const columns = [
+  { key: 'id', label: 'رقم الطلب' },
+  { key: 'service_type', label: 'نوع الخدمة' },
+  { key: 'personnel', label: 'الفرد' },
+  { key: 'military_number', label: 'الرقم العسكري' },
+  { key: 'status', label: 'الحالة الحالية' },
+  { key: 'date', label: 'تاريخ التقديم' },
+]
 
 const servicesStore = useServicesStore()
 const allRequests = ref<any[]>([])
@@ -198,6 +206,31 @@ const tabCounts = computed<Record<string, number>>(() => {
     rejected: allRequests.value.filter(r => r.status === 'rejected').length
   }
 })
+
+// Header Stats
+const headerStats = computed(() => [
+  {
+    label: 'بحاجة لطباعة', value: tabCounts.value.needs_print, icon: Printer,
+    borderClass: 'border-warning-200 bg-warning-50 dark:border-warning-500/20 dark:bg-warning-500/5',
+    iconClass: 'bg-warning-100 text-warning-600 dark:bg-warning-500/20 dark:text-warning-400',
+    labelClass: 'text-warning-700 dark:text-warning-400',
+    valueClass: 'text-warning-900 dark:text-warning-300',
+  },
+  {
+    label: 'بانتظار الوزارة', value: tabCounts.value.pending_ministry, icon: FileClock,
+    borderClass: 'border-blue-200 bg-blue-50 dark:border-blue-500/20 dark:bg-blue-500/5',
+    iconClass: 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400',
+    labelClass: 'text-blue-700 dark:text-blue-400',
+    valueClass: 'text-blue-900 dark:text-blue-300',
+  },
+  {
+    label: 'معتمدة', value: tabCounts.value.approved, icon: CheckCircle,
+    borderClass: 'border-success-200 bg-success-50 dark:border-success-500/20 dark:bg-success-500/5',
+    iconClass: 'bg-success-100 text-success-600 dark:bg-success-500/20 dark:text-success-400',
+    labelClass: 'text-success-700 dark:text-success-400',
+    valueClass: 'text-success-900 dark:text-success-300',
+  },
+])
 
 // Filtered Requests
 const displayedRequests = computed(() => {
@@ -373,16 +406,16 @@ function getStatusLabel(req: any) {
 }
 
 function getStatusStyle(req: any) {
-  if (req.status === 'approved') return 'bg-emerald-50 text-emerald-700 border border-emerald-250 dark:bg-emerald-950/20 dark:text-emerald-400'
-  if (req.status === 'rejected') return 'bg-red-50 text-red-700 border border-red-250 dark:bg-red-950/20 dark:text-red-400'
+  if (req.status === 'approved') return 'bg-success-50 text-success-700 border-success-200 dark:bg-success-500/10 dark:text-success-400 dark:border-success-500/20'
+  if (req.status === 'rejected') return 'bg-error-50 text-error-700 border-error-200 dark:bg-error-500/10 dark:text-error-400 dark:border-error-500/20'
   return req.is_printed
-    ? 'bg-blue-50 text-blue-700 border border-blue-250 dark:bg-blue-950/20 dark:text-blue-400'
-    : 'bg-amber-50 text-amber-700 border border-amber-250 dark:bg-amber-950/20 dark:text-amber-400'
+    ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20'
+    : 'bg-warning-50 text-warning-700 border-warning-200 dark:bg-warning-500/10 dark:text-warning-400 dark:border-warning-500/20'
 }
 
 function getStatusDot(req: any) {
-  if (req.status === 'approved') return 'bg-emerald-500'
-  if (req.status === 'rejected') return 'bg-red-500'
-  return req.is_printed ? 'bg-blue-500' : 'bg-amber-500'
+  if (req.status === 'approved') return 'bg-success-500'
+  if (req.status === 'rejected') return 'bg-error-500'
+  return req.is_printed ? 'bg-blue-500' : 'bg-warning-500'
 }
 </script>

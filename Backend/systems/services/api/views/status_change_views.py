@@ -404,8 +404,6 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
                 {'success': False, 'error': f'نوع غير صالح: {ft}'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        return Response({'success': True, 'data': FormRegistry.all_schemas()})
-
     @action(detail=False, methods=['get'])
     def export(self, request):
         qs = self.get_queryset()
