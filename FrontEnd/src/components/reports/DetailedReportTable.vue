@@ -1,6 +1,6 @@
 <template>
-  <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-    <div class="overflow-x-auto max-h-[600px]">
+  <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden print:overflow-visible print:border-none print:shadow-none">
+    <div class="overflow-x-auto max-h-[600px] print:max-h-none print:overflow-visible">
       <table class="w-full text-right text-sm">
         <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 sticky top-0 shadow-sm z-10 print:text-black print:static">
           <!-- Row 1 -->

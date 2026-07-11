@@ -25,11 +25,40 @@ class DjangoExecutionActionEngine:
             if action_type == 'UPDATE_STATUS':
                 # Use to_status_id from execution_config if provided (dynamic), else fallback to form.to_status_id (legacy/static)
                 target_status = execution_config.get('to_status_id') or to_status_id
+                
+                # Robust fallback for hardcoded types if missing
+                if not target_status:
+                    form = StatusChangeForm.objects.filter(id=form_id).first()
+                    if form and form.form_type == 'martyr':
+                        from core.models import ServiceStatus
+                        status_obj = ServiceStatus.objects.filter(name__icontains='شهيد').first()
+                        if status_obj:
+                            target_status = status_obj.id
+                            
                 if target_status:
                     PersonnelMaster.objects.filter(pk=personnel_id).update(
                         current_status_id=target_status,
                         updated_at=timezone.now(),
                     )
+                    # ── نسخ بيانات الاستمارة إلى حقل التفاصيل المناسب في سجل الفرد ──
+                    # حتى تظهر البيانات الصحيحة في تقارير القوة غير العاملة
+                    form = StatusChangeForm.objects.filter(id=form_id).first()
+                    if form and form.form_data:
+                        from systems.personnel.models import PersonnelMaster as PM
+                        personnel_obj = PM.objects.filter(pk=personnel_id).first()
+                        if personnel_obj:
+                            # الاستمارات المؤقتة: منتدب، مرافق، مريض، إلخ
+                            temp_types = ['delegate', 'escort', 'sick', 'study', 'imprisoned', 'vacation', 'missing']
+                            # الاستمارات النهائية: شهيد، متوفى، متقاعد، إلخ
+                            perm_types = ['martyr', 'death', 'retirement_age', 'service_end', 'disability', 'retired']
+                            
+                            ft = form.form_type or ''
+                            if any(t in ft for t in perm_types):
+                                personnel_obj.perm_status_details = form.form_data
+                                personnel_obj.save(update_fields=['perm_status_details'])
+                            elif any(t in ft for t in temp_types) or ft not in perm_types:
+                                personnel_obj.temp_status_details = form.form_data
+                                personnel_obj.save(update_fields=['temp_status_details'])
             elif action_type == 'UPDATE_RANK':
                 # منطق تحديث الرتبة
                 form = StatusChangeForm.objects.filter(id=form_id).first()

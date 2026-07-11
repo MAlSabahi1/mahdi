@@ -812,52 +812,22 @@ const router = createRouter({
         requiresAuth: true,
       },
     },
+    // ── مركز المعاملات الموحد ──
     {
-      path: '/services/inbox',
-      name: 'InboxTransactions',
-      component: () => import('@/views/Services/InboxTransactions.vue'),
+      path: '/services/transactions',
+      name: 'TransactionsHub',
+      component: () => import('@/views/Services/TransactionsHub.vue'),
       meta: {
-        title: 'قائمة المعاملات والمهام',
+        title: 'مركز المعاملات والمتابعة',
         requiresAuth: true,
       },
     },
-    {
-      path: '/services/requests',
-      name: 'RequestsList',
-      component: () => import('@/views/Services/RequestsList.vue'),
-      meta: {
-        title: 'قائمة الطلبات',
-        requiresAuth: true,
-      },
-    },
-    {
-      path: '/services/external-requests',
-      name: 'ExternalRequests',
-      component: () => import('@/views/Services/ExternalRequests.vue'),
-      meta: {
-        title: 'الطلبات الخارجية',
-        requiresAuth: true,
-      },
-    },
-    {
-      path: '/services/internal-requests',
-      name: 'InternalRequests',
-      component: () => import('@/views/Services/InternalRequests.vue'),
-      meta: {
-        title: 'الطلبات الداخلية',
-        requiresAuth: true,
-      },
-    },
-
-    {
-      path: '/services/workflows',
-      name: 'WorkflowTracking',
-      component: () => import('@/views/Services/WorkflowTracking.vue'),
-      meta: {
-        title: 'تتبع سير الموافقات',
-        requiresAuth: true,
-      },
-    },
+    // ── Redirects من المسارات القديمة ──
+    { path: '/services/inbox', redirect: '/services/transactions?tab=all' },
+    { path: '/services/requests', redirect: '/services/transactions?tab=all' },
+    { path: '/services/external-requests', redirect: '/services/transactions?tab=external' },
+    { path: '/services/internal-requests', redirect: '/services/transactions?tab=internal' },
+    { path: '/services/workflows', redirect: '/services/transactions?tab=tracking' },
     {
       path: '/services/forms/:id',
       name: 'FormDetail',

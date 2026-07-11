@@ -22,40 +22,42 @@
         </div>
 
         <!-- Print Content Wrapper -->
-        <div class="printable-area print:block print:w-full print:absolute print:top-0 print:left-0 print:bg-white print:z-50">
-          <!-- Print Header -->
-          <report-header 
-            :title="reportInfo.title" 
-            :subtitle="reportInfo.subtitle" 
-            :reportType="reportId"
-          />
+        <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-hidden printable-area print:overflow-visible print:border-none print:shadow-none print:bg-transparent">
+          <div class="p-6 print:p-0">
+            <!-- Print Header -->
+            <report-header 
+              :title="reportInfo.title" 
+              :subtitle="reportInfo.subtitle" 
+              :reportType="reportId"
+            />
 
-          <!-- Sub-Tabs for report_24 (Absence and AWOL) -->
-          <div v-if="reportId === 'report_24a' || reportId === 'report_24b'" class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-2 flex gap-2 w-max print:hidden mb-4">
-            <router-link 
-              :to="{ name: 'AuditMovementReports', params: { id: '24a' } }"
-              class="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
-              :class="reportId === 'report_24a' ? 'bg-brand-50 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400' : 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800'"
-            >
-              (أ) غياب مؤقت
-            </router-link>
-            <router-link 
-              :to="{ name: 'AuditMovementReports', params: { id: '24b' } }"
-              class="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
-              :class="reportId === 'report_24b' ? 'bg-brand-50 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400' : 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800'"
-            >
-              (ب) غياب مستمر (فرار)
-            </router-link>
+            <!-- Sub-Tabs for report_24 (Absence and AWOL) -->
+            <div v-if="reportId === 'report_24a' || reportId === 'report_24b'" class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-2 flex gap-2 w-max print:hidden mb-4">
+              <router-link 
+                :to="{ name: 'AuditMovementReports', params: { id: '24a' } }"
+                class="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                :class="reportId === 'report_24a' ? 'bg-brand-50 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400' : 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800'"
+              >
+                (أ) غياب مؤقت
+              </router-link>
+              <router-link 
+                :to="{ name: 'AuditMovementReports', params: { id: '24b' } }"
+                class="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                :class="reportId === 'report_24b' ? 'bg-brand-50 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400' : 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800'"
+              >
+                (ب) غياب مستمر (فرار)
+              </router-link>
+            </div>
+
+            <!-- Data Table -->
+            <detailed-report-table 
+              :columns="columns" 
+              :data="reportData" 
+              :loading="loading" 
+            />
+            
+            <report-footer class="mt-8" />
           </div>
-
-          <!-- Data Table -->
-          <detailed-report-table 
-            :columns="columns" 
-            :data="reportData" 
-            :loading="loading" 
-          />
-          
-          <report-footer class="hidden print:block mt-8" />
         </div>
       </div>
     </admin-layout>
@@ -67,6 +69,7 @@
   import api from '@/lib/api'
   import AdminLayout from '@/components/layout/AdminLayout.vue'
   import ReportHeader from '@/components/reports/ReportHeader.vue'
+  import ReportFooter from '@/components/reports/ReportFooter.vue'
   import DetailedReportTable from '@/components/reports/DetailedReportTable.vue'
 
   const route = useRoute()

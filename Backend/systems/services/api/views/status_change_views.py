@@ -211,6 +211,23 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
                         to_status_obj = ServiceStatus.objects.filter(name__icontains=word).first()
                         if to_status_obj:
                             break
+        
+        # ── التحقق الأمني والمنطقي (لمنع التكرار) ──
+        # 1. التحقق من الحالة الحالية (إذا كان يملكها مسبقاً)
+        if to_status_obj and personnel.current_status_id == to_status_obj.id:
+            return Response({'success': False, 'error': f'الفرد لديه هذه الحالة ({to_status_obj.name}) مسبقاً في النظام'}, status=status.HTTP_400_BAD_REQUEST)
+        elif not to_status_obj and form_type == 'martyr' and personnel.current_status and 'شهيد' in personnel.current_status.name:
+            return Response({'success': False, 'error': 'هذا الفرد مسجل كشهيد بالفعل في النظام'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 2. التحقق من وجود معاملة سابقة قيد الإجراء لنفس النوع ونفس الفرد
+        existing_pending = StatusChangeForm.objects.filter(
+            personnel=personnel,
+            form_type=form_type,
+            status__in=['draft', 'in_progress', 'pending_services', 'pending_hr', 'pending_director', 'returned']
+        ).first()
+        
+        if existing_pending:
+            return Response({'success': False, 'error': f'يوجد معاملة سابقة من نفس النوع قيد الإجراء (رقم: {existing_pending.id})'}, status=status.HTTP_400_BAD_REQUEST)
 
         # ── الإنشاء ──
         if is_dynamic:

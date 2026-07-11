@@ -585,7 +585,7 @@ class SuggestedCorrectionViewSet(BaseModelViewSet):
                 )
                 doc_ids = list(linked_docs.values_list('id', flat=True))
                 
-                if correction.field_name == 'full_name':
+                if correction.field_name in ['full_name', 'name_correction']:
                     # ── تصحيح الاسم عبر الخدمة المركزية ──
                     PersonnelService.correct_name(
                         personnel,
@@ -594,7 +594,7 @@ class SuggestedCorrectionViewSet(BaseModelViewSet):
                         document_ids=doc_ids if doc_ids else None,
                         user=request.user,
                     )
-                elif correction.field_name == 'national_id':
+                elif correction.field_name in ['national_id', 'national_id_correction']:
                     PersonnelService.update_personnel(
                         personnel, {'national_id': correction.new_value}, user=request.user
                     )
@@ -602,13 +602,22 @@ class SuggestedCorrectionViewSet(BaseModelViewSet):
                     if doc_ids:
                         AttachmentService.commit_documents(doc_ids)
                     
-                elif correction.field_name == 'military_number':
-                    PersonnelService.update_personnel(
-                        personnel, {'military_number': correction.new_value}, user=request.user
-                    )
+                elif correction.field_name in ['military_number', 'military_number_correction']:
+                    # تحديث الرقم العسكري: نحتفظ بالقديم كرقم عسكري سابق ثم نحدّث الجديد
+                    old_mil = personnel.military_number
+                    # تحديث الرقم العسكري بشكل آمن
+                    from django.db import transaction as db_transaction
+                    with db_transaction.atomic():
+                        # حفظ الرقم القديم كرقم سابق إذا لم يكن محفوظاً
+                        if not personnel.old_military_number:
+                            personnel.old_military_number = old_mil
+                            personnel.save(update_fields=['old_military_number'])
+                        PersonnelService.update_personnel(
+                            personnel, {'military_number': correction.new_value}, user=request.user
+                        )
                     if doc_ids:
                         AttachmentService.commit_documents(doc_ids)
-                elif correction.field_name in ['rank', 'current_rank_id']:
+                elif correction.field_name in ['rank', 'current_rank_id', 'rank_correction']:
                     from core.models import Rank
                     rank_obj = Rank.objects.get(pk=int(correction.new_value))
                     PersonnelService.update_personnel(
@@ -617,6 +626,8 @@ class SuggestedCorrectionViewSet(BaseModelViewSet):
                     if doc_ids:
                         AttachmentService.commit_documents(doc_ids)
             except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f'Correction approval error: {e}', exc_info=True)
                 return Response({'success': False, 'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
             
         correction.approval_document_id = approval_doc_id

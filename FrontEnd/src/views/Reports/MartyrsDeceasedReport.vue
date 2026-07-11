@@ -23,7 +23,7 @@
       </div>
 
       <!-- Report Container -->
-      <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-hidden printable-area print:border-none print:shadow-none print:bg-transparent">
+      <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-hidden printable-area print:overflow-visible print:border-none print:shadow-none print:bg-transparent">
         <div class="p-6 print:p-0">
           <!-- Official Print Header -->
           <ReportHeader title="كشف بالقوة غير العاملة شهداء ووفيات" />

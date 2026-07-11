@@ -1,4 +1,4 @@
-<template>
+  <template>
   <admin-layout>
     <div class="space-y-6 pb-20">
       <!-- Top Action Bar -->
@@ -22,7 +22,7 @@
         </div>
       </div>
 
-      <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-hidden printable-area print:border-none print:shadow-none print:bg-transparent">
+      <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-hidden printable-area print:overflow-visible print:border-none print:shadow-none print:bg-transparent">
         <div class="p-6 print:p-0">
           <!-- Header -->
           <report-header 
@@ -64,9 +64,10 @@ const reportId = computed(() => {
   return `report_${id}`
 })
 
+// عناوين التقارير بدون "لشهر ..." لأن ReportHeader يُضيف الشهر/السنة تلقائياً
 const reportDefinitions: Record<string, { title: string, subtitle: string, hideUnit?: boolean, dynamicCols: any[] }> = {
   'report_5': {
-    title: 'كشف بالقوة غير العاملة مؤقتاً مرضى لشهر ..... ٢٠٢م',
+    title: 'كشف بالقوة غير العاملة مؤقتاً مرضى',
     subtitle: 'قوة غير عاملة مؤقتاً',
     dynamicCols: [
       { key: 'hospital', label: 'اسم المستشفى' },
@@ -75,7 +76,7 @@ const reportDefinitions: Record<string, { title: string, subtitle: string, hideU
     ]
   },
   'report_6': {
-    title: 'كشف بالقوة غير العاملة مؤقتاً مرافقين لشهر ..... ٢٠٢م',
+    title: 'كشف بالقوة غير العاملة مؤقتاً مرافقين',
     subtitle: 'قوة غير عاملة مؤقتاً',
     hideUnit: true,
     dynamicCols: [
@@ -89,7 +90,7 @@ const reportDefinitions: Record<string, { title: string, subtitle: string, hideU
     ]
   },
   'report_7': {
-    title: 'كشف بالقوة غير العاملة مؤقتاً منتدبين لشهر ..... ٢٠٢م',
+    title: 'كشف بالقوة غير العاملة مؤقتاً منتدبين',
     subtitle: 'قوة غير عاملة مؤقتاً',
     hideUnit: true,
     dynamicCols: [
@@ -103,7 +104,7 @@ const reportDefinitions: Record<string, { title: string, subtitle: string, hideU
     ]
   },
   'report_8': {
-    title: 'كشف بالقوة غير العاملة مؤقتاً مفرغين للدراسة لشهر ..... ٢٠٢م',
+    title: 'كشف بالقوة غير العاملة مؤقتاً مفرغين للدراسة',
     subtitle: 'قوة غير عاملة مؤقتاً',
     hideUnit: true,
     dynamicCols: [
@@ -117,7 +118,7 @@ const reportDefinitions: Record<string, { title: string, subtitle: string, hideU
     ]
   },
   'report_9': {
-    title: 'كشف بالقوة غير العاملة مؤقتاً سجناء لشهر ..... ٢٠٢م',
+    title: 'كشف بالقوة غير العاملة مؤقتاً سجناء',
     subtitle: 'قوة غير عاملة مؤقتاً',
     hideUnit: true,
     dynamicCols: [
@@ -131,7 +132,7 @@ const reportDefinitions: Record<string, { title: string, subtitle: string, hideU
     ]
   },
   'report_10': {
-    title: 'كشف بالقوة غير العاملة مؤقتاً إجازات لشهر ..... ٢٠٢م',
+    title: 'كشف بالقوة غير العاملة مؤقتاً إجازات',
     subtitle: 'قوة غير عاملة مؤقتاً',
     dynamicCols: [
       { key: 'vacation_type', label: 'نوع الاجازة' },
@@ -143,7 +144,7 @@ const reportDefinitions: Record<string, { title: string, subtitle: string, hideU
     ]
   },
   'report_11': {
-    title: 'كشف بالقوة غير العاملة مؤقتاً مفقودين لشهر ..... ٢٠٢م',
+    title: 'كشف بالقوة غير العاملة مؤقتاً مفقودين',
     subtitle: 'قوة غير العاملة مؤقتاً',
     dynamicCols: [
       { key: 'missing_date', label: 'تاريخ الفقدان' },

@@ -90,13 +90,13 @@ class TempInactiveReportsView(BaseDetailedReportView):
         # Map report_id to the specific status name (these should match DB status names)
         # Assuming DB has statuses like 'مريض', 'مسجون', 'مرافق', etc.
         status_map = {
-            'report_5': 'مريض',
-            'report_6': 'مرافق',
-            'report_7': 'منتدب',
-            'report_8': 'مفرغ للدراسة',
-            'report_9': 'مسجون',
-            'report_10': 'إجازة رسمية',
-            'report_11': 'مفقود'
+            'report_5': 'الأمراض',        # الأمراض والمصابين
+            'report_6': 'المرافقة',     # المفرغين للمرافقة
+            'report_7': 'المنتدبين',    # المنتدبين لدى جهات
+            'report_8': 'للدراسة',      # المفرغين للدراسة
+            'report_9': 'السجناء',       # السجناء
+            'report_10': 'الإجازات',    # الإجازات
+            'report_11': 'المفقودين',   # المفقودين
         }
 
         target_status = status_map.get(report_id)
@@ -104,9 +104,34 @@ class TempInactiveReportsView(BaseDetailedReportView):
             qs = qs.filter(current_status__name__contains=target_status)
 
         data_list = []
+        
+        # خريطة: نوع التقرير → form_type الخاص به في StatusChangeForm
+        report_to_form_type = {
+            'report_5': 'sick',
+            'report_6': 'escort',
+            'report_7': 'seconded',      # اسم الاستمارة في قاعدة البيانات هو seconded
+            'report_8': 'study_leave',  # الاسم الحقيقي في DB
+            'report_9': 'imprisoned',
+            'report_10': 'vacation',
+            'report_11': 'missing',
+        }
+        
+        from systems.services.infrastructure.models.status_change import StatusChangeForm as SCForm
+        
         for idx, p in enumerate(qs, start=1):
             row = self.format_base_data(p, idx)
             temp_details = p.temp_status_details or {}
+            
+            # ── Fallback: إذا كان temp_status_details فارغاً، نقرأ من آخر استمارة معتمدة ──
+            if not temp_details and report_id in report_to_form_type:
+                form_type_key = report_to_form_type[report_id]
+                last_form = SCForm.objects.filter(
+                    personnel=p,
+                    form_type__icontains=form_type_key,
+                    status='approved'
+                ).order_by('-updated_at').first()
+                if last_form and last_form.form_data:
+                    temp_details = last_form.form_data
             
             if report_id == 'report_5':
                 row["hospital"] = temp_details.get("hospital", "غير مدخل")
@@ -120,10 +145,22 @@ class TempInactiveReportsView(BaseDetailedReportView):
                 row["duration_to"] = temp_details.get("duration_to", temp_details.get("end_date", "غير مدخل"))
             elif report_id == 'report_7':
                 row["order_source"] = temp_details.get("order_source", "غير مدخل")
-                row["delegate_to"] = temp_details.get("delegate_to", temp_details.get("destination", "غير مدخل"))
-                row["delegate_purpose"] = temp_details.get("delegate_purpose", temp_details.get("reason", "غير مدخل"))
-                row["duration_from"] = temp_details.get("duration_from", temp_details.get("start_date", "غير مدخل"))
-                row["duration_to"] = temp_details.get("duration_to", temp_details.get("end_date", "غير مدخل"))
+                # مفاتيح بديلة: destination أو delegate_to أو delegate_destination
+                row["delegate_to"] = temp_details.get("delegate_to",
+                    temp_details.get("destination",
+                    temp_details.get("delegate_destination", "غير مدخل")))
+                # مفاتيح بديلة: reason أو delegate_purpose أو purpose
+                row["delegate_purpose"] = temp_details.get("delegate_purpose",
+                    temp_details.get("reason",
+                    temp_details.get("purpose", "غير مدخل")))
+                # مفاتيح بديلة: start_date أو duration_from أو date_from
+                row["duration_from"] = temp_details.get("duration_from",
+                    temp_details.get("start_date",
+                    temp_details.get("date_from", "غير مدخل")))
+                # مفاتيح بديلة: end_date أو duration_to أو date_to
+                row["duration_to"] = temp_details.get("duration_to",
+                    temp_details.get("end_date",
+                    temp_details.get("date_to", "غير مدخل")))
             elif report_id == 'report_8':
                 row["study_type"] = temp_details.get("study_type", "غير مدخل")
                 row["study_location"] = temp_details.get("study_location", temp_details.get("institution", "غير مدخل"))
@@ -176,6 +213,18 @@ class PermInactiveReportsView(BaseDetailedReportView):
         elif report_id == 'report_16':
             qs = qs.filter(Q(current_status__name__contains='شهيد') | Q(current_status__name__contains='شهداء') | Q(current_status__name__contains='متوفى') | Q(current_status__name__contains='وفيات'))
 
+        # خريطة form_type للتقارير 12-17 للبحث في StatusChangeForm ك**Fallback**
+        perm_report_form_type = {
+            'report_12': 'retirement_age',
+            'report_13': 'end_of_service',
+            'report_14': 'retirement_candidate',
+            'report_15': 'medical_unfit',
+            'report_16': ['martyr', 'death'],
+            'report_17': 'retired',
+        }
+        
+        from systems.services.infrastructure.models.status_change import StatusChangeForm as SCForm
+
         data_list = []
         for idx, p in enumerate(qs, start=1):
             row = self.format_base_data(p, idx)
@@ -183,6 +232,18 @@ class PermInactiveReportsView(BaseDetailedReportView):
             row["join_date"] = p.join_date or "غير مدخل"
             
             perm_details = p.perm_status_details or {}
+            
+            # ── Fallback: إذا كان perm_status_details فارغاً، نقرأ من آخر استمارة معتمدة ──
+            if not perm_details and report_id in perm_report_form_type:
+                ft = perm_report_form_type[report_id]
+                form_types = ft if isinstance(ft, list) else [ft]
+                last_form = SCForm.objects.filter(
+                    personnel=p,
+                    form_type__in=form_types,
+                    status='approved'
+                ).order_by('-updated_at').first()
+                if last_form and last_form.form_data:
+                    perm_details = last_form.form_data
             
             if report_id == 'report_12':
                 row["personal_request"] = perm_details.get("personal_request", "غير مدخل")
@@ -220,79 +281,129 @@ class AuditMovementReportsView(BaseDetailedReportView):
     """
     def get(self, request, *args, **kwargs):
         report_id = request.query_params.get('report_id')
-        
-        # Only fetch personnel with audit_movement_details
-        qs = self.get_queryset().filter(audit_movement_details__isnull=False)
+        from systems.services.infrastructure.models.status_change import StatusChangeForm as SCForm
 
-        # Apply specific filters based on report_id by checking for required keys
-        if report_id == 'report_18':
-            qs = qs.filter(audit_movement_details__has_key='arrived_from')
-        elif report_id == 'report_19':
-            qs = qs.filter(audit_movement_details__has_key='transfer_reason')
-        elif report_id == 'report_20':
-            qs = qs.filter(audit_movement_details__has_key='new_directed_workplace')
-        elif report_id == 'report_21':
-            qs = qs.filter(audit_movement_details__has_key='salary_source')
-        elif report_id == 'report_22':
-            qs = qs.filter(audit_movement_details__has_key='external_delegate_target')
-        elif report_id == 'report_23':
-            qs = qs.filter(audit_movement_details__has_key='wrong_name')
-        elif report_id == 'report_24a':
-            qs = qs.filter(audit_movement_details__has_key='absence_days')
-        elif report_id == 'report_24b':
-            qs = qs.filter(audit_movement_details__has_key='continuous_absence_duration')
-        elif report_id == 'report_25':
-            qs = qs.filter(audit_movement_details__has_key='reporter_entity')
-
-        data_list = []
-        for idx, p in enumerate(qs, start=1):
-            row = self.format_base_data(p, idx)
-            audit_details = p.audit_movement_details or {}
+        # ── نموذج 23: المطلوب تصحيح أسمائهم — من جدول SuggestedCorrection ──
+        if report_id == 'report_23':
+            from systems.personnel.models import SuggestedCorrection
+            corrections = SuggestedCorrection.objects.select_related(
+                'personnel__current_rank'
+            ).filter(
+                field_name__in=['full_name', 'name_correction'],
+                status='pending'
+            ).order_by('created_at')
             
-            if report_id == 'report_18':
-                row["new_workplace"] = audit_details.get("new_workplace", "غير مدخل")
-                row["arrived_from"] = audit_details.get("arrived_from", "غير مدخل")
-                row["start_date"] = audit_details.get("start_date", "غير مدخل")
-            elif report_id == 'report_19':
-                row["old_workplace"] = audit_details.get("old_workplace", "غير مدخل")
-                row["old_service_type"] = audit_details.get("old_service_type", "غير مدخل")
-                row["transfer_date"] = audit_details.get("transfer_date", "غير مدخل")
-                row["transfer_reason"] = audit_details.get("transfer_reason", "غير مدخل")
-            elif report_id == 'report_20':
-                row["old_workplace"] = audit_details.get("old_workplace", "غير مدخل")
-                row["old_service_type"] = audit_details.get("old_service_type", "غير مدخل")
-                row["new_directed_workplace"] = audit_details.get("new_directed_workplace", "غير مدخل")
-                row["new_service_type"] = audit_details.get("new_service_type", "غير مدخل")
-            elif report_id == 'report_21':
-                row["current_workplace"] = audit_details.get("current_workplace", "غير مدخل")
-                row["actual_service_type"] = audit_details.get("actual_service_type", "غير مدخل")
-                row["salary_source"] = audit_details.get("salary_source", "غير مدخل")
-                row["start_date"] = audit_details.get("start_date", "غير مدخل")
-            elif report_id == 'report_22':
-                row["old_workplace"] = audit_details.get("old_workplace", "غير مدخل")
-                row["old_service_type"] = audit_details.get("old_service_type", "غير مدخل")
-                row["transfer_date"] = audit_details.get("transfer_date", "غير مدخل")
-                row["external_delegate_target"] = audit_details.get("external_delegate_target", "غير مدخل")
-            elif report_id == 'report_23':
-                row["national_id"] = p.national_id
-                row["wrong_name"] = audit_details.get("wrong_name", "غير مدخل")
-                row["correction_target"] = audit_details.get("correction_target", "غير مدخل")
-            elif report_id == 'report_24a':
-                row["national_id"] = p.national_id
-                row["stop_reason"] = audit_details.get("stop_reason", "غير مدخل")
-                row["absence_days"] = audit_details.get("absence_days", "غير مدخل")
-            elif report_id == 'report_24b':
-                row["national_id"] = p.national_id
-                row["stop_reason"] = audit_details.get("stop_reason", "غير مدخل")
-                row["continuous_absence_duration"] = audit_details.get("continuous_absence_duration", "غير مدخل")
-            elif report_id == 'report_25':
-                row["national_id"] = p.national_id
-                row["reporter_entity"] = audit_details.get("reporter_entity", "غير مدخل")
-                row["taken_procedures"] = audit_details.get("taken_procedures", "غير مدخل")
+            data_list = []
+            for idx, c in enumerate(corrections, start=1):
+                p = c.personnel
+                data_list.append({
+                    "index": idx,
+                    "rank": p.current_rank.name if p.current_rank else "غير محدد",
+                    "military_number": p.military_number,
+                    "full_name": p.full_name,
+                    "national_id": p.national_id,
+                    "wrong_name": c.old_value or p.full_name,
+                    "correction_target": c.new_value or "غير مدخل",
+                    "notes": c.notes or ""
+                })
+            return Response({"data": data_list, "total_count": len(data_list)})
 
-            data_list.append(row)
+        # ── نموذج 25: الملتحقين بالعدوان — من حالة PersonnelMaster ──
+        if report_id == 'report_25':
+            qs = self.get_queryset().filter(
+                current_status__name__icontains='العدوان'
+            )
+            data_list = []
+            for idx, p in enumerate(qs, start=1):
+                row = self.format_base_data(p, idx)
+                row["national_id"] = p.national_id
+                # حاول قراءة التفاصيل من audit_movement_details أو StatusChangeForm
+                details = p.audit_movement_details or {}
+                if not details:
+                    last_form = SCForm.objects.filter(
+                        personnel=p, status='approved'
+                    ).order_by('-updated_at').first()
+                    if last_form and last_form.form_data:
+                        details = last_form.form_data
+                row["reporter_entity"] = details.get("reporter_entity", "غير مدخل")
+                row["taken_procedures"] = details.get("taken_procedures", "غير مدخل")
+                data_list.append(row)
+            return Response({"data": data_list, "total_count": len(data_list)})
 
-        return Response({
-            "data": data_list,
-            "total_count": len(data_list)
-        })
+        # ── نماذج 18-22, 24أ, 24ب: تقرأ من StatusChangeForm حسب نوع الاستمارة ──
+        # خريطة التقرير → (form_type, الحقول المطلوبة)
+        form_type_map = {
+            'report_18': 'arrived',         # واصلين من الوزارة
+            'report_19': 'transfer_out',    # عازمين للوزارة
+            'report_20': 'transfer_detail', # عازمين (مقارن)
+            'report_21': 'internal_seconded', # انتداب للداخل
+            'report_22': 'external_seconded', # انتداب للخارج
+            'report_24a': 'absence_temp',   # غياب مؤقت
+            'report_24b': 'absence_perm',   # فرار/غياب مستمر
+        }
+
+        ft = form_type_map.get(report_id)
+        
+        # إذا كان النوع معروفاً، نقرأ من StatusChangeForm مباشرة
+        if ft:
+            scforms = SCForm.objects.select_related(
+                'personnel__current_rank'
+            ).filter(
+                form_type__icontains=ft,
+                status='approved'
+            ).order_by('-updated_at')
+
+            data_list = []
+            for idx, f in enumerate(scforms, start=1):
+                p = f.personnel
+                if not p:
+                    continue
+                fd = f.form_data or {}
+                row = {
+                    "index": idx,
+                    "rank": p.current_rank.name if p.current_rank else "غير محدد",
+                    "military_number": p.military_number,
+                    "full_name": p.full_name,
+                    "unit": "",
+                    "notes": ""
+                }
+                if report_id == 'report_18':
+                    row["new_workplace"] = fd.get("new_workplace", fd.get("destination", "غير مدخل"))
+                    row["arrived_from"] = fd.get("arrived_from", fd.get("source", "غير مدخل"))
+                    row["start_date"] = fd.get("start_date", fd.get("date", "غير مدخل"))
+                elif report_id == 'report_19':
+                    row["old_workplace"] = fd.get("old_workplace", fd.get("unit", "غير مدخل"))
+                    row["old_service_type"] = fd.get("old_service_type", "غير مدخل")
+                    row["transfer_date"] = fd.get("transfer_date", fd.get("date", "غير مدخل"))
+                    row["transfer_reason"] = fd.get("transfer_reason", fd.get("reason", "غير مدخل"))
+                elif report_id == 'report_20':
+                    row["old_workplace"] = fd.get("old_workplace", "غير مدخل")
+                    row["old_service_type"] = fd.get("old_service_type", "غير مدخل")
+                    row["new_directed_workplace"] = fd.get("new_directed_workplace", fd.get("destination", "غير مدخل"))
+                    row["new_service_type"] = fd.get("new_service_type", "غير مدخل")
+                elif report_id == 'report_21':
+                    row["current_workplace"] = fd.get("current_workplace", fd.get("destination", "غير مدخل"))
+                    row["actual_service_type"] = fd.get("actual_service_type", "غير مدخل")
+                    row["salary_source"] = fd.get("salary_source", fd.get("order_source", "غير مدخل"))
+                    row["start_date"] = fd.get("start_date", "غير مدخل")
+                elif report_id == 'report_22':
+                    row["old_workplace"] = fd.get("old_workplace", "غير مدخل")
+                    row["old_service_type"] = fd.get("old_service_type", "غير مدخل")
+                    row["transfer_date"] = fd.get("transfer_date", fd.get("start_date", "غير مدخل"))
+                    row["external_delegate_target"] = fd.get("external_delegate_target", fd.get("destination", "غير مدخل"))
+                elif report_id == 'report_24a':
+                    row["national_id"] = p.national_id
+                    row["stop_reason"] = fd.get("stop_reason", fd.get("reason", "غير مدخل"))
+                    row["absence_days"] = fd.get("absence_days", fd.get("days", "غير مدخل"))
+                elif report_id == 'report_24b':
+                    row["national_id"] = p.national_id
+                    row["stop_reason"] = fd.get("stop_reason", fd.get("reason", "غير مدخل"))
+                    row["continuous_absence_duration"] = fd.get("continuous_absence_duration", fd.get("duration", "غير مدخل"))
+                data_list.append(row)
+            
+            return Response({"data": data_list, "total_count": len(data_list)})
+
+        # Fallback عام إذا لم يُعرف النوع
+        return Response({"data": [], "total_count": 0, "message": "نوع التقرير غير محدد"})
+
+

@@ -132,7 +132,7 @@
             <div class="flex items-center gap-2">
               <button
                 v-if="card.form_type"
-                @click="$router.push(`/services/requests?type=${card.form_type}`)"
+                @click="$router.push(`/services/transactions?tab=internal&type=${card.form_type}`)"
                 class="flex items-center justify-center h-10 w-12 shrink-0 rounded-xl border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-brand-600 hover:border-brand-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition-all duration-300"
                 title="سجل الطلبات"
               >

@@ -843,6 +843,80 @@ async function addPersonnel(person: any) {
     return
   }
   
+  // ── التحقق المنطقي المسبق (Pre-flight Validation) ──
+  
+  // 1. منع إضافة شهيد وهو بالفعل شهيد في النظام
+  let statusStr = person.status_name || person.current_status_name || '';
+  if (!statusStr && person.current_status) {
+    if (typeof person.current_status === 'object') {
+      statusStr = person.current_status.name || '';
+    } else if (typeof person.current_status === 'string') {
+      statusStr = person.current_status;
+    }
+  }
+  
+  statusStr = String(statusStr || '');
+  
+  if (type === 'martyr' && (statusStr.includes('شهيد') || statusStr.includes('شهداء') || statusStr.includes('شهد'))) {
+    Swal.fire({
+      icon: 'error',
+      title: 'فرد مسجل كشهيد',
+      text: 'هذا الفرد مسجل ضمن الشهداء بالفعل في النظام ولا يمكن إنشاء معاملة استشهاد أخرى له.'
+    })
+    return
+  }
+  
+  // منع إضافة معاملة وفاة وهو بالفعل متوفى
+  if (type === 'death' && (statusStr.includes('متوفى') || statusStr.includes('وفيات') || statusStr.includes('وفاة') || statusStr.includes('وفاه'))) {
+    Swal.fire({
+      icon: 'error',
+      title: 'فرد مسجل كمتوفى',
+      text: 'هذا الفرد مسجل ضمن الوفيات بالفعل في النظام ولا يمكن إنشاء معاملة وفاة أخرى له.'
+    })
+    return
+  }
+
+  // 2. التحقق من الباك إند إذا كانت هناك معاملة معلقة لنفس الفرد ونفس النوع
+  if (category === 'form' || category === 'rank_settlement') {
+    try {
+      const checkRes = await api.get('/service-cycle/forms/', { params: { personnel: person.military_number, type: type } })
+      const pendingForms = checkRes.data?.results?.filter((f: any) => 
+        ['draft', 'in_progress', 'pending_services', 'pending_hr', 'pending_director', 'returned'].includes(f.status)
+      )
+      if (pendingForms && pendingForms.length > 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'طلب قيد الإجراء',
+          text: `يوجد معاملة سابقة من نفس النوع قيد الإجراء لهذا الفرد (TX-${String(pendingForms[0].id).padStart(6, '0')}). لا يمكنك تقديم طلب جديد حتى يتم إنجاز الطلب المعلق.`
+        })
+        return
+      }
+    } catch (e) {
+      console.error('Failed to check pending forms', e)
+    }
+  }
+
+  // 3. التحقق من وجود طلب تصحيح معلق لنفس النوع
+  if (category === 'correction') {
+    try {
+      const corrType = type // e.g. military_number_correction, national_id_correction
+      const checkRes = await api.get('/personnel/corrections/', { params: { personnel: person.military_number, status: 'pending' } })
+      const pendingCorrections = checkRes.data?.results?.filter((c: any) =>
+        c.correction_type === corrType || c.field_name === corrType
+      )
+      if (pendingCorrections && pendingCorrections.length > 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'طلب تصحيح معلق',
+          text: `يوجد طلب تصحيح من نفس النوع قيد الانتظار لهذا الفرد (رقم: ${pendingCorrections[0].id}). لا يمكن تقديم طلب جديد حتى يُبت في الطلب المعلق.`
+        })
+        return
+      }
+    } catch (e) {
+      console.error('Failed to check pending corrections', e)
+    }
+  }
+  
   if (!isPersonnelSelected(person.military_number)) {
     if (category === 'correction') {
       try {
@@ -991,23 +1065,34 @@ async function validateAndGoToStep3() {
 
       if (currentField === 'military_number' || currentField === 'military_number_correction') {
         const val = formData.value.new_value
-        if (!val || val.length < 4 || isNaN(Number(val))) {
+        // التحقق من صيغة الرقم العسكري: 7 أرقام
+        if (!val || !/^\d{7}$/.test(String(val))) {
           Swal.fire({
             icon: 'warning',
             title: 'رقم عسكري غير صالح',
-            text: 'الرجاء إدخال رقم عسكري صالح.'
+            text: 'الرقم العسكري يجب أن يتكون من 7 أرقام بالضبط.'
+          })
+          return
+        }
+        // التحقق من أن الرقم الجديد مختلف عن القديم
+        const oldVal = formData.value.old_value
+        if (oldVal && String(val) === String(oldVal)) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'لا يوجد تغيير',
+            text: 'الرقم العسكري الجديد لا يمكن أن يكون نفس الرقم الحالي.'
           })
           return
         }
 
-        // Live check military number
+        // التحقق الفوري من الرقم العسكري عبر قاعدة البيانات
         try {
           const checkRes = await api.get('/personnel/check-military-number/', { params: { value: val } })
           if (checkRes.data?.exists) {
             Swal.fire({
               icon: 'error',
               title: 'الرقم العسكري مستخدم',
-              text: 'هذا الرقم العسكري مستخدم بالفعل في النظام.'
+              text: 'هذا الرقم العسكري مستخدم بالفعل في النظام. يرجى إدخال رقم مختلف.'
             })
             return
           }

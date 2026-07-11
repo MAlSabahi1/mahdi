@@ -382,31 +382,9 @@ const menuGroups = computed(() => {
                 path: "/services/directory",
               },
               {
-                name: "nav.external_requests",
-                path: "/services/external-requests",
+                name: "nav.transactions_hub",
+                path: "/services/transactions",
                 new: true,
-              },
-              {
-                name: "nav.internal_requests",
-                path: "/services/internal-requests",
-                new: true,
-              },
-              {
-                name: "nav.requests_list",
-                path: "/services/requests",
-                new: true,
-              },
-              {
-                name: "nav.unified_request",
-                path: "/services/request",
-              },
-              {
-                name: "nav.inbox_transactions",
-                path: "/services/inbox",
-              },
-              {
-                name: "nav.workflow_tracking",
-                path: "/services/workflows",
               },
               {
                 name: "nav.service_builder",

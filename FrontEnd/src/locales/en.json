@@ -146,6 +146,7 @@
     "workflow_builder": "Workflow Builder (Admin)",
     "unified_request": "Unified Request Form",
     "inbox_transactions": "Inbox Transactions & Tasks",
+    "transactions_hub": "Transactions Hub",
     "workflow_tracking": "Workflow Approvals Tracking",
     "external_requests": "External Requests",
     "internal_requests": "Internal Requests",
