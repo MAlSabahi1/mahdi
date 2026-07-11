@@ -42,7 +42,7 @@
     </div>
 
     <!-- Report Container -->
-    <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-hidden printable-area print:border-none print:shadow-none print:bg-transparent">
+    <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-hidden printable-area print:border-2 print:border-black print:p-4 print:shadow-none print:bg-transparent">
       <div class="p-4 md:p-6 print:p-0">
         <!-- Official Print Header -->
         <ReportHeader title="خلاصة القوة العاملة بحسب الرتبة" />
@@ -213,7 +213,6 @@ const exportExcel = () => {
     left: 0;
     top: 0;
     width: 100%;
-    border: none !important;
     box-shadow: none !important;
   }
   /* Perfect Print Grid */
