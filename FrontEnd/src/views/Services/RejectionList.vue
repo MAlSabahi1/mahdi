@@ -5,46 +5,50 @@
       
       <!-- Header Section -->
       <div class="flex justify-end">
-        <button 
+        <BaseButton 
           @click="handleExport"
           :disabled="!filters.central_department || !filters.service_month || isExporting"
-          class="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-colors disabled:opacity-50 cursor-pointer"
+          :loading="isExporting"
+          variant="primary"
+          size="sm"
           title="اختر المديرية والشهر لتصدير التقرير"
         >
-          <svg v-if="isExporting" class="h-4.5 w-4.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-          </svg>
-          <svg v-else class="h-4.5 w-4.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg v-if="!isExporting" class="h-4.5 w-4.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           {{ $t('services.export_report') || 'تصدير التقرير' }}
-        </button>
+        </BaseButton>
       </div>
 
       <!-- Filters Section -->
       <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-theme-sm dark:border-gray-800 dark:bg-gray-900">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">{{ $t('personnel.governorate') || 'المديرية / الإدارة' }}</label>
-            <div class="relative">
-              <select v-model="filters.central_department" @change="fetchData(1)" class="block w-full appearance-none rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:border-brand-500">
-                <option value="">{{ $t('services.all') || 'الكل' }}</option>
-                <option v-for="dept in coreStore.centralDepartments" :key="dept.id" :value="dept.id">{{ dept.name }}</option>
-              </select>
-              <span class="pointer-events-none absolute inset-y-0 ltr:right-0 rtl:left-0 flex items-center px-4 text-gray-500">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            <BaseSelect
+              v-model="filters.central_department"
+              :label="$t('personnel.governorate') || 'المديرية / الإدارة'"
+              :options="coreStore.centralDepartments"
+              valueKey="id"
+              labelKey="name"
+              :placeholder="$t('services.all') || 'الكل'"
+              @update:modelValue="fetchData(1)"
+            />
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">{{ $t('services.service_month') || 'شهر الخدمة' }}</label>
+            <div class="relative z-20 bg-transparent">
+              <input type="month" v-model="filters.service_month" @change="fetchData(1)" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 transition-colors dark:placeholder:text-white/30 border-gray-300 text-gray-800 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:inset-0">
+              <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
+                <svg class="h-5 w-5 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
               </span>
             </div>
           </div>
-          <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">{{ $t('services.service_month') || 'شهر الخدمة' }}</label>
-            <input type="month" v-model="filters.service_month" @change="fetchData(1)" class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:border-brand-500">
-          </div>
           <div class="flex items-end">
-            <button @click="resetFilters" class="w-full md:w-auto rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
-              {{ $t('common.reset_filters') || 'إعادة ضبط الفرز' }}
-            </button>
+            <BaseButton @click="resetFilters" variant="outline" size="md" customClass="w-full md:w-auto h-11">
+              إعادة ضبط الفرز
+            </BaseButton>
           </div>
         </div>
       </div>
@@ -145,6 +149,8 @@
 import { ref, onMounted } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
+import BaseSelect from '@/components/common/BaseSelect.vue'
+import BaseButton from '@/components/common/BaseButton.vue'
 import { useServicesStore } from '@/stores/services'
 import { useCoreStore } from '@/stores/core'
 import Swal from 'sweetalert2'
@@ -153,7 +159,7 @@ const servicesStore = useServicesStore()
 const coreStore = useCoreStore()
 
 const filters = ref({
-  central_department: '',
+  central_department: null as string | number | null,
   service_month: ''
 })
 
@@ -176,7 +182,7 @@ function changePage(page: number) {
 
 function resetFilters() {
   filters.value = {
-    central_department: '',
+    central_department: null,
     service_month: ''
   }
   fetchData(1)

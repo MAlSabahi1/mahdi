@@ -1,6 +1,6 @@
 <template>
   <div>
-    <label v-if="label" class="mb-1.5 block text-theme-sm font-medium text-gray-700 dark:text-gray-400">
+    <label v-if="label" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
       {{ label }} <span v-if="required" class="text-error-500">*</span>
     </label>
     <div class="relative z-20 bg-transparent">
@@ -8,13 +8,14 @@
         v-model="internalValue"
         :disabled="disabled"
         :class="[
-          'dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-theme-sm shadow-theme-xs focus:outline-hidden focus:ring-3 transition-colors',
+          'dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 transition-colors dark:placeholder:text-white/30',
           error
             ? 'border-error-500 text-error-900 focus:border-error-500 focus:ring-error-500/20 dark:border-error-500 dark:text-error-400'
-            : 'border-gray-300 text-gray-800 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800'
+            : 'border-gray-300 text-gray-800 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800',
+          { 'text-gray-800 dark:text-white/90': internalValue }
         ]"
       >
-        <option v-if="placeholder !== false" :value="null" class="text-gray-500 dark:text-gray-500">
+        <option v-if="placeholder !== false" :value="null" disabled>
           {{ placeholder === true ? '...' : placeholder }}
         </option>
         
