@@ -195,7 +195,32 @@ export const useServicesStore = defineStore('services', () => {
       })
       return response.data
     } catch (err: any) {
-      error.value = err.response?.data?.error || 'فشل عملية الاستيراد'
+      let errStr = 'فشل عملية الاستيراد'
+      const errData = err.response?.data?.error || err.response?.data
+      
+      if (errData) {
+        let obj = errData
+        if (typeof obj === 'string') {
+          try { obj = JSON.parse(obj) } catch (e) {}
+        }
+        
+        if (typeof obj === 'object' && obj !== null) {
+          if (obj.detail && typeof obj.detail === 'object' && !Array.isArray(obj.detail)) {
+            const msgs = Object.values(obj.detail).flat()
+            errStr = msgs.length > 0 ? msgs.join('، ') : (obj.message || errStr)
+          } else if (obj.message) {
+            errStr = obj.message
+          } else if (typeof obj.detail === 'string') {
+            errStr = obj.detail
+          } else if (typeof errData === 'string') {
+            errStr = errData
+          }
+        } else if (typeof errData === 'string') {
+          errStr = errData
+        }
+      }
+      
+      error.value = errStr
       throw err
     } finally {
       loading.value = false

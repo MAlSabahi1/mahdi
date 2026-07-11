@@ -12,7 +12,7 @@
           <svg class="h-4.5 w-4.5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          {{ $t('common.refresh') || 'تحديث' }}
+          تحديث
         </button>
       </div>
 
@@ -78,28 +78,34 @@
       <!-- Filters & Actions -->
       <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-theme-sm dark:border-gray-800 dark:bg-gray-900 flex flex-col md:flex-row justify-between items-center gap-4">
         <div class="flex items-center gap-3 w-full md:w-auto">
-          <div class="relative w-full md:w-48">
-            <select v-model="filters.status" @change="fetchData(1)" class="block w-full appearance-none rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:border-brand-500">
-              <option value="pending">{{ $t('services.status_pending') || 'قيد الانتظار' }}</option>
-              <option value="approved">{{ $t('services.status_approved') || 'تم الموافقة' }}</option>
-              <option value="rejected">{{ $t('services.status_rejected') || 'مرفوضة' }}</option>
-              <option value="">{{ $t('services.all') || 'الكل' }}</option>
-            </select>
-            <span class="pointer-events-none absolute inset-y-0 ltr:right-0 rtl:left-0 flex items-center px-4 text-gray-500">
-              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-            </span>
+          <div class="w-full md:w-48">
+            <BaseSelect
+              v-model="filters.status"
+              :options="[
+                { id: 'pending', name: $t('services.status_pending') || 'قيد الانتظار' },
+                { id: 'approved', name: $t('services.status_approved') || 'تم الموافقة' },
+                { id: 'rejected', name: $t('services.status_rejected') || 'مرفوضة' }
+              ]"
+              valueKey="id"
+              labelKey="name"
+              :placeholder="$t('services.all') || 'الكل'"
+              @update:modelValue="fetchData(1)"
+            />
           </div>
           
-          <div class="relative w-full md:w-48">
-            <select v-model="filters.severity" @change="fetchData(1)" class="block w-full appearance-none rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:border-brand-500">
-              <option value="">{{ $t('services.all_severities') || 'كل المستويات' }}</option>
-              <option value="high">{{ $t('services.high_severity') || 'عالي الخطورة' }}</option>
-              <option value="medium">{{ $t('services.medium_severity') || 'متوسط الخطورة' }}</option>
-              <option value="low">{{ $t('services.low_severity') || 'منخفض الخطورة' }}</option>
-            </select>
-            <span class="pointer-events-none absolute inset-y-0 ltr:right-0 rtl:left-0 flex items-center px-4 text-gray-500">
-              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-            </span>
+          <div class="w-full md:w-48">
+            <BaseSelect
+              v-model="filters.severity"
+              :options="[
+                { id: 'high', name: $t('services.high_severity') || 'عالي الخطورة' },
+                { id: 'medium', name: $t('services.medium_severity') || 'متوسط الخطورة' },
+                { id: 'low', name: $t('services.low_severity') || 'منخفض الخطورة' }
+              ]"
+              valueKey="id"
+              labelKey="name"
+              :placeholder="$t('services.all_severities') || 'كل المستويات'"
+              @update:modelValue="fetchData(1)"
+            />
           </div>
         </div>
         
@@ -249,14 +255,15 @@
 import { ref, onMounted, computed } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
+import BaseSelect from '@/components/common/BaseSelect.vue'
 import { useServicesStore } from '@/stores/services'
 import Swal from 'sweetalert2'
 
 const servicesStore = useServicesStore()
 
 const filters = ref({
-  status: 'pending',
-  severity: '',
+  status: 'pending' as string | null,
+  severity: null as string | null,
   search: ''
 })
 

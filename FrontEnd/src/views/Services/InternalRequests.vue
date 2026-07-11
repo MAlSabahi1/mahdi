@@ -4,23 +4,23 @@
 
     <div class="space-y-6 text-start" dir="rtl">
 
-      <!-- Header -->
-      <div class="relative overflow-hidden rounded-2xl border border-blue-200 dark:border-blue-900/40 bg-gradient-to-br from-blue-50 to-white dark:from-blue-950/10 dark:to-gray-900 p-6 shadow-sm">
-        <div class="absolute -left-10 -top-10 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="relative flex items-center justify-between gap-4 flex-wrap">
-          <div class="flex items-center gap-4">
-            <div class="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-200/60 dark:border-blue-800">
+      <!-- Premium Page Header -->
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-theme-xs">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            <div class="p-2.5 bg-blue-50 dark:bg-blue-500/10 rounded-xl text-blue-600 dark:text-blue-400">
               <UserCheck class="h-6 w-6" />
             </div>
-            <div>
-              <h1 class="text-xl font-black text-gray-900 dark:text-white">الطلبات الداخلية</h1>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                تُعالج وتُعتمد بالكامل داخل المنظومة المحلية عبر سلسلة موافقات متدرجة.
-              </p>
-            </div>
-          </div>
-          <!-- Active Stage Badge -->
-          <div v-if="activeStageFilter !== 'all'" class="flex items-center gap-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-bold px-3 py-1.5 rounded-full border border-blue-200 dark:border-blue-800">
+            الطلبات الداخلية
+          </h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 font-medium leading-relaxed">
+            تُعالج وتُعتمد بالكامل داخل المنظومة المحلية عبر سلسلة موافقات متدرجة.
+          </p>
+        </div>
+
+        <!-- Active Stage Badge -->
+        <div class="flex items-center gap-4 flex-shrink-0">
+          <div v-if="activeStageFilter !== 'all'" class="flex items-center gap-2 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 text-xs font-bold px-4 py-2 rounded-xl border border-blue-200 dark:border-blue-500/20">
             <span class="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse"></span>
             {{ stageLabels[activeStageFilter] || activeStageFilter }}
           </div>
@@ -28,164 +28,149 @@
       </div>
 
       <!-- Stats Row -->
-      <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <div v-for="stat in stats" :key="stat.label"
-          class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm">
-          <p class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">{{ stat.label }}</p>
-          <div class="flex items-center justify-between">
-            <p class="text-lg font-black text-gray-900 dark:text-white font-mono">{{ stat.value }}</p>
-            <span :class="stat.dotClass" class="h-2.5 w-2.5 rounded-full"></span>
+          class="rounded-2xl border p-4 shadow-theme-xs" :class="stat.cardClass">
+          <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-full" :class="stat.iconBgClass">
+              <span :class="stat.dotClass" class="h-3 w-3 rounded-full"></span>
+            </div>
+            <div class="text-start">
+              <p class="text-xs font-medium" :class="stat.labelColorClass">{{ stat.label }}</p>
+              <h3 class="text-xl font-bold font-mono" :class="stat.valueColorClass">{{ stat.value }}</h3>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Filters Row -->
-      <div class="flex flex-wrap gap-2 items-center">
-        <!-- Stage Filter Tabs -->
-        <div class="flex gap-1.5 flex-wrap">
-          <button v-for="stage in stageOptions" :key="stage.value"
-            @click="activeStageFilter = stage.value"
-            :class="activeStageFilter === stage.value
-              ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-500/20'
-              : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:bg-gray-50'"
-            class="px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all flex items-center gap-1.5 cursor-pointer">
-            <span class="w-1.5 h-1.5 rounded-full" :class="stage.dot"></span>
-            {{ stage.label }}
-            <span v-if="stage.value !== 'all'" class="bg-white/30 text-white rounded px-1 text-[9px] font-black" :class="activeStageFilter === stage.value ? '' : 'hidden'">
-              {{ stageCounts[stage.value] || 0 }}
-            </span>
+      <!-- Data Table -->
+      <DataTable
+        :columns="columns"
+        :data="filteredRequests"
+        rowKey="id"
+        :loading="loading"
+        searchPlaceholder="بحث بالاسم أو رقم الطلب..."
+        @search="val => searchText = val"
+        @refresh="() => { /* Add refresh logic here if needed or re-fetch */ }"
+        emptyTitle="لا توجد طلبات داخلية"
+        emptyDescription="لا توجد طلبات داخلية بهذه المعايير"
+        actionsWidth="200px"
+      >
+        <!-- Toolbar Actions: Filters -->
+        <template #toolbar-actions>
+          <div class="flex flex-wrap items-center gap-3">
+            <!-- Stage Filter Tabs -->
+            <div class="flex gap-1.5 flex-wrap">
+              <button v-for="stage in stageOptions" :key="stage.value"
+                @click="activeStageFilter = stage.value"
+                :class="activeStageFilter === stage.value
+                  ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-500/20'
+                  : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'"
+                class="px-3.5 py-2 text-[11px] font-bold rounded-lg border transition-all flex items-center gap-1.5 cursor-pointer">
+                <span class="w-1.5 h-1.5 rounded-full" :class="stage.dot"></span>
+                {{ stage.label }}
+                <span v-if="stage.value !== 'all' && (stageCounts[stage.value] || 0) > 0"
+                  :class="activeStageFilter === stage.value ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'"
+                  class="rounded-md px-1.5 text-[9px] font-bold">
+                  {{ stageCounts[stage.value] || 0 }}
+                </span>
+              </button>
+            </div>
+
+            <!-- Service Type Filter -->
+            <div class="relative min-w-[160px]">
+              <select v-model="filterServiceType"
+                class="dark:bg-dark-900 h-10 w-full appearance-none rounded-lg border bg-transparent px-4 py-2 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 transition-colors border-gray-300 text-gray-800 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
+                <option value="">جميع الأنواع</option>
+                <option value="form">الاستمارات (إثبات حالة)</option>
+                <option value="correction">تصحيحات البيانات</option>
+                <option value="rank_settlement">الترقيات والتسويات</option>
+                <option value="disciplinary">الجزاءات والانضباط</option>
+                <option value="security">الأمان والوصول</option>
+              </select>
+            </div>
+          </div>
+        </template>
+
+        <template #cell-id="{ row }">
+          <template v-if="row.isCorrection">
+            <button @click="showCorrectionDetails(row)" class="text-blue-600 hover:underline hover:text-blue-700 font-mono font-bold">
+              #{{ String(row.rawId).padStart(5, '0') }}
+            </button>
+          </template>
+          <template v-else>
+            <RouterLink :to="`/services/forms/${row.id}`"
+              class="text-blue-600 hover:underline hover:text-blue-700 font-mono font-bold">
+              #{{ String(row.id).padStart(5, '0') }}
+            </RouterLink>
+          </template>
+        </template>
+
+        <template #cell-service_type="{ row }">
+          <span class="inline-flex items-center gap-1.5 text-gray-800 dark:text-gray-200 font-bold">
+            <span :class="serviceTypeColor(row.service_type)" class="h-1.5 w-1.5 rounded-full flex-shrink-0"></span>
+            {{ row.form_type_display || row.form_type }}
+          </span>
+        </template>
+
+        <template #cell-personnel="{ row }">
+          <span class="text-gray-700 dark:text-gray-300">{{ row.personnel_name || '—' }}</span>
+        </template>
+
+        <template #cell-military_number="{ row }">
+          <span class="font-mono text-gray-500 dark:text-gray-400 text-[11px]">{{ row.personnel_military_number || '—' }}</span>
+        </template>
+
+        <template #cell-attachments="{ row }">
+          <button v-if="row.attachments_count > 0" @click="showAttachments(row)"
+            class="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg bg-brand-50 text-brand-600 hover:bg-brand-100 dark:bg-brand-500/10 dark:text-brand-400 border border-brand-200 dark:border-brand-500/20 transition-colors cursor-pointer">
+            <Paperclip class="w-3 h-3" />
+            {{ row.attachments_count }}
           </button>
-        </div>
+          <span v-else class="text-[10px] text-gray-400">—</span>
+        </template>
 
-        <div class="flex-1"></div>
+        <template #cell-status="{ row }">
+          <span :class="stageColor(row.status)"
+            class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold border">
+            <span :class="stageDot(row.status)" class="h-1.5 w-1.5 rounded-full"></span>
+            {{ stageLabels[row.status] || row.status }}
+          </span>
+        </template>
 
-        <!-- Service Type Filter -->
-        <select v-model="filterServiceType"
-          class="text-xs border border-gray-200 dark:border-gray-800 rounded-lg p-2 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 min-w-[140px]">
-          <option value="">جميع الأنواع</option>
-          <option value="form">الاستمارات (إثبات حالة)</option>
-          <option value="correction">تصحيحات البيانات</option>
-          <option value="rank_settlement">الترقيات والتسويات</option>
-          <option value="disciplinary">الجزاءات والانضباط</option>
-          <option value="security">الأمان والوصول</option>
-        </select>
+        <template #cell-date="{ row }">
+          <span class="font-mono text-gray-500 dark:text-gray-400 text-[11px]">
+            {{ row.submitted_at ? new Date(row.submitted_at).toLocaleDateString('en-GB') : '—' }}
+          </span>
+        </template>
 
-        <!-- Search -->
-        <div class="relative">
-          <Search class="absolute right-2.5 top-2 h-3.5 w-3.5 text-gray-400" />
-          <input v-model="searchText" type="text" placeholder="بحث بالاسم أو رقم الطلب..."
-            class="text-xs border border-gray-200 dark:border-gray-800 rounded-lg py-2 pr-8 pl-3 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 w-48 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-      </div>
+        <template #actions="{ row }">
+          <button v-if="canApprove(row)"
+            @click="approveReq(row)"
+            class="bg-success-600 hover:bg-success-700 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors shadow-sm">
+            اعتماد
+          </button>
+          <button v-if="canApprove(row)"
+            @click="rejectReq(row)"
+            class="bg-error-50 hover:bg-error-100 text-error-600 border border-error-200 dark:bg-error-500/10 dark:text-error-400 dark:border-error-500/20 text-[10px] font-bold px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors">
+            رفض
+          </button>
+          <template v-if="row.isCorrection">
+            <button @click="showCorrectionDetails(row)"
+              class="text-blue-600 hover:text-blue-700 dark:text-blue-400 text-[10px] font-bold hover:underline px-1">
+              التفاصيل
+            </button>
+          </template>
+          <template v-else>
+            <RouterLink :to="`/services/forms/${row.id}`"
+              class="text-blue-600 hover:text-blue-700 dark:text-blue-400 text-[10px] font-bold hover:underline px-1">
+              التفاصيل
+            </RouterLink>
+          </template>
+        </template>
+      </DataTable>
 
-      <!-- Table -->
-      <div class="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800 rounded-2xl shadow-theme-xs overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-right border-collapse text-xs">
-            <thead>
-              <tr class="border-b border-gray-200 dark:border-gray-800 text-[10px] font-bold text-gray-450 bg-gray-50/50 dark:bg-gray-950/20">
-                <th class="px-4 py-3">رقم الطلب</th>
-                <th class="px-4 py-3">نوع الخدمة</th>
-                <th class="px-4 py-3">الفرد</th>
-                <th class="px-4 py-3">الرقم العسكري</th>
-                <th class="px-4 py-3">المرفقات</th>
-                <th class="px-4 py-3">المرحلة الحالية</th>
-                <th class="px-4 py-3">تاريخ التقديم</th>
-                <th class="px-4 py-3 text-center w-[200px]">الإجراءات</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60">
-              <tr v-if="loading">
-                <td colspan="8" class="px-4 py-12 text-center text-gray-400">
-                  <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                </td>
-              </tr>
-              <tr v-else-if="filteredRequests.length === 0">
-                <td colspan="8" class="px-4 py-12 text-center">
-                  <div class="flex flex-col items-center gap-3 text-gray-400">
-                    <FileX class="h-10 w-10 opacity-30" />
-                    <p class="text-sm font-bold">لا توجد طلبات داخلية بهذه المعايير</p>
-                  </div>
-                </td>
-              </tr>
-              <tr v-for="req in filteredRequests" :key="req.id"
-                class="hover:bg-blue-50/30 dark:hover:bg-blue-950/10 transition-colors group">
-                <td class="px-4 py-3 font-mono font-bold">
-                  <template v-if="req.isCorrection">
-                    <button @click="showCorrectionDetails(req)" class="text-blue-600 hover:underline hover:text-blue-700">
-                      #{{ String(req.rawId).padStart(5, '0') }}
-                    </button>
-                  </template>
-                  <template v-else>
-                    <RouterLink :to="`/services/forms/${req.id}`"
-                      class="text-blue-600 hover:underline hover:text-blue-700">
-                      #{{ String(req.id).padStart(5, '0') }}
-                    </RouterLink>
-                  </template>
-                </td>
-                <td class="px-4 py-3">
-                  <span class="inline-flex items-center gap-1.5 text-gray-800 dark:text-gray-200 font-bold">
-                    <span :class="serviceTypeColor(req.service_type)" class="h-1.5 w-1.5 rounded-full flex-shrink-0"></span>
-                    {{ req.form_type_display || req.form_type }}
-                  </span>
-                </td>
-                <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ req.personnel_name || '—' }}</td>
-                <td class="px-4 py-3 font-mono text-gray-500 text-[11px]">{{ req.personnel_military_number || '—' }}</td>
-                <td class="px-4 py-3">
-                  <button v-if="req.attachments_count > 0" @click="showAttachments(req)"
-                    class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg bg-brand-50 text-brand-600 hover:bg-brand-100 dark:bg-brand-900/20 dark:text-brand-400 border border-brand-200 dark:border-brand-800 transition-colors cursor-pointer">
-                    <Paperclip class="w-3 h-3" />
-                    {{ req.attachments_count }}
-                  </button>
-                  <span v-else class="text-[10px] text-gray-400">—</span>
-                </td>
-                <td class="px-4 py-3">
-                  <span :class="stageColor(req.status)"
-                    class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold border">
-                    <span :class="stageDot(req.status)" class="h-1.5 w-1.5 rounded-full"></span>
-                    {{ stageLabels[req.status] || req.status }}
-                  </span>
-                </td>
-                <td class="px-4 py-3 font-mono text-gray-450 text-[11px]">
-                  {{ req.submitted_at ? new Date(req.submitted_at).toLocaleDateString('en-GB') : '—' }}
-                </td>
-                <td class="px-4 py-3">
-                  <div class="flex items-center justify-center gap-1.5">
-                    <!-- Approve: only if current stage matches user role -->
-                    <button v-if="canApprove(req)"
-                      @click="approveReq(req)"
-                      class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-colors shadow-sm">
-                      اعتماد
-                    </button>
-                    <button v-if="canApprove(req)"
-                      @click="rejectReq(req)"
-                      class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[10px] font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-colors">
-                      رفض
-                    </button>
-                    <template v-if="req.isCorrection">
-                      <button @click="showCorrectionDetails(req)"
-                        class="text-blue-600 hover:text-blue-700 text-[10px] font-bold hover:underline px-1">
-                        التفاصيل
-                      </button>
-                    </template>
-                    <template v-else>
-                      <RouterLink :to="`/services/forms/${req.id}`"
-                        class="text-blue-600 hover:text-blue-700 text-[10px] font-bold hover:underline px-1">
-                        التفاصيل
-                      </RouterLink>
-                    </template>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- Pagination Info -->
-      <div v-if="!loading && allRequests.length > 0" class="text-xs text-gray-500 text-center">
-        عرض {{ filteredRequests.length }} من {{ allRequests.length }} طلب
-      </div>
     </div>
   </admin-layout>
 </template>
@@ -194,11 +179,22 @@
 import { ref, computed, onMounted } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
+import DataTable from '@/components/tables/DataTable.vue'
 import { UserCheck, Search, FileX, Paperclip } from 'lucide-vue-next'
 import { useServicesStore } from '@/stores/services'
 import { useAuthStore } from '@/stores/auth'
 import Swal from 'sweetalert2'
 import api from '@/lib/api'
+
+const columns = [
+  { key: 'id', label: 'رقم الطلب' },
+  { key: 'service_type', label: 'نوع الخدمة' },
+  { key: 'personnel', label: 'الفرد' },
+  { key: 'military_number', label: 'الرقم العسكري' },
+  { key: 'attachments', label: 'المرفقات' },
+  { key: 'status', label: 'المرحلة الحالية' },
+  { key: 'date', label: 'تاريخ التقديم' },
+]
 
 const servicesStore = useServicesStore()
 const authStore = useAuthStore()
@@ -242,11 +238,46 @@ const stageCounts = computed(() => {
 })
 
 const stats = computed(() => [
-  { label: 'إجمالي',            value: allRequests.value.length, dotClass: 'bg-gray-400' },
-  { label: 'عند رئيس الخدمات', value: stageCounts.value['pending_services'] || 0, dotClass: 'bg-amber-500' },
-  { label: 'عند مدير الموارد', value: stageCounts.value['pending_hr'] || 0,       dotClass: 'bg-blue-500'  },
-  { label: 'عند المدير العام',  value: stageCounts.value['pending_director'] || 0, dotClass: 'bg-purple-500'},
-  { label: 'معتمدة',            value: stageCounts.value['approved'] || 0,         dotClass: 'bg-emerald-500'},
+  {
+    label: 'إجمالي', value: allRequests.value.length,
+    dotClass: 'bg-gray-400',
+    cardClass: 'border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900',
+    iconBgClass: 'bg-gray-100 dark:bg-gray-800',
+    labelColorClass: 'text-gray-600 dark:text-gray-400',
+    valueColorClass: 'text-gray-900 dark:text-white',
+  },
+  {
+    label: 'عند رئيس الخدمات', value: stageCounts.value['pending_services'] || 0,
+    dotClass: 'bg-amber-500',
+    cardClass: 'border-warning-200 bg-warning-50 dark:border-warning-500/20 dark:bg-warning-500/5',
+    iconBgClass: 'bg-warning-100 dark:bg-warning-500/20',
+    labelColorClass: 'text-warning-700 dark:text-warning-400',
+    valueColorClass: 'text-warning-900 dark:text-warning-300',
+  },
+  {
+    label: 'عند مدير الموارد', value: stageCounts.value['pending_hr'] || 0,
+    dotClass: 'bg-blue-500',
+    cardClass: 'border-blue-200 bg-blue-50 dark:border-blue-500/20 dark:bg-blue-500/5',
+    iconBgClass: 'bg-blue-100 dark:bg-blue-500/20',
+    labelColorClass: 'text-blue-700 dark:text-blue-400',
+    valueColorClass: 'text-blue-900 dark:text-blue-300',
+  },
+  {
+    label: 'عند المدير العام', value: stageCounts.value['pending_director'] || 0,
+    dotClass: 'bg-purple-500',
+    cardClass: 'border-purple-200 bg-purple-50 dark:border-purple-500/20 dark:bg-purple-500/5',
+    iconBgClass: 'bg-purple-100 dark:bg-purple-500/20',
+    labelColorClass: 'text-purple-700 dark:text-purple-400',
+    valueColorClass: 'text-purple-900 dark:text-purple-300',
+  },
+  {
+    label: 'معتمدة', value: stageCounts.value['approved'] || 0,
+    dotClass: 'bg-emerald-500',
+    cardClass: 'border-success-200 bg-success-50 dark:border-success-500/20 dark:bg-success-500/5',
+    iconBgClass: 'bg-success-100 dark:bg-success-500/20',
+    labelColorClass: 'text-success-700 dark:text-success-400',
+    valueColorClass: 'text-success-900 dark:text-success-300',
+  },
 ])
 
 // ── الفلترة ──────────────────────────────────────────────
@@ -274,13 +305,13 @@ const filteredRequests = computed(() => {
 function stageColor(status: string) {
   const m: Record<string, string> = {
     draft:             'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700',
-    in_progress:       'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900',
-    pending_services:  'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900',
-    pending_hr:        'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900',
-    pending_director:  'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-900',
-    approved:          'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900',
-    rejected:          'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900',
-    returned:          'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900',
+    in_progress:       'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20',
+    pending_services:  'bg-warning-50 text-warning-700 border-warning-200 dark:bg-warning-500/10 dark:text-warning-400 dark:border-warning-500/20',
+    pending_hr:        'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20',
+    pending_director:  'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/20',
+    approved:          'bg-success-50 text-success-700 border-success-200 dark:bg-success-500/10 dark:text-success-400 dark:border-success-500/20',
+    rejected:          'bg-error-50 text-error-700 border-error-200 dark:bg-error-500/10 dark:text-error-400 dark:border-error-500/20',
+    returned:          'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/20',
   }
   return m[status] || 'bg-gray-100 text-gray-600 border-gray-200'
 }
