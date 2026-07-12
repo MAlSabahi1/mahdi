@@ -248,6 +248,11 @@ const menuGroups = computed(() => {
               {
                 name: "admin.dynamic_forms",
                 path: "/admin/documents/list",
+              },
+              {
+                name: "منشئ المذكرات الرسمية",
+                path: "/admin/documents/memo-builder",
+                new: true
               }
             ]
           },

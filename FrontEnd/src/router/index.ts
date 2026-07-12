@@ -506,6 +506,26 @@ const router = createRouter({
       }
     },
     {
+      path: '/admin/documents/memo-builder',
+      name: 'OfficialMemoBuilder',
+      component: () => import('@/views/SystemAdmin/DocumentBuilder/OfficialMemoBuilder.vue'),
+      meta: {
+        title: 'منشئ المذكرات (Cover Memos)',
+        requiresAuth: true,
+        requiresAdmin: true
+      }
+    },
+    {
+      path: '/admin/documents/memo-preview',
+      name: 'OfficialMemoPreview',
+      component: () => import('@/views/SystemAdmin/DocumentBuilder/OfficialMemoPreview.vue'),
+      meta: {
+        title: 'معاينة المذكرة الرسمية',
+        requiresAuth: true,
+        requiresAdmin: true
+      }
+    },
+    {
       path: '/admin/structure/org-tree',
       name: 'OrgHierarchyTree',
       component: () => import('@/views/SystemAdmin/Structure/OrgHierarchyTree.vue'),
