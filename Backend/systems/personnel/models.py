@@ -383,7 +383,7 @@ class PersonnelMaster(SoftDeletableModel):
         choices=[
             ('has_expenses', _('لديه نفقات')),
             ('no_expenses', _('بدون نفقات')),
-            ('expenses', _('نفقات')),
+           
         ],
         verbose_name=_('حالة النفقات')
     )
@@ -456,7 +456,12 @@ class PersonnelMaster(SoftDeletableModel):
         """
         تحديث تلقائي عند الحفظ:
         1. حساب is_complete
+        2. تعبئة category تلقائياً من job_title
         """
+        # تعبئة الفئة تلقائياً من المسمى الوظيفي إذا كانت فارغة أو إذا تم تغيير المسمى
+        if self.job_title_id and hasattr(self.job_title, 'category_id'):
+            self.category_id = self.job_title.category_id
+
         # حساب is_complete
         self.is_complete = all([
             self.photo,
@@ -474,6 +479,16 @@ class PersonnelMaster(SoftDeletableModel):
         # 2. إصلاح مشكلة قيد الرقم العسكري القديم (تحويل النص الفارغ إلى Null)
         if self.old_military_number == "":
             self.old_military_number = None
+
+        if self.old_military_number:
+            exists = PersonnelMaster.objects.filter(old_military_number=self.old_military_number).exclude(pk=self.pk).exists()
+            if exists:
+                from django.core.exceptions import ValidationError
+                from django.utils.translation import gettext_lazy as _
+                owner = PersonnelMaster.objects.filter(old_military_number=self.old_military_number).exclude(pk=self.pk).first()
+                raise ValidationError({
+                    'old_military_number': _('الرقم العسكري القديم مستخدم بالفعل للفرد: %s') % owner.full_name
+                })
 
         super().clean()
         # ============================================================

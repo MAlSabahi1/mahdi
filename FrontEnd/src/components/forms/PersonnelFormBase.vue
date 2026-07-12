@@ -241,7 +241,6 @@
                 <option :value="null">...</option>
                 <option value="has_expenses">لديه نفقات</option>
                 <option value="no_expenses">بدون نفقات</option>
-                <option value="expenses">نفقات</option>
               </select>
               <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
                 <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -1015,6 +1014,24 @@ async function handleSubmit() {
     return
   }
 
+  // ✅ التحقق من تاريخ الميلاد مقابل تاريخ التجنيد (18 سنة على الأقل)
+  if (form.birth_date && form.join_date) {
+    const birth = new Date(form.birth_date as string)
+    const join = new Date(form.join_date as string)
+    if (!isNaN(birth.getTime()) && !isNaN(join.getTime())) {
+      let ageAtJoin = join.getFullYear() - birth.getFullYear()
+      const monthDiff = join.getMonth() - birth.getMonth()
+      if (monthDiff < 0 || (monthDiff === 0 && join.getDate() < birth.getDate())) {
+        ageAtJoin--
+      }
+      if (ageAtJoin < 18) {
+        internalError.value = `❌ خطأ في التواريخ: تاريخ الميلاد (${(form.birth_date as string)}) يجعل عمر الفرد ${ageAtJoin} سنة عند تاريخ التجنيد (${(form.join_date as string)}). يجب أن يكون عمره 18 سنة على الأقل. يرجى تصحيح أحد التاريخين.`
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        return
+      }
+    }
+  }
+
   internalError.value = ''
 
   // Combine names
@@ -1025,11 +1042,19 @@ async function handleSubmit() {
 
   // Clean empty strings to null for API
   const payload = { ...form }
+  console.log("PAYLOAD TO SEND:", payload)
   Object.keys(payload).forEach(key => {
     if (payload[key as keyof typeof payload] === '') {
-      (payload as any)[key] = null
+      if (key !== 'notes') {
+        (payload as any)[key] = null
+      }
     }
   })
+  
+  // Ensure notes is an empty string instead of null, as Django TextField does not allow null
+  if (payload.notes === null) {
+    payload.notes = ''
+  }
 
   emit('submit', payload)
 }

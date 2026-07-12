@@ -100,7 +100,7 @@
           </ReportTable>
           
           <!-- توضيح رسمي في أسفل الكشف -->
-          <div class="mt-8 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 print:hidden">
+          <div class="mt-8 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 print:block">
             <h4 class="font-bold text-gray-800 dark:text-white mb-2 text-lg print:text-black flex items-center gap-2">
               <span class="bg-red-600 text-white px-3 py-1 rounded-full text-sm print:border print:border-black print:text-black print:bg-white">توضيح</span>
             </h4>

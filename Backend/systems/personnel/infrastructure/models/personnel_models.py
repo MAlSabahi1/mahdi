@@ -1,4 +1,4 @@
-"""
+    """
 Personnel Models - نماذج الأفراد
 """
 from django.db import models
@@ -458,6 +458,14 @@ class PersonnelMaster(SoftDeletableModel):
         # 2. إصلاح مشكلة قيد الرقم العسكري القديم (تحويل النص الفارغ إلى Null)
         if self.old_military_number == "":
             self.old_military_number = None
+
+        if self.old_military_number:
+            exists = PersonnelMaster.objects.filter(old_military_number=self.old_military_number).exclude(pk=self.pk).exists()
+            if exists:
+                owner = PersonnelMaster.objects.filter(old_military_number=self.old_military_number).exclude(pk=self.pk).first()
+                raise ValidationError({
+                    'old_military_number': _('الرقم العسكري القديم مستخدم بالفعل للفرد: %s') % owner.full_name
+                })
 
         super().clean()
         # ============================================================

@@ -156,6 +156,9 @@ class PersonnelDetailSerializer(serializers.ModelSerializer):
     force_classification_name = serializers.CharField(
         source='force_classification.name', read_only=True, default=None
     )
+    qualification_name = serializers.CharField(
+        source='qualification.name', read_only=True, default=None
+    )
     # بيانات محسوبة
     age = serializers.IntegerField(read_only=True)
     service_years = serializers.IntegerField(read_only=True)
@@ -192,10 +195,10 @@ class PersonnelDetailSerializer(serializers.ModelSerializer):
             'position', 'position_name',
             'force_classification', 'force_classification_name',
             # بيانات أخرى
-            'qualification', 'qualification_detail',
+            'qualification', 'qualification_detail', 'qualification_name',
             'geo_location', 'geo_location_name',
             'photo', 'fingerprint_hash',
-            'expense_status', 'appointment_info',
+            'expense_status', 'expense_status_display', 'appointment_info',
             'is_complete', 'is_data_clean',
             'data_quality_score', 'notes',
             'recent_events', 'pending_corrections', 'documents',
@@ -251,6 +254,13 @@ class PersonnelCreateSerializer(serializers.ModelSerializer):
             'category', 'job_title', 'position', 'force_classification',
             'qualification', 'geo_location', 'expense_status', 'notes',
         ]
+        extra_kwargs = {
+            'notes': {'allow_null': True, 'allow_blank': True, 'required': False},
+            'birth_date': {'allow_null': True, 'required': False},
+            'qualification': {'allow_null': True, 'required': False},
+            'geo_location': {'allow_null': True, 'required': False},
+            'expense_status': {'allow_null': True, 'allow_blank': True, 'required': False},
+        }
     
     def validate_military_number(self, value):
         if len(value) != 7 or not value.isdigit():
@@ -268,9 +278,23 @@ class PersonnelCreateSerializer(serializers.ModelSerializer):
             )
         return value
 
+    def validate(self, data):
+        birth_date = data.get('birth_date')
+        join_date = data.get('join_date')
+        
+        if birth_date and join_date:
+            age_at_join = join_date.year - birth_date.year - ((join_date.month, join_date.day) < (birth_date.month, birth_date.day))
+            if age_at_join < 18:
+                raise serializers.ValidationError(
+                    {'birth_date': 'تاريخ الميلاد غير صالح: يجب أن يكون عمر الفرد 18 عاماً على الأقل عند تاريخ التجنيد.'}
+                )
+        return super().validate(data) if hasattr(super(), 'validate') else data
+
 
 class PersonnelUpdateSerializer(serializers.ModelSerializer):
     """تحديث بيانات فرد"""
+    expense_status = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+
     
     class Meta:
         model = PersonnelMaster
@@ -279,11 +303,17 @@ class PersonnelUpdateSerializer(serializers.ModelSerializer):
             'phone_number', 'current_rank', 'current_status',
             'security_admin', 'central_department', 'branch',
             'district_police', 'division', 'unit',
-
             'category', 'job_title', 'position', 'force_classification',
             'qualification', 'geo_location', 'expense_status',
             'pending_rank', 'is_complete', 'notes',
         ]
+        extra_kwargs = {
+            'notes': {'allow_null': True, 'allow_blank': True, 'required': False},
+            'birth_date': {'allow_null': True, 'required': False},
+            'qualification': {'allow_null': True, 'required': False},
+            'geo_location': {'allow_null': True, 'required': False},
+            'expense_status': {'allow_null': True, 'allow_blank': True, 'required': False},
+        }
     
     def validate_national_id(self, value):
         instance = self.instance
@@ -301,6 +331,19 @@ class PersonnelUpdateSerializer(serializers.ModelSerializer):
         ).exclude(pk=instance.pk).exists():
             raise serializers.ValidationError('الرقم الوطني مستخدم بالفعل لموظف آخر')
         return value
+
+    def validate(self, data):
+        instance = self.instance
+        birth_date = data.get('birth_date', getattr(instance, 'birth_date', None))
+        join_date = data.get('join_date', getattr(instance, 'join_date', None))
+        
+        if birth_date and join_date:
+            age_at_join = join_date.year - birth_date.year - ((join_date.month, join_date.day) < (birth_date.month, birth_date.day))
+            if age_at_join < 18:
+                raise serializers.ValidationError(
+                    {'birth_date': 'تاريخ الميلاد غير صالح: يجب أن يكون عمر الفرد 18 عاماً على الأقل عند تاريخ التجنيد.'}
+                )
+        return super().validate(data) if hasattr(super(), 'validate') else data
 
 
 # ============================================================================

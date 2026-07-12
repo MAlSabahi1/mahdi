@@ -208,7 +208,13 @@ async function handleApproveInternal(req: any) {
       else { await servicesStore.approveForm(req.id) }
       Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم الاعتماد بنجاح', showConfirmButton: false, timer: 2500 })
       fetchAll()
-    } catch (e: any) { Swal.fire({ icon: 'error', title: 'خطأ', text: e?.response?.data?.error || 'حدث خطأ' }) }
+    } catch (e: any) {
+      let errorMsg = e?.response?.data?.error || 'حدث خطأ'
+      if (e?.response?.data && typeof e.response.data === 'object' && !e.response.data.error) {
+        errorMsg = Object.values(e.response.data).flat().join('\n')
+      }
+      Swal.fire({ icon: 'error', title: 'خطأ', text: errorMsg })
+    }
   }
 }
 
@@ -220,7 +226,13 @@ async function handleRejectInternal(req: any) {
       else { await servicesStore.rejectForm(req.id, result.value) }
       Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'تم رفض الطلب', showConfirmButton: false, timer: 2500 })
       fetchAll()
-    } catch (e: any) { Swal.fire({ icon: 'error', title: 'خطأ', text: e?.response?.data?.error || 'حدث خطأ' }) }
+    } catch (e: any) {
+      let errorMsg = e?.response?.data?.error || 'حدث خطأ'
+      if (e?.response?.data && typeof e.response.data === 'object' && !e.response.data.error) {
+        errorMsg = Object.values(e.response.data).flat().join('\n')
+      }
+      Swal.fire({ icon: 'error', title: 'خطأ', text: errorMsg })
+    }
   }
 }
 
@@ -270,7 +282,13 @@ async function handleRejectExternal(req: any) {
       else { await servicesStore.rejectForm(req.id, result.value) }
       Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'تم رفض الطلب', showConfirmButton: false, timer: 2000 })
       fetchAll()
-    } catch (e: any) { Swal.fire('خطأ', e.response?.data?.error || 'حدث خطأ', 'error') }
+    } catch (e: any) {
+      let errorMsg = e?.response?.data?.error || 'حدث خطأ'
+      if (e?.response?.data && typeof e.response.data === 'object' && !e.response.data.error) {
+        errorMsg = Object.values(e.response.data).flat().join('\n')
+      }
+      Swal.fire('خطأ', errorMsg, 'error')
+    }
   }
 }
 </script>

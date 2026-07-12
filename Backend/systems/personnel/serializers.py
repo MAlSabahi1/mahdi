@@ -287,6 +287,7 @@ class PersonnelCreateSerializer(serializers.ModelSerializer):
 
 class PersonnelUpdateSerializer(serializers.ModelSerializer):
     """تحديث بيانات فرد"""
+    expense_status = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     
     class Meta:
         model = PersonnelMaster
@@ -298,6 +299,7 @@ class PersonnelUpdateSerializer(serializers.ModelSerializer):
 
             'category', 'job_title', 'position', 'force_classification',
             'qualification', 'geo_location',
+            'expense_status',
             'pending_rank', 'is_complete', 'notes',
         ]
     

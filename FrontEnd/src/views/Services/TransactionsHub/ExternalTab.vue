@@ -43,7 +43,9 @@
       </template>
 
       <template #cell-form_type_display="{ row }">
-        <span class="font-bold text-gray-800 dark:text-gray-200">{{ row.form_type_display || row.form_type }}</span>
+        <span class="font-bold text-gray-800 dark:text-gray-200">
+          {{ (row.form_type_display || row.form_type || '').replace('returned_to_service', 'عائد للخدمة') }}
+        </span>
       </template>
 
       <template #cell-personnel_name="{ row }">

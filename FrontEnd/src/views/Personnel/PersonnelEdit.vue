@@ -97,48 +97,57 @@ async function handleSubmit(payload: any) {
 
   try {
     await personnelStore.updatePersonnel(payload.military_number, payload)
-    router.push(`/personnel/${payload.military_number}`) // navigate back to detail view
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم حفظ البيانات بنجاح', showConfirmButton: false, timer: 3000 })
+    router.push(`/personnel/${payload.military_number}`)
   } catch (err: any) {
-    errorMsg.value = err.response?.data?.message || personnelStore.error || t('common.error') || 'فشل الحفظ. تأكد من صحة البيانات والقواعد الإدارية.'
-    
-    // Attempt to map backend validation errors to fields
-    if (err.response?.data) {
-      const beErrors = err.response.data
-        const fieldLabels: Record<string, string> = {
-          job_title: 'المسمى الوظيفي',
-          position: 'المنصب',
-          category: 'الفئة',
-          national_id: 'الرقم الوطني',
-          military_number: 'الرقم العسكري',
-          full_name: 'الاسم الكامل',
-          phone_number: 'رقم الهاتف',
-          birth_date: 'تاريخ الميلاد',
-          join_date: 'تاريخ التجنيد',
-          current_rank: 'الرتبة',
-          current_status: 'الحالة',
-          security_admin: 'الإدارة الأمنية',
-          central_department: 'القطاع / الإدارة المركزية',
-          branch: 'الفرع',
-          district_police: 'المديرية',
-          division: 'القسم',
-          unit: 'الوحدة',
-          qualification: 'المؤهل',
-          force_classification: 'قوة السلاح',
-          geo_location: 'الموقع الجغرافي',
-          notes: 'الملاحظات'
-        }
-        Object.keys(beErrors).forEach(key => {
-          if (key === 'message' || key === 'error') return
-          const label = fieldLabels[key] || key
-          const msg = Array.isArray(beErrors[key]) ? beErrors[key].join(', ') : beErrors[key]
-          errorMsg.value += `\n- ${label}: ${msg}`
-        })
+    const fieldLabels: Record<string, string> = {
+      job_title: 'المسمى الوظيفي', position: 'المنصب', category: 'الفئة',
+      national_id: 'الرقم الوطني', military_number: 'الرقم العسكري',
+      full_name: 'الاسم الكامل', phone_number: 'رقم الهاتف',
+      birth_date: 'تاريخ الميلاد', join_date: 'تاريخ التجنيد',
+      current_rank: 'الرتبة', current_status: 'الحالة',
+      security_admin: 'الإدارة الأمنية', central_department: 'القطاع / الإدارة المركزية',
+      branch: 'الفرع', district_police: 'المديرية', division: 'القسم', unit: 'الوحدة',
+      qualification: 'المؤهل', force_classification: 'قوة السلاح',
+      geo_location: 'الموقع الجغرافي', notes: 'الملاحظات',
+      detail: 'تفاصيل', non_field_errors: 'أخطاء عامة',
     }
+
+    let mainMsg = 'فشل الحفظ. يرجى مراجعة البيانات.'
+    let details = ''
+    const responseData = err.response?.data
+
+    if (responseData && typeof responseData === 'object' && !Array.isArray(responseData)) {
+      const lines: string[] = []
+      Object.keys(responseData).forEach(key => {
+        const label = fieldLabels[key] || key
+        const val = responseData[key]
+        const msg = Array.isArray(val) ? val.join('، ') : (typeof val === 'string' ? val : JSON.stringify(val))
+        lines.push(`• ${label}: ${msg}`)
+      })
+      if (lines.length > 0) {
+        mainMsg = 'فشل الحفظ — يوجد أخطاء في البيانات:'
+        details = lines.join('\n')
+      }
+    } else if (typeof responseData === 'string' && responseData.includes('<!DOCTYPE')) {
+      mainMsg = 'حدث خطأ داخلي في الخادم. يرجى التحقق من صحة جميع البيانات (خاصة تاريخ الميلاد ويجب أن يكون 18 سنة قبل تاريخ التجنيد).'
+    } else if (personnelStore.error) {
+      mainMsg = personnelStore.error
+    }
+
+    errorMsg.value = mainMsg + (details ? '\n' + details : '')
+    Swal.fire({
+      icon: 'error',
+      title: 'فشل حفظ البيانات',
+      html: `<div style="text-align:right;direction:rtl;white-space:pre-line">${mainMsg}${details ? '\n\n' + details : ''}</div>`,
+      confirmButtonText: 'حسناً',
+    })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   } finally {
     loading.value = false
   }
 }
+
 
 onMounted(async () => {
   if (coreStore.ranks.length === 0) {

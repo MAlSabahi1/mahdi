@@ -544,8 +544,8 @@ async function confirmApprove() {
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: t('corrections.approve_success') || 'تم اعتماد التصحيح وتحديث بيانات الفرد بنجاح', showConfirmButton: false, timer: 3000 })
     showApproveModal.value = false
     requests.value = requests.value.filter(r => r.id !== selectedRequest.value.id)
-  } catch (err) {
-    // Global handler
+  } catch (err: any) {
+    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'خطأ', text: err.response?.data?.error || 'حدث خطأ أثناء التنفيذ', showConfirmButton: false, timer: 4000 })
   } finally {
     actionLoading.value = false
   }
@@ -563,8 +563,8 @@ async function confirmReject() {
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: t('corrections.reject_success') || 'تم رفض الطلب بنجاح', showConfirmButton: false, timer: 3000 })
     showRejectModal.value = false
     requests.value = requests.value.filter(r => r.id !== selectedRequest.value.id)
-  } catch (err) {
-    // Global handler
+  } catch (err: any) {
+    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'خطأ', text: err.response?.data?.error || 'حدث خطأ أثناء محاولة الرفض', showConfirmButton: false, timer: 4000 })
   } finally {
     actionLoading.value = false
   }
@@ -584,8 +584,8 @@ async function confirmBatchApprove() {
     selectedIds.value = []
     memoDocumentId.value = ''
     approveError.value = ''
-  } catch (err) {
-    // Global handler
+  } catch (err: any) {
+    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'خطأ', text: err.response?.data?.error || 'حدث خطأ أثناء محاولة الموافقة', showConfirmButton: false, timer: 4000 })
   } finally {
     actionLoading.value = false
   }
@@ -606,8 +606,8 @@ async function confirmBatchReject() {
     selectedIds.value = []
     rejectionReason.value = ''
     rejectError.value = ''
-  } catch (err) {
-    // Global handler
+  } catch (err: any) {
+    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'خطأ', text: err.response?.data?.error || 'حدث خطأ أثناء محاولة الرفض الجماعي', showConfirmButton: false, timer: 4000 })
   } finally {
     actionLoading.value = false
   }

@@ -201,6 +201,11 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
         to_id = d.get('to_status_id')
         if to_id:
             to_status_obj = ServiceStatus.objects.filter(pk=to_id).first()
+        elif is_dynamic:
+            from systems.services.models import ServiceCatalog
+            catalog = ServiceCatalog.objects.filter(code=form_type).first() or ServiceCatalog.objects.filter(form_type=form_type).first()
+            if catalog and catalog.execution_config and catalog.execution_config.get('to_status_id'):
+                to_status_obj = ServiceStatus.objects.filter(pk=catalog.execution_config.get('to_status_id')).first()
         elif not is_dynamic:
             defn = FormRegistry.get(form_type)
             if defn and defn.target_status:
@@ -213,11 +218,25 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
                             break
         
         # ── التحقق الأمني والمنطقي (لمنع التكرار) ──
-        # 1. التحقق من الحالة الحالية (إذا كان يملكها مسبقاً)
+        # 1. التحقق الاستباقي من تعارض الأرقام لتجنب الفشل في التنفيذ النهائي
+        n_id = form_data.get('national_id')
+        old_mil = form_data.get('old_military_number')
+        
+        if n_id and PersonnelMaster.objects.filter(national_id=n_id).exclude(pk=personnel.pk).exists():
+            return Response({'success': False, 'error': 'الرقم الوطني المُدخل مسجل مسبقاً لفرد آخر في النظام.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        if old_mil and PersonnelMaster.objects.filter(old_military_number=old_mil).exclude(pk=personnel.pk).exists():
+            owner = PersonnelMaster.objects.filter(old_military_number=old_mil).exclude(pk=personnel.pk).first()
+            return Response({'success': False, 'error': f'الرقم العسكري القديم مستخدم بالفعل للفرد: {owner.full_name}'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 2. التحقق من الحالة الحالية (إذا كان يملكها مسبقاً)
         if to_status_obj and personnel.current_status_id == to_status_obj.id:
             return Response({'success': False, 'error': f'الفرد لديه هذه الحالة ({to_status_obj.name}) مسبقاً في النظام'}, status=status.HTTP_400_BAD_REQUEST)
-        elif not to_status_obj and form_type == 'martyr' and personnel.current_status and 'شهيد' in personnel.current_status.name:
-            return Response({'success': False, 'error': 'هذا الفرد مسجل كشهيد بالفعل في النظام'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 3. التحقق إذا كان الفرد شهيد أو متوفى (لا يقبل أي معاملات باستثناء العودة للخدمة)
+        if personnel.current_status and any(word in personnel.current_status.name for word in ['شهيد', 'متوفى']):
+            if form_type not in ['returned_to_service', 'correction']:
+                return Response({'success': False, 'error': f'لا يمكن إنشاء هذه المعاملة لأن الفرد مسجل كـ ({personnel.current_status.name}) في النظام.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # 2. التحقق من وجود معاملة سابقة قيد الإجراء لنفس النوع ونفس الفرد
         existing_pending = StatusChangeForm.objects.filter(

@@ -121,8 +121,13 @@ class PersonnelViewSet(BaseModelViewSet):
         )
     
     def perform_update(self, serializer):
+        print(">>> VAL DATA:", serializer.validated_data)
         old_data = PersonnelListSerializer(self.get_object()).data
         personnel = serializer.save()
+        if 'expense_status' in self.request.data:
+            personnel.expense_status = self.request.data['expense_status']
+            personnel.save()
+        print(">>> DB EXP STATUS AFTER EXPLICIT SAVE:", personnel.expense_status)
         AuditLog.objects.create(
             user=self.request.user,
             action='UPDATE',

@@ -184,7 +184,7 @@
                   <div>
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ $t('personnel.birth_date') || 'تاريخ الميلاد' }}</dt>
                     <dd class="text-sm font-bold text-gray-900 dark:text-white">
-                      {{ person.birth_date ? new Date(person.birth_date).toLocaleDateString('ar-SA') : 'غير متوفر' }}
+                      {{ person.birth_date ? new Date(person.birth_date).toLocaleDateString('en-GB') : 'غير متوفر' }}
                     </dd>
                   </div>
                   <div>
@@ -196,7 +196,7 @@
                   <div>
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ $t('personnel.qualification') || 'المؤهل العلمي' }}</dt>
                     <dd class="text-sm font-bold text-gray-900 dark:text-white">
-                      {{ person.qualification_name || 'غير متوفر' }}
+                      {{ person.qualification_name || person.qualification_detail?.name || 'غير متوفر' }}
                     </dd>
                   </div>
                 </div>
@@ -244,7 +244,7 @@
                   </div>
                   <div>
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ $t('personnel.join_date') || 'تاريخ الالتحاق' }}</dt>
-                    <dd class="text-sm font-bold text-gray-900 dark:text-white">{{ person.join_date ? new Date(person.join_date).toLocaleDateString('ar-SA') : ($t('personnel.unspecified') || 'غير متوفر') }}</dd>
+                    <dd class="text-sm font-bold text-gray-900 dark:text-white">{{ person.join_date ? new Date(person.join_date).toLocaleDateString('en-GB') : ($t('personnel.unspecified') || 'غير متوفر') }}</dd>
                   </div>
                 </div>
               </div>
@@ -258,29 +258,15 @@
                   <h3 class="text-base font-bold text-gray-900 dark:text-white">{{ $t('personnel.workplace') || 'جهة العمل' }}</h3>
                 </div>
                 <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8 flex-1">
+                  <div class="lg:col-span-2">
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ $t('personnel.workplace_main') || 'جهة العمل (السرية / الإدارة)' }}</dt>
+                    <dd class="text-sm font-bold text-gray-900 dark:text-white">
+                      {{ person.central_department_name || person.branch_name || person.district_police_name || $t('personnel.unspecified') || 'غير متوفر' }}
+                    </dd>
+                  </div>
                   <div>
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ $t('personnel.security_admin') || 'الإدارة الأمنية' }}</dt>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ $t('personnel.unit_location') || 'مكان الوحدة' }}</dt>
                     <dd class="text-sm font-bold text-gray-900 dark:text-white">{{ person.security_admin_name || $t('personnel.unspecified') || 'غير متوفر' }}</dd>
-                  </div>
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ $t('personnel.central_department') || 'الإدارة المركزية' }}</dt>
-                    <dd class="text-sm font-bold text-gray-900 dark:text-white">{{ person.central_department_name || $t('personnel.unspecified') || 'غير متوفر' }}</dd>
-                  </div>
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ $t('personnel.branch') || 'الفرع' }}</dt>
-                    <dd class="text-sm font-bold text-gray-900 dark:text-white">{{ person.branch_name || $t('personnel.unspecified') || 'غير متوفر' }}</dd>
-                  </div>
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ $t('personnel.district_police') || 'شرطة المحافظة/المديرية' }}</dt>
-                    <dd class="text-sm font-bold text-gray-900 dark:text-white">{{ person.district_police_name || $t('personnel.unspecified') || 'غير متوفر' }}</dd>
-                  </div>
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ $t('personnel.division') || 'القسم' }}</dt>
-                    <dd class="text-sm font-bold text-gray-900 dark:text-white">{{ person.division_name || $t('personnel.unspecified') || 'غير متوفر' }}</dd>
-                  </div>
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ $t('personnel.unit') || 'الوحدة' }}</dt>
-                    <dd class="text-sm font-bold text-gray-900 dark:text-white">{{ person.unit_name || $t('personnel.unspecified') || 'غير متوفر' }}</dd>
                   </div>
                 </div>
               </div>
@@ -331,7 +317,7 @@
               </span>
               <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1">
                 <h3 class="text-base font-bold text-gray-900 dark:text-white">{{ event.event_type_display }}</h3>
-                <time class="mb-1 text-sm font-normal text-gray-400 sm:mb-0">{{ new Date(event.event_date).toLocaleDateString('ar-SA') }}</time>
+                <time class="mb-1 text-sm font-normal text-gray-400 sm:mb-0">{{ new Date(event.event_date).toLocaleDateString('en-GB') }}</time>
               </div>
               <p class="text-sm font-normal text-gray-500 dark:text-gray-400 mt-2">{{ event.description || ($t('personnel.details.no_event_desc') || 'لا يوجد وصف متاح لهذا الحدث.') }}</p>
             </div>

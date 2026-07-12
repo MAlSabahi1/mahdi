@@ -6,14 +6,17 @@
       
       <!-- Action Buttons -->
       <div v-if="form && canApprove" class="flex flex-wrap gap-2">
-        <button @click="rejectForm" class="bg-white text-red-600 hover:bg-red-50 border border-red-200 dark:bg-gray-900 dark:border-red-900/50 dark:hover:bg-red-950/30 font-bold px-4 py-2 rounded-lg transition-all text-xs shadow-sm">
+        <button v-if="canApprove" @click="rejectForm" class="bg-white text-red-600 hover:bg-red-50 border border-red-200 dark:bg-gray-900 dark:border-red-900/50 dark:hover:bg-red-950/30 font-bold px-4 py-2 rounded-lg transition-all text-xs shadow-sm">
           رفض
         </button>
-        <button @click="returnFormModal" class="bg-white text-amber-600 hover:bg-amber-50 border border-amber-200 dark:bg-gray-900 dark:border-amber-900/50 dark:hover:bg-amber-950/30 font-bold px-4 py-2 rounded-lg transition-all text-xs shadow-sm flex items-center gap-2">
+        <button v-if="canApprove" @click="returnFormModal" class="bg-white text-amber-600 hover:bg-amber-50 border border-amber-200 dark:bg-gray-900 dark:border-amber-900/50 dark:hover:bg-amber-950/30 font-bold px-4 py-2 rounded-lg transition-all text-xs shadow-sm flex items-center gap-2">
           إرجاع للتعديل
         </button>
-        <button @click="approveForm" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2 rounded-lg transition-all shadow-md shadow-emerald-500/20 text-xs flex items-center gap-2">
+        <button v-if="canApprove" @click="approveForm()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2 rounded-lg transition-all shadow-md shadow-emerald-500/20 text-xs flex items-center gap-2">
           اعتماد الطلب
+        </button>
+        <button v-if="form && form.status === 'draft'" @click="submitDraft" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded-lg transition-all shadow-md shadow-blue-500/20 text-xs flex items-center gap-2">
+          تقديم الطلب النهائي
         </button>
       </div>
     </div>
@@ -45,7 +48,7 @@
             </div>
             <div>
               <h1 class="text-xl font-black text-gray-900 dark:text-white leading-tight">
-                {{ form.form_type_display || form.form_type }}
+                {{ (form.form_type_display || form.form_type || '').replace('returned_to_service', 'عائد للخدمة') }}
               </h1>
               <div class="flex items-center gap-3 mt-1.5 text-xs text-gray-500 font-medium">
                 <span class="flex items-center gap-1 font-mono text-gray-700 dark:text-gray-300">
@@ -113,8 +116,8 @@
               </RouterLink>
             </div>
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8">
-              <div class="flex flex-col">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-8">
+              <div class="flex flex-col sm:col-span-2 md:col-span-1">
                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">الاسم الرباعي</span>
                 <span class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ form.personnel?.full_name || form.personnel_name || '—' }}</span>
               </div>
@@ -124,7 +127,15 @@
               </div>
               <div class="flex flex-col">
                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">الرتبة الحالية</span>
-                <span class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ form.personnel?.rank || form.personnel_rank || '—' }}</span>
+                <span class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ form.personnel?.rank || form.personnel_rank || form.personnel?.rank_name || form.personnel?.current_rank?.name || '—' }}</span>
+              </div>
+              <div class="flex flex-col">
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">المؤهل العلمي</span>
+                <span class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ form.personnel?.qualification_name || form.personnel?.qualification_detail?.name || '—' }}</span>
+              </div>
+              <div class="flex flex-col">
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">حالة النفقات</span>
+                <span class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ form.personnel?.expense_status_display || '—' }}</span>
               </div>
               <div class="flex flex-col">
                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">تاريخ النفاذ</span>
@@ -209,6 +220,8 @@
               لا توجد مرفقات مرتبطة بهذه المعاملة.
             </div>
           </div>
+
+          <ReportFooter />
         </div>
 
         <!-- Sidebar Column -->
@@ -323,8 +336,10 @@ import { useRoute, useRouter } from 'vue-router'
 import Swal from 'sweetalert2'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
+import ReportFooter from '@/components/reports/ReportFooter.vue'
 import { useServicesStore } from '@/stores/services'
 import { useAuthStore } from '@/stores/auth'
+import api from '@/lib/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -401,7 +416,7 @@ const canApprove = computed(() => {
   if (status === 'pending_services' && (role.includes('رئيس الخدمات') || authStore.isAdmin)) return true
   if (status === 'pending_hr' && (role.includes('مدير الموارد') || authStore.isAdmin)) return true
   if (status === 'pending_director' && (role.includes('المدير العام') || authStore.isAdmin)) return true
-  if ((status === 'in_progress' || status === 'draft') && authStore.isAdmin) return true
+  if (status === 'in_progress' && authStore.isAdmin) return true
   return false
 })
 
@@ -463,8 +478,21 @@ async function toggleChecklist(item: any) {
   }
 }
 
-async function approveForm() {
+async function approveForm(ministryDocId?: number) {
   if (!form.value) return
+
+  if (ministryDocId) {
+    try {
+      await servicesStore.approveForm(form.value.id, { ministry_document_id: ministryDocId })
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم اعتماد المعاملة بنجاح', showConfirmButton: false, timer: 2000 })
+      fetchFormDetails()
+    } catch (err: any) {
+      let errorMsg = err.response?.data?.error || 'حدث خطأ أثناء اعتماد المعاملة'
+      Swal.fire({ icon: 'error', title: 'خطأ', text: errorMsg })
+    }
+    return
+  }
+
   Swal.fire({
     title: 'تأكيد الاعتماد؟',
     text: `سيتم الاعتماد وتمرير المعاملة للمرحلة التالية. هل أنت متأكد؟`,
@@ -481,7 +509,68 @@ async function approveForm() {
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم اعتماد المعاملة بنجاح', showConfirmButton: false, timer: 2000 })
         fetchFormDetails()
       } catch (err: any) {
-        Swal.fire({ icon: 'error', title: 'خطأ', text: err.response?.data?.error || 'حدث خطأ' })
+        let errorMsg = err.response?.data?.error || 'حدث خطأ أثناء اعتماد المعاملة'
+        
+        if (errorMsg.includes('يجب إرفاق مستند موافقة الوزارة') || errorMsg.includes('مستند موافقة')) {
+          return promptMinistryDoc()
+        }
+
+        if (err.response?.data && typeof err.response.data === 'object' && !err.response.data.error) {
+          errorMsg = Object.values(err.response.data).flat().join('\n')
+        }
+        Swal.fire({ icon: 'error', title: 'خطأ', text: errorMsg })
+      }
+    }
+  })
+}
+
+async function promptMinistryDoc() {
+  const result = await Swal.fire({
+    title: 'تسجيل موافقة الوزارة',
+    html: `<div class="text-right" dir="rtl"><p class="text-xs text-gray-600 mb-3">يجب إرفاق ملف القرار/المذكرة الوزارية.</p><input type="file" id="ministry-doc" class="block w-full text-xs" accept=".pdf,.png,.jpg,.jpeg"></div>`,
+    icon: 'info', showCancelButton: true, confirmButtonText: 'رفع واعتماد', cancelButtonText: 'إلغاء', confirmButtonColor: '#10b981', showLoaderOnConfirm: true,
+    preConfirm: async () => {
+      const fileInput = document.getElementById('ministry-doc') as HTMLInputElement
+      if (!fileInput?.files?.length) { Swal.showValidationMessage('يجب اختيار ملف'); return false }
+      const fd = new FormData()
+      fd.append('file', fileInput.files[0])
+      fd.append('document_type', 'ministry_approval')
+      try {
+        const uploadRes = await api.post('/storage/upload/', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+        const docId = uploadRes.data?.data?.id || uploadRes.data?.id
+        if (!docId) throw new Error('فشل الحصول على معرّف المستند')
+        return docId
+      } catch (e: any) {
+        Swal.showValidationMessage(e.response?.data?.error || 'حدث خطأ أثناء رفع الملف')
+        return false
+      }
+    }
+  })
+  
+  if (result.isConfirmed && result.value) {
+     approveForm(result.value)
+  }
+}
+
+async function submitDraft() {
+  if (!form.value) return
+  Swal.fire({
+    title: 'تقديم الطلب',
+    text: `هل أنت متأكد من تقديم هذا الطلب نهائياً وبدء دورة الاعتماد؟`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'نعم، قدم الطلب',
+    cancelButtonText: 'إلغاء',
+    confirmButtonColor: '#2563eb', // blue-600
+    reverseButtons: true
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        await api.post(`/service-cycle/forms/${form.value.id}/submit/`)
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم تقديم الطلب بنجاح', showConfirmButton: false, timer: 2000 })
+        fetchFormDetails()
+      } catch (err: any) {
+        Swal.fire({ icon: 'error', title: 'فشل التقديم', text: err.response?.data?.error || 'حدث خطأ أثناء التقديم' })
       }
     }
   })
@@ -507,7 +596,11 @@ async function rejectForm() {
         Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'تم رفض المعاملة', showConfirmButton: false, timer: 2000 })
         fetchFormDetails()
       } catch (err: any) {
-        Swal.fire({ icon: 'error', title: 'خطأ', text: err.response?.data?.error || 'حدث خطأ' })
+        let errorMsg = err.response?.data?.error || 'حدث خطأ أثناء الرفض'
+        if (err.response?.data && typeof err.response.data === 'object' && !err.response.data.error) {
+          errorMsg = Object.values(err.response.data).flat().join('\n')
+        }
+        Swal.fire({ icon: 'error', title: 'خطأ', text: errorMsg })
       }
     }
   })
@@ -557,7 +650,11 @@ async function returnFormModal() {
       Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم إرجاع المعاملة للتعديل', showConfirmButton: false, timer: 2000 })
       fetchFormDetails()
     } catch (err: any) {
-      Swal.fire({ icon: 'error', title: 'خطأ', text: err.response?.data?.error || 'حدث خطأ' })
+      let errorMsg = err.response?.data?.error || 'حدث خطأ أثناء الإرجاع'
+      if (err.response?.data && typeof err.response.data === 'object' && !err.response.data.error) {
+        errorMsg = Object.values(err.response.data).flat().join('\n')
+      }
+      Swal.fire({ icon: 'error', title: 'خطأ', text: errorMsg })
     }
   }
 }

@@ -148,7 +148,7 @@
             <!-- أولاً: البيانات الشخصية -->
             <div class="p-4 border-b border-gray-200 dark:border-gray-800">
               <h3 class="text-brand-700 dark:text-brand-400 font-bold mb-3 border-b-2 border-brand-200 dark:border-brand-900 pb-1 w-max">أولاً: البيانات الشخصية</h3>
-              <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+              <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
                 <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
                   <span class="block text-[10px] font-bold text-gray-500 mb-1">الرتبة</span>
                   <strong class="text-sm dark:text-white">{{ selectedPersonnelList[0].rank_name || selectedPersonnelList[0].current_rank?.name || selectedPersonnelList[0].rank?.name || '—' }}</strong>
@@ -166,8 +166,16 @@
                   <strong class="text-sm dark:text-white">{{ selectedPersonnelList[0].unit_name || selectedPersonnelList[0].unit?.name || '—' }}</strong>
                 </div>
                 <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span class="block text-[10px] font-bold text-gray-500 mb-1">إدارته / المديرية / الفرع</span>
+                  <span class="block text-[10px] font-bold text-gray-500 mb-1">الإدارة / الفرع</span>
                   <strong class="text-sm dark:text-white">{{ selectedPersonnelList[0].department_name || selectedPersonnelList[0].branch?.name || selectedPersonnelList[0].district_police?.name || selectedPersonnelList[0].central_department?.name || '—' }}</strong>
+                </div>
+                <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <span class="block text-[10px] font-bold text-gray-500 mb-1">المؤهل</span>
+                  <strong class="text-sm dark:text-white">{{ selectedPersonnelList[0].qualification_name || selectedPersonnelList[0].qualification?.name || '—' }}</strong>
+                </div>
+                <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <span class="block text-[10px] font-bold text-gray-500 mb-1">حالة النفقات</span>
+                  <strong class="text-sm dark:text-white">{{ selectedPersonnelList[0].expense_status_display || '—' }}</strong>
                 </div>
               </div>
             </div>
@@ -857,21 +865,14 @@ async function addPersonnel(person: any) {
   
   statusStr = String(statusStr || '');
   
-  if (type === 'martyr' && (statusStr.includes('شهيد') || statusStr.includes('شهداء') || statusStr.includes('شهد'))) {
-    Swal.fire({
-      icon: 'error',
-      title: 'فرد مسجل كشهيد',
-      text: 'هذا الفرد مسجل ضمن الشهداء بالفعل في النظام ولا يمكن إنشاء معاملة استشهاد أخرى له.'
-    })
-    return
-  }
+  // 1. منع إضافة أي معاملة لشهيد أو متوفى (باستثناء عودة للخدمة أو التصحيح)
+  const isDeceased = statusStr.includes('شهيد') || statusStr.includes('شهد') || statusStr.includes('متوفى') || statusStr.includes('وفيات') || statusStr.includes('وفاة') || statusStr.includes('وفاه');
   
-  // منع إضافة معاملة وفاة وهو بالفعل متوفى
-  if (type === 'death' && (statusStr.includes('متوفى') || statusStr.includes('وفيات') || statusStr.includes('وفاة') || statusStr.includes('وفاه'))) {
+  if (isDeceased && type !== 'returned_to_service' && category !== 'correction') {
     Swal.fire({
       icon: 'error',
-      title: 'فرد مسجل كمتوفى',
-      text: 'هذا الفرد مسجل ضمن الوفيات بالفعل في النظام ولا يمكن إنشاء معاملة وفاة أخرى له.'
+      title: 'إجراء غير مسموح',
+      text: `هذا الفرد مسجل كـ (${statusStr || 'غير نشط'}) في النظام، ولا يمكن إنشاء أي معاملات جديدة له (باستثناء العودة للخدمة أو تصحيح البيانات).`
     })
     return
   }
@@ -1198,6 +1199,7 @@ async function submitBulk() {
   submittedCount.value = 0
   let successCount = 0
   let errorCount = 0
+  let errorMessage = ''
 
   let lastCorrectionId = null
   let lastFormId = null
@@ -1256,8 +1258,26 @@ async function submitBulk() {
         }
       }
       successCount++
-    } catch (err) {
+    } catch (err: any) {
       console.error('Submission error for', person.military_number, err)
+      let msg = err.response?.data?.error || err.response?.data?.detail
+      if (!msg && err.response?.data && typeof err.response.data === 'object') {
+        try {
+          const extractErrors = (obj: any): string[] => {
+            let errors: string[] = []
+            for (const [key, val] of Object.entries(obj)) {
+              if (typeof val === 'string') errors.push(`${key}: ${val}`)
+              else if (Array.isArray(val)) errors.push(`${key}: ${val.join(', ')}`)
+              else if (typeof val === 'object' && val !== null) Object.assign(errors, extractErrors(val))
+            }
+            return errors
+          }
+          msg = extractErrors(err.response.data).join('<br/>') || JSON.stringify(err.response.data)
+        } catch(e) {
+          msg = 'الرجاء التحقق من صحة البيانات المدخلة (مثل المدة أو الحقول الإلزامية)'
+        }
+      }
+      errorMessage += `<div class="mb-1"><b>${person.full_name}:</b> ${msg || 'خطأ غير معروف'}</div>`
       errorCount++
     }
     submittedCount.value++
@@ -1273,7 +1293,8 @@ async function submitBulk() {
     Swal.fire({
       icon: errorCount > 0 ? 'warning' : 'success',
       title: errorCount > 0 ? 'تم الإنجاز جزئياً' : 'تم تقديم الطلبات بنجاح',
-      html: `تم رفع <b>${successCount}</b> طلب للمراجعة.<br/>${errorCount > 0 ? `تعذر معالجة <b>${errorCount}</b> طلب.` : ''}`,
+      html: `تم رفع <b>${successCount}</b> طلب للمراجعة.<br/>
+             ${errorCount > 0 ? `<div class="mt-3 text-xs text-right text-red-600 bg-red-50 p-3 rounded-lg border border-red-100">${errorMessage}</div>` : ''}`,
       confirmButtonText: 'انتقال لقائمة الطلبات',
       showDenyButton: showPrintButton,
       denyButtonText: '<i class="fas fa-print ml-2"></i> طباعة النموذج',
@@ -1308,7 +1329,7 @@ async function submitBulk() {
     Swal.fire({
       icon: 'error',
       title: 'فشل العملية',
-      text: 'حدث خطأ أثناء محاولة تقديم الطلبات. يرجى مراجعة البيانات.'
+      html: `<div class="text-sm text-right text-red-600">${errorMessage || 'حدث خطأ أثناء محاولة تقديم الطلبات. يرجى مراجعة البيانات.'}</div>`
     })
   }
 }

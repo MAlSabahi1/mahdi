@@ -91,15 +91,39 @@
 
                     <!-- Level 3: Sub Departments -->
                     <div v-show="dept.expanded" class="mt-4 space-y-2 border-t border-gray-200 dark:border-gray-700 pt-3">
-                      <div v-for="subDept in dept.children" :key="subDept.id" class="flex items-center justify-between p-2 rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors group">
-                        <div class="flex items-center gap-2">
-                          <Layers class="w-4 h-4 text-gray-400" />
-                          <span class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ subDept.name }}</span>
+                      <div v-for="subDept in dept.children" :key="subDept.id" class="flex flex-col p-2 rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors group">
+                        <div class="flex items-center justify-between">
+                          <div class="flex items-center gap-2 cursor-pointer" @click="subDept.expanded = !subDept.expanded">
+                            <button v-if="subDept.children && subDept.children.length > 0" class="p-0.5 border border-gray-200 dark:border-gray-700 rounded shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                              <ChevronDown v-if="subDept.expanded" class="w-3.5 h-3.5 text-gray-500" />
+                              <ChevronLeft v-else class="w-3.5 h-3.5 text-gray-500" />
+                            </button>
+                            <div v-else class="w-5 h-5"></div>
+                            <Layers class="w-4 h-4 text-gray-400" />
+                            <span class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ subDept.name }}</span>
+                          </div>
+                          <div class="flex items-center gap-3 text-xs text-gray-500">
+                            <span>الوحدات: {{ subDept.personnelCount }}</span>
+                            <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                              <button @click.stop="handleEditNode(subDept)" class="p-1 text-gray-400 hover:text-blue-600 rounded cursor-pointer" title="تعديل"><Edit class="w-3.5 h-3.5" /></button>
+                              <button @click.stop="handleAddUnit(subDept)" class="p-1 text-gray-400 hover:text-emerald-600 rounded cursor-pointer" title="إضافة وحدة"><Plus class="w-3.5 h-3.5" /></button>
+                            </div>
+                          </div>
                         </div>
-                        <div class="flex items-center gap-3 text-xs text-gray-500">
-                          <span>قوة: {{ subDept.personnelCount }}</span>
-                          <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                            <button @click.stop="handleEditNode(subDept)" class="p-1 text-gray-400 hover:text-blue-600 rounded cursor-pointer"><Edit class="w-3.5 h-3.5" /></button>
+                        
+                        <!-- Level 4: Units -->
+                        <div v-show="subDept.expanded" class="mt-2 space-y-1 border-r border-dashed border-gray-200 dark:border-gray-700 mr-6 pr-4">
+                          <div v-for="unit in subDept.children" :key="unit.id" class="flex items-center justify-between p-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700/50 group/unit">
+                            <div class="flex items-center gap-2">
+                              <Box class="w-3.5 h-3.5 text-gray-400" />
+                              <span class="text-xs font-medium text-gray-600 dark:text-gray-400">{{ unit.name }}</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs text-gray-400">
+                              <span>{{ unit.code }}</span>
+                              <div class="opacity-0 group-hover/unit:opacity-100 transition-opacity">
+                                <button @click.stop="handleEditNode(unit)" class="p-1 text-gray-400 hover:text-blue-600 rounded cursor-pointer"><Edit class="w-3 h-3" /></button>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -123,7 +147,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
-import { ShieldAlert, Search, Plus, ChevronDown, ChevronLeft, Shield, UserCheck, Users, Edit, Briefcase, Layers } from 'lucide-vue-next'
+import { ShieldAlert, Search, Plus, ChevronDown, ChevronLeft, Shield, UserCheck, Users, Edit, Briefcase, Layers, Box } from 'lucide-vue-next'
 import Swal from 'sweetalert2'
 import api from '@/lib/api'
 
@@ -158,7 +182,9 @@ const fetchOrgTree = async () => {
               db_id: div.id,
               type: 'divisions',
               name: div.name,
-              personnelCount: (div.units || []).length
+              personnelCount: (div.units || []).length,
+              expanded: false,
+              children: (div.units || []).map((u: any) => ({ id: `unit-${u.id}`, db_id: u.id, type: 'units', name: u.name, code: u.code }))
             }))
           })
         })
@@ -179,7 +205,9 @@ const fetchOrgTree = async () => {
               db_id: div.id,
               type: 'divisions',
               name: div.name,
-              personnelCount: (div.units || []).length
+              personnelCount: (div.units || []).length,
+              expanded: false,
+              children: (div.units || []).map((u: any) => ({ id: `unit-${u.id}`, db_id: u.id, type: 'units', name: u.name, code: u.code }))
             }))
           })
         })
@@ -200,7 +228,9 @@ const fetchOrgTree = async () => {
               db_id: div.id,
               type: 'divisions',
               name: div.name,
-              personnelCount: (div.units || []).length
+              personnelCount: (div.units || []).length,
+              expanded: false,
+              children: (div.units || []).map((u: any) => ({ id: `unit-${u.id}`, db_id: u.id, type: 'units', name: u.name, code: u.code }))
             }))
           })
         })
@@ -448,6 +478,51 @@ const handleAddDivision = (dept: any) => {
     if (result.isConfirmed) {
       fetchOrgTree()
       Swal.fire('تمت الإضافة', 'تم إضافة الإدارة الفرعية بنجاح', 'success')
+    }
+  })
+}
+
+
+const handleAddUnit = (subDept: any) => {
+  Swal.fire({
+    title: `إضافة وحدة في ${subDept.name}`,
+    html: `
+      <input id="swal-unit-name" class="swal2-input" placeholder="اسم الوحدة" dir="rtl">
+      <input id="swal-unit-code" class="swal2-input" placeholder="الكود" dir="ltr">
+    `,
+    focusConfirm: false,
+    showCancelButton: true,
+    confirmButtonText: 'إضافة',
+    cancelButtonText: 'إلغاء',
+    confirmButtonColor: '#10b981',
+    showLoaderOnConfirm: true,
+    preConfirm: async () => {
+      const name = (document.getElementById('swal-unit-name') as HTMLInputElement).value
+      const code = (document.getElementById('swal-unit-code') as HTMLInputElement).value
+      if (!name) { Swal.showValidationMessage('اسم الوحدة مطلوب!'); return false }
+      
+      try {
+        await api.post('/dictionaries/units/', { name, code, division: subDept.db_id })
+        return true
+      } catch (e: any) {
+        const errData = e.response?.data
+        let msg = 'حدث خطأ أثناء الإضافة'
+        if (errData?.error?.detail) {
+          const detail = errData.error.detail
+          const firstKey = Object.keys(detail)[0]
+          if (firstKey && Array.isArray(detail[firstKey])) msg = detail[firstKey][0]
+        } else if (errData?.name?.[0] || errData?.code?.[0]) {
+          msg = errData.name?.[0] || errData.code?.[0]
+        }
+        Swal.showValidationMessage(msg)
+        return false
+      }
+    },
+    allowOutsideClick: () => !Swal.isLoading()
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetchOrgTree()
+      Swal.fire('تمت الإضافة', 'تم إضافة الوحدة بنجاح', 'success')
     }
   })
 }
