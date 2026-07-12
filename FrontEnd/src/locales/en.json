@@ -644,7 +644,8 @@
     "system_group": "System Health & Seeding",
     "initial_seeding": "Initial Seeding Wizard",
     "snapshots": "Archive & Monthly Snapshots",
-    "system_telemetry": "System Telemetry & Tasks"
+    "system_telemetry": "System Telemetry & Tasks",
+    "dynamic_forms": "Dynamic Forms Builder"
   },
   "services.export_config": "Form Export Configuration",
   "services.monthly_exports": "Monthly Consolidated Reports",

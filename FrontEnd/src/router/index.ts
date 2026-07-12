@@ -476,6 +476,36 @@ const router = createRouter({
       }
     },
     {
+      path: '/admin/documents/list',
+      name: 'DocumentFormsList',
+      component: () => import('@/views/SystemAdmin/DocumentBuilder/DocumentFormsList.vue'),
+      meta: {
+        title: 'قائمة الاستمارات الديناميكية',
+        requiresAuth: true,
+        requiresAdmin: true
+      }
+    },
+    {
+      path: '/admin/documents/builder/:id?',
+      name: 'DocumentFormBuilder',
+      component: () => import('@/views/SystemAdmin/DocumentBuilder/DocumentFormBuilder.vue'),
+      meta: {
+        title: 'مصمم الاستمارات',
+        requiresAuth: true,
+        requiresAdmin: true
+      }
+    },
+    {
+      path: '/admin/documents/preview/:id',
+      name: 'DocumentFormPreview',
+      component: () => import('@/views/SystemAdmin/DocumentBuilder/DocumentFormPreview.vue'),
+      meta: {
+        title: 'معاينة الاستمارة',
+        requiresAuth: true,
+        requiresAdmin: true
+      }
+    },
+    {
       path: '/admin/structure/org-tree',
       name: 'OrgHierarchyTree',
       component: () => import('@/views/SystemAdmin/Structure/OrgHierarchyTree.vue'),

@@ -16,7 +16,7 @@ from systems.services.api.views.main_views import (
 from systems.services.api.views.import_views import ImportAPIViewSet
 from systems.services.api.views.raw_data_views import RawDataStandardizedViewSet
 from systems.services.api.views.status_change_views import StatusChangeFormViewSet
-from systems.services.api.views.admin_views import CustomFormTemplateViewSet, CustomReportTemplateViewSet
+from systems.services.api.views.admin_views import CustomFormTemplateViewSet, CustomReportTemplateViewSet, DocumentFormTemplateViewSet
 from systems.services.api.views.bi_views import (
     BIDataSourceViewSet,
     EnterpriseReportTemplateViewSet,
@@ -58,6 +58,7 @@ import_router.register(r'import', ImportAPIViewSet, basename='import-api')
 admin_router = DefaultRouter()
 admin_router.register(r'forms', CustomFormTemplateViewSet, basename='admin-forms')
 admin_router.register(r'reports', CustomReportTemplateViewSet, basename='admin-reports')
+admin_router.register(r'document-templates', DocumentFormTemplateViewSet, basename='admin-document-templates')
 admin_router.register(r'bi-sources', BIDataSourceViewSet, basename='bi-sources')
 admin_router.register(r'bi-templates', EnterpriseReportTemplateViewSet, basename='bi-templates')
 

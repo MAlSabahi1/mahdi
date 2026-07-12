@@ -147,3 +147,51 @@ class CustomReportTemplate(TimeStampedModel):
 
     def __str__(self):
         return f"نموذج {self.model_number} — {self.title}"
+
+
+class DocumentFormTemplate(TimeStampedModel):
+    """
+    قالب استمارة ديناميكي (يتم تصميمه عبر الواجهة).
+    يحتوي على ترويسة، محتوى (CKEditor)، وتذييل، مع إمكانية إدراج حقول ديناميكية وصور.
+    """
+    name = models.CharField(max_length=200, verbose_name=_('اسم الاستمارة'))
+    slug = models.SlugField(unique=True, max_length=100, verbose_name=_('الرمز (Slug)'))
+    category = models.CharField(max_length=100, verbose_name=_('التصنيف'), default='رسمية')
+    is_preset = models.BooleanField(default=False, verbose_name=_('قالب جاهز (Preset)'))
+    is_active = models.BooleanField(default=True, verbose_name=_('مفعّل'))
+
+    # Header
+    header_columns = models.PositiveSmallIntegerField(default=3, verbose_name=_('أعمدة الترويسة'))
+    header_blocks = models.JSONField(
+        default=list, verbose_name=_('محتوى الترويسة'),
+        help_text=_('مصفوفة من النصوص (HTML) لكل عمود')
+    )
+
+    # Body
+    body_content = models.TextField(blank=True, verbose_name=_('محتوى الاستمارة الرئيسي'))
+
+    # Footer
+    footer_columns = models.PositiveSmallIntegerField(default=1, verbose_name=_('أعمدة التذييل'))
+    footer_blocks = models.JSONField(
+        default=list, verbose_name=_('محتوى التذييل'),
+        help_text=_('مصفوفة من النصوص (HTML) لكل عمود')
+    )
+
+    # Metadata
+    page_size = models.CharField(max_length=20, default='A4', verbose_name=_('حجم الصفحة'))
+    orientation = models.CharField(max_length=20, default='portrait', verbose_name=_('اتجاه الصفحة'))
+
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='document_form_templates', verbose_name=_('أنشأه')
+    )
+
+    class Meta:
+        app_label = 'services'
+        db_table = 'services_document_form_template'
+        verbose_name = _('استمارة ديناميكية')
+        verbose_name_plural = _('الاستمارات الديناميكية')
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name

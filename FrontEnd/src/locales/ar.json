@@ -661,7 +661,8 @@
     "system_group": "وحدة سلامة وتأسيس النظام",
     "initial_seeding": "معالج التأسيس الأولي",
     "snapshots": "الأرشيف واللقطة الشهرية",
-    "system_telemetry": "تليمتري النظام والمهام"
+    "system_telemetry": "تليمتري النظام والمهام",
+    "dynamic_forms": "الاستمارات الديناميكية"
   },
   "blank_page": {
     "title": "صفحة قيد التطوير",

@@ -6,7 +6,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
-from systems.services.models import CustomFormTemplate, CustomReportTemplate
+from systems.services.models import CustomFormTemplate, CustomReportTemplate, DocumentFormTemplate
 from systems.services.registries import FormRegistry, ReportRegistry
 
 
@@ -188,4 +188,104 @@ class CustomReportTemplateViewSet(viewsets.ViewSet):
             CustomReportTemplate.objects.get(pk=pk).delete()
             return Response({'success': True})
         except CustomReportTemplate.DoesNotExist:
+            return Response({'success': False, 'error': 'غير موجود'}, status=404)
+
+
+class DocumentFormTemplateViewSet(viewsets.ViewSet):
+    """
+    CRUD للاستمارات الديناميكية.
+    GET    /api/v1/services/admin/document-templates/          → قائمة
+    POST   /api/v1/services/admin/document-templates/          → إنشاء
+    GET    /api/v1/services/admin/document-templates/presets/  → القوالب الجاهزة
+    GET    /api/v1/services/admin/document-templates/{id}/     → تفاصيل
+    PUT    /api/v1/services/admin/document-templates/{id}/     → تعديل
+    DELETE /api/v1/services/admin/document-templates/{id}/     → حذف
+    """
+    permission_classes = [IsAdminUser]
+
+    def _serialize(self, obj):
+        return {
+            'id': obj.id,
+            'name': obj.name,
+            'slug': obj.slug,
+            'category': obj.category,
+            'is_preset': obj.is_preset,
+            'is_active': obj.is_active,
+            'header_columns': obj.header_columns,
+            'header_blocks': obj.header_blocks,
+            'body_content': obj.body_content,
+            'footer_columns': obj.footer_columns,
+            'footer_blocks': obj.footer_blocks,
+            'page_size': obj.page_size,
+            'orientation': obj.orientation,
+            'created_at': obj.created_at,
+        }
+
+    def list(self, request):
+        qs = DocumentFormTemplate.objects.all().order_by('-id')
+        return Response({
+            'success': True,
+            'count': qs.count(),
+            'results': [self._serialize(o) for o in qs],
+        })
+
+    @action(detail=False, methods=['get'])
+    def presets(self, request):
+        qs = DocumentFormTemplate.objects.filter(is_preset=True).order_by('name')
+        return Response({
+            'success': True,
+            'count': qs.count(),
+            'results': [self._serialize(o) for o in qs],
+        })
+
+    def create(self, request):
+        d = request.data
+        try:
+            obj = DocumentFormTemplate.objects.create(
+                name=d['name'],
+                slug=d['slug'],
+                category=d.get('category', 'رسمية'),
+                is_preset=d.get('is_preset', False),
+                is_active=d.get('is_active', True),
+                header_columns=d.get('header_columns', 3),
+                header_blocks=d.get('header_blocks', []),
+                body_content=d.get('body_content', ''),
+                footer_columns=d.get('footer_columns', 1),
+                footer_blocks=d.get('footer_blocks', []),
+                page_size=d.get('page_size', 'A4'),
+                orientation=d.get('orientation', 'portrait'),
+                created_by=request.user,
+            )
+            return Response({
+                'success': True, 'data': self._serialize(obj),
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'success': False, 'error': str(e)}, status=400)
+
+    def retrieve(self, request, pk=None):
+        try:
+            obj = DocumentFormTemplate.objects.get(pk=pk)
+            return Response({'success': True, 'data': self._serialize(obj)})
+        except DocumentFormTemplate.DoesNotExist:
+            return Response({'success': False, 'error': 'غير موجود'}, status=404)
+
+    def update(self, request, pk=None):
+        try:
+            obj = DocumentFormTemplate.objects.get(pk=pk)
+            d = request.data
+            for field in ['name', 'slug', 'category', 'is_preset', 'is_active',
+                          'header_columns', 'header_blocks', 'body_content',
+                          'footer_columns', 'footer_blocks', 'page_size', 'orientation']:
+                if field in d:
+                    setattr(obj, field, d[field])
+            obj.save()
+            return Response({'success': True, 'data': self._serialize(obj)})
+        except DocumentFormTemplate.DoesNotExist:
+            return Response({'success': False, 'error': 'غير موجود'}, status=404)
+
+    def destroy(self, request, pk=None):
+        try:
+            DocumentFormTemplate.objects.get(pk=pk).delete()
+            return Response({'success': True})
+        except DocumentFormTemplate.DoesNotExist:
             return Response({'success': False, 'error': 'غير موجود'}, status=404)

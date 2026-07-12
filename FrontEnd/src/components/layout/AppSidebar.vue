@@ -244,6 +244,10 @@ const menuGroups = computed(() => {
               {
                 name: "admin.system_telemetry",
                 path: "/admin/system/telemetry",
+              },
+              {
+                name: "admin.dynamic_forms",
+                path: "/admin/documents/list",
               }
             ]
           },
