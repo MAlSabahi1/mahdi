@@ -38,7 +38,7 @@
         <div v-for="(sig, index) in displaySignatures" :key="index" class="flex-1 flex flex-col gap-1 relative items-center text-center">
           <!-- Design 2: Free Text Style -->
           <template v-if="sig.freeText">
-            <div class="ck-content signature-content text-[1.05em] leading-tight w-full mt-2" v-html="sig.freeText"></div>
+            <div class="ck-content signature-content text-[1.05em] leading-tight mt-2" v-html="sig.freeText"></div>
           </template>
           <div v-if="sig.showSeal" class="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-16 h-16 border-2 border-dashed border-gray-400 rounded-full flex items-center justify-center opacity-60 z-0 -rotate-12 pointer-events-none" :class="index === 0 ? 'right-0 translate-x-0 left-auto' : index === displaySignatures.length - 1 ? 'left-0 translate-x-0 right-auto' : ''">
             <span class="text-gray-400 text-[8px] font-black text-center leading-tight" style="font-family: 'Arial', sans-serif; text-decoration: none;">الختم<br>الرسمي</span>
@@ -47,16 +47,16 @@
       </div>
     </template>
 
-    <!-- Security Tracking Footer & QR Code -->
-    <div class="flex mt-auto items-center justify-between text-[7px] text-gray-500 font-medium border-t border-gray-400 pt-2 leading-relaxed">
+    <!-- Security Tracking Footer & QR Code (Absolute Bottom) -->
+    <div class="absolute bottom-2 left-8 right-8 flex items-center justify-between text-[7px] text-gray-500 font-medium border-t border-gray-400 pt-2 leading-relaxed z-50">
       <div class="space-y-0.5 text-right flex-1">
         <p>طُبع بواسطة: <span class="font-bold text-gray-800">{{ userName }}</span> | بتاريخ: <span class="font-bold text-gray-800" dir="ltr">{{ printDate }}</span></p>
         <p>المرجع (REF): <span class="font-bold text-gray-800 font-mono tracking-wider">{{ refId }}</span> <span class="text-gray-400 px-2">|</span> كود التوثيق (HASH): <span class="font-bold text-gray-700 font-mono tracking-widest text-[6px]">{{ secHash }}</span></p>
       </div>
       
-      <!-- Functional QR Code -->
-      <div class="flex items-center gap-2 pr-4 border-r border-gray-300 shrink-0">
-        <img :src="`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://moi.gov.ye/verify/${refId}`" class="h-[65px] w-[65px] min-w-[65px] min-h-[65px] object-contain grayscale shrink-0" alt="QR Code" />
+      <!-- Functional QR Code (Cryptographic Token) -->
+      <div class="flex items-center gap-2 pr-3 border-r border-gray-200 shrink-0">
+        <img :src="`https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=1&data=${encodeURIComponent(offlineQrData)}`" class="h-[55px] w-[55px] min-w-[55px] min-h-[55px] object-contain grayscale shrink-0 opacity-90 mix-blend-multiply" alt="QR Code" />
       </div>
     </div>
   </div>
@@ -125,6 +125,14 @@ const printDate = ref('')
 const refId = ref('')
 const secHash = ref('')
 
+const offlineQrData = computed(() => {
+  // TODO: [قيد التطوير] ميزة الباركود للاسترجاع الأرشيفي الداخلي.
+  // تم وضع أساس الميزة الآن لتكون متوافقة مع أجهزة الفحص اليدوية (USB Barcode Scanners).
+  // تقوم هذه الأجهزة بقراءة الباركود وكتابته كـ "نص مباشر" في خانة البحث في النظام المغلق.
+  // لم تكتمل الميزة إلا الآن كقاعدة تصميم، وسيتم تفعيل دورة الاسترجاع في الـ Backend لاحقاً.
+  return refId.value
+})
+
 onMounted(() => {
   const now = new Date()
   const dateStr = now.toLocaleDateString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('/')
@@ -141,3 +149,25 @@ onMounted(() => {
   secHash.value = hash
 })
 </script>
+
+<style>
+/* CKEditor 5 Alignment & Font Fixes (Bulletproof) */
+.ck-content .text-tiny { font-size: 0.7em !important; }
+.ck-content .text-small { font-size: 0.85em !important; }
+.ck-content .text-big { font-size: 1.4em !important; }
+.ck-content .text-huge { font-size: 1.8em !important; }
+
+.ck-content .text-align-left, .ck-content .text-left { text-align: left !important; display: block; }
+.ck-content .text-align-center, .ck-content .text-center { text-align: center !important; display: block; }
+.ck-content .text-align-right, .ck-content .text-right { text-align: right !important; display: block; }
+.ck-content .text-align-justify, .ck-content .text-justify { text-align: justify !important; display: block; }
+
+.signature-content p {
+  width: 100% !important;
+  margin: 0 !important;
+  text-align: inherit;
+}
+.signature-content {
+  text-align: center;
+}
+</style>

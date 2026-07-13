@@ -1189,9 +1189,9 @@ const defaultForm = {
   body: '<p>في البدء نهديكم أطيب التحيات، راجين لكم التوفيق بمهام عملكم..</p><p>بصدد الموضوع أعلاه... (أكمل النص هنا)</p><p>لذلك لزم توجيهكم... وتقبلوا خالص التحيات.</p>',
   conclusion: '<p>وعليه، يتم اتخاذ الإجراءات اللازمة...</p>',
   signatures: [
-    { title: 'قسم الخدمات', rank: '', name: '', showSeal: false },
-    { title: 'مدير إدارة القوى البشرية', rank: '', name: '', showSeal: false },
-    { title: 'مدير عام شرطة المحافظة', rank: '', name: '', showSeal: true }
+    { title: 'قسم الخدمات', rank: '', name: '', showSeal: false, freeText: '<p class="text-align-center"><span style="font-family:\'Amiri\', serif; font-size: 24px; color: #1a202c;"><strong>مـقــــــدم /</strong></span></p><p class="text-align-center"><span style="font-family:\'Cairo\', sans-serif; font-size: 26px; color: #000000;"><strong>أحـمـد عـلـي الـسـيـد</strong></span></p><p class="text-align-center"><span style="font-family:\'Cairo\', sans-serif; font-size: 18px; color: #4a5568;">مدير قسـم الخدمـات</span></p>' },
+    { title: 'مدير إدارة القوى البشرية', rank: '', name: '', showSeal: false, freeText: '<p class="text-align-center"><span style="font-family:\'Amiri\', serif; font-size: 24px; color: #1a202c;"><strong>عـمـيـــــــد /</strong></span></p><p class="text-align-center"><span style="font-family:\'Cairo\', sans-serif; font-size: 26px; color: #000000;"><strong>عـبـدالله مـحـمـد</strong></span></p><p class="text-align-center"><span style="font-family:\'Cairo\', sans-serif; font-size: 18px; color: #4a5568;">مديـر إدارة القـوى البشـريـة</span></p>' },
+    { title: 'مدير عام شرطة المحافظة', rank: '', name: '', showSeal: true, freeText: '<p class="text-align-center"><span style="font-family:\'Amiri\', serif; font-size: 26px; color: #1a202c;"><strong>لــــــــواء /</strong></span></p><p class="text-align-center"><span style="font-family:\'Cairo\', sans-serif; font-size: 28px; color: #000000;"><strong>يـحـيـى أحـمـد الـيـمـانـي</strong></span></p><p class="text-align-center"><span style="font-family:\'Cairo\', sans-serif; font-size: 20px; color: #4a5568;">مديـر عـام شـرطـة المـحـافـظـة</span></p>' }
   ],
   signatureSettings: {
     showFrame: true,
@@ -1234,7 +1234,13 @@ const removeAddressee = (index: number) => {
 
 const addSignature = () => {
   if (!form.value.signatures) form.value.signatures = []
-  form.value.signatures.push({ title: 'جهة جديدة', rank: '', name: '', showSeal: false })
+  form.value.signatures.push({ 
+    title: 'جهة جديدة', 
+    rank: '', 
+    name: '', 
+    showSeal: false,
+    freeText: '<p class="text-align-center"><span style="font-family:\'Amiri\', serif; font-size: 24px; color: #1a202c;"><strong>عـقـيـــــــد /</strong></span></p><p class="text-align-center"><span style="font-family:\'Cairo\', sans-serif; font-size: 26px; color: #000000;"><strong>الاسـم هـنـا</strong></span></p><p class="text-align-center"><span style="font-family:\'Cairo\', sans-serif; font-size: 18px; color: #4a5568;">الصـفـة هـنـا</span></p>'
+  })
 }
 
 const removeSignature = (index: number) => {
