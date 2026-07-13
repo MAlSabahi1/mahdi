@@ -103,6 +103,54 @@ class FormActionsViewSet(viewsets.ViewSet):
         
         return Response({'message': 'تم إرجاع الطلب بنجاح'})
 
+    @decorators.action(detail=True, methods=['post'])
+    def update_attachments(self, request, pk=None):
+        """إضافة مرفقات جديدة أو استبدال المرفقات — مع إعادة حساب attachments_complete"""
+        form = get_object_or_404(StatusChangeForm, pk=pk)
+
+        if form.status in ['approved', 'rejected']:
+            return Response({'error': 'لا يمكن تعديل المرفقات لطلب معتمد أو مرفوض'}, status=status.HTTP_400_BAD_REQUEST)
+
+        doc_ids = request.data.get('document_ids', [])
+        action_type = request.data.get('action', 'add')  # 'add' أو 'replace'
+
+        from infra.storage.models import Document
+        docs = Document.objects.filter(id__in=doc_ids)
+
+        if action_type == 'replace':
+            form.attachments.set(docs)
+        else:
+            form.attachments.add(*docs)
+
+        # ── ربط المرفقات بالفرد ──
+        for doc in docs:
+            if not doc.personnel_id:
+                doc.personnel = form.personnel
+                doc.context_type = 'StatusChangeForm'
+                doc.context_id = str(form.id)
+                doc.save(update_fields=['personnel_id', 'context_type', 'context_id'])
+
+        # ── إعادة حساب attachments_complete ──
+        total_attachments = form.attachments.count()
+        min_docs = len(form.required_attachments) if form.required_attachments else 0
+        form.attachments_complete = total_attachments >= max(min_docs, 1)
+        form.save(update_fields=['attachments_complete'])
+
+        # ── تسجيل الحدث ──
+        FormEventLog.objects.create(
+            form=form,
+            action='updated',
+            performed_by=request.user,
+            notes=f'تم تحديث المرفقات — العدد الحالي: {total_attachments}'
+        )
+
+        return Response({
+            'success': True,
+            'message': f'تم تحديث المرفقات ({total_attachments} مرفق)',
+            'attachments_complete': form.attachments_complete,
+            'attachments_count': total_attachments,
+        })
+
     @decorators.action(detail=True, methods=['get'])
     def checklist(self, request, pk=None):
         """جلب Checklist المرحلة الحالية"""

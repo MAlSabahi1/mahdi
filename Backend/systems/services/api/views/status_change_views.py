@@ -106,35 +106,50 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
             # Fallback for legacy types
             form_type_display = dict(form.FORM_TYPE_CHOICES).get(form.form_type, form.form_type)
             
+        approval_type = getattr(catalog, 'approval_type', 'internal') if catalog else 'internal'
+        execution_action = getattr(catalog, 'execution_action', 'UPDATE_STATUS') if catalog else 'UPDATE_STATUS'
+
         return {
             'id': form.pk,
             'form_type': form.form_type,
             'form_type_display': form_type_display,
             'service_type': service_type,
+            'approval_type': approval_type,
+            'is_external': approval_type == 'external',
+            'execution_action': execution_action,
             'status': form.status,
             'status_display': form.get_status_display(),
             'personnel': {
                 'military_number': p.military_number,
                 'full_name': p.full_name,
                 'rank': p.current_rank.name if p.current_rank else '',
+                'rank_id': p.current_rank.id if p.current_rank else None,
+                'central_department': p.central_department.name if getattr(p, 'central_department', None) else '',
+                'security_admin': p.security_admin.name if getattr(p, 'security_admin', None) else '',
             } if p else None,
             'from_status': form.from_status.name if form.from_status else None,
             'to_status': form.to_status.name if form.to_status else None,
+            'to_status_id': form.to_status_id,
             'effective_date': form.effective_date,
             'form_data': form.form_data,
             'notes': form.notes,
             'required_attachments': form.required_attachments,
-            'attachments': list(form.attachments.values('id', 'document_type', 'file', 'status')),
+            'attachments': list(form.attachments.values('id', 'document_type', 'file', 'status', 'personnel_id', 'context_type')),
             'attachments_complete': form.attachments_complete,
             'submitted_by': getattr(form.submitted_by, 'username', None),
             'submitted_at': form.submitted_at,
             'is_printed': form.is_printed,
             'ministry_approval_doc_id': form.ministry_approval_doc_id,
+            'ministry_approval_doc_url': form.ministry_approval_doc.file.url if form.ministry_approval_doc and hasattr(form.ministry_approval_doc, 'file') and form.ministry_approval_doc.file else None,
             'current_step_name': form.current_step.stage.name_ar if getattr(form, 'current_step', None) and getattr(form.current_step, 'stage', None) else None,
+            'current_step_id': form.current_step_id,
             'all_steps': all_steps,
             'current_step_index': current_step_index,
             'workflow_log': form.workflow_log,
             'rejection_reason': form.rejection_reason,
+            'priority': form.priority,
+            'sla_deadline': form.sla_deadline,
+            'is_overdue': form.is_overdue,
             'created_at': form.created_at,
             'updated_at': form.updated_at,
         }
@@ -272,6 +287,7 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
                 submitted_by=request.user,
                 required_attachments=att_labels,
                 notes=d.get('notes', ''),
+                service_catalog=ServiceCatalog.objects.filter(code=form_type).first() or ServiceCatalog.objects.filter(form_type=form_type).first(),
             )
 
             doc_ids = d.get('document_ids', [])
@@ -281,7 +297,25 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
                 form.attachments_complete = len(docs) >= min_docs
                 form.save(update_fields=['attachments_complete'])
 
-        # ── بعد نجاح المعاملة — تسجيل التدقيق (يُنفَّذ فقط بعد commit) ──
+                # ── ربط المرفقات بالفرد مباشرة ──
+                for doc in docs:
+                    if not doc.personnel_id:
+                        doc.personnel = personnel
+                        doc.context_type = 'StatusChangeForm'
+                        doc.context_id = str(form.id)
+                        doc.save(update_fields=['personnel_id', 'context_type', 'context_id'])
+
+            # ── تسجيل الحدث في Timeline ──
+            from systems.services.models import FormEventLog
+            FormEventLog.objects.create(
+                form=form,
+                action='created',
+                to_status='draft',
+                performed_by=request.user,
+                notes=f'تم إنشاء مسودة {label_msg} للفرد {personnel.full_name}'
+            )
+
+        # ── بعد نجاح المعاملة — تسجيل التدقيق (يُنفَّذ فقط بعد commit) ──
         transaction.on_commit(lambda: AuditService.log_create(user=request.user, obj=form, module='SERVICES'))
 
         return Response({
@@ -296,19 +330,40 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
     def submit(self, request, pk=None):
         try:
             form = self.get_object()
-            from systems.services.models import ServiceCatalog
+            from systems.services.models import ServiceCatalog, FormEventLog
             catalog = ServiceCatalog.objects.filter(code=form.form_type).first() or ServiceCatalog.objects.filter(form_type=form.form_type).first()
             if not catalog:
                 return Response({'success': False, 'error': 'لم يتم العثور على الخدمة'}, status=400)
-            
+
+            # ── تحديد الخطوة الأولى من مسار سير العمل ──
+            first_step_id = None
+            ordered_steps = list(catalog.workflow_steps.order_by('order'))
+            if ordered_steps:
+                first_step_id = ordered_steps[0].id
+
             uc = SubmitStatusFormUseCase(self.repo)
             cmd = SubmitFormCommand(
                 form_id=form.id,
                 submitted_by=request.user.id,
                 submitted_at=timezone.now(),
-                first_step_id=None
+                first_step_id=first_step_id,
             )
             uc.execute(cmd)
+
+            # ── تحديث current_step في النموذج مباشرة (لأن الـ repo يحدث بالـ filter().update) ──
+            if first_step_id:
+                StatusChangeForm.objects.filter(id=form.id).update(current_step_id=first_step_id)
+
+            # ── تسجيل الحدث في Timeline ──
+            FormEventLog.objects.create(
+                form=form,
+                action='submitted',
+                from_status='draft',
+                to_status='in_progress',
+                performed_by=request.user,
+                notes=f'تم تقديم الطلب — المرحلة الأولى: {ordered_steps[0].stage.name_ar if ordered_steps else "غير محدد"}'
+            )
+
             return Response({'success': True, 'message': 'تم التقديم بنجاح. بانتظار الاعتماد.'})
         except ValueError as e:
             return Response({'success': False, 'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -332,41 +387,66 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
             form = self.get_object()
             if getattr(form, 'status', None) != 'in_progress':
                 return Response({'success': False, 'error': 'الطلب ليس في مرحلة قيد الإجراء'}, status=400)
-            
-            from systems.services.models import ServiceCatalog
+
+            from systems.services.models import ServiceCatalog, FormEventLog
             catalog = ServiceCatalog.objects.filter(code=form.form_type).first() or ServiceCatalog.objects.filter(form_type=form.form_type).first()
-            
-            # Validation for external requests
+
+            if not catalog:
+                return Response({'success': False, 'error': 'لم يتم العثور على الخدمة في الدليل. لا يمكن الاعتماد.'}, status=400)
+
+            # ── حماية الشهيد/المتوفى من أي اعتماد نهائي غير منطقي ──
+            if form.personnel and form.personnel.current_status:
+                ps_name = form.personnel.current_status.name
+                if any(w in ps_name for w in ['شهيد', 'متوفى']):
+                    if form.form_type not in ['returned_to_service', 'correction']:
+                        return Response({'success': False, 'error': f'الفرد مسجّل كـ ({ps_name}). لا يمكن اعتماد هذه المعاملة.'}, status=400)
+
+            # ── التحقق من الخدمات الخارجية (external) ──
             if catalog and getattr(catalog, 'approval_type', '') == 'external':
                 if not form.is_printed:
                     return Response({'success': False, 'error': 'يجب طباعة الاستمارة وإرسالها للوزارة أولاً قبل الاعتماد.'}, status=400)
-                
+
                 ministry_doc_id = request.data.get('ministry_document_id')
                 if not ministry_doc_id:
                     return Response({'success': False, 'error': 'يجب إرفاق مستند موافقة الوزارة.'}, status=400)
-                
+
+                # منع تكرار مستند الوزارة
+                if form.ministry_approval_doc_id and form.ministry_approval_doc_id != int(ministry_doc_id):
+                    return Response({'success': False, 'error': 'مستند الوزارة مرفق مسبقاً. لا يمكن استبداله.'}, status=400)
+
                 from infra.storage.models import Document
                 doc = Document.objects.filter(id=ministry_doc_id).first()
                 if not doc:
                     return Response({'success': False, 'error': 'المستند المرفق غير صالح.'}, status=400)
-                
-                # Attach the document
+
                 form.ministry_approval_doc = doc
                 form.attachments.add(doc)
                 form.save(update_fields=['ministry_approval_doc'])
-            
-            # Determine next workflow step dynamically
+
+            # ── تحديد الخطوة التالية من مسار سير العمل ──
             next_step_id = None
-            if catalog:
-                ordered_steps = list(catalog.workflow_steps.order_by('order'))
-                if form.current_step:
-                    current_idx = next((i for i, s in enumerate(ordered_steps) if s.id == form.current_step_id), -1)
-                    if current_idx >= 0 and current_idx < len(ordered_steps) - 1:
+            current_step_name = 'غير محدد'
+            next_step_name = None
+
+            ordered_steps = list(catalog.workflow_steps.select_related('stage').order_by('order'))
+            if not ordered_steps:
+                return Response({'success': False, 'error': 'لا يوجد مسار سير عمل معرّف لهذه الخدمة. يرجى إعداد المراحل أولاً.'}, status=400)
+
+            if form.current_step_id:
+                current_idx = next((i for i, s in enumerate(ordered_steps) if s.id == form.current_step_id), -1)
+                if current_idx >= 0:
+                    current_step_name = ordered_steps[current_idx].stage.name_ar
+                    if current_idx < len(ordered_steps) - 1:
                         next_step_id = ordered_steps[current_idx + 1].id
-                    # else: last step → next_step_id stays None → triggers final approval
-                elif ordered_steps:
-                    # No current step but has steps — start from first
-                    next_step_id = ordered_steps[0].id if len(ordered_steps) > 1 else None
+                        next_step_name = ordered_steps[current_idx + 1].stage.name_ar
+                    # else: آخر خطوة → next_step_id = None → اعتماد نهائي
+            else:
+                # لا توجد خطوة حالية لكن يوجد مسار — نبدأ من الأولى ثم ننتقل للثانية
+                current_step_name = ordered_steps[0].stage.name_ar
+                if len(ordered_steps) > 1:
+                    next_step_id = ordered_steps[1].id
+                    next_step_name = ordered_steps[1].stage.name_ar
+                # else: خطوة واحدة فقط → اعتماد نهائي
 
             uc = ApproveStatusFormUseCase(
                 self.repo,
@@ -379,12 +459,39 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
                 approved_by=request.user.id,
                 approved_at=timezone.now(),
                 next_step_id=next_step_id,
-                execution_action=catalog.execution_action if catalog else 'UPDATE_STATUS'
+                execution_action=catalog.execution_action if catalog else 'UPDATE_STATUS',
+                execution_config=catalog.execution_config if catalog else {},
             )
             uc.execute(cmd)
-            
+
             is_final = next_step_id is None
-            msg = 'تم الاعتماد النهائي للطلب بنجاح. تم تحديث حالة الفرد.' if is_final else 'تم الاعتماد وتمرير المعاملة للمرحلة التالية.'
+
+            # ── تحديث current_step في النموذج ──
+            StatusChangeForm.objects.filter(id=form.id).update(
+                current_step_id=next_step_id
+            )
+
+            # ── تسجيل الحدث في Timeline ──
+            if is_final:
+                FormEventLog.objects.create(
+                    form=form,
+                    action='approved',
+                    from_status='in_progress',
+                    to_status='approved',
+                    performed_by=request.user,
+                    notes=f'اعتماد نهائي — المرحلة: {current_step_name}. تم تحديث حالة الفرد.'
+                )
+            else:
+                FormEventLog.objects.create(
+                    form=form,
+                    action='approved',
+                    from_status='in_progress',
+                    to_status='in_progress',
+                    performed_by=request.user,
+                    notes=f'تم اعتماد مرحلة ({current_step_name}) وتمرير المعاملة إلى ({next_step_name})'
+                )
+
+            msg = 'تم الاعتماد النهائي للطلب بنجاح. تم تحديث حالة الفرد.' if is_final else f'تم الاعتماد وتمرير المعاملة إلى مرحلة: {next_step_name}.'
             return Response({'success': True, 'message': msg, 'is_final': is_final})
         except ValueError as e:
             return Response({'success': False, 'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -392,13 +499,31 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
         try:
+            form = self.get_object()
+            reason = request.data.get('reason', 'تم الرفض')
+
             uc = RejectStatusFormUseCase(self.repo, self.event_publisher)
             cmd = RejectFormCommand(
-                form_id=self.get_object().id,
-                reason=request.data.get('reason', 'تم الرفض'),
+                form_id=form.id,
+                reason=reason,
                 rejected_by=request.user.id
             )
             uc.execute(cmd)
+
+            # ── تسجيل الحدث في Timeline ──
+            from systems.services.models import FormEventLog
+            FormEventLog.objects.create(
+                form=form,
+                action='rejected',
+                from_status='in_progress',
+                to_status='rejected',
+                performed_by=request.user,
+                notes=f'سبب الرفض: {reason}'
+            )
+
+            # ملاحظة: RejectionLog مرتبط بـ StagingRecord (نظام الاستيراد) وليس بالاستمارات.
+            # الرفض مسجّل في: FormEventLog (أعلاه) + AuditService.log_form_rejected (عبر DjangoEventPublisher)
+
             return Response({'success': True, 'message': 'تم رفض الاستمارة'})
         except ValueError as e:
             return Response({'success': False, 'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -443,15 +568,25 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def export(self, request):
         qs = self.get_queryset()
+        # ── تحضير خريطة أسماء الأنواع الديناميكية ──
+        from systems.services.models import ServiceCatalog
+        catalog_map = {}
+        for sc in ServiceCatalog.objects.values('code', 'form_type', 'name_ar'):
+            catalog_map[sc['code']] = sc['name_ar']
+            if sc['form_type']:
+                catalog_map[sc['form_type']] = sc['name_ar']
+
         rows = []
         for i, f in enumerate(qs, 1):
             p = f.personnel
+            # حل الاسم: من Catalog أولاً، ثم من choices، ثم الكود الخام
+            ft_display = catalog_map.get(f.form_type) or dict(f.FORM_TYPE_CHOICES).get(f.form_type) or f.form_type
             rows.append({
                 'seq': i,
                 'rank': p.current_rank.name if p and p.current_rank else '',
                 'military_number': p.military_number if p else '',
                 'full_name': p.full_name if p else '',
-                'form_type': f.get_form_type_display(),
+                'form_type': ft_display,
                 'status': f.get_status_display(),
                 'effective_date': str(f.effective_date) if f.effective_date else '',
                 'from_status': f.from_status.name if f.from_status else '',

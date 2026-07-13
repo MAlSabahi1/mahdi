@@ -36,6 +36,12 @@ class ServiceCatalog(TimeStampedModel):
         ('UPDATE_RANK', _('تحديث الرتبة (ترقيات)')),
         ('PERSONNEL_TO_OFFICER', _('تحديث رتبة ورقم عسكري (ضباط)')),
         ('SECURITY_RESTRICT', _('قيد أمني')),
+        ('SECURITY_SYNC', _('مزامنة أمنية')),
+        ('CORRECTION_NAME', _('تصحيح اسم')),
+        ('CORRECTION_MILITARY_NUM', _('تصحيح رقم عسكري')),
+        ('CORRECTION_NATIONAL_ID', _('تصحيح رقم وطني')),
+        ('DISCIPLINARY_ADD', _('إضافة جزاء تأديبي')),
+        ('DISCIPLINARY_REMOVE', _('رفع جزاء تأديبي')),
         ('NONE', _('للتوثيق فقط (لا يوجد تأثير)')),
     ]
 

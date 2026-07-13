@@ -14,8 +14,8 @@ from django.db.models import Count, Q
 
 from systems.personnel.models import PersonnelMaster
 from systems.services.models import (
-    AuditLog, RejectionLog, DirectorateCompliance,
-    ReportTemplate,
+    AuditLog, DirectorateCompliance,
+    ReportTemplate, FormEventLog, StatusChangeForm,
 )
 from core.models import CentralDepartment
 
@@ -129,10 +129,11 @@ class ReportGenerationService:
             leave = personnel.filter(
                 current_status__classification='inactive_temp'
             ).count()
+            # الغائبون: حالة 'absent' فقط (منفصلة عن inactive_temp)
             absent = personnel.filter(
-                current_status__classification__in=['absent', 'inactive_temp']
-            ).exclude(current_status__classification='inactive_temp').count()
-            other = total - active - leave - absent
+                current_status__classification='absent'
+            ).count()
+            other = max(total - active - leave - absent, 0)
             
             ws.cell(row=row_num, column=1, value=dept.name)
             ws.cell(row=row_num, column=2, value=total)
@@ -146,70 +147,116 @@ class ReportGenerationService:
         return output.getvalue()
     
     def _generate_monthly_changes(self, filters):
-        """نموذج 3: التغييرات الشهرية"""
+        """نموذج 3: التغييرات الشهرية — من استمارات الخدمات المعتمدة"""
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = 'التغييرات الشهرية'
         ws.sheet_view.rightToLeft = True
-        
-        headers = ['الرقم العسكري', 'الاسم', 'الإدارة', 'التغيير', 'القيمة القديمة', 'القيمة الجديدة', 'التاريخ']
+
+        headers = ['م', 'الرقم العسكري', 'الاسم', 'الرتبة', 'الإدارة',
+                   'نوع الخدمة', 'الحالة السابقة', 'الحالة الجديدة', 'تاريخ الاعتماد']
+        header_font = Font(bold=True, size=11)
         for i, h in enumerate(headers, 1):
-            ws.cell(row=1, column=i, value=h)
-        
-        from systems.services.models import ServiceEventLog
+            cell = ws.cell(row=1, column=i, value=h)
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal='center')
+
+        # جلب الاستمارات المعتمدة خلال الشهر المحدد
         month = filters.get('month', date.today().strftime('%Y-%m'))
-        events = ServiceEventLog.objects.select_related(
-            'personnel', 'personnel__central_department'
-        ).filter(service_month=month)
-        
+        year, mon = month.split('-') if '-' in month else (date.today().year, date.today().month)
+
+        qs = StatusChangeForm.objects.select_related(
+            'personnel', 'personnel__current_rank',
+            'personnel__central_department',
+            'from_status', 'to_status', 'service_catalog',
+        ).filter(
+            status='approved',
+            updated_at__year=int(year),
+            updated_at__month=int(mon),
+        )
+
         dept_id = filters.get('directorate_id')
         if dept_id:
-            events = events.filter(personnel__central_department_id=dept_id)
-        
-        for row_num, event in enumerate(events, 2):
-            ws.cell(row=row_num, column=1, value=event.personnel.military_number)
-            ws.cell(row=row_num, column=2, value=event.personnel.full_name)
-            ws.cell(row=row_num, column=3, value=event.personnel.central_department.name if event.personnel.central_department else '')
-            ws.cell(row=row_num, column=4, value=event.field_name)
-            ws.cell(row=row_num, column=5, value=event.old_value)
-            ws.cell(row=row_num, column=6, value=event.new_value)
-            ws.cell(row=row_num, column=7, value=str(event.event_date))
-        
+            qs = qs.filter(personnel__central_department_id=dept_id)
+
+        for row_num, form in enumerate(qs, 2):
+            p = form.personnel
+            service_name = (
+                form.service_catalog.name_ar if form.service_catalog
+                else form.get_form_type_display() if hasattr(form, 'get_form_type_display')
+                else form.form_type
+            )
+            ws.cell(row=row_num, column=1, value=row_num - 1)
+            ws.cell(row=row_num, column=2, value=p.military_number if p else '')
+            ws.cell(row=row_num, column=3, value=p.full_name if p else '')
+            ws.cell(row=row_num, column=4, value=p.current_rank.name if p and p.current_rank else '')
+            ws.cell(row=row_num, column=5, value=p.central_department.name if p and p.central_department else '')
+            ws.cell(row=row_num, column=6, value=service_name)
+            ws.cell(row=row_num, column=7, value=form.from_status.name if form.from_status else '')
+            ws.cell(row=row_num, column=8, value=form.to_status.name if form.to_status else '')
+            ws.cell(row=row_num, column=9, value=str(form.updated_at.date()) if form.updated_at else '')
+
         output = BytesIO()
         wb.save(output)
         return output.getvalue()
     
     def _generate_rejections_report(self, filters):
-        """نموذج 4: تقرير المرفوضات"""
+        """نموذج 4: تقرير المرفوضات — من FormEventLog (استمارات الخدمات)"""
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = 'المرفوضات'
         ws.sheet_view.rightToLeft = True
-        
-        headers = ['الرقم العسكري', 'الاسم', 'الإدارة', 'الحالة المقترحة', 'سبب الرفض', 'رفض بواسطة', 'التاريخ']
+
+        headers = ['م', 'الرقم العسكري', 'الاسم', 'الرتبة', 'الإدارة',
+                   'نوع الخدمة', 'الحالة المطلوبة', 'سبب الرفض', 'رفض بواسطة', 'التاريخ']
+        header_font = Font(bold=True, size=11)
         for i, h in enumerate(headers, 1):
-            ws.cell(row=1, column=i, value=h)
-        
-        qs = RejectionLog.objects.select_related(
-            'personnel', 'central_department', 'rejected_by'
-        ).all()
-        
+            cell = ws.cell(row=1, column=i, value=h)
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal='center')
+
+        # جلب الاستمارات المرفوضة من FormEventLog
+        qs = FormEventLog.objects.select_related(
+            'form', 'form__personnel', 'form__personnel__current_rank',
+            'form__personnel__central_department',
+            'form__to_status', 'form__service_catalog',
+            'performed_by',
+        ).filter(action='rejected')
+
         month = filters.get('month')
-        if month:
-            qs = qs.filter(service_month=month)
+        if month and '-' in month:
+            year, mon = month.split('-')
+            qs = qs.filter(
+                created_at__year=int(year),
+                created_at__month=int(mon),
+            )
+
         dept_id = filters.get('directorate_id')
         if dept_id:
-            qs = qs.filter(central_department_id=dept_id)
-        
-        for row_num, rej in enumerate(qs, 2):
-            ws.cell(row=row_num, column=1, value=rej.personnel.military_number)
-            ws.cell(row=row_num, column=2, value=rej.personnel.full_name)
-            ws.cell(row=row_num, column=3, value=rej.central_department.name)
-            ws.cell(row=row_num, column=4, value=rej.proposed_status)
-            ws.cell(row=row_num, column=5, value=rej.rejection_reason)
-            ws.cell(row=row_num, column=6, value=rej.rejected_by.username if rej.rejected_by else '')
-            ws.cell(row=row_num, column=7, value=str(rej.rejected_at))
-        
+            qs = qs.filter(form__personnel__central_department_id=dept_id)
+
+        for row_num, event in enumerate(qs, 2):
+            form = event.form
+            p = form.personnel if form else None
+            service_name = (
+                form.service_catalog.name_ar if form and form.service_catalog
+                else form.get_form_type_display() if form and hasattr(form, 'get_form_type_display')
+                else (form.form_type if form else '')
+            )
+            to_status_name = form.to_status.name if form and form.to_status else ''
+            rejection_reason = event.notes.replace('سبب الرفض: ', '') if event.notes else ''
+
+            ws.cell(row=row_num, column=1, value=row_num - 1)
+            ws.cell(row=row_num, column=2, value=p.military_number if p else '')
+            ws.cell(row=row_num, column=3, value=p.full_name if p else '')
+            ws.cell(row=row_num, column=4, value=p.current_rank.name if p and p.current_rank else '')
+            ws.cell(row=row_num, column=5, value=p.central_department.name if p and p.central_department else '')
+            ws.cell(row=row_num, column=6, value=service_name)
+            ws.cell(row=row_num, column=7, value=to_status_name)
+            ws.cell(row=row_num, column=8, value=rejection_reason)
+            ws.cell(row=row_num, column=9, value=event.performed_by.username if event.performed_by else '')
+            ws.cell(row=row_num, column=10, value=str(event.created_at.date()) if event.created_at else '')
+
         output = BytesIO()
         wb.save(output)
         return output.getvalue()

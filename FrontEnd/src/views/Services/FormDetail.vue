@@ -5,17 +5,46 @@
       <PageBreadcrumb :pageTitle="'تفاصيل المعاملة رقم ' + (form?.id || '')" />
       
       <!-- Action Buttons -->
-      <div v-if="form && canApprove" class="flex flex-wrap gap-2">
-        <button v-if="canApprove" @click="rejectForm" class="bg-white text-red-600 hover:bg-red-50 border border-red-200 dark:bg-gray-900 dark:border-red-900/50 dark:hover:bg-red-950/30 font-bold px-4 py-2 rounded-lg transition-all text-xs shadow-sm">
+      <div v-if="form" class="flex flex-wrap gap-2">
+        <!-- زر الطباعة -->
+        <button @click="printForm"
+          class="bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-800 font-bold px-4 py-2 rounded-lg transition-all text-xs shadow-sm flex items-center gap-2">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+          طباعة الاستمارة
+        </button>
+
+        <!-- رفع مستند الوزارة (خارجي فقط) -->
+        <button v-if="form.is_external && form.is_printed && !form.ministry_approval_doc_id && canApprove"
+          @click="promptMinistryDoc"
+          class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-4 py-2 rounded-lg transition-all text-xs shadow-md shadow-amber-500/20 flex items-center gap-2">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          رفع مستند الوزارة
+        </button>
+
+        <!-- رفض -->
+        <button v-if="canApprove" @click="rejectForm"
+          class="bg-white text-red-600 hover:bg-red-50 border border-red-200 dark:bg-gray-900 dark:border-red-900/50 dark:hover:bg-red-950/30 font-bold px-4 py-2 rounded-lg transition-all text-xs shadow-sm">
           رفض
         </button>
-        <button v-if="canApprove" @click="returnFormModal" class="bg-white text-amber-600 hover:bg-amber-50 border border-amber-200 dark:bg-gray-900 dark:border-amber-900/50 dark:hover:bg-amber-950/30 font-bold px-4 py-2 rounded-lg transition-all text-xs shadow-sm flex items-center gap-2">
+
+        <!-- إرجاع للتعديل -->
+        <button v-if="canApprove" @click="returnFormModal"
+          class="bg-white text-amber-600 hover:bg-amber-50 border border-amber-200 dark:bg-gray-900 dark:border-amber-900/50 dark:hover:bg-amber-950/30 font-bold px-4 py-2 rounded-lg transition-all text-xs shadow-sm flex items-center gap-2">
           إرجاع للتعديل
         </button>
-        <button v-if="canApprove" @click="approveForm()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2 rounded-lg transition-all shadow-md shadow-emerald-500/20 text-xs flex items-center gap-2">
+
+        <!-- اعتماد - يُعطَّل للخارجي إذا لم تكتمل الشروط -->
+        <button v-if="canApprove"
+          @click="approveForm()"
+          :disabled="form.is_external && (!form.is_printed || !form.ministry_approval_doc_id)"
+          :title="form.is_external && !form.is_printed ? 'يجب طباعة الاستمارة أولاً' : form.is_external && !form.ministry_approval_doc_id ? 'يجب رفع مستند الوزارة أولاً' : ''"
+          class="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold px-6 py-2 rounded-lg transition-all shadow-md shadow-emerald-500/20 text-xs flex items-center gap-2">
           اعتماد الطلب
         </button>
-        <button v-if="form && form.status === 'draft'" @click="submitDraft" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded-lg transition-all shadow-md shadow-blue-500/20 text-xs flex items-center gap-2">
+
+        <!-- تقديم المسودة -->
+        <button v-if="form && form.status === 'draft'" @click="submitDraft"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded-lg transition-all shadow-md shadow-blue-500/20 text-xs flex items-center gap-2">
           تقديم الطلب النهائي
         </button>
       </div>
@@ -70,30 +99,18 @@
           </div>
         </div>
 
-        <!-- Progress Steps (If available) -->
-        <div v-if="form.all_steps && form.all_steps.length > 0" class="px-6 py-5 bg-white dark:bg-gray-900 print:hidden border-b border-gray-100 dark:border-gray-800">
-          <div class="flex items-center w-full justify-between gap-1">
-            <div v-for="(step, idx) in form.all_steps" :key="idx" class="flex-1 flex flex-col gap-2.5 relative">
-              <div class="h-1.5 rounded-full w-full relative z-10 transition-colors"
-                :class="[
-                  idx < form.current_step_index ? 'bg-emerald-500' :
-                  idx === form.current_step_index && form.status !== 'approved' && form.status !== 'rejected' ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' :
-                  form.status === 'approved' ? 'bg-emerald-500' :
-                  form.status === 'rejected' && idx === form.current_step_index ? 'bg-red-500' :
-                  'bg-gray-100 dark:bg-gray-800'
-                ]"></div>
-              <div class="text-[10px] font-bold text-center transition-colors"
-                :class="[
-                  idx < form.current_step_index ? 'text-emerald-700 dark:text-emerald-500' :
-                  idx === form.current_step_index && form.status !== 'approved' && form.status !== 'rejected' ? 'text-blue-700 dark:text-blue-500' :
-                  form.status === 'approved' ? 'text-emerald-700 dark:text-emerald-500' :
-                  form.status === 'rejected' && idx === form.current_step_index ? 'text-red-700 dark:text-red-500' :
-                  'text-gray-400 dark:text-gray-500'
-                ]">
-                {{ step }}
-              </div>
-            </div>
-          </div>
+        <!-- Workflow Progress Bar -->
+        <div class="px-6 py-5 bg-white dark:bg-gray-900 print:hidden border-b border-gray-100 dark:border-gray-800">
+          <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-3">مسار سير العمل</p>
+          <WorkflowProgressBar
+            :steps="form.all_steps || []"
+            :current-step-index="form.current_step_index ?? -1"
+            :status="form.status"
+            :is-external="!!form.is_external"
+            :is-printed="!!form.is_printed"
+            :has-ministry-doc="!!form.ministry_approval_doc_id"
+            :rejection-reason="form.rejection_reason"
+          />
         </div>
       </div>
 
@@ -208,7 +225,7 @@
                   </div>
                   <div>
                     <p class="text-xs font-bold text-gray-900 dark:text-white">{{ translateField(att.document_type || 'مستند مرفق') }}</p>
-                    <p class="text-[9px] text-gray-400 font-mono mt-0.5">REF: {{ String(att.id).padStart(4, '0') }}</p>
+                    <p class="text-[8px] text-gray-500 mt-0.5">TX-{{ String(form?.id ?? 0).padStart(6, '0') }}</p>
                   </div>
                 </div>
                 <a :href="att.file" target="_blank" class="text-[10px] font-bold text-gray-600 hover:text-brand-600 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded hover:border-brand-300 dark:hover:border-brand-700 transition-all shadow-sm">
@@ -337,6 +354,7 @@ import Swal from 'sweetalert2'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import ReportFooter from '@/components/reports/ReportFooter.vue'
+import WorkflowProgressBar from '@/components/services/WorkflowProgressBar.vue'
 import { useServicesStore } from '@/stores/services'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/lib/api'
@@ -455,6 +473,18 @@ async function fetchFormDetails() {
   }
 }
 
+async function printForm() {
+  if (!form.value) return
+  try {
+    // سجل الطباعة في النظام
+    await api.post(`/service-cycle/forms/${form.value.id}/mark_printed/`)
+    await fetchFormDetails() // تحديث is_printed
+  } catch (_) {
+    // تجاهل الخطأ لكن أكمل الطباعة
+  }
+  setTimeout(() => window.print(), 300)
+}
+
 async function submitNote() {
   if (!newNote.value.trim()) return
   try {
@@ -561,7 +591,7 @@ async function submitDraft() {
     showCancelButton: true,
     confirmButtonText: 'نعم، قدم الطلب',
     cancelButtonText: 'إلغاء',
-    confirmButtonColor: '#2563eb', // blue-600
+    confirmButtonColor: '#2563eb',
     reverseButtons: true
   }).then(async (result) => {
     if (result.isConfirmed) {
