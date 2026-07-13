@@ -357,6 +357,36 @@ const router = createRouter({
       }
     },
     {
+      path: '/admin/reports/templates/list',
+      name: 'ReportTemplatesList',
+      component: () => import('@/views/SystemAdmin/ReportBuilder/ReportTemplatesList.vue'),
+      meta: {
+        title: 'قائمة قوالب التقارير المخصصة',
+        requiresAuth: true,
+        requiresAdmin: true
+      }
+    },
+    {
+      path: '/admin/reports/templates/builder/:id?',
+      name: 'ReportTemplateBuilder',
+      component: () => import('@/views/SystemAdmin/ReportBuilder/ReportTemplateBuilder.vue'),
+      meta: {
+        title: 'مصمم قوالب التقارير',
+        requiresAuth: true,
+        requiresAdmin: true
+      }
+    },
+    {
+      path: '/admin/reports/templates/preview/:id',
+      name: 'ReportTemplatePreview',
+      component: () => import('@/views/SystemAdmin/ReportBuilder/ReportTemplatePreview.vue'),
+      meta: {
+        title: 'معاينة قالب التقرير',
+        requiresAuth: true,
+        requiresAdmin: true
+      }
+    },
+    {
       path: "/reports/builder/view/:id",
       name: "CustomReportViewer",
       component: () => import("@/views/Reports/Builder/CustomReportViewer.vue"),

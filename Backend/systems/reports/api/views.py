@@ -1,4 +1,5 @@
 from rest_framework.views import APIView
+from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
@@ -301,3 +302,14 @@ class ExportRequestViewSet(viewsets.ModelViewSet):
         # Delegate logic to report services
         return generate_export_response(export_req, request)
 
+from ..models import ReportLayoutTemplate
+from .serializers import ReportLayoutTemplateSerializer
+
+class ReportLayoutTemplateViewSet(viewsets.ModelViewSet):
+    """
+    إدارة قوالب تخطيط التقارير
+    """
+    queryset = ReportLayoutTemplate.objects.all()
+    serializer_class = ReportLayoutTemplateSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id'

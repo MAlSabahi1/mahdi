@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import ExportRequest
+from ..models import ExportRequest, ReportLayoutTemplate
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -17,3 +17,15 @@ class ExportRequestSerializer(serializers.ModelSerializer):
             'approval_notes', 'created_at', 'updated_at', 'expires_at'
         ]
         read_only_fields = ['requested_by', 'status', 'approved_by', 'approval_notes', 'expires_at']
+
+class ReportLayoutTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReportLayoutTemplate
+        fields = '__all__'
+        read_only_fields = ['created_by', 'created_at', 'updated_at']
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            validated_data['created_by'] = user
+        return super().create(validated_data)

@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .api.views import CategoricalWorkforceReportView, NonWorkforceReportView, ExportRequestViewSet
+from .api.views import CategoricalWorkforceReportView, NonWorkforceReportView, ExportRequestViewSet, ReportLayoutTemplateViewSet
 from ..personnel.api.views.detailed_reports_views import (
     ActiveForceReportView,
     TempInactiveReportsView,
@@ -12,6 +12,7 @@ app_name = 'reports'
 
 router = DefaultRouter()
 router.register(r'export-requests', ExportRequestViewSet, basename='export-request')
+router.register(r'templates', ReportLayoutTemplateViewSet, basename='report-layout-template')
 
 urlpatterns = [
     path('categorical-summary/', CategoricalWorkforceReportView.as_view(), name='categorical-summary'),

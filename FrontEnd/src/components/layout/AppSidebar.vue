@@ -463,6 +463,10 @@ const menuGroups = computed(() => {
               {
                 name: "الهيكل التنظيمي والقوة الفعلية",
                 path: "/reports/hierarchical",
+              },
+              {
+                name: "قوالب تصميم التقارير",
+                path: "/admin/reports/templates/list",
               }
             ]
           }
