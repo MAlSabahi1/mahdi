@@ -41,11 +41,10 @@
           />
 
           <!-- Memo Body Content with standard official margins -->
-          <div class="px-10 mt-2 flex-1 flex flex-col">
-          <!-- Involved Personnel Table (For Disciplinary/Attention Notices) -->
-          <div v-if="memo.documentType === 'ATTENTION_NOTICE' && memo.involvedPersonnel && memo.involvedPersonnel.length > 0" class="mb-8 px-4 mt-2">
-            <div class="rounded-2xl border-2 border-gray-500 overflow-hidden shadow-sm">
-              <table class="w-full text-center border-collapse text-[1.1rem]">
+          <div class="px-10 mt-0 flex-1 flex flex-col">
+          <!-- Type-Specific Dynamic Tables (If needed) -->
+          <div v-if="memo.involvedPersonnel && memo.involvedPersonnel.length > 0 && ['ATTENTION_NOTICE', 'WORK_COMMENCEMENT', 'PERSONNEL_MEMO'].includes(memo.documentType)" class="mb-4 overflow-hidden rounded-xl border border-gray-400 shadow-sm print:shadow-none print:border-gray-800">
+              <table class="w-full text-center border-collapse text-[1.1rem]" v-if="memo.documentType === 'ATTENTION_NOTICE'">
                 <thead>
                   <tr class="bg-gray-100 print:bg-gray-100 font-bold text-gray-800">
                     <th class="border border-gray-400 py-2.5 w-12">م</th>
@@ -56,7 +55,7 @@
                   </tr>
                 </thead>
                 <tbody class="font-medium text-gray-900">
-                  <tr v-for="(person, i) in memo.involvedPersonnel" :key="i" class="hover:bg-gray-50">
+                  <tr v-for="(person, i) in memo.involvedPersonnel" :key="i" class="hover:bg-gray-50 bg-white print:bg-white">
                     <td class="border border-gray-400 py-2">{{ Number(i) + 1 }}</td>
                     <td class="border border-gray-400 py-2">{{ person.rank }}</td>
                     <td class="border border-gray-400 py-2 font-mono tracking-wider">{{ person.militaryId }}</td>
@@ -65,88 +64,124 @@
                   </tr>
                 </tbody>
               </table>
-            </div>
-          </div>
 
-          <!-- Involved Personnel Table (For Work Commencement) -->
-          <div v-if="memo.documentType === 'WORK_COMMENCEMENT' && memo.involvedPersonnel && memo.involvedPersonnel.length > 0" class="mb-8 px-4 mt-2">
-            <div class="rounded-2xl border-2 border-gray-500 overflow-hidden shadow-sm">
-              <table class="w-full text-center border-collapse text-[1.05rem]">
+              <table class="w-full text-center border-collapse text-[0.75rem] print:text-[0.7rem] font-cairo" v-else-if="memo.documentType === 'WORK_COMMENCEMENT'">
+                <thead>
+                  <tr class="bg-gray-100 print:bg-gray-100 font-bold text-gray-800 leading-tight">
+                    <th class="border border-gray-400 py-1 print:py-0.5 w-6">م</th>
+                    <th class="border border-gray-400 py-1 print:py-0.5">الرتبة</th>
+                    <th class="border border-gray-400 py-1 print:py-0.5">الرقم العسكري</th>
+                    <th class="border border-gray-400 py-1 print:py-0.5 whitespace-nowrap">الاسم</th>
+                    <th class="border border-gray-400 py-1 print:py-0.5">الرقم الوطني</th>
+                    <th class="border border-gray-400 py-1 print:py-0.5">تاريخ المباشرة</th>
+                    <th class="border border-gray-400 py-1 print:py-0.5">مكان العمل</th>
+                    <th class="border border-gray-400 py-1 print:py-0.5">محل الخدمة</th>
+                    <th class="border border-gray-400 py-1 print:py-0.5">رقم الهاتف</th>
+                    <th class="border border-gray-400 py-1 print:py-0.5 w-16">ملاحظات</th>
+                  </tr>
+                </thead>
+                <tbody class="font-medium text-gray-900 leading-tight">
+                  <tr v-for="(person, i) in memo.involvedPersonnel" :key="i" class="bg-white print:bg-white hover:bg-gray-50 transition-colors">
+                    <td class="border border-gray-400 py-1.5 px-0.5 bg-gray-50 print:bg-gray-50">{{ Number(i) + 1 }}</td>
+                    <td class="border border-gray-400 py-1.5 px-0.5 whitespace-nowrap">{{ person.rank }}</td>
+                    <td class="border border-gray-400 py-1.5 px-0.5 font-mono tracking-wider whitespace-nowrap text-[0.7rem]">{{ person.militaryId }}</td>
+                    <td class="border border-gray-400 py-1.5 px-1.5 text-right font-bold whitespace-nowrap">{{ person.name }}</td>
+                    <td class="border border-gray-400 py-1.5 px-0.5 font-mono text-[0.7rem]">{{ person.nationalId }}</td>
+                    <td class="border border-gray-400 py-1.5 px-0.5 whitespace-nowrap text-[0.7rem]" dir="ltr">{{ person.commencementDate }}</td>
+                    <td class="border border-gray-400 py-1.5 px-1">{{ person.workplace }}</td>
+                    <td class="border border-gray-400 py-1.5 px-1">{{ person.serviceLocation }}</td>
+                    <td class="border border-gray-400 py-1.5 px-0.5 font-mono text-[0.7rem]">{{ person.phone }}</td>
+                    <td class="border border-gray-400 py-1.5 px-1 text-[0.7rem] text-right">{{ person.secondaryNotes || person.notes }}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <table class="w-full text-center border-collapse text-[0.85rem] print:text-[0.75rem]" v-else-if="memo.documentType === 'PERSONNEL_MEMO'">
                 <thead>
                   <tr class="bg-gray-100 print:bg-gray-100 font-bold text-gray-800">
-                    <th class="border border-gray-400 py-2.5 w-10">م</th>
-                    <th class="border border-gray-400 py-2.5 w-24">الرتبة</th>
-                    <th class="border border-gray-400 py-2.5 w-32">الرقم العسكري</th>
-                    <th class="border border-gray-400 py-2.5 w-1/4">الاسم</th>
-                    <th class="border border-gray-400 py-2.5 w-1/5">مكان العمل</th>
-                    <th class="border border-gray-400 py-2.5 w-1/5">محل الخدمة</th>
+                    <th class="border border-gray-400 py-2 print:py-1 w-10">م</th>
+                    <th v-if="memo.visibleColumns?.rank" class="border border-gray-400 py-2 print:py-1">الرتبة</th>
+                    <th v-if="memo.visibleColumns?.militaryId" class="border border-gray-400 py-2 print:py-1">الرقم العسكري</th>
+                    <th class="border border-gray-400 py-2 print:py-1 w-1/4">الاسم الرباعي واللقب</th>
+                    <th v-if="memo.visibleColumns?.nationalId" class="border border-gray-400 py-2 print:py-1">الرقم الوطني</th>
+                    <th v-if="memo.visibleColumns?.status" class="border border-gray-400 py-2 print:py-1">الحالة</th>
+                    <th v-if="memo.visibleColumns?.jobTitle" class="border border-gray-400 py-2 print:py-1">المسمى الوظيفي</th>
+                    <th v-if="memo.visibleColumns?.position" class="border border-gray-400 py-2 print:py-1">المنصب</th>
+                    <th v-if="memo.visibleColumns?.qualification" class="border border-gray-400 py-2 print:py-1">المؤهل</th>
+                    <th v-if="memo.visibleColumns?.joinDate" class="border border-gray-400 py-2 print:py-1">تاريخ التجنيد</th>
+                    <th v-if="memo.visibleColumns?.workplace" class="border border-gray-400 py-2 print:py-1">مكان العمل</th>
+                    <th v-if="memo.visibleColumns?.serviceLocation" class="border border-gray-400 py-2 print:py-1">محل الخدمة</th>
+                    <th v-if="memo.visibleColumns?.commencementDate" class="border border-gray-400 py-2 print:py-1">تاريخ المباشرة</th>
+                    <th v-if="memo.visibleColumns?.phone" class="border border-gray-400 py-2 print:py-1">رقم الهاتف</th>
+                    <th v-if="memo.visibleColumns?.clarification" class="border border-gray-400 py-2 print:py-1">الإيضاح</th>
+                    <th v-if="memo.visibleColumns?.notes" class="border border-gray-400 py-2 print:py-1">ملاحظات</th>
                   </tr>
                 </thead>
                 <tbody class="font-medium text-gray-900">
-                  <template v-for="(person, i) in memo.involvedPersonnel" :key="i">
-                    <!-- Main Row -->
-                    <tr>
-                      <td rowspan="2" class="border border-gray-400 py-2 bg-gray-50 print:bg-gray-50 align-middle">{{ Number(i) + 1 }}</td>
-                      <td class="border border-gray-400 py-2">{{ person.rank }}</td>
-                      <td class="border border-gray-400 py-2 font-mono tracking-wider">{{ person.militaryId }}</td>
-                      <td class="border border-gray-400 py-2">{{ person.name }}</td>
-                      <td class="border border-gray-400 py-2">{{ person.workplace }}</td>
-                      <td class="border border-gray-400 py-2">{{ person.serviceLocation }}</td>
-                    </tr>
-                    <!-- Sub Row for extra details -->
-                    <tr class="bg-gray-50 print:bg-gray-50 text-[0.95rem]">
-                      <td colspan="5" class="border border-gray-400 py-2 px-4">
-                        <div class="flex justify-between items-center text-right text-gray-800">
-                          <span v-if="person.commencementDate"><span class="text-gray-500 ml-1 font-bold">تاريخ المباشرة:</span> {{ person.commencementDate }}</span>
-                          <span v-if="person.nationalId"><span class="text-gray-500 ml-1 font-bold">الرقم الوطني:</span> <span class="font-mono tracking-wider">{{ person.nationalId }}</span></span>
-                          <span v-if="person.phone"><span class="text-gray-500 ml-1 font-bold">رقم الهاتف:</span> <span class="font-mono tracking-wider">{{ person.phone }}</span></span>
-                          <span v-if="person.secondaryNotes || person.notes"><span class="text-gray-500 ml-1 font-bold">ملاحظات:</span> {{ person.secondaryNotes || person.notes }}</span>
-                        </div>
-                      </td>
-                    </tr>
-                  </template>
+                  <tr v-for="(person, i) in memo.involvedPersonnel" :key="i" class="hover:bg-gray-50 bg-white print:bg-white transition-colors">
+                    <td class="border border-gray-400 py-1.5 px-1 bg-gray-50 print:bg-gray-50">{{ Number(i) + 1 }}</td>
+                    <td v-if="memo.visibleColumns?.rank" class="border border-gray-400 py-1.5 px-1">{{ person.rank }}</td>
+                    <td v-if="memo.visibleColumns?.militaryId" class="border border-gray-400 py-1.5 px-1 font-mono tracking-wider">{{ person.militaryId }}</td>
+                    <td class="border border-gray-400 py-1.5 px-2 text-right">{{ person.name }}</td>
+                    <td v-if="memo.visibleColumns?.nationalId" class="border border-gray-400 py-1.5 px-1">{{ person.nationalId }}</td>
+                    <td v-if="memo.visibleColumns?.status" class="border border-gray-400 py-1.5 px-1">{{ person.status }}</td>
+                    <td v-if="memo.visibleColumns?.jobTitle" class="border border-gray-400 py-1.5 px-1">{{ person.jobTitle }}</td>
+                    <td v-if="memo.visibleColumns?.position" class="border border-gray-400 py-1.5 px-1">{{ person.position }}</td>
+                    <td v-if="memo.visibleColumns?.qualification" class="border border-gray-400 py-1.5 px-1">{{ person.qualification }}</td>
+                    <td v-if="memo.visibleColumns?.joinDate" class="border border-gray-400 py-1.5 px-1">{{ person.joinDate }}</td>
+                    <td v-if="memo.visibleColumns?.workplace" class="border border-gray-400 py-1.5 px-1">{{ person.workplace }}</td>
+                    <td v-if="memo.visibleColumns?.serviceLocation" class="border border-gray-400 py-1.5 px-1">{{ person.serviceLocation }}</td>
+                    <td v-if="memo.visibleColumns?.commencementDate" class="border border-gray-400 py-1.5 px-1 whitespace-nowrap">{{ person.commencementDate }}</td>
+                    <td v-if="memo.visibleColumns?.phone" class="border border-gray-400 py-1.5 px-1">{{ person.phone }}</td>
+                    <td v-if="memo.visibleColumns?.clarification" class="border border-gray-400 py-1.5 px-1">{{ person.clarification }}</td>
+                    <td v-if="memo.visibleColumns?.notes" class="border border-gray-400 py-1.5 px-1">{{ person.secondaryNotes || person.notes }}</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
-          </div>
 
           <!-- Addressees -->
-          <div class="mb-8 memo-addressees">
-            <div v-for="(addr, i) in memo.addressees" :key="i" class="flex justify-between items-center mb-1.5 font-bold text-[1.25rem]">
-              <div class="flex items-center">
-                <span v-if="addr.prefix" class="ml-2 font-black">{{ addr.prefix }}</span>
+          <div class="mb-6 memo-addressees px-8">
+            <div v-for="(addr, i) in memo.addressees" :key="i" class="flex justify-between items-end mb-2 leading-none" :class="[memo.typography?.addressee?.weight || 'font-bold', { 'underline underline-offset-4': memo.typography?.addressee?.underline }]" :style="{ fontSize: getFontSize(memo.typography?.addressee?.size, 1.3), fontFamily: memo.typography?.addressee?.family || 'Cairo' }">
+              <div class="flex items-baseline">
+                <span v-if="addr.prefix" class="ml-2">{{ addr.prefix }}</span>
                 <span>{{ addr.name }}</span>
               </div>
-              <div v-if="addr.suffix" class="text-left font-black">
+              <div v-if="addr.suffix" class="text-left">
                 {{ addr.suffix }}
               </div>
             </div>
-            <div class="mt-6 text-[1.2rem] font-bold">
-              السلام عليكم ورحمة الله وبركاته.. وبعد،،
-            </div>
+          </div>
+
+          <!-- Official Greeting -->
+          <div class="px-8 mb-4 mt-2 text-center">
+            <span :class="[memo.typography?.greeting?.weight || 'font-bold', { 'underline underline-offset-4': memo.typography?.greeting?.underline }]" :style="{ fontSize: getFontSize(memo.typography?.greeting?.size, 1.6), fontFamily: memo.typography?.greeting?.family || '\'Aref Ruqaa\', \'Amiri\', \'Traditional Arabic\', serif' }">
+              تحية طيبة وبعد ،،،
+            </span>
           </div>
 
           <!-- Subject -->
-          <div v-if="memo.subject" class="mb-10 mt-2 text-center relative w-full flex items-center justify-center">
-            <!-- Decorative line -->
-            <div class="flex-1 border-b-[3px] border-black"></div>
-            <h2 class="mx-6 font-black text-2xl tracking-tight leading-none whitespace-nowrap">الموضـــــــــــوع / {{ memo.subject }}</h2>
-            <div class="flex-1 border-b-[3px] border-black"></div>
+          <div v-if="memo.subject" class="mb-4 text-center" :style="{ fontFamily: memo.typography?.subject?.family || 'Cairo' }">
+            <span class="tracking-tight pb-1 inline-block" :class="[memo.typography?.subject?.weight || 'font-black', { 'border-b-[3px] border-black': memo.typography?.subject?.underline !== false }]" :style="{ fontSize: getFontSize(memo.typography?.subject?.size, 1.4) }">
+              الموضوع / {{ memo.subject }}
+            </span>
           </div>
 
+          <!-- Memo Body (Fully User Controlled) -->
+          <div class="flex-none ck-content memo-body text-gray-900 mb-4 px-8 text-justify" :class="[memo.typography?.body?.weight || 'font-normal', { 'underline underline-offset-4': memo.typography?.body?.underline }]" :style="{ textJustify: 'inter-word', textAlign: 'justify', fontSize: getFontSize(memo.typography?.body?.size, 1.1), fontFamily: memo.typography?.body?.family || 'Cairo' }" v-html="memo.body"></div>
 
-
-          <!-- Memo Body -->
-          <main class="flex-none ck-content memo-body text-gray-900 mb-6 px-2" v-html="memo.body"></main>
-
-          <!-- Memo Conclusion -->
-          <div v-if="memo.conclusion" class="flex-1 px-2">
-             <div class="ck-content memo-body font-bold text-gray-900" v-html="memo.conclusion"></div>
+          <!-- Memo Conclusion (Action Required) -->
+          <div v-if="memo.conclusion" class="px-8 mt-2" :class="memo.signatureSettings?.showLabels !== false ? 'flex-1' : 'flex-none mb-4'">
+             <!-- Explicit 'وعليه' Separator -->
+             <div class="text-right mb-2">
+               <span class="tracking-tight pb-1 inline-block" :class="[memo.typography?.conclusionSeparator?.weight || 'font-black', { 'border-b-[3px] border-black': memo.typography?.conclusionSeparator?.underline !== false }]" :style="{ fontSize: getFontSize(memo.typography?.conclusionSeparator?.size, 1.4), fontFamily: memo.typography?.conclusionSeparator?.family || 'Cairo' }">وعليه :</span>
+             </div>
+             <div class="ck-content memo-body text-gray-900 text-justify" :class="[memo.typography?.conclusionBody?.weight || 'font-normal', { 'underline underline-offset-4': memo.typography?.conclusionBody?.underline }]" :style="{ textJustify: 'inter-word', textAlign: 'justify', fontSize: getFontSize(memo.typography?.conclusionBody?.size, 1.1), fontFamily: memo.typography?.conclusionBody?.family || 'Cairo' }" v-html="memo.conclusion"></div>
           </div>
 
           <!-- Official Custom Signatures Footer -->
-          <div class="mt-auto pt-4 border-t-2 border-black">
-            <OfficialMemoFooter :signatures="memo.signatures" />
+          <div class="pt-4 flex flex-col w-full" :class="memo.signatureSettings?.showLabels !== false ? 'mt-auto border-t-2 border-black' : 'mt-8 flex-1'">
+            <OfficialMemoFooter :signatures="memo.signatures" :settings="memo.signatureSettings" :typography="memo.typography?.signatures" class="flex-1 flex flex-col w-full" />
           </div>
 
           </div> <!-- Close Body Content Wrapper -->
@@ -178,6 +213,12 @@ const loadMemo = () => {
   loading.value = false
 }
 
+const getFontSize = (sizeVal: string | number | undefined, defaultSize: number) => {
+  if (!sizeVal) return `${defaultSize}rem`
+  if (typeof sizeVal === 'string' && sizeVal.includes('rem')) return sizeVal
+  return `${sizeVal}rem`
+}
+
 const printDocument = () => {
   window.print()
 }
@@ -195,7 +236,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&family=Dancing+Script:wght@400..700&family=Noto+Nastaliq+Urdu:wght@400..700&display=swap');
 
 .print-container {
   font-family: 'Arial', 'Tajawal', sans-serif;
@@ -243,6 +284,12 @@ onMounted(() => {
 .ck-content img {
   max-width: 100%;
   height: auto;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+
+.font-cairo {
+  font-family: 'Cairo', sans-serif !important;
 }
 
 @media print {

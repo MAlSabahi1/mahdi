@@ -818,3 +818,20 @@ span.flatpickr-weekday,
     margin: 10mm;
   }
 }
+
+/* CKEditor 5 Fixes */
+.ck-content .text-tiny { font-size: 0.7em !important; }
+.ck-content .text-small { font-size: 0.85em !important; }
+.ck-content .text-big { font-size: 1.4em !important; }
+.ck-content .text-huge { font-size: 1.8em !important; }
+
+/* CKEditor alignments */
+.ck-content .text-align-left { text-align: left !important; }
+.ck-content .text-align-center { text-align: center !important; }
+.ck-content .text-align-right { text-align: right !important; }
+.ck-content .text-align-justify { text-align: justify !important; }
+
+/* Ensure paragraphs inside signature content take full width to allow alignment */
+.signature-content p {
+  width: 100% !important;
+}

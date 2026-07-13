@@ -84,7 +84,7 @@
     <!-- Thick Separator Line -->
     <div class="px-2 -mt-4 relative z-10">
       <div class="w-full border-b-[3px] border-black mb-[2px]"></div>
-      <div class="w-full border-b-[1.5px] border-black mb-4"></div>
+      <div class="w-full border-b-[1.5px] border-black mb-1"></div>
       
       <!-- Security / Intelligence Badge (Breaks the lines) -->
       <div v-if="securityLevel && securityLevel !== 'NORMAL'" class="absolute top-[-9px] left-0 w-full flex justify-center pointer-events-none print:top-[-9px]">

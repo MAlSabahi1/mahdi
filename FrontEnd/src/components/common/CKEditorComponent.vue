@@ -23,6 +23,10 @@ const props = defineProps({
   placeholder: {
     type: String,
     default: 'اكتب المحتوى هنا...'
+  },
+  toolbar: {
+    type: Array,
+    default: null
   }
 })
 
@@ -86,11 +90,40 @@ const initEditor = () => {
         'ImageToolbar', 'ImageCaption', 'ImageStyle', 'ImageResize', 'Base64UploadAdapter',
         'FontFamily', 'FontSize', 'FontColor', 'FontBackgroundColor'
       ],
-      toolbar: {
+      fontFamily: {
+        options: [
+          'default',
+          { title: 'Arial', model: 'Arial, Helvetica, sans-serif' },
+          { title: 'Courier New', model: 'Courier New, Courier, monospace' },
+          { title: 'Georgia', model: 'Georgia, serif' },
+          { title: 'Tahoma', model: 'Tahoma, Geneva, sans-serif' },
+          { title: 'Times New Roman', model: 'Times New Roman, Times, serif' },
+          { title: 'كايرو (Cairo)', model: 'Cairo, sans-serif' },
+          { title: 'تجاول (Tajawal)', model: 'Tajawal, sans-serif' },
+          { title: 'المراعي (Almarai)', model: 'Almarai, sans-serif' },
+          { title: 'تشانجا (Changa)', model: 'Changa, sans-serif' },
+          { title: 'لطيف (Lateef)', model: 'Lateef, serif' },
+          { title: 'أميري (Amiri)', model: 'Amiri, serif' },
+          { title: 'رقعة (Aref Ruqaa)', model: 'Aref Ruqaa, serif' },
+          { title: 'نسخ (Noto Naskh)', model: 'Noto Naskh Arabic, serif' },
+          { title: 'كوفي (Noto Kufi)', model: 'Noto Kufi Arabic, sans-serif' },
+          { title: 'Traditional Arabic', model: 'Traditional Arabic, serif' }
+        ],
+        supportAllValues: true
+      },
+      fontSize: {
+        options: [
+          9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 28, 32, 36
+        ]
+      },
+      alignment: {
+        options: [ 'left', 'right', 'center', 'justify' ]
+      },
+      toolbar: props.toolbar ? { items: props.toolbar } : {
         items: [
           'heading', '|',
+          'fontFamily', 'fontSize', 'fontColor', 'fontBackgroundColor', '|',
           'bold', 'italic', 'underline', 'strikethrough', '|',
-          'fontSize', 'fontColor', '|',
           'alignment', '|',
           'bulletedList', 'numberedList', '|',
           'insertTable', 'blockQuote', '|',
