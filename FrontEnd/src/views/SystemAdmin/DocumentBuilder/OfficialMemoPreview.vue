@@ -238,6 +238,24 @@ onMounted(() => {
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&family=Dancing+Script:wght@400..700&family=Noto+Nastaliq+Urdu:wght@400..700&display=swap');
 
+/* احترام التنسيقات (المحاذاة) القادمة من محرر النصوص */
+:deep(.ck-content .text-align-center),
+:deep(.ck-content.text-align-center) {
+  text-align: center !important;
+}
+:deep(.ck-content .text-align-left),
+:deep(.ck-content.text-align-left) {
+  text-align: left !important;
+}
+:deep(.ck-content .text-align-right),
+:deep(.ck-content.text-align-right) {
+  text-align: right !important;
+}
+:deep(.ck-content .text-align-justify),
+:deep(.ck-content.text-align-justify) {
+  text-align: justify !important;
+}
+
 .print-container {
   font-family: 'Arial', 'Tajawal', sans-serif;
 }
@@ -270,7 +288,10 @@ onMounted(() => {
   font-weight: 800;
 }
 .ck-content p {
-  margin-bottom: 1.2rem;
+  margin-bottom: 0.25rem;
+}
+.signature-content p {
+  margin-bottom: 0;
 }
 .ck-content table {
   width: 100%;
