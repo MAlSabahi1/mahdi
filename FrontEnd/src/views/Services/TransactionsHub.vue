@@ -47,10 +47,12 @@
 
       <!-- Tab Content -->
       <AllTab v-if="activeTab === 'all'" :rows="allRequests" :loading="loading" :currentStatus="filterStatus"
-        @filter-status="filterStatus = $event" @approve="handleApprove" @reject="handleReject" />
+        @filter-status="filterStatus = $event" @approve="handleApprove" @reject="handleReject"
+        @submit-draft="handleSubmitDraft" />
 
       <InternalTab v-else-if="activeTab === 'internal'" :rows="internalRequests" :loading="loading"
-        @approve="handleApproveInternal" @reject="handleRejectInternal" />
+        @approve="handleApproveInternal" @reject="handleRejectInternal"
+        @submit-draft="handleSubmitDraft" />
 
       <ExternalTab v-else-if="activeTab === 'external'" :rows="externalRequests" :loading="loading"
         @print="handlePrint" @register-approval="handleRegisterApproval" @reject="handleRejectExternal" />
@@ -180,6 +182,36 @@ async function fetchAll() {
   }
 }
 
+// ── Submit Draft ──
+async function handleSubmitDraft(tx: any) {
+  const result = await Swal.fire({
+    title: 'تقديم الطلب',
+    html: `<div class="text-right" dir="rtl">
+      <p class="text-sm text-gray-600 mb-2">سيتم تقديم المعاملة <b class="font-mono text-blue-600">#${String(tx.id).padStart(5,'0')}</b> وبدء دورة الاعتماد.</p>
+      <p class="text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-lg border border-amber-100">⚠️ بعد التقديم لا يمكن تعديل بيانات الطلب.</p>
+    </div>`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'نعم، قدّم الطلب',
+    cancelButtonText: 'إلغاء',
+    confirmButtonColor: '#2563eb',
+    reverseButtons: true
+  })
+  if (!result.isConfirmed) return
+  try {
+    await servicesStore.submitForm(tx.id)
+    Swal.fire({
+      toast: true, position: 'top-end', icon: 'success',
+      title: '✅ تم تقديم الطلب وبدأ سير العمل',
+      showConfirmButton: false, timer: 3000
+    })
+    fetchAll()
+  } catch (e: any) {
+    const msg = e?.response?.data?.error || 'حدث خطأ أثناء التقديم'
+    Swal.fire({ icon: 'error', title: 'فشل التقديم', text: msg })
+  }
+}
+
 // ── All Tab Actions ──
 async function handleApprove(tx: any) {
   const result = await Swal.fire({ title: 'اعتماد المعاملة؟', text: `الموافقة على المعاملة في مرحلة (${tx.current_step_name || 'الاعتماد'}).`, icon: 'success', showCancelButton: true, confirmButtonText: 'نعم، اعتماد', cancelButtonText: 'إلغاء', confirmButtonColor: '#10b981' })
@@ -201,12 +233,34 @@ async function handleReject(tx: any) {
 
 // ── Internal Tab Actions ──
 async function handleApproveInternal(req: any) {
-  const result = await Swal.fire({ title: 'تأكيد الاعتماد', html: `<p class="text-sm text-gray-600">سيتم اعتماد الطلب <strong>#${String(req.isCorrection ? req.rawId : req.id).padStart(5,'0')}</strong> ونقله للمرحلة التالية.</p>`, icon: 'success', showCancelButton: true, confirmButtonText: 'نعم، اعتماد', cancelButtonText: 'إلغاء', confirmButtonColor: '#10b981' })
+  const stepLabel = req.current_step_name ? `المرحلة الحالية: <b>${req.current_step_name}</b>` : ''
+  const result = await Swal.fire({
+    title: 'تأكيد الاعتماد',
+    html: `<div class="text-right" dir="rtl">
+      <p class="text-sm text-gray-600 mb-2">سيتم اعتماد الطلب <b class="font-mono text-blue-600">#${String(req.isCorrection ? req.rawId : req.id).padStart(5,'0')}</b> ونقله للمرحلة التالية.</p>
+      ${stepLabel ? `<p class="text-xs text-gray-500">${stepLabel}</p>` : ''}
+    </div>`,
+    icon: 'success',
+    showCancelButton: true,
+    confirmButtonText: 'نعم، اعتماد وتمرير',
+    cancelButtonText: 'إلغاء',
+    confirmButtonColor: '#10b981'
+  })
   if (result.isConfirmed) {
     try {
-      if (req.isCorrection) { await api.post(`/personnel/corrections/${req.rawId}/approve/`) }
-      else { await servicesStore.approveForm(req.id) }
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم الاعتماد بنجاح', showConfirmButton: false, timer: 2500 })
+      let res: any
+      if (req.isCorrection) {
+        res = await api.post(`/personnel/corrections/${req.rawId}/approve/`)
+      } else {
+        res = await servicesStore.approveForm(req.id)
+      }
+      const msg = res?.data?.message || res?.message || 'تم الاعتماد بنجاح'
+      const isFinal = res?.data?.is_final ?? res?.is_final ?? false
+      Swal.fire({
+        toast: true, position: 'top-end', icon: 'success',
+        title: isFinal ? '✅ تم الاعتماد النهائي' : `✅ ${msg}`,
+        showConfirmButton: false, timer: 3000
+      })
       fetchAll()
     } catch (e: any) {
       let errorMsg = e?.response?.data?.error || 'حدث خطأ'

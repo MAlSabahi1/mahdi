@@ -146,127 +146,162 @@
             </div>
             
             <!-- أولاً: البيانات الشخصية -->
-            <div class="p-4 border-b border-gray-200 dark:border-gray-800">
-              <h3 class="text-brand-700 dark:text-brand-400 font-bold mb-3 border-b-2 border-brand-200 dark:border-brand-900 pb-1 w-max">أولاً: البيانات الشخصية</h3>
-              <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-                <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span class="block text-[10px] font-bold text-gray-500 mb-1">الرتبة</span>
-                  <strong class="text-sm dark:text-white">{{ selectedPersonnelList[0].rank_name || selectedPersonnelList[0].current_rank?.name || selectedPersonnelList[0].rank?.name || '—' }}</strong>
+            <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm relative overflow-visible">
+              <div class="absolute top-0 right-0 w-2 h-full bg-brand-500 rounded-r-2xl"></div>
+              <h3 class="mb-5 text-lg font-bold text-gray-900 dark:text-white border-b border-gray-100 pb-3 dark:border-gray-800">أولاً: البيانات الشخصية</h3>
+              
+              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الرتبة</label>
+                  <input type="text" :value="selectedPersonnelList[0].rank_name || selectedPersonnelList[0].current_rank?.name || selectedPersonnelList[0].rank?.name || '—'" disabled class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 shadow-theme-xs focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300" />
                 </div>
-                <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span class="block text-[10px] font-bold text-gray-500 mb-1">الرقم العسكري</span>
-                  <strong class="text-sm dark:text-white font-sans">{{ selectedPersonnelList[0].military_number || '—' }}</strong>
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الرقم العسكري</label>
+                  <input type="text" :value="selectedPersonnelList[0].military_number || '—'" disabled class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 shadow-theme-xs font-sans focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300" />
                 </div>
-                <div class="md:col-span-2 bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span class="block text-[10px] font-bold text-gray-500 mb-1">الاسم الرباعي</span>
-                  <strong class="text-sm dark:text-white">{{ selectedPersonnelList[0].full_name || '—' }}</strong>
+                <div class="md:col-span-2">
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الاسم الرباعي</label>
+                  <input type="text" :value="selectedPersonnelList[0].full_name || '—'" disabled class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 shadow-theme-xs focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300" />
                 </div>
-                <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span class="block text-[10px] font-bold text-gray-500 mb-1">الوحدة</span>
-                  <strong class="text-sm dark:text-white">{{ selectedPersonnelList[0].unit_name || selectedPersonnelList[0].unit?.name || '—' }}</strong>
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الوحدة</label>
+                  <input type="text" :value="selectedPersonnelList[0].security_admin_name || selectedPersonnelList[0].unit_name || '—'" disabled class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 shadow-theme-xs focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300" />
                 </div>
-                <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span class="block text-[10px] font-bold text-gray-500 mb-1">الإدارة / الفرع</span>
-                  <strong class="text-sm dark:text-white">{{ selectedPersonnelList[0].department_name || selectedPersonnelList[0].branch?.name || selectedPersonnelList[0].district_police?.name || selectedPersonnelList[0].central_department?.name || '—' }}</strong>
-                </div>
-                <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span class="block text-[10px] font-bold text-gray-500 mb-1">المؤهل</span>
-                  <strong class="text-sm dark:text-white">{{ selectedPersonnelList[0].qualification_name || selectedPersonnelList[0].qualification?.name || '—' }}</strong>
-                </div>
-                <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span class="block text-[10px] font-bold text-gray-500 mb-1">حالة النفقات</span>
-                  <strong class="text-sm dark:text-white">{{ selectedPersonnelList[0].expense_status_display || '—' }}</strong>
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الإدارة / الفرع</label>
+                  <input type="text" :value="selectedPersonnelList[0].central_department_name || selectedPersonnelList[0].branch_name || selectedPersonnelList[0].district_police_name || selectedPersonnelList[0].division_name || '—'" disabled class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 shadow-theme-xs focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300" />
                 </div>
               </div>
             </div>
 
             <!-- ثانياً: بيانات الميلاد والإقامة الحالية -->
-            <div class="p-4 bg-gray-50/50 dark:bg-gray-800/30">
-              <h3 class="text-brand-700 dark:text-brand-400 font-bold mb-3 border-b-2 border-brand-200 dark:border-brand-900 pb-1 w-max">ثانياً: بيانات الميلاد والإقامة الحالية</h3>
+            <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm relative overflow-visible mt-6">
+              <div class="absolute top-0 right-0 w-2 h-full bg-indigo-500 rounded-r-2xl"></div>
+              <h3 class="mb-5 text-lg font-bold text-gray-900 dark:text-white border-b border-gray-100 pb-3 dark:border-gray-800">ثانياً: بيانات الميلاد والإقامة الحالية</h3>
               
-              <div class="space-y-4">
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <span class="block text-[10px] font-bold text-gray-500 mb-1">الرقم الوطني</span>
-                    <strong class="text-sm dark:text-white font-sans tracking-widest">{{ selectedPersonnelList[0].national_id || '—' }}</strong>
+              <div v-if="!isHeaderDataComplete" class="mb-6 bg-yellow-50 dark:bg-yellow-900/30 border-r-4 border-yellow-400 p-4 rounded-lg flex gap-3">
+                <svg class="w-6 h-6 text-yellow-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <div>
+                  <h3 class="text-sm font-bold text-yellow-800 dark:text-yellow-200">بيانات الفرد الأساسية غير مكتملة</h3>
+                  <p class="text-xs text-yellow-700 dark:text-yellow-400 mt-1">يجب استكمال جميع بيانات الميلاد والإقامة والبطاقة الخاصة بالفرد في هذه الاستمارة لكي يتم حفظها والتتمكن من تقديم الطلب.</p>
+                </div>
+              </div>
+
+              <div class="space-y-6">
+                <!-- ID Details -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                  <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الرقم الوطني</label>
+                    <input type="text" :value="selectedPersonnelList[0].national_id || '—'" disabled class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 shadow-theme-xs focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300" />
                   </div>
-                  <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <span class="block text-[10px] font-bold text-gray-500 mb-1">تاريخ الإصدار</span>
-                    <input type="date" v-model="localHeaderData.id_issue_date" class="w-full bg-transparent text-sm font-sans dark:text-white outline-none border-b border-gray-300 dark:border-gray-600 focus:border-brand-500" />
+                  <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400" :class="{'text-error-600': headerValidationErrors.id_issue_date}">تاريخ إصدار البطاقة</label>
+                    <input type="date" v-model="localHeaderData.id_issue_date" class="block w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-900 shadow-theme-xs focus:border-brand-500 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:border-brand-500" :class="{'border-error-500 focus:border-error-500': headerValidationErrors.id_issue_date}" />
+                    <p v-if="headerValidationErrors.id_issue_date" class="mt-1 text-xs text-error-500">{{ headerValidationErrors.id_issue_date }}</p>
                   </div>
-                  <div class="bg-white dark:bg-gray-900 p-2.5 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <span class="block text-[10px] font-bold text-gray-500 mb-1">جهة الإصدار</span>
-                    <input type="text" v-model="localHeaderData.id_issue_place" placeholder="جهة الإصدار" class="w-full bg-transparent text-sm dark:text-white outline-none border-b border-gray-300 dark:border-gray-600 focus:border-brand-500" />
+                  <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">جهة الإصدار</label>
+                    <input type="text" v-model="localHeaderData.id_issue_place" placeholder="مثال: صنعاء، تعز، ..." class="block w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-900 shadow-theme-xs focus:border-brand-500 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:border-brand-500" />
                   </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <!-- Birth Place -> 4 boxes -->
-                  <div class="bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <span class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">محل الميلاد</span>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">المحافظة</span>
-                        <select v-model="localHeaderData.birth_gov_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="gov in coreStore.governorates" :key="gov.id" :value="gov.id">{{ gov.name }}</option>
-                        </select>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <!-- Birth Location -->
+                  <div class="space-y-4 p-4 rounded-xl border border-gray-100 bg-gray-50/30 dark:border-gray-800 dark:bg-gray-800/10">
+                    <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                      <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                      محل الميلاد
+                    </h4>
+                    <div class="grid grid-cols-2 gap-4">
+                      <!-- Governorate -->
+                      <div>
+                        <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">المحافظة</label>
+                        <div class="relative bg-transparent">
+                          <select v-model="localHeaderData.birth_gov_id" class="w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                            <option :value="null">اختر...</option>
+                            <option v-for="gov in coreStore.governorates" :key="gov.id" :value="gov.id">{{ gov.name }}</option>
+                          </select>
+                        </div>
                       </div>
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">المديرية</span>
-                        <select v-model="localHeaderData.birth_district_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none" :disabled="!localHeaderData.birth_gov_id">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="d in headerDistrictsCache[localHeaderData.birth_gov_id as number] || []" :key="d.id" :value="d.id">{{ d.name_ar || d.name }}</option>
-                        </select>
+                      <!-- District -->
+                      <div>
+                        <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">المديرية</label>
+                        <div class="relative bg-transparent">
+                          <select v-model="localHeaderData.birth_district_id" :disabled="!localHeaderData.birth_gov_id" class="w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:opacity-50">
+                            <option :value="null">اختر...</option>
+                            <option v-for="d in headerDistrictsCache[localHeaderData.birth_gov_id as number] || []" :key="d.id" :value="d.id">{{ d.name_ar || d.name }}</option>
+                          </select>
+                        </div>
                       </div>
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">العزلة</span>
-                        <select v-model="localHeaderData.birth_sub_district_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none" :disabled="!localHeaderData.birth_district_id">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="s in headerSubDistrictsCache[localHeaderData.birth_district_id as number] || []" :key="s.id" :value="s.id">{{ s.name_ar || s.name }}</option>
-                        </select>
+                      <!-- Sub District -->
+                      <div>
+                        <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">العزلة</label>
+                        <div class="relative bg-transparent">
+                          <select v-model="localHeaderData.birth_sub_district_id" :disabled="!localHeaderData.birth_district_id" class="w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:opacity-50">
+                            <option :value="null">اختر...</option>
+                            <option v-for="s in headerSubDistrictsCache[localHeaderData.birth_district_id as number] || []" :key="s.id" :value="s.id">{{ s.name_ar || s.name }}</option>
+                          </select>
+                        </div>
                       </div>
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">القرية/الحارة</span>
-                        <select v-model="localHeaderData.birth_village_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none" :disabled="!localHeaderData.birth_sub_district_id">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="v in headerVillagesCache[localHeaderData.birth_sub_district_id as number] || []" :key="v.id" :value="v.id">{{ v.name_ar || v.name_ar_normalized || v.name }}</option>
-                        </select>
+                      <!-- Village -->
+                      <div>
+                        <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">القرية/الحارة</label>
+                        <div class="relative bg-transparent">
+                          <select v-model="localHeaderData.birth_village_id" :disabled="!localHeaderData.birth_sub_district_id" class="w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:opacity-50">
+                            <option :value="null">اختر...</option>
+                            <option v-for="v in headerVillagesCache[localHeaderData.birth_sub_district_id as number] || []" :key="v.id" :value="v.id">{{ v.name_ar || v.name_ar_normalized || v.name }}</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <!-- Residence Place -> 4 boxes -->
-                  <div class="bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <span class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">محل الإقامة الحالية</span>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">المحافظة</span>
-                        <select v-model="localHeaderData.residence_gov_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="gov in coreStore.governorates" :key="gov.id" :value="gov.id">{{ gov.name }}</option>
-                        </select>
+                  <!-- Residence Location -->
+                  <div class="space-y-4 p-4 rounded-xl border border-gray-100 bg-gray-50/30 dark:border-gray-800 dark:bg-gray-800/10">
+                    <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                      <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                      محل الإقامة الحالية
+                    </h4>
+                    <div class="grid grid-cols-2 gap-4">
+                      <!-- Governorate -->
+                      <div>
+                        <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">المحافظة</label>
+                        <div class="relative bg-transparent">
+                          <select v-model="localHeaderData.residence_gov_id" class="w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                            <option :value="null">اختر...</option>
+                            <option v-for="gov in coreStore.governorates" :key="gov.id" :value="gov.id">{{ gov.name }}</option>
+                          </select>
+                        </div>
                       </div>
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">المديرية</span>
-                        <select v-model="localHeaderData.residence_district_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none" :disabled="!localHeaderData.residence_gov_id">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="d in headerDistrictsCache[localHeaderData.residence_gov_id as number] || []" :key="d.id" :value="d.id">{{ d.name_ar || d.name }}</option>
-                        </select>
+                      <!-- District -->
+                      <div>
+                        <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">المديرية</label>
+                        <div class="relative bg-transparent">
+                          <select v-model="localHeaderData.residence_district_id" :disabled="!localHeaderData.residence_gov_id" class="w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:opacity-50">
+                            <option :value="null">اختر...</option>
+                            <option v-for="d in headerDistrictsCache[localHeaderData.residence_gov_id as number] || []" :key="d.id" :value="d.id">{{ d.name_ar || d.name }}</option>
+                          </select>
+                        </div>
                       </div>
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">العزلة</span>
-                        <select v-model="localHeaderData.residence_sub_district_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none" :disabled="!localHeaderData.residence_district_id">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="s in headerSubDistrictsCache[localHeaderData.residence_district_id as number] || []" :key="s.id" :value="s.id">{{ s.name_ar || s.name }}</option>
-                        </select>
+                      <!-- Sub District -->
+                      <div>
+                        <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">العزلة</label>
+                        <div class="relative bg-transparent">
+                          <select v-model="localHeaderData.residence_sub_district_id" :disabled="!localHeaderData.residence_district_id" class="w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:opacity-50">
+                            <option :value="null">اختر...</option>
+                            <option v-for="s in headerSubDistrictsCache[localHeaderData.residence_district_id as number] || []" :key="s.id" :value="s.id">{{ s.name_ar || s.name }}</option>
+                          </select>
+                        </div>
                       </div>
-                      <div class="border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 p-1.5 text-center">
-                        <span class="block text-[9px] text-gray-400 mb-1">الشارع/القرية</span>
-                        <select v-model="localHeaderData.residence_village_id" class="w-full bg-transparent text-xs font-bold dark:text-white outline-none" :disabled="!localHeaderData.residence_sub_district_id">
-                          <option :value="null" disabled>اختر...</option>
-                          <option v-for="v in headerVillagesCache[localHeaderData.residence_sub_district_id as number] || []" :key="v.id" :value="v.id">{{ v.name_ar || v.name_ar_normalized || v.name }}</option>
-                        </select>
+                      <!-- Village -->
+                      <div>
+                        <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">الشارع/القرية</label>
+                        <div class="relative bg-transparent">
+                          <select v-model="localHeaderData.residence_village_id" :disabled="!localHeaderData.residence_sub_district_id" class="w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:opacity-50">
+                            <option :value="null">اختر...</option>
+                            <option v-for="v in headerVillagesCache[localHeaderData.residence_sub_district_id as number] || []" :key="v.id" :value="v.id">{{ v.name_ar || v.name_ar_normalized || v.name }}</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -288,12 +323,14 @@
           </div>
         </div>
         
-        <div class="space-y-8">
+        <div class="space-y-8 mt-6">
           <!-- General Dynamic Layout -->
           <div v-for="(section, sIdx) in schema.sections" :key="sIdx">
             <template v-if="getDynamicFields(section).length > 0">
-              <h3 class="text-md font-bold text-brand-600 mb-4">{{ section.title }}</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm relative overflow-visible">
+                <div class="absolute top-0 right-0 w-2 h-full bg-emerald-500 rounded-r-2xl"></div>
+                <h3 class="mb-5 text-lg font-bold text-gray-900 dark:text-white border-b border-gray-100 pb-3 dark:border-gray-800">{{ section.title }}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <template v-for="field in getDynamicFields(section)" :key="field.key">
                 <!-- Current Rank injected right before to_rank for Rank Settlements -->
                 <div v-if="field.key === 'to_rank' && category === 'rank_settlement'" class="bg-gray-50/50 dark:bg-gray-800/20 p-4 rounded-xl border border-gray-100 dark:border-gray-800/60 flex flex-col justify-center">
@@ -309,78 +346,114 @@
                     {{ field.label }} <span v-if="field.required || (field.key === 'new_military_number' && formData.settlement_type === 'personnel_to_officer')" class="text-red-500">*</span>
                   </label>
                 
-                <select v-if="field.type === 'select'" v-model="formData[field.key]" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-shadow">
-                  <option value="" disabled>اختر...</option>
-                  <option v-for="opt in getFilteredOptions(field)" :key="opt && typeof opt === 'object' ? opt.value : opt" :value="opt && typeof opt === 'object' ? opt.value : opt">
-                    {{ opt && typeof opt === 'object' ? opt.label : opt }}
-                  </option>
-                </select>
+                <div v-if="field.type === 'select'" class="relative z-20 bg-transparent">
+                  <select v-model="formData[field.key]" class="w-full appearance-none bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-800 dark:text-white shadow-theme-xs focus:ring-3 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-shadow ltr:pr-11 rtl:pl-11">
+                    <option value="" disabled>اختر...</option>
+                    <option v-for="opt in getFilteredOptions(field)" :key="opt && typeof opt === 'object' ? opt.value : opt" :value="opt && typeof opt === 'object' ? opt.value : opt">
+                      {{ opt && typeof opt === 'object' ? opt.label : opt }}
+                    </option>
+                  </select>
+                  <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
+                    <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                  </span>
+                </div>
 
                 <!-- Location Cascade: محافظة → مديرية → عزلة → قرية/حارة -->
-                <div v-else-if="field.type === 'location_cascade'" class="space-y-3">
-                  <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div v-else-if="field.type === 'location_cascade'" class="md:col-span-2 space-y-4 p-4 rounded-xl border border-gray-100 bg-gray-50/30 dark:border-gray-800 dark:bg-gray-800/10">
+                  <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    {{ field.label }} <span v-if="field.required" class="text-red-500">*</span>
+                  </h4>
+                  <div class="grid grid-cols-2 gap-4">
                     <!-- محافظة -->
                     <div>
-                      <label class="text-[10px] font-bold text-gray-500 mb-1 block">المحافظة</label>
-                      <select v-model="locationState[field.key + '_gov']" @change="onGovernorateChange(field.key)"
-                        class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                        <option value="">اختر المحافظة...</option>
-                        <option v-for="g in governorates" :key="g.id" :value="g.id">{{ g.name_ar }}</option>
-                      </select>
+                      <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">المحافظة</label>
+                      <div class="relative bg-transparent">
+                        <select v-model="locationState[field.key + '_gov']" @change="onGovernorateChange(field.key)"
+                          class="w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 rtl:pl-8">
+                          <option value="">اختر المحافظة...</option>
+                          <option v-for="g in governorates" :key="g.id" :value="g.id">{{ g.name_ar }}</option>
+                        </select>
+                        <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none rtl:left-2.5 top-1/2 dark:text-gray-400">
+                          <svg class="stroke-current" width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                        </span>
+                      </div>
                     </div>
                     <!-- مديرية -->
                     <div>
-                      <label class="text-[10px] font-bold text-gray-500 mb-1 block">المديرية</label>
-                      <select v-model="locationState[field.key + '_dist']" @change="onDistrictChange(field.key)"
-                        :disabled="!locationState[field.key + '_gov']"
-                        class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-50">
-                        <option value="">اختر المديرية...</option>
-                        <option v-for="d in getDistricts(field.key)" :key="d.id" :value="d.id">{{ d.name_ar }}</option>
-                      </select>
+                      <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">المديرية</label>
+                      <div class="relative bg-transparent">
+                        <select v-model="locationState[field.key + '_dist']" @change="onDistrictChange(field.key)"
+                          :disabled="!locationState[field.key + '_gov']"
+                          class="w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 rtl:pl-8 disabled:opacity-50">
+                          <option value="">اختر المديرية...</option>
+                          <option v-for="d in getDistricts(field.key)" :key="d.id" :value="d.id">{{ d.name_ar }}</option>
+                        </select>
+                        <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none rtl:left-2.5 top-1/2 dark:text-gray-400">
+                          <svg class="stroke-current" width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                        </span>
+                      </div>
                     </div>
                     <!-- عزلة -->
                     <div>
-                      <label class="text-[10px] font-bold text-gray-500 mb-1 block">العزلة</label>
-                      <select v-model="locationState[field.key + '_sub']" @change="onSubDistrictChange(field.key)"
-                        :disabled="!locationState[field.key + '_dist']"
-                        class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-50">
-                        <option value="">اختر العزلة...</option>
-                        <option v-for="s in getSubDistricts(field.key)" :key="s.id" :value="s.id">{{ s.name_ar }}</option>
-                      </select>
+                      <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">العزلة</label>
+                      <div class="relative bg-transparent">
+                        <select v-model="locationState[field.key + '_sub']" @change="onSubDistrictChange(field.key)"
+                          :disabled="!locationState[field.key + '_dist']"
+                          class="w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 rtl:pl-8 disabled:opacity-50">
+                          <option value="">اختر العزلة...</option>
+                          <option v-for="s in getSubDistricts(field.key)" :key="s.id" :value="s.id">{{ s.name_ar }}</option>
+                        </select>
+                        <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none rtl:left-2.5 top-1/2 dark:text-gray-400">
+                          <svg class="stroke-current" width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                        </span>
+                      </div>
                     </div>
                     <!-- قرية / حارة -->
                     <div>
-                      <label class="text-[10px] font-bold text-gray-500 mb-1 block">القرية / الحارة</label>
-                      <select v-model="locationState[field.key + '_vil']" @change="onVillageChange(field.key)"
-                        :disabled="!locationState[field.key + '_sub']"
-                        class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-50">
-                        <option value="">اختر القرية...</option>
-                        <option v-for="v in getVillages(field.key)" :key="v.id" :value="v.id">{{ v.name_ar || v.name_ar_normalized }}</option>
-                      </select>
+                      <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">القرية / الحارة</label>
+                      <div class="relative bg-transparent">
+                        <select v-model="locationState[field.key + '_vil']" @change="onVillageChange(field.key)"
+                          :disabled="!locationState[field.key + '_sub']"
+                          class="w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 rtl:pl-8 disabled:opacity-50">
+                          <option value="">اختر القرية...</option>
+                          <option v-for="v in getVillages(field.key)" :key="v.id" :value="v.id">{{ v.name_ar || v.name_ar_normalized }}</option>
+                        </select>
+                        <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none rtl:left-2.5 top-1/2 dark:text-gray-400">
+                          <svg class="stroke-current" width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <!-- الكتابة اليدوية -->
-                  <div class="flex items-center gap-2">
+                  <div class="flex items-center gap-2 mt-2">
                     <label class="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" v-model="locationState[field.key + '_manual']" class="w-3.5 h-3.5 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
-                      <span class="text-[10px] text-gray-500">كتابة يدوية</span>
+                      <input type="checkbox" v-model="locationState[field.key + '_manual']" class="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
+                      <span class="text-xs font-medium text-gray-700 dark:text-gray-300">إدخال المكان يدوياً</span>
                     </label>
                   </div>
                   <input v-if="locationState[field.key + '_manual']"
-                    v-model="formData[field.key]" type="text" placeholder="اكتب المكان يدوياً..."
-                    class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
+                    v-model="formData[field.key]" type="text" placeholder="اكتب تفاصيل المكان هنا..."
+                    class="w-full bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-900 dark:text-white shadow-theme-xs focus:ring-3 focus:ring-brand-500/10 focus:border-brand-500 outline-none mt-2" />
                   <!-- المكان النهائي المُجمّع -->
-                  <div v-if="formData[field.key] && !locationState[field.key + '_manual']" class="text-[10px] text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950/20 px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800">
-                    📍 {{ formData[field.key] }}
+                  <div v-if="formData[field.key] && !locationState[field.key + '_manual']" class="mt-2 text-xs text-emerald-700 font-bold bg-emerald-50 dark:bg-emerald-950/20 px-3 py-2 rounded-lg border border-emerald-200 dark:border-emerald-800 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    {{ formData[field.key] }}
                   </div>
                 </div>
 
-                <textarea v-else-if="field.type === 'textarea'" v-model="formData[field.key]" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none h-24 transition-shadow"></textarea>
-                <input v-else :type="field.type" v-model="formData[field.key]" 
-                        :readonly="field.key === 'old_value' || field.disabled"
-                        :maxlength="field.key === 'new_military_number' ? 7 : (field.key === 'new_value' && (formData.correction_type === 'national_id_correction' || formData.field_name === 'national_id') ? 11 : undefined)"
-                        :class="['w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-shadow', field.type === 'date' ? 'text-left' : '', (field.key === 'old_value' || field.disabled) ? 'opacity-70 cursor-not-allowed font-bold text-gray-600 bg-gray-100 dark:bg-gray-800/50' : '']"
-                        :dir="field.type === 'date' ? 'ltr' : 'rtl'" />
+                <textarea v-else-if="field.type === 'textarea'" v-model="formData[field.key]" class="w-full bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-900 dark:text-white shadow-theme-xs focus:ring-3 focus:ring-brand-500/10 focus:border-brand-500 outline-none h-24 transition-shadow"></textarea>
+                <div v-else>
+                  <input :type="field.type" v-model="formData[field.key]" 
+                          :readonly="field.key === 'old_value' || field.disabled"
+                          :min="field.type === 'date' ? '1900-01-01' : undefined"
+                          :max="field.type === 'date' && !['end_date','due_date'].includes(field.key) ? new Date().toISOString().split('T')[0] : undefined"
+                          :maxlength="field.key === 'new_military_number' ? 7 : (field.key === 'new_value' && (formData.correction_type === 'national_id_correction' || formData.field_name === 'national_id') ? 11 : undefined)"
+                          @change="field.type === 'date' ? validateDateField(field, $event) : undefined"
+                          :class="['w-full bg-gray-50 dark:bg-gray-800 border rounded-xl px-4 py-2.5 text-sm focus:ring-2 outline-none transition-shadow', field.type === 'date' ? 'text-left' : '', (field.key === 'old_value' || field.disabled) ? 'opacity-70 cursor-not-allowed font-bold text-gray-600 bg-gray-100 dark:bg-gray-800/50' : '', formDataErrors[field.key] ? 'border-error-500 focus:ring-error-500' : 'border-gray-200 dark:border-gray-700 focus:ring-brand-500']"
+                          :dir="field.type === 'date' ? 'ltr' : 'rtl'" />
+                  <p v-if="formDataErrors[field.key]" class="text-[10px] text-error-600 font-bold mt-1.5 flex items-center gap-1"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> {{ formDataErrors[field.key] }}</p>
+                </div>
                 <p v-if="field.key === 'new_military_number'" class="mt-1 text-xs text-brand-600 dark:text-brand-400 flex items-center gap-1">
                   <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   الرقم العسكري للضابط يبدأ بـ 60 ويتكون من 7 خانات
@@ -388,6 +461,7 @@
                 <p v-if="field.help_text" class="text-[10px] text-gray-400 mt-1">{{ field.help_text }}</p>
                 </div>
               </template>
+            </div>
             </div>
             </template>
           </div>
@@ -467,7 +541,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Swal from 'sweetalert2'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
@@ -548,55 +622,169 @@ async function fetchHeaderVillages(subDistId: number) {
   } catch { headerVillagesCache.value[subDistId] = [] }
 }
 
-watch(() => localHeaderData.birth_gov_id, (newGov) => {
+const isInitializingHeaderGeo = ref(false)
+
+watch(() => localHeaderData.birth_gov_id, (newGov, oldVal) => {
+  if (isInitializingHeaderGeo.value) return; // Ignore programmatic updates
   localHeaderData.birth_district_id = null;
   localHeaderData.birth_sub_district_id = null;
   localHeaderData.birth_village_id = null;
   if (newGov) fetchHeaderDistricts(newGov);
 })
-watch(() => localHeaderData.residence_gov_id, (newGov) => {
+watch(() => localHeaderData.residence_gov_id, (newGov, oldVal) => {
+  if (isInitializingHeaderGeo.value) return; // Ignore programmatic updates
   localHeaderData.residence_district_id = null;
   localHeaderData.residence_sub_district_id = null;
   localHeaderData.residence_village_id = null;
   if (newGov) fetchHeaderDistricts(newGov);
 })
-watch(() => localHeaderData.birth_district_id, (newDist) => {
+watch(() => localHeaderData.birth_district_id, (newDist, oldVal) => {
+  if (isInitializingHeaderGeo.value) return; // Ignore programmatic updates
   localHeaderData.birth_sub_district_id = null;
   localHeaderData.birth_village_id = null;
   if (newDist) fetchHeaderSubDistricts(newDist);
 })
-watch(() => localHeaderData.residence_district_id, (newDist) => {
+watch(() => localHeaderData.residence_district_id, (newDist, oldVal) => {
+  if (isInitializingHeaderGeo.value) return; // Ignore programmatic updates
   localHeaderData.residence_sub_district_id = null;
   localHeaderData.residence_village_id = null;
   if (newDist) fetchHeaderSubDistricts(newDist);
 })
-watch(() => localHeaderData.birth_sub_district_id, (newSub) => {
+watch(() => localHeaderData.birth_sub_district_id, (newSub, oldVal) => {
+  if (isInitializingHeaderGeo.value) return; // Ignore programmatic updates
   localHeaderData.birth_village_id = null;
   if (newSub) fetchHeaderVillages(newSub);
 })
-watch(() => localHeaderData.residence_sub_district_id, (newSub) => {
+watch(() => localHeaderData.residence_sub_district_id, (newSub, oldVal) => {
+  if (isInitializingHeaderGeo.value) return; // Ignore programmatic updates
   localHeaderData.residence_village_id = null;
   if (newSub) fetchHeaderVillages(newSub);
 })
 
-watch(selectedPersonnelList, (newVal) => {
+watch(selectedPersonnelList, async (newVal) => {
   if (newVal && newVal.length > 0) {
+    isInitializingHeaderGeo.value = true;
     const p = newVal[0];
-    localHeaderData.birth_gov_id = p.birth_gov_id || null;
-    localHeaderData.birth_district_id = null; // Normally map from DB if exists
-    localHeaderData.birth_sub_district_id = null;
-    localHeaderData.birth_village_id = null;
-    localHeaderData.residence_gov_id = p.residence_gov_id || null;
-    localHeaderData.residence_district_id = null;
-    localHeaderData.residence_sub_district_id = null;
-    localHeaderData.residence_village_id = null;
-    localHeaderData.id_issue_date = p.id_issue_date || '';
-    localHeaderData.id_issue_place = p.id_issue_place || '';
+    
+    try {
+      const promises = [];
+      if (p.birth_gov_id) promises.push(fetchHeaderDistricts(p.birth_gov_id));
+      if (p.birth_district_id) promises.push(fetchHeaderSubDistricts(p.birth_district_id));
+      if (p.birth_sub_district_id) promises.push(fetchHeaderVillages(p.birth_sub_district_id));
+      
+      if (p.residence_gov_id) promises.push(fetchHeaderDistricts(p.residence_gov_id));
+      if (p.residence_district_id) promises.push(fetchHeaderSubDistricts(p.residence_district_id));
+      if (p.residence_sub_district_id) promises.push(fetchHeaderVillages(p.residence_sub_district_id));
+      
+      await Promise.all(promises);
+      
+      localHeaderData.birth_gov_id = p.birth_gov_id || null;
+      localHeaderData.birth_district_id = p.birth_district_id || null;
+      localHeaderData.birth_sub_district_id = p.birth_sub_district_id || null;
+      localHeaderData.birth_village_id = p.birth_village_id || null;
+      localHeaderData.residence_gov_id = p.residence_gov_id || null;
+      localHeaderData.residence_district_id = p.residence_district_id || null;
+      localHeaderData.residence_sub_district_id = p.residence_sub_district_id || null;
+      localHeaderData.residence_village_id = p.residence_village_id || null;
+      localHeaderData.id_issue_date = p.id_issue_date || '';
+      localHeaderData.id_issue_place = p.id_issue_place || '';
+
+    } finally {
+      await nextTick();
+      setTimeout(() => {
+        isInitializingHeaderGeo.value = false;
+      }, 150);
+    }
   }
 }, { deep: true })
 
+const isHeaderDataComplete = computed(() => {
+  return localHeaderData.birth_gov_id && localHeaderData.birth_district_id && 
+    localHeaderData.birth_sub_district_id && localHeaderData.birth_village_id &&
+    localHeaderData.residence_gov_id && localHeaderData.residence_district_id && 
+    localHeaderData.residence_sub_district_id && localHeaderData.residence_village_id &&
+    localHeaderData.id_issue_date && localHeaderData.id_issue_place
+})
+
+const headerValidationErrors = reactive<Record<string, string>>({})
+
+watch([() => localHeaderData.id_issue_date, () => selectedPersonnelList.value[0]?.birth_date], ([idDate, birthDate]) => {
+  if (idDate) {
+    const issueDateObj = new Date(idDate)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    if (issueDateObj > today) {
+      headerValidationErrors.id_issue_date = 'لا يمكن أن يكون تاريخ الإصدار في المستقبل'
+    } else if (birthDate) {
+      const birthDateObj = new Date(birthDate)
+      if (issueDateObj <= birthDateObj) {
+        headerValidationErrors.id_issue_date = 'تاريخ الإصدار يجب أن يكون بعد تاريخ الميلاد'
+      } else {
+        headerValidationErrors.id_issue_date = ''
+      }
+    } else {
+      headerValidationErrors.id_issue_date = ''
+    }
+  } else {
+    headerValidationErrors.id_issue_date = ''
+  }
+})
+
 // Step 2 & 3 State
 const formData = ref<any>({})
+const formDataErrors = reactive<Record<string, string>>({})
+
+watch(() => formData.value, (newVal) => {
+  if (!schema.value?.sections) return
+  const allFields = schema.value.sections.flatMap((s:any) => s.fields || [])
+  const today = new Date().toISOString().split('T')[0]
+  const allowedFuture = ['end_date', 'due_date']
+
+  for (const f of allFields) {
+    if (f.type === 'date') {
+      const val = newVal[f.key]
+      if (val) {
+        // تاريخ تم ادخاله وهو صالح من ناحية المتصفح
+        if (!allowedFuture.includes(f.key) && val > today) {
+          formDataErrors[f.key] = `تاريخ غير صالح: لا يمكن أن يكون في المستقبل`
+        } else {
+          formDataErrors[f.key] = ''
+        }
+      } else {
+        // val فارغ — إما لم يُدخل أو المتصفح رفض التاريخ لأنه غير صالح
+        if (f.required) {
+          // لا نعرض الخطأ إلا إذا كانت قيمة الحقل في DOM غير فارغة
+          // سنكشف ذلك عبر data-raw-value attribute في onDateInput handler
+          // هنا نضع placeholder فقط إذا كان هناك خطأ مسجل مسبقاً
+          // (سيتم تعيين الخطأ من onDateInput)
+        } else {
+          formDataErrors[f.key] = ''
+        }
+      }
+    }
+  }
+}, { deep: true })
+
+// يُستدعى عند @change على حقول التاريخ — يكشف التواريخ الغير صالحة التي رفضها المتصفح بصمت
+function validateDateField(field: any, event: Event) {
+  const input = event.target as HTMLInputElement
+  const rawValue = input.value  // ما يراه المتصفح كقيمة فعلية
+  const allowedFuture = ['end_date', 'due_date']
+  const today = new Date().toISOString().split('T')[0]
+
+  if (!rawValue) {
+    // المتصفح أفرغ الحقل → التاريخ غير صالح (مثل 04/31 أو سنة 0009)
+    if (field.required) {
+      formDataErrors[field.key] = 'تاريخ غير صالح — تحقق من اليوم والشهر والسنة'
+    }
+  } else if (!allowedFuture.includes(field.key) && rawValue > today) {
+    formDataErrors[field.key] = 'تاريخ غير صالح: لا يمكن أن يكون في المستقبل'
+  } else {
+    formDataErrors[field.key] = ''
+  }
+}
+
 const documentIds = ref<number[]>([])
 const uploadedFiles = ref<Record<string, File>>({})
 const uploadingDoc = ref<string | null>(null)
@@ -885,10 +1073,17 @@ async function addPersonnel(person: any) {
         ['draft', 'in_progress', 'pending_services', 'pending_hr', 'pending_director', 'returned'].includes(f.status)
       )
       if (pendingForms && pendingForms.length > 0) {
+        const pending = pendingForms[0]
         Swal.fire({
           icon: 'warning',
           title: 'طلب قيد الإجراء',
-          text: `يوجد معاملة سابقة من نفس النوع قيد الإجراء لهذا الفرد (TX-${String(pendingForms[0].id).padStart(6, '0')}). لا يمكنك تقديم طلب جديد حتى يتم إنجاز الطلب المعلق.`
+          html: `<p class="text-sm text-gray-700 text-right mb-3">يوجد معاملة سابقة من نفس النوع قيد الإجراء لهذا الفرد.</p><p class="text-xs font-mono text-gray-500 text-right">رقم المعاملة: <b class="text-blue-600">TX-${String(pending.id).padStart(6, '0')}</b> — الحالة: ${pending.status}</p>`,
+          confirmButtonText: 'عرض المعاملة المعلقة',
+          showCancelButton: true,
+          cancelButtonText: 'إلغاء',
+          confirmButtonColor: '#2563eb',
+        }).then(r => {
+          if (r.isConfirmed) router.push(`/services/forms/${pending.id}`)
         })
         return
       }
@@ -989,121 +1184,107 @@ async function goToStep2() {
 
 // === Step 2 Logic ===
 async function validateAndGoToStep3() {
-  // Check required fields in all dynamic sections
   const allFields = schema.value.sections?.flatMap((s: any) => s.fields || []) || []
+
+  // 1. تحقق من أخطاء التحقق الفورية
+  const dateErrors = allFields.filter((f: any) => f.type === 'date' && formDataErrors[f.key])
+  if (dateErrors.length > 0) {
+    Swal.fire({
+      icon: 'error',
+      title: 'تاريخ غير صالح',
+      html: dateErrors.map((f: any) => `<b>${f.label}</b>: ${formDataErrors[f.key]}`).join('<br>')
+    })
+    return
+  }
+
+  // 2. تحقق من الحقول الإلزامية الفارغة
   if (allFields.length > 0) {
     const missing = allFields.filter((f: any) => {
       if (f.key === 'new_military_number') {
         return formData.value.settlement_type === 'personnel_to_officer' && !formData.value[f.key]
       }
+      if (f.type === 'date' && f.required && !formData.value[f.key]) {
+        formDataErrors[f.key] = 'تاريخ غير صالح — تحقق من اليوم والشهر والسنة'
+        return true
+      }
       return f.required && !formData.value[f.key]
     })
     if (missing.length > 0) {
+      const invalidDates = missing.filter((f: any) => f.type === 'date')
+      const blankFields = missing.filter((f: any) => f.type !== 'date')
+      if (invalidDates.length > 0) {
+        Swal.fire({
+          icon: 'error',
+          title: 'تاريخ غير صالح',
+          text: `الحقول التالية تحتوي على تاريخ غير صالح: ${invalidDates.map((f:any) => f.label).join('، ')}`
+        })
+        return
+      }
       Swal.fire({
         icon: 'warning',
         title: 'بيانات ناقصة',
-        text: `الرجاء تعبئة الحقول الإلزامية: ${missing.map((f:any) => f.label).join('، ')}`
+        text: `الرجاء تعبئة الحقول الإلزامية: ${blankFields.map((f:any) => f.label).join('، ')}`
       })
       return
     }
+  }
 
-      // Rank Settlement validations
-      if (formData.value.settlement_type === 'personnel_to_officer' && formData.value.new_military_number) {
-        const milNum = formData.value.new_military_number
-        if (!milNum.startsWith('60') || milNum.length !== 7 || isNaN(Number(milNum))) {
-          Swal.fire({
-            icon: 'warning',
-            title: 'رقم عسكري غير صالح',
-            text: 'الرقم العسكري الجديد للضابط يجب أن يبدأ بـ 60 ويتكون من 7 أرقام.'
-          })
-          return
-        }
-
-        // Live check military number
-        try {
-          const checkRes = await api.get('/personnel/check-military-number/', { params: { value: milNum } })
-          if (checkRes.data?.exists) {
-            Swal.fire({
-              icon: 'error',
-              title: 'الرقم العسكري مستخدم',
-              text: 'هذا الرقم العسكري مستخدم بالفعل في النظام.'
-            })
-            return
-          }
-        } catch (e) {
-          console.error(e)
-        }
-      }
-
-      // National ID and Military Number validations in Correction forms
-      const currentField = formData.value.field_name || formData.value.correction_type || type
-      if (currentField === 'national_id' || currentField === 'national_id_correction') {
-        const val = formData.value.new_value
-        if (!val || val.length !== 11 || !/^\d+$/.test(val)) {
-          Swal.fire({
-            icon: 'warning',
-            title: 'رقم وطني غير صالح',
-            text: 'الرقم الوطني الجديد يجب أن يتكون من 11 رقماً.'
-          })
-          return
-        }
-
-        // Live check national ID
-        try {
-          const checkRes = await api.get('/personnel/check-national-id/', { params: { value: val } })
-          if (checkRes.data?.exists) {
-            Swal.fire({
-              icon: 'error',
-              title: 'الرقم الوطني مسجل مسبقاً',
-              text: 'هذا الرقم الوطني مسجل بالفعل في النظام.'
-            })
-            return
-          }
-        } catch (e) {
-          console.error(e)
-        }
-      }
-
-      if (currentField === 'military_number' || currentField === 'military_number_correction') {
-        const val = formData.value.new_value
-        // التحقق من صيغة الرقم العسكري: 7 أرقام
-        if (!val || !/^\d{7}$/.test(String(val))) {
-          Swal.fire({
-            icon: 'warning',
-            title: 'رقم عسكري غير صالح',
-            text: 'الرقم العسكري يجب أن يتكون من 7 أرقام بالضبط.'
-          })
-          return
-        }
-        // التحقق من أن الرقم الجديد مختلف عن القديم
-        const oldVal = formData.value.old_value
-        if (oldVal && String(val) === String(oldVal)) {
-          Swal.fire({
-            icon: 'warning',
-            title: 'لا يوجد تغيير',
-            text: 'الرقم العسكري الجديد لا يمكن أن يكون نفس الرقم الحالي.'
-          })
-          return
-        }
-
-        // التحقق الفوري من الرقم العسكري عبر قاعدة البيانات
-        try {
-          const checkRes = await api.get('/personnel/check-military-number/', { params: { value: val } })
-          if (checkRes.data?.exists) {
-            Swal.fire({
-              icon: 'error',
-              title: 'الرقم العسكري مستخدم',
-              text: 'هذا الرقم العسكري مستخدم بالفعل في النظام. يرجى إدخال رقم مختلف.'
-            })
-            return
-          }
-        } catch (e) {
-          console.error(e)
-        }
-      }
+  // 3. التحقق من الترقية
+  if (formData.value.settlement_type === 'personnel_to_officer' && formData.value.new_military_number) {
+    const milNum = formData.value.new_military_number
+    if (!milNum.startsWith('60') || milNum.length !== 7 || isNaN(Number(milNum))) {
+      Swal.fire({ icon: 'warning', title: 'رقم عسكري غير صالح', text: 'الرقم العسكري الجديد للضابط يجب أن يبدأ بـ 60 ويتكون من 7 أرقام.' })
+      return
     }
+    try {
+      const checkRes = await api.get('/personnel/check-military-number/', { params: { value: milNum } })
+      if (checkRes.data?.exists) {
+        Swal.fire({ icon: 'error', title: 'الرقم العسكري مستخدم', text: 'هذا الرقم العسكري مستخدم بالفعل في النظام.' })
+        return
+      }
+    } catch (e) { console.error(e) }
+  }
+
+  // 4. التحقق من التصحيحات
+  const currentField = formData.value.field_name || formData.value.correction_type || type
+  if (currentField === 'national_id' || currentField === 'national_id_correction') {
+    const val = formData.value.new_value
+    if (!val || val.length !== 11 || !/^\d+$/.test(val)) {
+      Swal.fire({ icon: 'warning', title: 'رقم وطني غير صالح', text: 'الرقم الوطني الجديد يجب أن يتكون من 11 رقماً.' })
+      return
+    }
+    try {
+      const checkRes = await api.get('/personnel/check-national-id/', { params: { value: val } })
+      if (checkRes.data?.exists) {
+        Swal.fire({ icon: 'error', title: 'الرقم الوطني مسجل مسبقاً', text: 'هذا الرقم الوطني مسجل بالفعل في النظام.' })
+        return
+      }
+    } catch (e) { console.error(e) }
+  }
+
+  if (currentField === 'military_number' || currentField === 'military_number_correction') {
+    const val = formData.value.new_value
+    if (!val || !/^\d{7}$/.test(String(val))) {
+      Swal.fire({ icon: 'warning', title: 'رقم عسكري غير صالح', text: 'الرقم العسكري يجب أن يتكون من 7 أرقام بالضبط.' })
+      return
+    }
+    const oldVal = formData.value.old_value
+    if (oldVal && String(val) === String(oldVal)) {
+      Swal.fire({ icon: 'warning', title: 'لا يوجد تغيير', text: 'الرقم العسكري الجديد لا يمكن أن يكون نفس الرقم الحالي.' })
+      return
+    }
+    try {
+      const checkRes = await api.get('/personnel/check-military-number/', { params: { value: val } })
+      if (checkRes.data?.exists) {
+        Swal.fire({ icon: 'error', title: 'الرقم العسكري مستخدم', text: 'هذا الرقم العسكري مستخدم بالفعل في النظام. يرجى إدخال رقم مختلف.' })
+        return
+      }
+    } catch (e) { console.error(e) }
+  }
+
   step.value = 3
 }
+
 
 // === Step 3 Logic ===
 async function handleFileUpload(docType: string, event: Event) {
@@ -1151,6 +1332,31 @@ async function submitBulk() {
     return
   }
 
+  // Validate Header Data (Geographic & ID)
+  if (
+    !localHeaderData.birth_gov_id || !localHeaderData.birth_district_id || 
+    !localHeaderData.birth_sub_district_id || !localHeaderData.birth_village_id ||
+    !localHeaderData.residence_gov_id || !localHeaderData.residence_district_id || 
+    !localHeaderData.residence_sub_district_id || !localHeaderData.residence_village_id ||
+    !localHeaderData.id_issue_date || !localHeaderData.id_issue_place
+  ) {
+    Swal.fire({
+      icon: 'error',
+      title: 'بيانات ناقصة',
+      text: 'لا يمكن تقديم الطلب إلا بعد استكمال بيانات الميلاد والإقامة والبطاقة الخاصة بالفرد.'
+    })
+    return
+  }
+  
+  if (headerValidationErrors.id_issue_date) {
+    Swal.fire({
+      icon: 'error',
+      title: 'تاريخ غير صالح',
+      text: headerValidationErrors.id_issue_date
+    })
+    return
+  }
+
   // Validate All Fields
   const allFields = schema.value.sections?.flatMap((s:any) => s.fields || []) || []
   if (allFields.length > 0) {
@@ -1181,13 +1387,11 @@ async function submitBulk() {
 
       // 3. Date Check (No Future Dates except allowed)
       if (val && f.type === 'date') {
-        const allowedFuture = ['end_date', 'due_date']
-        const today = new Date().toISOString().split('T')[0]
-        if (!allowedFuture.includes(f.key) && val > today) {
+        if (formDataErrors[f.key]) {
           Swal.fire({
             icon: 'error',
-            title: 'تاريخ غير صالح',
-            text: `تاريخ الحقل "${f.label}" لا يمكن أن يكون في المستقبل.`
+            title: 'خطأ في التاريخ',
+            text: `الحقل "${f.label}": ${formDataErrors[f.key]}`
           })
           return
         }
@@ -1207,6 +1411,29 @@ async function submitBulk() {
   // Loop through all selected personnel and submit
   for (const person of selectedPersonnelList.value) {
     try {
+      // Auto-Sync Personnel Geographic and ID Data
+      // Only include fields with actual values to avoid overwriting existing DB data with null
+      try {
+        const geoPayload: Record<string, any> = {}
+        if (localHeaderData.birth_gov_id)         geoPayload.birth_governorate        = localHeaderData.birth_gov_id
+        if (localHeaderData.birth_district_id)    geoPayload.birth_district           = localHeaderData.birth_district_id
+        if (localHeaderData.birth_sub_district_id) geoPayload.birth_sub_district      = localHeaderData.birth_sub_district_id
+        if (localHeaderData.birth_village_id)     geoPayload.birth_village            = localHeaderData.birth_village_id
+        if (localHeaderData.residence_gov_id)     geoPayload.residence_governorate    = localHeaderData.residence_gov_id
+        if (localHeaderData.residence_district_id) geoPayload.residence_district      = localHeaderData.residence_district_id
+        if (localHeaderData.residence_sub_district_id) geoPayload.residence_sub_district = localHeaderData.residence_sub_district_id
+        if (localHeaderData.residence_village_id) geoPayload.residence_village        = localHeaderData.residence_village_id
+        if (localHeaderData.id_issue_date)        geoPayload.id_issue_date            = localHeaderData.id_issue_date
+        if (localHeaderData.id_issue_place)       geoPayload.id_issue_place           = localHeaderData.id_issue_place
+
+        console.log('[GEO-SYNC] Payload to save:', geoPayload)
+        if (Object.keys(geoPayload).length > 0) {
+          await personnelStore.updatePersonnel(person.military_number, geoPayload)
+        }
+      } catch (syncErr) {
+        console.error('Failed to sync personnel header data:', syncErr)
+      }
+
       if (category === 'correction') {
         const req = await correctionStore.submitCorrection({
           military_number: person.military_number,
@@ -1287,8 +1514,14 @@ async function submitBulk() {
 
   if (successCount > 0) {
     const isModel23 = type === 'name_correction' && successCount === 1;
-    const isExternalForm = schema.value?.approval_type === 'external' && successCount === 1;
+    // فحص approval_type من السكيما ومن النتيجة الفعلية
+    const approvalTypeFromSchema = schema.value?.approval_type
+    const isExternalForm = (approvalTypeFromSchema === 'external') && successCount === 1;
     const showPrintButton = isModel23 || isExternalForm;
+    
+    // تحديد الوجهة الصحيحة بعد الإرسال
+    const redirectTab = isExternalForm ? 'external' : 'internal'
+    const redirectRoute = { path: '/services/transactions', query: { tab: redirectTab } }
     
     Swal.fire({
       icon: errorCount > 0 ? 'warning' : 'success',
@@ -1315,14 +1548,12 @@ async function submitBulk() {
           }).toString()
           router.push(`/services/print/model-23/${lastCorrectionId}?${queryParams}`)
         } else if (isExternalForm && lastFormId) {
-          try {
-            await servicesStore.markFormPrinted(lastFormId)
-          } catch(e) {}
-          window.open(`/services/forms/${lastFormId}?print=true`, '_blank')
-          router.push(category === 'form' ? '/services/external-requests' : '/services/internal-requests')
+          // فتح صفحة الطباعة المستقلة
+          window.open(`/services/forms/${lastFormId}/print`, '_blank')
+          router.push(redirectRoute)
         }
       } else {
-        router.push(category === 'form' ? '/services/external-requests' : '/services/internal-requests')
+        router.push(redirectRoute)
       }
     })
   } else {

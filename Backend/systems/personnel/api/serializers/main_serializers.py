@@ -66,6 +66,14 @@ class PersonnelListSerializer(serializers.ModelSerializer):
     qualification_name = serializers.CharField(
         source='qualification.name', read_only=True, default=None
     )
+    birth_gov_id = serializers.IntegerField(source='birth_governorate_id', read_only=True)
+    birth_district_id = serializers.IntegerField(read_only=True)
+    birth_sub_district_id = serializers.IntegerField(read_only=True)
+    birth_village_id = serializers.IntegerField(read_only=True)
+    residence_gov_id = serializers.IntegerField(source='residence_governorate_id', read_only=True)
+    residence_district_id = serializers.IntegerField(read_only=True)
+    residence_sub_district_id = serializers.IntegerField(read_only=True)
+    residence_village_id = serializers.IntegerField(read_only=True)
     has_pending_correction = serializers.SerializerMethodField()
     military_number_type = serializers.DictField(read_only=True)
     national_id_status = serializers.CharField(read_only=True)
@@ -96,6 +104,9 @@ class PersonnelListSerializer(serializers.ModelSerializer):
             'qualification', 'qualification_name',
             # بيانات أخرى
             'phone_number', 'birth_date', 'join_date',
+            'birth_gov_id', 'birth_district_id', 'birth_sub_district_id', 'birth_village_id',
+            'residence_gov_id', 'residence_district_id', 'residence_sub_district_id', 'residence_village_id',
+            'id_issue_date', 'id_issue_place',
             'expense_status', 'expense_status_display', 'appointment_info', 'notes',
             'is_complete', 'is_data_clean', 'data_quality_score',
             'has_pending_correction',
@@ -159,6 +170,14 @@ class PersonnelDetailSerializer(serializers.ModelSerializer):
     qualification_name = serializers.CharField(
         source='qualification.name', read_only=True, default=None
     )
+    birth_gov_id = serializers.IntegerField(source='birth_governorate_id', read_only=True)
+    birth_district_id = serializers.IntegerField(read_only=True)
+    birth_sub_district_id = serializers.IntegerField(read_only=True)
+    birth_village_id = serializers.IntegerField(read_only=True)
+    residence_gov_id = serializers.IntegerField(source='residence_governorate_id', read_only=True)
+    residence_district_id = serializers.IntegerField(read_only=True)
+    residence_sub_district_id = serializers.IntegerField(read_only=True)
+    residence_village_id = serializers.IntegerField(read_only=True)
     # بيانات محسوبة
     age = serializers.IntegerField(read_only=True)
     service_years = serializers.IntegerField(read_only=True)
@@ -196,6 +215,9 @@ class PersonnelDetailSerializer(serializers.ModelSerializer):
             'force_classification', 'force_classification_name',
             # بيانات أخرى
             'qualification', 'qualification_detail', 'qualification_name',
+            'birth_gov_id', 'birth_district_id', 'birth_sub_district_id', 'birth_village_id',
+            'residence_gov_id', 'residence_district_id', 'residence_sub_district_id', 'residence_village_id',
+            'id_issue_date', 'id_issue_place',
             'geo_location', 'geo_location_name',
             'photo', 'fingerprint_hash',
             'expense_status', 'expense_status_display', 'appointment_info',
@@ -253,6 +275,11 @@ class PersonnelCreateSerializer(serializers.ModelSerializer):
 
             'category', 'job_title', 'position', 'force_classification',
             'qualification', 'geo_location', 'expense_status', 'notes',
+            
+            # البيانات الجغرافية وتفاصيل الهوية الجديدة
+            'birth_governorate', 'birth_district', 'birth_sub_district', 'birth_village',
+            'residence_governorate', 'residence_district', 'residence_sub_district', 'residence_village',
+            'id_issue_date', 'id_issue_place',
         ]
         extra_kwargs = {
             'notes': {'allow_null': True, 'allow_blank': True, 'required': False},
@@ -260,6 +287,7 @@ class PersonnelCreateSerializer(serializers.ModelSerializer):
             'qualification': {'allow_null': True, 'required': False},
             'geo_location': {'allow_null': True, 'required': False},
             'expense_status': {'allow_null': True, 'allow_blank': True, 'required': False},
+            'id_issue_place': {'allow_null': True, 'allow_blank': True, 'required': False},
         }
     
     def validate_military_number(self, value):
@@ -288,6 +316,19 @@ class PersonnelCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {'birth_date': 'تاريخ الميلاد غير صالح: يجب أن يكون عمر الفرد 18 عاماً على الأقل عند تاريخ التجنيد.'}
                 )
+                
+        id_issue_date = data.get('id_issue_date')
+        if id_issue_date:
+            from datetime import date
+            if id_issue_date > date.today():
+                raise serializers.ValidationError(
+                    {'id_issue_date': 'لا يمكن أن يكون تاريخ إصدار البطاقة في المستقبل.'}
+                )
+            if birth_date and id_issue_date <= birth_date:
+                raise serializers.ValidationError(
+                    {'id_issue_date': 'تاريخ إصدار البطاقة يجب أن يكون بعد تاريخ الميلاد.'}
+                )
+                
         return super().validate(data) if hasattr(super(), 'validate') else data
 
 
@@ -306,6 +347,11 @@ class PersonnelUpdateSerializer(serializers.ModelSerializer):
             'category', 'job_title', 'position', 'force_classification',
             'qualification', 'geo_location', 'expense_status',
             'pending_rank', 'is_complete', 'notes',
+            
+            # البيانات الجغرافية وتفاصيل الهوية الجديدة
+            'birth_governorate', 'birth_district', 'birth_sub_district', 'birth_village',
+            'residence_governorate', 'residence_district', 'residence_sub_district', 'residence_village',
+            'id_issue_date', 'id_issue_place',
         ]
         extra_kwargs = {
             'notes': {'allow_null': True, 'allow_blank': True, 'required': False},
@@ -313,6 +359,17 @@ class PersonnelUpdateSerializer(serializers.ModelSerializer):
             'qualification': {'allow_null': True, 'required': False},
             'geo_location': {'allow_null': True, 'required': False},
             'expense_status': {'allow_null': True, 'allow_blank': True, 'required': False},
+            'id_issue_place': {'allow_null': True, 'allow_blank': True, 'required': False},
+            # السماح بـ null/blank للحقول الجغرافية أثناء PATCH
+            'birth_governorate': {'allow_null': True, 'required': False},
+            'birth_district': {'allow_null': True, 'required': False},
+            'birth_sub_district': {'allow_null': True, 'required': False},
+            'birth_village': {'allow_null': True, 'required': False},
+            'residence_governorate': {'allow_null': True, 'required': False},
+            'residence_district': {'allow_null': True, 'required': False},
+            'residence_sub_district': {'allow_null': True, 'required': False},
+            'residence_village': {'allow_null': True, 'required': False},
+            'id_issue_date': {'allow_null': True, 'required': False},
         }
     
     def validate_national_id(self, value):
@@ -334,6 +391,21 @@ class PersonnelUpdateSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         instance = self.instance
+
+        # ── حماية الحقول الجغرافية: لا تكتب null فوق قيمة موجودة في قاعدة البيانات ──
+        # هذا يحمي البيانات الجغرافية المحفوظة من الضياع عند إرسال null من الفرونت
+        GEO_FIELDS = [
+            'birth_governorate', 'birth_district', 'birth_sub_district', 'birth_village',
+            'residence_governorate', 'residence_district', 'residence_sub_district', 'residence_village',
+        ]
+        if instance and self.partial:
+            for field in GEO_FIELDS:
+                if field in data and data[field] is None:
+                    existing_val = getattr(instance, f'{field}_id', None)
+                    if existing_val is not None:
+                        # Don't overwrite existing value with null
+                        del data[field]
+
         birth_date = data.get('birth_date', getattr(instance, 'birth_date', None))
         join_date = data.get('join_date', getattr(instance, 'join_date', None))
         
@@ -343,6 +415,22 @@ class PersonnelUpdateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {'birth_date': 'تاريخ الميلاد غير صالح: يجب أن يكون عمر الفرد 18 عاماً على الأقل عند تاريخ التجنيد.'}
                 )
+                
+        id_issue_date = data.get('id_issue_date')
+        if id_issue_date:
+            from datetime import date
+            if id_issue_date > date.today():
+                raise serializers.ValidationError(
+                    {'id_issue_date': 'لا يمكن أن يكون تاريخ إصدار البطاقة في المستقبل.'}
+                )
+            
+            # Since birth_date might not be in data if it wasn't updated, check instance too
+            final_birth_date = birth_date or (instance.birth_date if instance else None)
+            if final_birth_date and id_issue_date <= final_birth_date:
+                raise serializers.ValidationError(
+                    {'id_issue_date': 'تاريخ إصدار البطاقة يجب أن يكون بعد تاريخ الميلاد.'}
+                )
+                
         return super().validate(data) if hasattr(super(), 'validate') else data
 
 

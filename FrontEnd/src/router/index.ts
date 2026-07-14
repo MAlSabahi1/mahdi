@@ -888,6 +888,15 @@ const router = createRouter({
       },
     },
     {
+      path: '/services/forms/:id/print',
+      name: 'FormPrintView',
+      component: () => import('@/views/Services/PrintTemplates/FormPrintView.vue'),
+      meta: {
+        title: 'طباعة الاستمارة الرسمية',
+        requiresAuth: true,
+      },
+    },
+    {
       path: '/services/editor-react',
       name: 'ServicesEditorReact',
       component: () => import('@/views/Services/VueGridEditor.vue'),

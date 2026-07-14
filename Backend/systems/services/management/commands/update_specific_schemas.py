@@ -247,8 +247,11 @@ class Command(BaseCommand):
                     "fields": [
                         {"key": "category", "label": "الفئة", "type": "text", "required": True, "disabled": True, "value": "سجناء"},
                         {"key": "case_type", "label": "نوع القضية", "type": "text", "required": True},
+                        {"key": "ruling_type", "label": "نوع الحكم", "type": "text", "required": False},
                         {"key": "ruling_date", "label": "تاريخ الحكم", "type": "date", "required": False},
                         {"key": "ruling_duration", "label": "مدة الحكم", "type": "text", "required": False},
+                        {"key": "sentence_start_date", "label": "مدة الحكم (من)", "type": "date", "required": False},
+                        {"key": "sentence_end_date", "label": "مدة الحكم (إلى)", "type": "date", "required": False},
                         {"key": "arrest_date", "label": "تاريخ التوقيف", "type": "date", "required": True},
                         {"key": "arrest_authority", "label": "جهة التوقيف", "type": "text", "required": True},
                         {"key": "notes", "label": "ملاحظات", "type": "textarea", "required": False}

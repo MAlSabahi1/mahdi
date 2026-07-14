@@ -243,10 +243,10 @@ _REPORTS = {
         columns=_BASE + (
             ReportColumn('case_type', 'نوع القضية', 'form_data.case_type'),
             ReportColumn('arrest_date', 'تاريخ التوقيف', 'form_data.arrest_date'),
-            ReportColumn('ruling_type', 'نوع الحكم'),
+            ReportColumn('verdict_type', 'نوع الحكم', 'form_data.ruling_type'),
             ReportColumn('ruling_date', 'تاريخ الحكم', 'form_data.ruling_date'),
-            ReportColumn('sentence_start', 'مدة الحكم من', 'form_data.arrest_date'),
-            ReportColumn('sentence_end', 'مدة الحكم إلى'),
+            ReportColumn('duration_from', 'مدة الحكم من', 'form_data.sentence_start_date'),
+            ReportColumn('duration_to', 'مدة الحكم إلى', 'form_data.sentence_end_date'),
         ),
         description='نموذج 9 — الدليل ص 25',
     ),

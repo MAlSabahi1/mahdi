@@ -33,6 +33,8 @@ class FormField:
     required: bool = True       # إلزامي أم اختياري
     options: tuple = ()         # خيارات (للـ select)
     help_text: str = ''         # توضيح إضافي
+    disabled: bool = False      # هل الحقل معطل
+    default: str = ''           # قيمة افتراضية
 
 
 # ─────────────────────────────────────────────
@@ -99,6 +101,7 @@ _FORMS = {
         target_status='كبار سن',
         description='الدليل: ص 33 — تُستخدم عند بلوغ الفرد السن القانوني للتقاعد',
         fields=(
+            FormField('category', 'الفئة', 'text', required=True, disabled=True, default='كبار سن'),
             FormField('birth_date', 'تاريخ الميلاد', 'date'),
             FormField('join_date', 'تاريخ الالتحاق بالخدمة', 'date'),
             FormField('age', 'العمر', 'number'),
@@ -118,9 +121,11 @@ _FORMS = {
         target_status='وفيات',
         description='الدليل: ص 34 — تُستخدم لتوثيق الوفاة الطبيعية',
         fields=(
+            FormField('category', 'الفئة', 'text', required=True, disabled=True, default='وفيات'),
             FormField('death_date', 'تاريخ الوفاة', 'date'),
             FormField('death_cause', 'سبب الوفاة', 'textarea'),
-            FormField('death_location', 'مكان الوفاة', 'text'),
+            FormField('death_location', 'مكان الوفاة', 'location_cascade',
+                      help_text='محافظة → مديرية → عزلة/قرية — يمكن الكتابة يدوياً'),
             FormField('occurrence_context', 'حالة الوقوع', 'select',
                       options=('أثناء الواجب', 'طبيعية')),
         ),
@@ -142,8 +147,10 @@ _FORMS = {
         target_status='مفقودين',
         description='الدليل: ص 35 — نموذج 11 — المفقودين (مؤقتاً)',
         fields=(
+            FormField('category', 'الفئة', 'text', required=True, disabled=True, default='مفقودين'),
             FormField('missing_date', 'تاريخ الفقدان', 'date'),
-            FormField('missing_location', 'مكان الفقدان', 'text'),
+            FormField('missing_location', 'مكان الفقدان', 'location_cascade',
+                      help_text='محافظة → مديرية → عزلة/قرية — يمكن الكتابة يدوياً'),
             FormField('court_ruling_date', 'تاريخ الحكم الشرعي', 'date', required=False),
             FormField('legal_status', 'حالة الإجراءات', 'select',
                       options=('مستكمل', 'غير مستكمل')),
@@ -167,6 +174,7 @@ _FORMS = {
         target_status='عدم لياقة',
         description='الدليل: ص 36 — نموذج 15 — أمراض ومشوهين',
         fields=(
+            FormField('category', 'الفئة', 'text', required=True, disabled=True, default='عدم اللياقة الصحية'),
             FormField('disease_type', 'نوع المرض', 'text'),
             FormField('disability_percentage', 'نسبة العجز', 'number'),
             FormField('medical_source', 'مصدر القرار الطبي', 'text'),
@@ -191,6 +199,7 @@ _FORMS = {
         target_status='إنهاء مدة',
         description='الدليل: ص 37 — نموذج 13 — شرط 20 سنة خدمة',
         fields=(
+            FormField('category', 'الفئة', 'text', required=True, disabled=True, default='إنهاء مدة'),
             FormField('birth_date', 'تاريخ الميلاد', 'date'),
             FormField('join_date', 'تاريخ الالتحاق بالخدمة', 'date'),
             FormField('service_years', 'سنوات الخدمة', 'number'),
@@ -210,6 +219,7 @@ _FORMS = {
         target_status='متقاعدين',
         description='الدليل: ص 38 — نموذج 17',
         fields=(
+            FormField('category', 'الفئة', 'text', required=True, disabled=True, default='محال للتقاعد'),
             FormField('birth_date', 'تاريخ الميلاد', 'date'),
             FormField('join_date', 'تاريخ الالتحاق', 'date'),
             FormField('decision_number', 'رقم قرار الإحالة', 'text'),
@@ -231,11 +241,16 @@ _FORMS = {
         target_status='سجناء',
         description='الدليل: ص 37 — استمارة 7 — أحكام قضائية',
         fields=(
+            FormField('category', 'الفئة', 'text', required=True, disabled=True, default='سجناء'),
             FormField('case_type', 'نوع القضية', 'text'),
-            FormField('ruling_date', 'تاريخ الحكم', 'date'),
-            FormField('sentence_duration', 'مدة الحكم', 'text'),
+            FormField('ruling_type', 'نوع الحكم', 'text', required=False),
+            FormField('ruling_date', 'تاريخ الحكم', 'date', required=False),
+            FormField('ruling_duration', 'مدة الحكم', 'text', required=False),
+            FormField('sentence_start_date', 'مدة الحكم (من)', 'date', required=False),
+            FormField('sentence_end_date', 'مدة الحكم (إلى)', 'date', required=False),
             FormField('arrest_date', 'تاريخ التوقيف', 'date'),
-            FormField('detention_location', 'جهة التوقيف', 'text'),
+            FormField('arrest_authority', 'جهة التوقيف', 'text'),
+            FormField('notes', 'ملاحظات', 'textarea', required=False),
         ),
         attachments=(
             AttachmentSpec('court_ruling', 'نسخة من الحكم القضائي'),
@@ -254,6 +269,7 @@ _FORMS = {
         target_status='مفرغين للمرافقة',
         description='الدليل: ص 41 — نموذج 6',
         fields=(
+            FormField('category', 'الفئة', 'text', required=True, disabled=True, default='المعيات'),
             FormField('dignitary_name', 'اسم الشخصية', 'text'),
             FormField('dignitary_position', 'منصب الشخصية', 'text'),
             FormField('order_source', 'مصدر الأمر', 'text',
@@ -275,9 +291,11 @@ _FORMS = {
         target_status='شهداء',
         description='الدليل: ص 40 — أكبر عدد مرفقات',
         fields=(
+            FormField('category', 'الفئة', 'text', required=True, disabled=True, default='الشهداء'),
             FormField('martyrdom_date', 'تاريخ الاستشهاد', 'date'),
             FormField('martyrdom_cause', 'سبب الاستشهاد', 'textarea'),
-            FormField('martyrdom_location', 'مكان الاستشهاد', 'text'),
+            FormField('martyrdom_location', 'مكان الاستشهاد', 'location_cascade',
+                      help_text='محافظة → مديرية → عزلة/قرية — يمكن الكتابة يدوياً'),
             FormField('occurrence_context', 'حالة الوقوع', 'select',
                       options=('أثناء الواجب',)),
         ),
@@ -302,6 +320,7 @@ _FORMS = {
         target_status='مفرغين للدراسة',
         description='الدليل: ص 42 — نموذج 8',
         fields=(
+            FormField('category', 'الفئة', 'text', required=True, disabled=True, default='مفرغين للدراسة'),
             FormField('study_type', 'نوع الدراسة', 'select',
                       options=('دبلوم', 'بكالوريوس', 'ماجستير', 'دكتوراه', 'دورة تخصصية')),
             FormField('institution', 'جهة الدراسة', 'text'),
@@ -324,6 +343,7 @@ _FORMS = {
         target_status='منتدبين لدى جهات',
         description='الدليل: ص 42 — نموذج 7',
         fields=(
+            FormField('category', 'الفئة', 'text', required=True, disabled=True, default='المنتدبين'),
             FormField('destination', 'جهة الانتداب', 'text'),
             FormField('reason', 'سبب الانتداب', 'textarea'),
             FormField('order_source', 'مصدر الأمر', 'text'),
@@ -335,6 +355,70 @@ _FORMS = {
             AttachmentSpec('national_id_front', 'صورة البطاقة العسكرية والشخصية'),
         ),
         min_documents=2,
+    ),
+    # ── استمارة 12: تنزيل الرتبة ──
+    'rank_demotion': FormDefinition(
+        form_type='rank_demotion',
+        label='طلب تنزيل الرتبة',
+        target_status='تنزيل رتبة',
+        description='تنزيل رتبة الفرد نتيجة عقوبة عسكرية أو إدارية أو حكم قضائي',
+        fields=(
+            FormField('category', 'الفئة', 'text', required=True, disabled=True, default='الترقيات وتسويات الرتب'),
+            FormField('settlement_type', 'نوع التسوية', 'text', required=True, disabled=True, default='تنزيل رتبة'),
+            FormField('to_rank', 'الرتبة المستهدفة', 'select', required=True),
+            FormField('demotion_reason', 'سبب التنزيل (بناءً على القرار)', 'textarea', required=True),
+            FormField('decision_number', 'رقم قرار التنزيل', 'text', required=True),
+            FormField('decision_date', 'تاريخ القرار', 'date', required=True),
+        ),
+        attachments=(
+            AttachmentSpec('demotion_decision', 'نسخة من قرار التنزيل'),
+            AttachmentSpec('national_id_front', 'صورة البطاقة العسكرية والشخصية'),
+        ),
+        min_documents=2,
+    ),
+
+    # ── استمارة 13: ترقية / تسوية رتبة ──
+    'rank_promotion': FormDefinition(
+        form_type='rank_promotion',
+        label='طلب ترقية اعتيادية / استثنائية',
+        target_status='ترقية رتبة',
+        description='ترقية الفرد إلى الرتبة العسكرية التالية',
+        fields=(
+            FormField('category', 'الفئة', 'text', required=True, disabled=True, default='الترقيات وتسويات الرتب'),
+            FormField('settlement_type', 'نوع الترقية', 'select', required=True, options=('ترقية اعتيادية', 'ترقية استثنائية', 'ترقية استثنائية (شهيد)', 'ترقية (متقاعد)')),
+            FormField('to_rank', 'الرتبة المستهدفة', 'select', required=True),
+            FormField('due_date', 'تاريخ الاستحقاق', 'date', required=True),
+            FormField('decision_number', 'رقم قرار الترقية', 'text', required=True),
+            FormField('decision_date', 'تاريخ القرار', 'date', required=True),
+        ),
+        attachments=(
+            AttachmentSpec('promotion_decision', 'نسخة من قرار الترقية'),
+            AttachmentSpec('national_id_front', 'صورة البطاقة العسكرية والشخصية'),
+        ),
+        min_documents=2,
+    ),
+
+    # ── استمارة 14: تسوية من كادر الأفراد إلى كادر الضباط ──
+    'personnel_to_officer': FormDefinition(
+        form_type='personnel_to_officer',
+        label='طلب تسوية من كادر الأفراد إلى كادر الضباط',
+        target_status='ضباط (تسوية جامعيين)',
+        description='تسوية وضع فرد حاصل على مؤهل جامعي وتحويله إلى كادر الضباط مع رقم عسكري جديد يبدأ بـ (60)',
+        fields=(
+            FormField('category', 'الفئة', 'text', required=True, disabled=True, default='التسويات لجامعيين'),
+            FormField('settlement_type', 'نوع التسوية', 'text', required=True, disabled=True, default='تسوية وضع (من فرد إلى ضابط)'),
+            FormField('to_rank', 'الرتبة المستهدفة', 'select', required=True, help_text='عادة ما تكون ملازم'),
+            FormField('new_military_number', 'الرقم العسكري الجديد (للضابط)', 'text', required=True, help_text='يجب أن يبدأ بـ 60 ويتكون من 7 أرقام'),
+            FormField('university_degree_type', 'نوع المؤهل الجامعي', 'select', required=True, options=('بكالوريوس', 'ماجستير', 'دكتوراه', 'أخرى')),
+            FormField('decision_number', 'رقم قرار التسوية', 'text', required=True),
+            FormField('decision_date', 'تاريخ القرار', 'date', required=True),
+        ),
+        attachments=(
+            AttachmentSpec('university_degree', 'صورة المؤهل الجامعي مصدقة'),
+            AttachmentSpec('settlement_decision', 'نسخة من قرار التسوية'),
+            AttachmentSpec('national_id_front', 'صورة البطاقة العسكرية والشخصية'),
+        ),
+        min_documents=3,
     ),
 }
 
@@ -477,6 +561,8 @@ class FormRegistry:
                 'required': f.required,
                 'options': list(f.options) if f.options else None,
                 'help_text': f.help_text or None,
+                'disabled': getattr(f, 'disabled', False),
+                'default': getattr(f, 'default', ''),
             }
 
         def _auto_sections():
@@ -516,6 +602,10 @@ class FormRegistry:
             'key': f['key'], 'label': f['label'], 'type': f.get('type', 'text'),
             'required': f.get('required', True),
             'options': f.get('options'), 'help_text': f.get('help_text'),
+            'disabled': f.get('disabled', False),
+            'default': f.get('default', ''),
+            'source': f.get('source', 'user_input'),
+            'options_source': f.get('options_source', ''),
         } for f in (custom.fields or [])]
 
         return {

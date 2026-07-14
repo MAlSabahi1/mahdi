@@ -159,6 +159,127 @@
         </div>
       </div>
 
+      <!-- Section 1.5: Geographic & ID Info -->
+      <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm relative overflow-visible">
+        <div class="absolute top-0 right-0 w-2 h-full bg-indigo-500 rounded-r-2xl"></div>
+        <h3 class="mb-5 text-lg font-bold text-gray-900 dark:text-white border-b border-gray-100 pb-3 dark:border-gray-800">بيانات الميلاد والإقامة والبطاقة</h3>
+        
+        <!-- ID Details -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">تاريخ إصدار البطاقة</label>
+            <input v-model="form.id_issue_date" type="date" class="block w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-900 shadow-theme-xs focus:border-brand-500 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:border-brand-500" :class="{'border-error-500': validationErrors.id_issue_date}">
+            <p v-if="validationErrors.id_issue_date" class="mt-1 text-xs text-error-500">{{ validationErrors.id_issue_date }}</p>
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">جهة الإصدار</label>
+            <input v-model="form.id_issue_place" type="text" class="block w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-900 shadow-theme-xs focus:border-brand-500 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:border-brand-500" placeholder="مثال: صنعاء، تعز، ...">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <!-- Birth Location -->
+          <div class="space-y-4 p-4 rounded-xl border border-gray-100 bg-gray-50/30 dark:border-gray-800 dark:bg-gray-800/10">
+            <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+              <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+              محل الميلاد
+            </h4>
+            <div class="grid grid-cols-2 gap-4">
+              <!-- Governorate -->
+              <div>
+                <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">المحافظة</label>
+                <div class="relative bg-transparent">
+                  <select v-model="form.birth_governorate" class="w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                    <option :value="null">اختر...</option>
+                    <option v-for="gov in coreStore.governorates" :key="gov.id" :value="gov.id">{{ gov.name }}</option>
+                  </select>
+                </div>
+              </div>
+              <!-- District -->
+              <div>
+                <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">المديرية</label>
+                <div class="relative bg-transparent">
+                  <select v-model="form.birth_district" :disabled="!form.birth_governorate" class="w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:opacity-50">
+                    <option :value="null">اختر...</option>
+                    <option v-for="dist in birthDistricts" :key="dist.id" :value="dist.id">{{ dist.name_ar }}</option>
+                  </select>
+                </div>
+              </div>
+              <!-- Sub District -->
+              <div>
+                <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">العزلة</label>
+                <div class="relative bg-transparent">
+                  <select v-model="form.birth_sub_district" :disabled="!form.birth_district" class="w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:opacity-50">
+                    <option :value="null">اختر...</option>
+                    <option v-for="sub in birthSubDistricts" :key="sub.id" :value="sub.id">{{ sub.name_ar }}</option>
+                  </select>
+                </div>
+              </div>
+              <!-- Village -->
+              <div>
+                <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">القرية</label>
+                <div class="relative bg-transparent">
+                  <select v-model="form.birth_village" :disabled="!form.birth_sub_district" class="w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:opacity-50">
+                    <option :value="null">اختر...</option>
+                    <option v-for="vil in birthVillages" :key="vil.id" :value="vil.id">{{ vil.name_ar }}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Residence Location -->
+          <div class="space-y-4 p-4 rounded-xl border border-gray-100 bg-gray-50/30 dark:border-gray-800 dark:bg-gray-800/10">
+            <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+              <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+              محل الإقامة الحالي
+            </h4>
+            <div class="grid grid-cols-2 gap-4">
+              <!-- Governorate -->
+              <div>
+                <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">المحافظة</label>
+                <div class="relative bg-transparent">
+                  <select v-model="form.residence_governorate" class="w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                    <option :value="null">اختر...</option>
+                    <option v-for="gov in coreStore.governorates" :key="gov.id" :value="gov.id">{{ gov.name }}</option>
+                  </select>
+                </div>
+              </div>
+              <!-- District -->
+              <div>
+                <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">المديرية</label>
+                <div class="relative bg-transparent">
+                  <select v-model="form.residence_district" :disabled="!form.residence_governorate" class="w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:opacity-50">
+                    <option :value="null">اختر...</option>
+                    <option v-for="dist in resDistricts" :key="dist.id" :value="dist.id">{{ dist.name_ar }}</option>
+                  </select>
+                </div>
+              </div>
+              <!-- Sub District -->
+              <div>
+                <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">العزلة</label>
+                <div class="relative bg-transparent">
+                  <select v-model="form.residence_sub_district" :disabled="!form.residence_district" class="w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:opacity-50">
+                    <option :value="null">اختر...</option>
+                    <option v-for="sub in resSubDistricts" :key="sub.id" :value="sub.id">{{ sub.name_ar }}</option>
+                  </select>
+                </div>
+              </div>
+              <!-- Village -->
+              <div>
+                <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">القرية</label>
+                <div class="relative bg-transparent">
+                  <select v-model="form.residence_village" :disabled="!form.residence_sub_district" class="w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:opacity-50">
+                    <option :value="null">اختر...</option>
+                    <option v-for="vil in resVillages" :key="vil.id" :value="vil.id">{{ vil.name_ar }}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Section 2: Service Info -->
       <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm relative overflow-visible">
         <div class="absolute top-0 right-0 w-2 h-full bg-blue-500 rounded-r-2xl"></div>
@@ -412,7 +533,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed, watch, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, computed, watch, onUnmounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useCoreStore } from '@/stores/core'
 import { usePersonnelStore } from '@/stores/personnel'
@@ -431,6 +552,7 @@ const emit = defineEmits(['submit', 'cancel', 'request-nid-correction'])
 const { t } = useI18n()
 const coreStore = useCoreStore()
 const personnelStore = usePersonnelStore()
+import api from '@/lib/api'
 
 const internalError = ref('')
 const isNationalIdDuplicate = ref(false)
@@ -488,6 +610,20 @@ const form = reactive({
   
   expense_status: null as string | null,
   notes: null as string | null,
+  
+  // Geographic and ID Data
+  birth_governorate: null as number | null,
+  birth_district: null as number | null,
+  birth_sub_district: null as number | null,
+  birth_village: null as number | null,
+  
+  residence_governorate: null as number | null,
+  residence_district: null as number | null,
+  residence_sub_district: null as number | null,
+  residence_village: null as number | null,
+  
+  id_issue_date: null as string | null,
+  id_issue_place: null as string | null,
 })
 
 // Watch will be defined lower down
@@ -529,6 +665,147 @@ const deptSearchQuery = ref('')
 const jobSearchQuery = ref('')
 const showJobDropdown = ref(false)
 const jobDropdownRef = ref<HTMLElement | null>(null)
+
+// Geographic Dynamic State
+const birthDistricts = ref<any[]>([])
+const birthSubDistricts = ref<any[]>([])
+const birthVillages = ref<any[]>([])
+
+const resDistricts = ref<any[]>([])
+const resSubDistricts = ref<any[]>([])
+const resVillages = ref<any[]>([])
+
+// Geographic Fetch Logic
+async function fetchGeo(endpoint: string, params: any, targetRef: any) {
+  try {
+    const res = await api.get(endpoint, { params: { ...params, page_size: 1000 } })
+    targetRef.value = res.data.results || res.data
+  } catch (err) {
+    console.error('Error fetching geo data:', err)
+  }
+}
+
+// Watchers for Birth Geography Cascading
+watch(() => form.birth_governorate, (newVal, oldVal) => {
+  if (isInitializingGeo.value) return; // Ignore programatic updates
+  if (newVal) {
+    fetchGeo('/dictionaries/geo/districts/', { governorate: newVal }, birthDistricts)
+  } else {
+    birthDistricts.value = []
+  }
+  form.birth_district = null
+  form.birth_sub_district = null
+  form.birth_village = null
+})
+watch(() => form.birth_district, (newVal, oldVal) => {
+  if (isInitializingGeo.value) return; // Ignore programatic updates
+  if (newVal) {
+    fetchGeo('/dictionaries/geo/sub-districts/', { district: newVal }, birthSubDistricts)
+  } else {
+    birthSubDistricts.value = []
+  }
+  form.birth_sub_district = null
+  form.birth_village = null
+})
+watch(() => form.birth_sub_district, (newVal, oldVal) => {
+  if (isInitializingGeo.value) return; // Ignore programatic updates
+  if (newVal) {
+    fetchGeo('/dictionaries/geo/villages/', { sub_district: newVal }, birthVillages)
+  } else {
+    birthVillages.value = []
+  }
+  form.birth_village = null
+})
+
+// Watchers for Residence Geography Cascading
+watch(() => form.residence_governorate, (newVal, oldVal) => {
+  if (newVal && !isInitializingGeo.value) {
+    fetchGeo('/dictionaries/geo/districts/', { governorate: newVal }, resDistricts)
+  } else if (!newVal) {
+    resDistricts.value = []
+  }
+  if (!isInitializingGeo.value) {
+    form.residence_district = null
+    form.residence_sub_district = null
+    form.residence_village = null
+  }
+})
+watch(() => form.residence_district, (newVal, oldVal) => {
+  if (isInitializingGeo.value) return; // Ignore programatic updates
+  if (newVal) {
+    fetchGeo('/dictionaries/geo/sub-districts/', { district: newVal }, resSubDistricts)
+  } else {
+    resSubDistricts.value = []
+  }
+  form.residence_sub_district = null
+  form.residence_village = null
+})
+watch(() => form.residence_sub_district, (newVal, oldVal) => {
+  if (isInitializingGeo.value) return; // Ignore programatic updates
+  if (newVal) {
+    fetchGeo('/dictionaries/geo/villages/', { sub_district: newVal }, resVillages)
+  } else {
+    resVillages.value = []
+  }
+  form.residence_village = null
+})
+
+// Load initial data (placed here so variables are already initialized)
+const isInitializingGeo = ref(false)
+
+// Initial load check for edit mode (fetch dropdowns if IDs are pre-filled)
+watch(() => props.initialData, async (newVal) => {
+  if (!newVal) return;
+  
+  // Set flag to true to prevent watchers from clearing dependent fields or double fetching
+  isInitializingGeo.value = true;
+  
+  if (coreStore.governorates.length === 0) {
+    await coreStore.fetchAllReferences();
+  }
+
+  try {
+    const promises = [];
+    if (newVal.birth_gov_id) promises.push(fetchGeo('/dictionaries/geo/districts/', { governorate: newVal.birth_gov_id }, birthDistricts));
+    if (newVal.birth_district_id) promises.push(fetchGeo('/dictionaries/geo/sub-districts/', { district: newVal.birth_district_id }, birthSubDistricts));
+    if (newVal.birth_sub_district_id) promises.push(fetchGeo('/dictionaries/geo/villages/', { sub_district: newVal.birth_sub_district_id }, birthVillages));
+    
+    if (newVal.residence_gov_id) promises.push(fetchGeo('/dictionaries/geo/districts/', { governorate: newVal.residence_gov_id }, resDistricts));
+    if (newVal.residence_district_id) promises.push(fetchGeo('/dictionaries/geo/sub-districts/', { district: newVal.residence_district_id }, resSubDistricts));
+    if (newVal.residence_sub_district_id) promises.push(fetchGeo('/dictionaries/geo/villages/', { sub_district: newVal.residence_sub_district_id }, resVillages));
+
+    // Wait for all dependent geographic dropdowns to finish loading
+    await Promise.all(promises);
+
+    // Explicit mapping for geographic fields (backend returns them with _id suffix in DetailSerializer)
+    if (newVal.birth_gov_id !== undefined) form.birth_governorate = newVal.birth_gov_id;
+    if (newVal.birth_district_id !== undefined) form.birth_district = newVal.birth_district_id;
+    if (newVal.birth_sub_district_id !== undefined) form.birth_sub_district = newVal.birth_sub_district_id;
+    if (newVal.birth_village_id !== undefined) form.birth_village = newVal.birth_village_id;
+    
+    if (newVal.residence_gov_id !== undefined) form.residence_governorate = newVal.residence_gov_id;
+    if (newVal.residence_district_id !== undefined) form.residence_district = newVal.residence_district_id;
+    if (newVal.residence_sub_district_id !== undefined) form.residence_sub_district = newVal.residence_sub_district_id;
+    if (newVal.residence_village_id !== undefined) form.residence_village = newVal.residence_village_id;
+    
+    // Map hierarchy fields
+    if (newVal.security_admin_id !== undefined) form.security_admin = newVal.security_admin_id;
+    if (newVal.central_department_id !== undefined) form.central_department = newVal.central_department_id;
+    if (newVal.branch_id !== undefined) form.branch = newVal.branch_id;
+    if (newVal.district_police_id !== undefined) form.district_police = newVal.district_police_id;
+    if (newVal.division_id !== undefined) form.division = newVal.division_id;
+    if (newVal.unit_id !== undefined) form.unit = newVal.unit_id;
+    if (newVal.position_id !== undefined) form.position = newVal.position_id;
+    
+  } finally {
+    // We use nextTick plus a small timeout to guarantee that all Vue reactive watchers 
+    // triggered by the assignments above execute BEFORE the flag is unset.
+    await nextTick();
+    setTimeout(() => {
+      isInitializingGeo.value = false;
+    }, 150);
+  }
+}, { immediate: true })
 
 // National ID Integration Logic
 async function checkDuplicateNationalId(val: string): Promise<string | null> {
@@ -685,6 +962,30 @@ watch(() => props.initialData, (newVal) => {
     }
   }
 }, { immediate: true })
+
+// Real-time Date Validation
+watch([() => form.id_issue_date, () => form.birth_date], ([idDate, birthDate]) => {
+  if (idDate) {
+    const issueDateObj = new Date(idDate)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    if (issueDateObj > today) {
+      validationErrors.id_issue_date = 'لا يمكن أن يكون تاريخ إصدار البطاقة في المستقبل'
+    } else if (birthDate) {
+      const birthDateObj = new Date(birthDate)
+      if (issueDateObj <= birthDateObj) {
+        validationErrors.id_issue_date = 'تاريخ إصدار البطاقة يجب أن يكون بعد تاريخ الميلاد'
+      } else {
+        validationErrors.id_issue_date = ''
+      }
+    } else {
+      validationErrors.id_issue_date = ''
+    }
+  } else {
+    validationErrors.id_issue_date = ''
+  }
+})
 
 function selectDepartment(opt: {value: string, label: string}) {
   selectedDepartment.value = opt.value
@@ -995,6 +1296,10 @@ function checkValidity() {
   
   validateRankLogic()
   if (validationErrors.current_rank || validationErrors.force_classification) {
+    isValid = false
+  }
+  
+  if (validationErrors.id_issue_date) {
     isValid = false
   }
   

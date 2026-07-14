@@ -370,14 +370,24 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def mark_printed(self, request, pk=None):
+        """تسجيل الطباعة — يُسمح من أي حالة نشطة (مسودة، قيد الإجراء، مُرجع)"""
         try:
             form = self.get_object()
-            if form.status != 'in_progress':
-                return Response({'success': False, 'error': 'الطلب ليس قيد الإجراء'}, status=400)
-            
+            if form.status in ['approved', 'rejected']:
+                return Response({'success': False, 'error': 'لا يمكن طباعة معاملة معتمدة أو مرفوضة بهذه الطريقة'}, status=400)
+
             form.is_printed = True
             form.save(update_fields=['is_printed'])
-            return Response({'success': True, 'message': 'تم تسجيل الطباعة بنجاح'})
+
+            # ── تسجيل حدث الطباعة في Timeline ──
+            from systems.services.models import FormEventLog
+            FormEventLog.objects.create(
+                form=form,
+                action='printed',
+                performed_by=request.user,
+                notes=f'تمت طباعة الاستمارة بواسطة {request.user.get_full_name() or request.user.username}'
+            )
+            return Response({'success': True, 'message': 'تم تسجيل الطباعة بنجاح', 'is_printed': True})
         except Exception as e:
             return Response({'success': False, 'error': str(e)}, status=400)
 

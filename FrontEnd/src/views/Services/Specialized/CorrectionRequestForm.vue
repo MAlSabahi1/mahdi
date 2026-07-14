@@ -1259,6 +1259,7 @@ async function submitBulk() {
   submittedCount.value = 0
   let successCount = 0
   let errorCount = 0
+  const errorMessages: string[] = []
 
   let lastCorrectionId = null
   let lastFormId = null
@@ -1343,8 +1344,28 @@ async function submitBulk() {
         }
       }
       successCount++
-    } catch (err) {
+    } catch (err: any) {
       console.error('Submission error for', person.military_number, err)
+      
+      // Extract specific backend error message
+      let msg = 'حدث خطأ غير معروف'
+      if (err.response?.data) {
+        if (typeof err.response.data.error === 'string') {
+          msg = err.response.data.error
+        } else if (typeof err.response.data === 'object') {
+          // Flatten DRF validation errors
+          const errors = []
+          for (const [key, value] of Object.entries(err.response.data)) {
+            if (Array.isArray(value)) {
+              errors.push(value[0])
+            } else if (typeof value === 'string') {
+              errors.push(value)
+            }
+          }
+          if (errors.length > 0) msg = errors.join('<br>')
+        }
+      }
+      errorMessages.push(`الفرد ${person.full_name}: ${msg}`)
       errorCount++
     }
     submittedCount.value++
@@ -1357,10 +1378,16 @@ async function submitBulk() {
     const isExternalForm = schema.value?.approval_type === 'external' && successCount === 1;
     const showPrintButton = isModel23 || isExternalForm;
     
+    let htmlContent = `تم رفع <b>${successCount}</b> طلب للمراجعة.`
+    if (errorCount > 0) {
+      htmlContent += `<br/><br/><span class="text-red-500">تعذر معالجة <b>${errorCount}</b> طلب:</span><br/>`
+      htmlContent += `<div class="text-xs text-right mt-2 text-red-600 bg-red-50 p-2 rounded max-h-32 overflow-y-auto">${errorMessages.join('<br>')}</div>`
+    }
+
     Swal.fire({
       icon: errorCount > 0 ? 'warning' : 'success',
       title: errorCount > 0 ? 'تم الإنجاز جزئياً' : 'تم تقديم الطلبات بنجاح',
-      html: `تم رفع <b>${successCount}</b> طلب للمراجعة.<br/>${errorCount > 0 ? `تعذر معالجة <b>${errorCount}</b> طلب.` : ''}`,
+      html: htmlContent,
       confirmButtonText: 'انتقال لقائمة الطلبات',
       showDenyButton: showPrintButton,
       denyButtonText: '<i class="fas fa-print ml-2"></i> طباعة النموذج',
@@ -1395,7 +1422,7 @@ async function submitBulk() {
     Swal.fire({
       icon: 'error',
       title: 'فشل العملية',
-      text: 'حدث خطأ أثناء محاولة تقديم الطلبات. يرجى مراجعة البيانات.'
+      html: `حدث خطأ أثناء محاولة تقديم الطلبات:<br><div class="text-xs text-right mt-2 text-red-600 bg-red-50 p-2 rounded">${errorMessages.join('<br>')}</div>`
     })
   }
 }

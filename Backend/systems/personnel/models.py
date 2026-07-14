@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from core.models import (
     SoftDeletableModel, TimeStampedModel, Rank, ServiceStatus,
     JobCategory, JobTitle, Qualification,
-    GeoGovernorate, GeoDistrict,
+    GeoGovernorate, GeoDistrict, GeoSubDistrict, GeoVillage,
     SecurityAdministration, CentralDepartment, Branch, DistrictPolice,
     Division, Unit, Position, ForceType
 )
@@ -151,6 +151,19 @@ class PersonnelMaster(SoftDeletableModel):
     )
     # البيانات الشخصية
     birth_date = models.DateField(null=True, blank=True, verbose_name=_('تاريخ الميلاد'))
+    birth_governorate = models.ForeignKey(GeoGovernorate, on_delete=models.SET_NULL, null=True, blank=True, related_name='personnel_birth_gov', verbose_name=_('محافظة الميلاد'))
+    birth_district = models.ForeignKey(GeoDistrict, on_delete=models.SET_NULL, null=True, blank=True, related_name='personnel_birth_dist', verbose_name=_('مديرية الميلاد'))
+    birth_sub_district = models.ForeignKey(GeoSubDistrict, on_delete=models.SET_NULL, null=True, blank=True, related_name='personnel_birth_subdist', verbose_name=_('عزلة الميلاد'))
+    birth_village = models.ForeignKey(GeoVillage, on_delete=models.SET_NULL, null=True, blank=True, related_name='personnel_birth_vill', verbose_name=_('قرية الميلاد'))
+    
+    residence_governorate = models.ForeignKey(GeoGovernorate, on_delete=models.SET_NULL, null=True, blank=True, related_name='personnel_res_gov', verbose_name=_('محافظة الإقامة'))
+    residence_district = models.ForeignKey(GeoDistrict, on_delete=models.SET_NULL, null=True, blank=True, related_name='personnel_res_dist', verbose_name=_('مديرية الإقامة'))
+    residence_sub_district = models.ForeignKey(GeoSubDistrict, on_delete=models.SET_NULL, null=True, blank=True, related_name='personnel_res_subdist', verbose_name=_('عزلة الإقامة'))
+    residence_village = models.ForeignKey(GeoVillage, on_delete=models.SET_NULL, null=True, blank=True, related_name='personnel_res_vill', verbose_name=_('قرية الإقامة'))
+
+    id_issue_date = models.DateField(null=True, blank=True, verbose_name=_('تاريخ إصدار الرقم الوطني'))
+    id_issue_place = models.CharField(max_length=150, null=True, blank=True, verbose_name=_('جهة إصدار الرقم الوطني'))
+
     join_date = models.DateField(null=True, blank=True, verbose_name=_('تاريخ الالتحاق'))
     phone_number = models.CharField(
         max_length=9,

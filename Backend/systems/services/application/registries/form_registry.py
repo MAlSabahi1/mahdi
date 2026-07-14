@@ -243,10 +243,14 @@ _FORMS = {
         fields=(
             FormField('category', 'الفئة', 'text', required=True, disabled=True, default='سجناء'),
             FormField('case_type', 'نوع القضية', 'text'),
-            FormField('ruling_date', 'تاريخ الحكم', 'date'),
-            FormField('sentence_duration', 'مدة الحكم', 'text'),
+            FormField('ruling_type', 'نوع الحكم', 'text', required=False),
+            FormField('ruling_date', 'تاريخ الحكم', 'date', required=False),
+            FormField('ruling_duration', 'مدة الحكم', 'text', required=False),
+            FormField('sentence_start_date', 'مدة الحكم (من)', 'date', required=False),
+            FormField('sentence_end_date', 'مدة الحكم (إلى)', 'date', required=False),
             FormField('arrest_date', 'تاريخ التوقيف', 'date'),
-            FormField('detention_location', 'جهة التوقيف', 'text'),
+            FormField('arrest_authority', 'جهة التوقيف', 'text'),
+            FormField('notes', 'ملاحظات', 'textarea', required=False),
         ),
         attachments=(
             AttachmentSpec('court_ruling', 'نسخة من الحكم القضائي'),

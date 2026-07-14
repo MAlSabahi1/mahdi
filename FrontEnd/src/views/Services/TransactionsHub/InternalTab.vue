@@ -63,7 +63,7 @@
         <span :class="stageColor(row.status)"
           class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold border">
           <span :class="stageDot(row.status)" class="h-1.5 w-1.5 rounded-full"></span>
-          {{ stageLabels[row.status] || row.status }}
+          {{ getDisplayStatus(row) }}
         </span>
       </template>
 
@@ -72,6 +72,12 @@
       </template>
 
       <template #actions="{ row }">
+        <!-- زر تقديم المسودة -->
+        <button v-if="row.status === 'draft' && !row.isCorrection" @click="$emit('submit-draft', row)"
+          class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-colors shadow-sm flex items-center gap-1">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          تقديم
+        </button>
         <button v-if="canApprove(row)" @click="$emit('approve', row)"
           class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-colors shadow-sm">
           اعتماد
@@ -98,17 +104,35 @@ import { useAuthStore } from '@/stores/auth'
 import DataTable from '@/components/tables/DataTable.vue'
 
 const props = defineProps<{ rows: any[]; loading: boolean }>()
-defineEmits<{ (e: 'approve', req: any): void; (e: 'reject', req: any): void; (e: 'refresh'): void }>()
+defineEmits<{
+  (e: 'approve', req: any): void
+  (e: 'reject', req: any): void
+  (e: 'submit-draft', req: any): void
+  (e: 'refresh'): void
+}>()
 
 const authStore = useAuthStore()
 const activeStage = ref('all')
 const searchText = ref('')
 
 const stageLabels: Record<string, string> = {
-  all: 'الكل', draft: 'مسودة', in_progress: 'قيد المراجعة',
-  pending_services: 'عند رئيس الخدمات', pending_hr: 'عند مدير الموارد',
-  pending_director: 'عند المدير العام', approved: 'معتمد نهائياً',
-  rejected: 'مرفوض', returned: 'مُرجع للتعديل',
+  all: 'الكل',
+  draft: 'مسودة',
+  in_progress: 'قيد المراجعة',
+  pending_services: 'عند رئيس الخدمات',
+  pending_hr: 'عند مدير الموارد',
+  pending_director: 'عند المدير العام',
+  approved: 'معتمد نهائياً',
+  rejected: 'مرفوض',
+  returned: 'مُرجع للتعديل',
+}
+
+// عرض ذكي: إذا كانت in_progress فأظهر اسم الخطوة الحالية من الابي
+function getDisplayStatus(row: any): string {
+  if (row.status === 'in_progress' && row.current_step_name) {
+    return `عند: ${row.current_step_name}`
+  }
+  return stageLabels[row.status] || row.status
 }
 
 const columns = [
@@ -116,17 +140,17 @@ const columns = [
   { key: 'form_type_display', label: 'نوع الخدمة', minWidth: '140px' },
   { key: 'personnel_name', label: 'الفرد', minWidth: '160px' },
   { key: 'personnel_military_number', label: 'الرقم العسكري', minWidth: '120px' },
-  { key: 'status', label: 'المرحلة الحالية', minWidth: '160px' },
+  { key: 'status', label: 'المرحلة الحالية', minWidth: '170px' },
   { key: 'submitted_at', label: 'تاريخ التقديم', minWidth: '110px' },
 ]
 
 const stageOptions = [
   { value: 'all', label: 'الكل', dot: 'bg-gray-400' },
-  { value: 'pending_services', label: 'عند رئيس الخدمات', dot: 'bg-amber-500' },
-  { value: 'pending_hr', label: 'عند مدير الموارد', dot: 'bg-blue-500' },
-  { value: 'pending_director', label: 'عند المدير العام', dot: 'bg-purple-500' },
+  { value: 'in_progress', label: 'قيد المراجعة', dot: 'bg-blue-500' },
+  { value: 'draft', label: 'مسودة', dot: 'bg-gray-400' },
   { value: 'approved', label: 'معتمدة', dot: 'bg-emerald-500' },
   { value: 'rejected', label: 'مرفوضة', dot: 'bg-red-500' },
+  { value: 'returned', label: 'مُرجعة', dot: 'bg-orange-500' },
 ]
 
 const stageCounts = computed(() => {
@@ -149,11 +173,16 @@ const filteredRows = computed(() => {
 
 function canApprove(req: any): boolean {
   if (req.status === 'approved' || req.status === 'rejected') return false
+  if (authStore.isAdmin) return true  // المدير يعتمد في أي مرحلة
+  if (req.status === 'draft') return false  // لم يُقدّم بعد
   const role = authStore.user?.authz_profile?.role_name || ''
-  if (req.status === 'pending_services' && (role.includes('رئيس الخدمات') || authStore.isAdmin)) return true
-  if (req.status === 'pending_hr' && (role.includes('مدير الموارد') || authStore.isAdmin)) return true
-  if (req.status === 'pending_director' && (role.includes('المدير العام') || authStore.isAdmin)) return true
-  if ((req.status === 'in_progress' || req.status === 'draft') && authStore.isAdmin) return true
+  // مطابقة اسم المرحلة مع دور المستخدم
+  const stepName = req.current_step_name || ''
+  if (stepName.includes('رئيس الخدمات') && (role.includes('رئيس الخدمات') || authStore.isAdmin)) return true
+  if (stepName.includes('مدير الموارد') && (role.includes('مدير الموارد') || authStore.isAdmin)) return true
+  if (stepName.includes('المدير العام') && (role.includes('المدير العام') || authStore.isAdmin)) return true
+  // إذا لا يوجد اسم خطوة محدد: اسمح للجميع
+  if (req.status === 'in_progress') return true
   return false
 }
 

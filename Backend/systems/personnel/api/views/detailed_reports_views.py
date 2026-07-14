@@ -133,6 +133,9 @@ class TempInactiveReportsView(BaseDetailedReportView):
                 if last_form and last_form.form_data:
                     temp_details = last_form.form_data
             
+            if temp_details and temp_details.get("notes"):
+                row["notes"] = temp_details.get("notes")
+            
             if report_id == 'report_5':
                 row["hospital"] = temp_details.get("hospital", "غير مدخل")
                 row["entry_date"] = temp_details.get("entry_date", "غير مدخل")
@@ -170,9 +173,9 @@ class TempInactiveReportsView(BaseDetailedReportView):
             elif report_id == 'report_9':
                 row["case_type"] = temp_details.get("case_type", "غير مدخل")
                 row["arrest_date"] = temp_details.get("arrest_date", "غير مدخل")
-                row["verdict_type"] = temp_details.get("verdict_type", temp_details.get("sentence_duration", "غير مدخل"))
-                row["duration_from"] = temp_details.get("duration_from", temp_details.get("start_date", "غير مدخل"))
-                row["duration_to"] = temp_details.get("duration_to", temp_details.get("end_date", "غير مدخل"))
+                row["verdict_type"] = temp_details.get("ruling_type", temp_details.get("verdict_type", temp_details.get("sentence_duration", "غير مدخل")))
+                row["duration_from"] = temp_details.get("sentence_start_date", temp_details.get("duration_from", temp_details.get("start_date", "غير مدخل")))
+                row["duration_to"] = temp_details.get("sentence_end_date", temp_details.get("duration_to", temp_details.get("end_date", "غير مدخل")))
             elif report_id == 'report_10':
                 row["vacation_type"] = temp_details.get("vacation_type", "غير مدخل")
                 row["order_source"] = temp_details.get("order_source", "غير مدخل")
@@ -255,14 +258,14 @@ class PermInactiveReportsView(BaseDetailedReportView):
                 row["procedures"] = perm_details.get("procedures", "غير مدخل")
             elif report_id == 'report_15':
                 row["disease_type"] = perm_details.get("disease_type", "غير مدخل")
-                row["disability_ratio"] = perm_details.get("disability_ratio", "غير مدخل")
-                row["incident_date"] = perm_details.get("incident_date", "غير مدخل")
+                row["disability_ratio"] = perm_details.get("disability_ratio", perm_details.get("disability_percentage", "غير مدخل"))
+                row["incident_date"] = perm_details.get("incident_date", perm_details.get("injury_date", "غير مدخل"))
                 row["medical_source"] = perm_details.get("medical_source", "غير مدخل")
-                row["incident_type"] = perm_details.get("incident_type", "غير مدخل")
+                row["incident_type"] = perm_details.get("incident_type", perm_details.get("injury_context", "غير مدخل"))
             elif report_id == 'report_16':
                 row["case_type"] = p.current_status.name if p.current_status else "غير مدخل"
-                row["death_date"] = perm_details.get("death_date", "غير مدخل")
-                row["incident_type"] = perm_details.get("incident_type", "غير مدخل")
+                row["death_date"] = perm_details.get("death_date", perm_details.get("martyrdom_date", "غير مدخل"))
+                row["incident_type"] = perm_details.get("incident_type", perm_details.get("occurrence_context", "غير مدخل"))
             elif report_id == 'report_17':
                 row["decision_number"] = perm_details.get("decision_number", "غير مدخل")
                 row["decision_date"] = perm_details.get("decision_date", "غير مدخل")

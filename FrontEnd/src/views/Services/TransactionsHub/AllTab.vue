@@ -48,8 +48,15 @@
       </template>
 
       <template #cell-status="{ row }">
-        <!-- Progress Stepper -->
-        <div v-if="row.status === 'in_progress' && row.all_steps && row.all_steps.length > 0" class="w-full min-w-[160px]">
+        <!-- مسودة: مؤشر بياني خاص -->
+        <div v-if="row.status === 'draft'" class="flex items-center gap-2">
+          <span class="inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[10px] font-bold px-2 py-0.5 rounded border border-gray-200 dark:border-gray-700">
+            <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+            مسودة — بانتظار التقديم
+          </span>
+        </div>
+        <!-- in_progress: شريط المراحل -->
+        <div v-else-if="row.status === 'in_progress' && row.all_steps && row.all_steps.length > 0" class="w-full min-w-[160px]">
           <div class="flex items-center gap-1 mb-1.5 justify-between">
             <span class="text-[10px] font-bold text-gray-700 dark:text-gray-300">
               مرحلة {{ row.current_step_index + 1 }} / {{ row.all_steps.length }}
@@ -67,6 +74,7 @@
               ]"></div>
           </div>
         </div>
+        <!-- غير ذلك -->
         <span v-else :class="getStatusColor(row.status)" class="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold">
           <span :class="getStatusDot(row.status)" class="h-1.5 w-1.5 rounded-full"></span>
           {{ getStatusLabel(row.status) }}
@@ -82,6 +90,13 @@
       </template>
 
       <template #actions="{ row }">
+        <!-- زر تقديم المسودة -->
+        <button v-if="row.status === 'draft'" @click="$emit('submit-draft', row)"
+          class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-colors shadow-sm flex items-center gap-1">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          تقديم
+        </button>
+        <!-- اعتماد/رفض في_progress -->
         <button v-if="row.status === 'in_progress'" @click="$emit('approve', row)"
           class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-colors shadow-sm">
           اعتماد
@@ -113,6 +128,7 @@ defineEmits<{
   (e: 'filter-status', v: string): void
   (e: 'approve', req: any): void
   (e: 'reject', req: any): void
+  (e: 'submit-draft', req: any): void
   (e: 'refresh'): void
 }>()
 

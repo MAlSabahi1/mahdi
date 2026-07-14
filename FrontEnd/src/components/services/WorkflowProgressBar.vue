@@ -1,8 +1,21 @@
 <template>
   <div class="workflow-tracker" dir="rtl">
 
+    <!-- ══ بانر المسودة (لم يُقدَّم بعد) ══ -->
+    <div v-if="status === 'draft'" class="mb-4 flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
+      <svg class="mt-0.5 h-5 w-5 flex-shrink-0 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+      </svg>
+      <div>
+        <p class="text-sm font-black text-gray-700 dark:text-gray-300">مسودة — في انتظار التقديم</p>
+        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+          الطلب لم يُقدَّم بعد لدورة الاعتماد. اضغط <strong>تقديم الطلب</strong> لبدء سير العمل.
+        </p>
+      </div>
+    </div>
+
     <!-- ══ بانر الخدمة الخارجية ══ -->
-    <div v-if="isExternal" class="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800/50 dark:bg-amber-900/20">
+    <div v-if="isExternal && status !== 'draft'" class="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800/50 dark:bg-amber-900/20">
       <svg class="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
       </svg>

@@ -475,14 +475,9 @@ async function fetchFormDetails() {
 
 async function printForm() {
   if (!form.value) return
-  try {
-    // سجل الطباعة في النظام
-    await api.post(`/service-cycle/forms/${form.value.id}/mark_printed/`)
-    await fetchFormDetails() // تحديث is_printed
-  } catch (_) {
-    // تجاهل الخطأ لكن أكمل الطباعة
-  }
-  setTimeout(() => window.print(), 300)
+  // فتح صفحة الطباعة المستقلة في تبويب جديد
+  const printUrl = router.resolve({ name: 'FormPrintView', params: { id: form.value.id } }).href
+  window.open(printUrl, '_blank')
 }
 
 async function submitNote() {
