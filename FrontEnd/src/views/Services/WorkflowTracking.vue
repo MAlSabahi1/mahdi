@@ -165,9 +165,9 @@ onMounted(async () => {
       timestamp: form.services_approved_at ? new Date(form.services_approved_at).toLocaleString('en-GB') : undefined
     }
 
-    // Step 3: HR Approval
+    // Step 3: HR Director Approval
     const s3: WorkflowStep = {
-      title: 'اعتماد الموارد البشرية',
+      title: 'اعتماد مدير إدارة القوى البشرية',
       desc: 'تدقيق الأثر الوظيفي والمالي للمنتسب.',
       status: form.hr_approved_at ? 'completed' : (form.status === 'pending_hr' ? 'current' : 'pending'),
       timestamp: form.hr_approved_at ? new Date(form.hr_approved_at).toLocaleString('en-GB') : undefined
@@ -175,7 +175,7 @@ onMounted(async () => {
 
     // Step 4: Director Approval
     const s4: WorkflowStep = {
-      title: 'الاعتماد النهائي',
+      title: 'اعتماد المدير العام للمحافظة',
       desc: 'مصادقة المدير العام وتطبيق الأثر على السجل.',
       status: form.status === 'approved' ? 'completed' : (form.status === 'pending_director' ? 'current' : 'pending'),
       timestamp: form.director_approved_at ? new Date(form.director_approved_at).toLocaleString('en-GB') : undefined
@@ -183,11 +183,13 @@ onMounted(async () => {
     
     // Last action mapping
     const actionMap: any = {
-      'pending_services': 'انتظار مراجعة الخدمات',
-      'pending_hr': 'انتظار الموارد البشرية',
-      'pending_director': 'انتظار الاعتماد النهائي',
-      'approved': 'تم الاعتماد النهائي',
-      'rejected': 'مرفوض'
+      'pending_services': 'عند رئيس قسم الخدمات',
+      'pending_hr': 'عند مدير إدارة القوى البشرية',
+      'pending_director': 'عند المدير العام للمحافظة',
+      'approved': 'معتمد نهائياً',
+      'rejected': 'مرفوض',
+      'returned': 'مُرجع للتعديل',
+      'in_progress': 'قيد الإجراء',
     }
 
     return {

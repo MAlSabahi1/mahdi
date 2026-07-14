@@ -76,12 +76,47 @@ const selected = ref<Workflow | null>(null)
 
 const workflows = computed<Workflow[]>(() => {
   return props.rows.filter((f: any) => f.status !== 'draft').map((form: any) => {
-    const s1: WorkflowStep = { title: 'إنشاء الطلب', desc: 'تم إنشاء المعاملة ورفع المرفقات.', status: form.submitted_at ? 'completed' : 'pending', timestamp: form.submitted_at ? new Date(form.submitted_at).toLocaleString('en-GB') : undefined }
-    const s2: WorkflowStep = { title: 'تدقيق قسم الخدمات', desc: 'مراجعة أولية ومطابقة المرفقات.', status: form.services_approved_at ? 'completed' : (form.status === 'pending_services' ? 'current' : 'pending'), timestamp: form.services_approved_at ? new Date(form.services_approved_at).toLocaleString('en-GB') : undefined }
-    const s3: WorkflowStep = { title: 'اعتماد الموارد البشرية', desc: 'تدقيق الأثر الوظيفي والمالي.', status: form.hr_approved_at ? 'completed' : (form.status === 'pending_hr' ? 'current' : 'pending'), timestamp: form.hr_approved_at ? new Date(form.hr_approved_at).toLocaleString('en-GB') : undefined }
-    const s4: WorkflowStep = { title: 'الاعتماد النهائي', desc: 'مصادقة المدير العام وتطبيق الأثر.', status: form.status === 'approved' ? 'completed' : (form.status === 'pending_director' ? 'current' : 'pending'), timestamp: form.director_approved_at ? new Date(form.director_approved_at).toLocaleString('en-GB') : undefined }
-    const actionMap: any = { pending_services: 'انتظار مراجعة الخدمات', pending_hr: 'انتظار الموارد البشرية', pending_director: 'انتظار الاعتماد النهائي', approved: 'تم الاعتماد', rejected: 'مرفوض', in_progress: 'قيد المراجعة' }
-    return { id: form.id, txNumber: `TX-${form.id.toString().padStart(6, '0')}`, title: form.form_type_display || form.form_type, governorate: form.personnel?.full_name || form.personnel_name || form.personnel, lastAction: actionMap[form.status] || form.status, steps: [s1, s2, s3, s4] }
+    // ── إذا كانت المراحل متوفرة ديناميكياً من API ──
+    let steps: WorkflowStep[] = []
+
+    if (form.all_steps && form.all_steps.length > 0) {
+      // خطوة التقديم
+      steps.push({
+        title: 'إنشاء الطلب',
+        desc: 'تم إنشاء المعاملة ورفع المرفقات.',
+        status: form.submitted_at ? 'completed' : 'pending',
+        timestamp: form.submitted_at ? new Date(form.submitted_at).toLocaleString('en-GB') : undefined
+      })
+      // مراحل سير العمل من الـ API
+      const currentIdx = form.current_step_index ?? -1
+      form.all_steps.forEach((step: any, idx: number) => {
+        const stepName = step.name || step.stage_name || `مرحلة ${idx + 1}`
+        steps.push({
+          title: stepName,
+          desc: step.description || '',
+          status: idx < currentIdx ? 'completed' : idx === currentIdx && form.status === 'in_progress' ? 'current' : form.status === 'approved' ? 'completed' : 'pending',
+          timestamp: step.completed_at ? new Date(step.completed_at).toLocaleString('en-GB') : undefined
+        })
+      })
+    } else {
+      // ── Fallback: المراحل الافتراضية بالأسماء الصحيحة ──
+      const s1: WorkflowStep = { title: 'إنشاء الطلب', desc: 'تم إنشاء المعاملة ورفع المرفقات.', status: form.submitted_at ? 'completed' : 'pending', timestamp: form.submitted_at ? new Date(form.submitted_at).toLocaleString('en-GB') : undefined }
+      const s2: WorkflowStep = { title: 'تدقيق رئيس قسم الخدمات', desc: 'مراجعة أولية ومطابقة المرفقات.', status: form.services_approved_at ? 'completed' : (form.status === 'pending_services' ? 'current' : 'pending'), timestamp: form.services_approved_at ? new Date(form.services_approved_at).toLocaleString('en-GB') : undefined }
+      const s3: WorkflowStep = { title: 'اعتماد مدير إدارة القوى البشرية', desc: 'تدقيق الأثر الوظيفي والمالي.', status: form.hr_approved_at ? 'completed' : (form.status === 'pending_hr' ? 'current' : 'pending'), timestamp: form.hr_approved_at ? new Date(form.hr_approved_at).toLocaleString('en-GB') : undefined }
+      const s4: WorkflowStep = { title: 'اعتماد المدير العام للمحافظة', desc: 'مصادقة المدير العام وتطبيق الأثر.', status: form.status === 'approved' ? 'completed' : (form.status === 'pending_director' ? 'current' : 'pending'), timestamp: form.director_approved_at ? new Date(form.director_approved_at).toLocaleString('en-GB') : undefined }
+      steps = [s1, s2, s3, s4]
+    }
+
+    const actionMap: any = {
+      pending_services: 'عند رئيس قسم الخدمات',
+      pending_hr: 'عند مدير إدارة القوى البشرية',
+      pending_director: 'عند المدير العام للمحافظة',
+      approved: 'معتمد نهائياً',
+      rejected: 'مرفوض',
+      returned: 'مُرجع للتعديل',
+      in_progress: 'قيد الإجراء',
+    }
+    return { id: form.id, txNumber: `TX-${form.id.toString().padStart(6, '0')}`, title: form.form_type_display || form.form_type, governorate: form.personnel?.full_name || form.personnel_name || form.personnel, lastAction: actionMap[form.status] || form.status, steps }
   })
 })
 

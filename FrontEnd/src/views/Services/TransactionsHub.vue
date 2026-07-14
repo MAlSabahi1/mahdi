@@ -294,11 +294,154 @@ async function handleRejectInternal(req: any) {
 async function handlePrint(req: any) {
   try {
     if (req.isCorrection) {
-      await api.post(`/personnel/corrections/${req.rawId}/mark_printed/`)
-      window.open(`/services/print/model-23/${req.rawId}?personnelId=${req.personnel_military_number}&old_value=${req.old_value}&new_value=${req.new_value}&reason=${req.reason}`, '_blank')
+      // طلبات التصحيح → منشئ المذكرات مع بيانات التصحيح
+      try { await api.post(`/personnel/corrections/${req.rawId}/mark_printed/`) } catch (_) { /* لا نوقف الطباعة */ }
+
+      const personnelName = req.personnel_name || ''
+      const militaryNumber = req.personnel_military_number || ''
+      const correctionType = req.form_type_display || req.form_type || 'طلب تصحيح'
+      const txNumber = `CORR-${String(req.rawId).padStart(5, '0')}`
+      const today = new Date()
+      const dateStr = today.toLocaleDateString('ar-YE', { year: 'numeric', month: '2-digit', day: '2-digit' })
+
+      // استخلاص "المطلوب تصحيحه" من بيانات الطلب
+      const corrTarget = req.correction_targets?.join('، ') || correctionType
+      let memoDraft = {
+        documentType: 'PERSONNEL_MEMO',
+        securityLevel: 'NORMAL',
+        referenceNo: txNumber,
+        docDate: dateStr,
+        correspondingDate: '',
+        attachments: 'نموذج رقم (23) — كشف المطابقة',
+        bilingual: false,
+        issuerLine1: '', issuerLine2: '', issuerLine3: '',
+        addressees: [
+          { prefix: 'الأخ /', name: 'المدير العام للمحافظة', suffix: 'المحترم' }
+        ],
+        involvedPersonnel: [
+          {
+            militaryId: militaryNumber,
+            rank: '',
+            name: personnelName,
+            nationalId: '',
+            correctName: req.new_value || '',
+            wrongName: req.old_value || '',
+            correctionTarget: corrTarget,
+            notes: req.reason || req.notes || '',
+          }
+        ],
+        subject: `طلب تصحيح بيانات — ${personnelName}`,
+        body: `<p>نحيط سيادتكم علماً بأنه ورد إلينا طلب تصحيح بيانات للمنتسب/المنتسبين الموضحين أعلاه.</p>
+<p>نرفق لكم كشفاً بأسماء المطلوب تصحيح أسمائهم <strong>(كشف المطابقة — نموذج 23)</strong>، مع مرفقات كل فرد، وذلك لاتخاذ الإجراءات اللازمة.</p>`,
+        conclusion: '<p>والله الموفق ،،،</p>',
+        signatures: [
+          { title: 'رئيس قسم الخدمات', rank: '', name: '', showSeal: false },
+          { title: 'مدير إدارة القوى البشرية', rank: '', name: '', showSeal: true },
+        ],
+        signatureSettings: { showLabels: true, showFrame: true },
+        visibleColumns: {
+          militaryId: true, rank: true, nationalId: false,
+          status: false, workplace: false, serviceLocation: false,
+          jobTitle: false, position: false, qualification: false,
+          joinDate: false, commencementDate: false, phone: false,
+          clarification: false, notes: true,
+          correctName: true, wrongName: true, correctionTarget: true,
+        },
+        typography: {
+          addressee:  { family: 'Cairo', size: 1.1, weight: 'font-bold', underline: true },
+          greeting:   { family: 'Cairo', size: 1.0, weight: 'font-bold', underline: true },
+          subject:    { family: 'Cairo', size: 1.15, weight: 'font-black', underline: true },
+          body:       { family: 'Cairo', size: 1.0, weight: 'font-normal', underline: false },
+          conclusionSeparator: { family: 'Cairo', size: 1.1, weight: 'font-bold', underline: true },
+          conclusionBody: { family: 'Cairo', size: 1.0, weight: 'font-normal', underline: false },
+          signatures: { family: 'Cairo', size: 0.95, weight: 'font-bold', underline: false },
+        },
+      }
+
+                // Try to load any generic template or just fallback to default
+          const tplStr = localStorage.getItem('memo_template_WORK_COMMENCEMENT') || localStorage.getItem('memo_template_ATTENTION_NOTICE');
+          if (tplStr && (req?.form_type === 'work_commencement' || req?.form_type === 'attention_notice')) {
+            try {
+              const tpl = JSON.parse(tplStr);
+              memoDraft = { ...memoDraft, ...tpl, referenceNo: memoDraft.referenceNo, docDate: memoDraft.docDate, involvedPersonnel: [] };
+            } catch(e) {}
+          }
+          localStorage.setItem('official_memo_draft', JSON.stringify(memoDraft))
+      window.open('/admin/documents/memo-preview', '_blank')
     } else {
-      await servicesStore.markFormPrinted(req.id)
-      window.open(`/services/forms/${req.id}?print=true`, '_blank')
+      // الخدمات العادية → منشئ المذكرات الرسمية مع بيانات مُعبأة تلقائياً
+      try { await servicesStore.markFormPrinted(req.id) } catch (_) { /* لا نوقف الطباعة */ }
+
+      // ── بناء draft المذكرة من بيانات المعاملة ──
+      const personnelName = req.personnel_name || req.personnel?.full_name || ''
+      const militaryNumber = req.personnel_military_number || req.personnel?.military_number || ''
+      const formType = req.form_type_display || req.form_type || ''
+      const txNumber = `TX-${String(req.id).padStart(6, '0')}`
+      const today = new Date()
+      const dateStr = today.toLocaleDateString('ar-YE', { year: 'numeric', month: '2-digit', day: '2-digit' })
+
+      let memoDraft = {
+        documentType: 'PERSONNEL_MEMO',
+        securityLevel: 'NORMAL',
+        referenceNo: txNumber,
+        docDate: dateStr,
+        correspondingDate: '',
+        attachments: 'نموذج إثبات حالة',
+        bilingual: false,
+        issuerLine1: '',
+        issuerLine2: '',
+        issuerLine3: '',
+        addressees: [
+          { prefix: 'الأخ /', name: 'المدير العام للمحافظة', suffix: 'المحترم' }
+        ],
+        involvedPersonnel: [
+          {
+            militaryId: militaryNumber,
+            rank: req.personnel?.rank_display || '',
+            name: personnelName,
+            nationalId: '',
+            status: formType,
+            workplace: '',
+            serviceLocation: '',
+            notes: '',
+          }
+        ],
+        subject: `بخصوص طلب إثبات حالة (${formType}) — ${personnelName}`,
+        body: `<p>نحيط سيادتكم علماً بأنه تم اعتماد طلب إثبات حالة (${formType}) للمنتسب المذكور أعلاه.</p><p>رقم المعاملة: <strong>${txNumber}</strong></p><p>نأمل التكرم بالاطلاع واتخاذ اللازم.</p>`,
+        conclusion: '<p>والله الموفق ،،،</p>',
+        signatures: [
+          { title: 'رئيس قسم الخدمات', rank: '', name: '', showSeal: false },
+          { title: 'مدير إدارة القوى البشرية', rank: '', name: '', showSeal: true },
+        ],
+        signatureSettings: { showLabels: true, showFrame: true },
+        visibleColumns: {
+          militaryId: true, rank: true, nationalId: false,
+          status: true, workplace: false, serviceLocation: false,
+          jobTitle: false, position: false, qualification: false,
+          joinDate: false, commencementDate: false, phone: false,
+          clarification: false, notes: true,
+        },
+        typography: {
+          addressee:  { family: 'Cairo', size: 1.1, weight: 'font-bold', underline: true },
+          greeting:   { family: 'Cairo', size: 1.0, weight: 'font-bold', underline: true },
+          subject:    { family: 'Cairo', size: 1.15, weight: 'font-black', underline: true },
+          body:       { family: 'Cairo', size: 1.0, weight: 'font-normal', underline: false },
+          conclusionSeparator: { family: 'Cairo', size: 1.1, weight: 'font-bold', underline: true },
+          conclusionBody: { family: 'Cairo', size: 1.0, weight: 'font-normal', underline: false },
+          signatures: { family: 'Cairo', size: 0.95, weight: 'font-bold', underline: false },
+        },
+      }
+
+                // Try to load any generic template or just fallback to default
+          const tplStr = localStorage.getItem('memo_template_WORK_COMMENCEMENT') || localStorage.getItem('memo_template_ATTENTION_NOTICE');
+          if (tplStr && (req?.form_type === 'work_commencement' || req?.form_type === 'attention_notice')) {
+            try {
+              const tpl = JSON.parse(tplStr);
+              memoDraft = { ...memoDraft, ...tpl, referenceNo: memoDraft.referenceNo, docDate: memoDraft.docDate, involvedPersonnel: [] };
+            } catch(e) {}
+          }
+          localStorage.setItem('official_memo_draft', JSON.stringify(memoDraft))
+      window.open('/admin/documents/memo-preview', '_blank')
     }
     fetchAll()
   } catch (e: any) { Swal.fire('خطأ', e.response?.data?.error || 'حدث خطأ أثناء الطباعة', 'error') }

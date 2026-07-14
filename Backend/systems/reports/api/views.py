@@ -301,3 +301,74 @@ class ExportRequestViewSet(viewsets.ModelViewSet):
         # Delegate logic to report services
         return generate_export_response(export_req, request)
 
+
+class MonthlyServicesReportView(APIView):
+    """
+    تقرير: تصدير الخدمات والكشوفات الشهرية
+    يعرض الإجراءات (StatusChangeForm) خلال شهر وسنة محددين.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        month = request.query_params.get('month')
+        year = request.query_params.get('year')
+        status_param = request.query_params.get('status', 'all')
+        
+        from systems.services.models import StatusChangeForm, ServiceCatalog
+        
+        qs = StatusChangeForm.objects.select_related('personnel', 'personnel__current_rank', 'submitted_by')
+        
+        if year:
+            qs = qs.filter(created_at__year=year)
+        if month:
+            qs = qs.filter(created_at__month=month)
+            
+        if status_param != 'all':
+            qs = qs.filter(status=status_param)
+            
+        # Scope by user permissions
+        from infra.authorization.services.permission_service import PermissionService
+        try:
+            qs = PermissionService.get_scoped_queryset(request.user, qs, 'services.view.*')
+        except Exception:
+            pass
+
+        catalog_map = {}
+        for sc in ServiceCatalog.objects.values('code', 'form_type', 'name_ar'):
+            catalog_map[sc['code']] = sc['name_ar']
+            if sc['form_type']:
+                catalog_map[sc['form_type']] = sc['name_ar']
+                
+        data = []
+        for index, form in enumerate(qs.order_by('-created_at'), 1):
+            p = form.personnel
+            if not p:
+                continue
+            
+            ft_display = catalog_map.get(form.form_type) or dict(form.FORM_TYPE_CHOICES).get(form.form_type) or form.form_type
+            
+            unit = 'غير محدد'
+            if p.central_department:
+                unit = p.central_department.name
+            elif p.branch:
+                unit = p.branch.name
+            elif p.district_police:
+                unit = p.district_police.name
+            elif p.security_admin:
+                unit = p.security_admin.name
+            
+            data.append({
+                'index': index,
+                'rank': p.current_rank.name if p.current_rank else 'بدون رتبة',
+                'military_number': p.military_number,
+                'full_name': p.full_name,
+                'unit': unit,
+                'service_type': ft_display,
+                'status': form.get_status_display(),
+                'created_at': form.created_at.isoformat(),
+                'submitted_by': form.submitted_by.get_full_name() or form.submitted_by.username if form.submitted_by else 'النظام'
+            })
+            
+        return Response({
+            'data': data
+        })

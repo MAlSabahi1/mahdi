@@ -228,9 +228,11 @@ class Command(BaseCommand):
                     "source": "user_input",
                     "fields": [
                         {"key": "category", "label": "الفئة", "type": "text", "required": True, "disabled": True, "value": "محال للتقاعد"},
+                        {"key": "birth_date", "label": "تاريخ الميلاد", "type": "date", "required": False, "disabled": True, "source": "personnel_master"},
+                        {"key": "join_date", "label": "تاريخ الالتحاق", "type": "date", "required": False, "disabled": True, "source": "personnel_master"},
                         {"key": "decision_number", "label": "رقم قرار الإحالة", "type": "text", "required": True},
                         {"key": "decision_date", "label": "تاريخ قرار الإحالة", "type": "date", "required": True},
-                        {"key": "retirement_date", "label": "تاريخ الإحالة (الفعلي)", "type": "date", "required": True},
+                        {"key": "referral_date", "label": "تاريخ الإحالة (الفعلي)", "type": "date", "required": True},
                         {"key": "notes", "label": "ملاحظات", "type": "textarea", "required": False}
                     ]
                 }],
@@ -316,7 +318,7 @@ class Command(BaseCommand):
                     "fields": [
                         {"key": "category", "label": "الفئة", "type": "text", "required": True, "disabled": True, "value": "مفرغين للدراسة"},
                         {"key": "study_type", "label": "نوع الدراسة", "type": "text", "required": True},
-                        {"key": "study_place", "label": "مكان الدراسة", "type": "text", "required": True},
+                        {"key": "institution", "label": "جهة الدراسة", "type": "text", "required": True},
                         {"key": "order_source", "label": "مصدر الأمر", "type": "text", "required": True},
                         {"key": "duration", "label": "مدة الدراسة", "type": "text", "required": True},
                         {"key": "start_date", "label": "تاريخ البدء", "type": "date", "required": True},

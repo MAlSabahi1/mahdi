@@ -118,19 +118,22 @@ const searchText = ref('')
 const stageLabels: Record<string, string> = {
   all: 'الكل',
   draft: 'مسودة',
-  in_progress: 'قيد المراجعة',
-  pending_services: 'عند رئيس الخدمات',
-  pending_hr: 'عند مدير الموارد',
-  pending_director: 'عند المدير العام',
+  in_progress: 'قيد الإجراء',
   approved: 'معتمد نهائياً',
   rejected: 'مرفوض',
   returned: 'مُرجع للتعديل',
+  // الحالات القديمة — توافق مع بيانات DB
+  pending_services:  'عند رئيس قسم الخدمات',
+  pending_hr:        'عند مدير إدارة القوى البشرية',
+  pending_director:  'عند المدير العام للمحافظة',
 }
 
 // عرض ذكي: إذا كانت in_progress فأظهر اسم الخطوة الحالية من الابي
 function getDisplayStatus(row: any): string {
+  // الحالة التفصيلية: in_progress مع اسم الخطوة
   if (row.status === 'in_progress' && row.current_step_name) {
-    return `عند: ${row.current_step_name}`
+    const stepIdx = row.current_step_index != null ? ` (مرحلة ${row.current_step_index + 1})` : ''
+    return `عند: ${row.current_step_name}${stepIdx}`
   }
   return stageLabels[row.status] || row.status
 }
@@ -171,19 +174,44 @@ const filteredRows = computed(() => {
   return list
 })
 
+// منطق الصلاحيات المعتمد على stage.code (المفتاح البرمجي الثابت) بدل مقارنة النص العربي
 function canApprove(req: any): boolean {
   if (req.status === 'approved' || req.status === 'rejected') return false
-  if (authStore.isAdmin) return true  // المدير يعتمد في أي مرحلة
   if (req.status === 'draft') return false  // لم يُقدّم بعد
-  const role = authStore.user?.authz_profile?.role_name || ''
-  // مطابقة اسم المرحلة مع دور المستخدم
+
+  // المدير العام يعتمد في أي مرحلة
+  if (authStore.isAdmin) return true
+
+  const userRole = authStore.user?.authz_profile?.role_code
+    || authStore.user?.authz_profile?.role_name
+    || ''
+
+  // استخدم stage.code إذا توفر — وإلا ارجع لـ current_step_name كبديل مؤقت
+  const stepCode = req.current_step_code || ''
   const stepName = req.current_step_name || ''
-  if (stepName.includes('رئيس الخدمات') && (role.includes('رئيس الخدمات') || authStore.isAdmin)) return true
-  if (stepName.includes('مدير الموارد') && (role.includes('مدير الموارد') || authStore.isAdmin)) return true
-  if (stepName.includes('المدير العام') && (role.includes('المدير العام') || authStore.isAdmin)) return true
-  // إذا لا يوجد اسم خطوة محدد: اسمح للجميع
-  if (req.status === 'in_progress') return true
-  return false
+
+  // ── مطابقة بالكود أولاً (آمن) ──
+  if (stepCode) {
+    if (stepCode === 'services_dept' && (userRole === 'services_dept' || userRole.includes('رئيس قسم الخدمات'))) return true
+    if (stepCode === 'hr_director'   && (userRole === 'hr_director'   || userRole.includes('مدير إدارة')))           return true
+    if (stepCode === 'governor_general' && (userRole === 'governor_general' || userRole.includes('مدير عام')))  return true
+    // أي كود آخر غير معروف: لا تسمح بالاعتماد تلقائياً
+    return false
+  }
+
+  // ── فول باك: مطابقة باسم الخطوة إذا لم يتوفر الكود ──
+  if (stepName.includes('رئيس قسم الخدمات') || stepName.includes('الخدمات')) {
+    return userRole.includes('رئيس') || userRole.includes('الخدمات')
+  }
+  if (stepName.includes('مدير إدارة') || stepName.includes('القوى البشرية')) {
+    return userRole.includes('مدير') || userRole.includes('القوى')
+  }
+  if (stepName.includes('المدير العام') || stepName.includes('المحافظة')) {
+    return userRole.includes('مدير عام') || userRole.includes('المحافظة')
+  }
+
+  // إذا لا يوجد اسم خطوة محدد: الطلب قيد الإجراء ولا توجد خطوة → المدير فقط
+  return authStore.isAdmin
 }
 
 function stageColor(s: string) {

@@ -7,6 +7,7 @@ from ..personnel.api.views.detailed_reports_views import (
     PermInactiveReportsView,
     AuditMovementReportsView
 )
+from .api.views import MonthlyServicesReportView
 
 app_name = 'reports'
 
@@ -21,6 +22,7 @@ urlpatterns = [
     path('detailed-reports/temp-inactive/', TempInactiveReportsView.as_view(), name='temp_inactive_reports'),
     path('detailed-reports/perm-inactive/', PermInactiveReportsView.as_view(), name='perm_inactive_reports'),
     path('detailed-reports/audit-movement/', AuditMovementReportsView.as_view(), name='audit_movement_reports'),
+    path('detailed-reports/monthly-services/', MonthlyServicesReportView.as_view(), name='monthly_services_report'),
     
     path('', include(router.urls)),
 ]

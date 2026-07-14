@@ -213,6 +213,12 @@ _FORMS = {
     ),
 
     # ── استمارة 6: تقاعد ──
+    # [قواعد الأعمال الإدارية - Business Rules]:
+    # 1. "يرفع لمرة واحدة عند وصول بلاغ القرار": بمعنى أن هذه الاستمارة (محال للتقاعد) تُعمل للفرد مرة واحدة فقط في مسيرته العسكرية كلها. 
+    #    ولا يجوز عملها إلا بعد أن يصل إليكم البلاغ أو التعميم الرسمي بالقرار الوزاري.
+    # 2. "وينزلوا من كشف الخدمات الشهر اللاحق": الفرد بمجرد اعتماد هذه الاستمارة له، سيظل يستلم راتبه ومستحقاته كفرد عامل للشهر الحالي، 
+    #    ولكن ابتداءً من الشهر القادم (اللاحق)، سيتم حذفه تلقائياً من كشوفات القوة العاملة النشطة، وتُرفع أسماؤهم إلى كشوفات صندوق التقاعد.
+    # 3. الفرق: "مرشح تقاعد" (نموذج 14) هم من بلغوا السن ولكن لم يصدر قرارهم بعد، بينما "متقاعد" (نموذج 17) من صدر قرارهم وتم تنزيلهم من القوة.
     'retired': FormDefinition(
         form_type='retired',
         label='استمارة إثبات حالة — محال للتقاعد',
@@ -220,8 +226,8 @@ _FORMS = {
         description='الدليل: ص 38 — نموذج 17',
         fields=(
             FormField('category', 'الفئة', 'text', required=True, disabled=True, default='محال للتقاعد'),
-            FormField('birth_date', 'تاريخ الميلاد', 'date'),
-            FormField('join_date', 'تاريخ الالتحاق', 'date'),
+            FormField('birth_date', 'تاريخ الميلاد', 'date', required=False),
+            FormField('join_date', 'تاريخ الالتحاق', 'date', required=False),
             FormField('decision_number', 'رقم قرار الإحالة', 'text'),
             FormField('decision_date', 'تاريخ قرار الإحالة', 'date'),
             FormField('referral_date', 'تاريخ الإحالة الفعلي', 'date'),
@@ -544,16 +550,44 @@ class FormRegistry:
         return len(errors) == 0, errors
     
     @staticmethod
+    def _get_dynamic_approval_workflow(form_type: str) -> list:
+        """
+        جلب مسار الاعتماد الديناميكي من ServiceCatalog.workflow_steps.
+        الفوت-باك: القائمة الثابتة الصحيحة حسب هيكل المحافظة.
+        """
+        _FALLBACK = [
+            {'level': 1, 'label': 'رئيس قسم الخدمات',             'role': 'services_dept'},
+            {'level': 2, 'label': 'مدير إدارة القوى البشرية',       'role': 'hr_director'},
+            {'level': 3, 'label': 'المدير العام للمحافظة',           'role': 'governor_general'},
+        ]
+        try:
+            from systems.services.models import ServiceCatalog
+            catalog = (
+                ServiceCatalog.objects.filter(form_type=form_type).first()
+                or ServiceCatalog.objects.filter(code=form_type).first()
+            )
+            if catalog:
+                steps = catalog.workflow_steps.select_related('stage').order_by('order')
+                if steps.exists():
+                    return [
+                        {
+                            'level': s.order,
+                            'label': s.stage.name_ar,
+                            'role':  s.stage.code,
+                        }
+                        for s in steps
+                    ]
+        except Exception:
+            pass
+        return _FALLBACK
+
+    @staticmethod
     def schema(form_type: str) -> dict:
         """
         هيكل الاستمارة كـ JSON (للفرونت اند).
         يبحث أولاً في الثابتة ثم في المخصصة.
+        مسار الاعتماد يُجلب ديناميكياً من ServiceCatalog.workflow_steps.
         """
-        _APPROVAL = [
-            {'level': 1, 'label': 'قسم الخدمات', 'role': 'services'},
-            {'level': 2, 'label': 'مدير إدارة الموارد', 'role': 'hr'},
-            {'level': 3, 'label': 'مدير عام شرطة المحافظة/الوحدة', 'role': 'director'},
-        ]
 
         def _field_dict(f):
             return {
@@ -573,6 +607,9 @@ class FormRegistry:
                  'fields': [_field_dict(f) for f in SECTION_IDENTITY]},
             ]
 
+        # مسار الاعتماد الديناميكي
+        approval_workflow = FormRegistry._get_dynamic_approval_workflow(form_type)
+
         # ── 1. بحث في الثابتة ──
         defn = _FORMS.get(form_type)
         if defn:
@@ -590,7 +627,7 @@ class FormRegistry:
                 ],
                 'min_documents': defn.min_documents,
                 'max_documents': defn.max_documents,
-                'approval_workflow': _APPROVAL,
+                'approval_workflow': approval_workflow,
             }
 
         # ── 2. بحث في المخصصة (DB) ──
@@ -619,7 +656,7 @@ class FormRegistry:
             'attachments': custom.attachments or [],
             'min_documents': custom.min_documents,
             'max_documents': custom.max_documents,
-            'approval_workflow': _APPROVAL,
+            'approval_workflow': approval_workflow,
         }
 
     @staticmethod

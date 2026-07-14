@@ -72,24 +72,55 @@
       </template>
       
       <template #cell-is_printed="{ row }">
-        <span v-if="row.is_printed" class="text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded text-[10px] font-bold border border-emerald-100 dark:border-emerald-900">
-          تمت الطباعة
-        </span>
-        <span v-else class="text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-[10px] font-bold border border-gray-200 dark:border-gray-700">
-          لم يطبع
-        </span>
+        <div class="flex flex-col gap-1">
+          <!-- الخطوة 1: الطباعة -->
+          <span class="flex items-center gap-1.5 text-[10px] font-bold"
+            :class="row.is_printed ? 'text-emerald-600' : 'text-gray-400'">
+            <span class="flex items-center justify-center w-3.5 h-3.5 rounded-full border text-white"
+              :class="row.is_printed ? 'bg-emerald-500 border-emerald-500' : 'border-gray-300'">
+              <svg v-if="row.is_printed" class="w-2 h-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+            </span>
+            {{ row.is_printed ? 'تمت الطباعة' : 'لم يطبع بعد' }}
+          </span>
+          <!-- الخطوة 2: مرفق الوزارة -->
+          <span class="flex items-center gap-1.5 text-[10px] font-bold"
+            :class="row.ministry_approval_doc_id ? 'text-emerald-600' : (row.is_printed ? 'text-amber-600' : 'text-gray-300')">
+            <span class="flex items-center justify-center w-3.5 h-3.5 rounded-full border text-white"
+              :class="row.ministry_approval_doc_id ? 'bg-emerald-500 border-emerald-500' : (row.is_printed ? 'border-amber-400' : 'border-gray-300')">
+              <svg v-if="row.ministry_approval_doc_id" class="w-2 h-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+            </span>
+            {{ row.ministry_approval_doc_id ? 'مرفق الوزارة ✓' : 'بانتظار مرفق الوزارة' }}
+          </span>
+          <!-- الخطوة 3: الاعتماد النهائي -->
+          <span class="flex items-center gap-1.5 text-[10px] font-bold"
+            :class="row.status === 'approved' ? 'text-emerald-600' : 'text-gray-300'">
+            <span class="flex items-center justify-center w-3.5 h-3.5 rounded-full border text-white"
+              :class="row.status === 'approved' ? 'bg-emerald-500 border-emerald-500' : 'border-gray-300'">
+              <svg v-if="row.status === 'approved'" class="w-2 h-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+            </span>
+            {{ row.status === 'approved' ? 'معتمد نهائياً' : 'الاعتماد النهائي' }}
+          </span>
+        </div>
       </template>
 
       <template #actions="{ row }">
+        <!-- زر الطباعة — متاح دائماً قبل الاعتماد النهائي -->
         <button v-if="canPrint(row)" @click="$emit('print', row)"
           class="bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 text-[10px] font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-colors shadow-sm flex items-center gap-1">
           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-          طباعة
+          {{ row.is_printed ? 'إعادة طباعة' : 'طباعة' }}
         </button>
+        <!-- رفع مرفق الوزارة — فقط بعد الطباعة وقبل الاعتماد -->
         <button v-if="canRegisterApproval(row)" @click="$emit('register-approval', row)"
-          class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-colors shadow-sm">
-          موافقة الوزارة
+          class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-colors shadow-sm flex items-center gap-1">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+          رفع موافقة الوزارة
         </button>
+        <!-- تنبيه: يجب طباعة أولاً -->
+        <span v-if="!row.is_printed && row.status === 'in_progress'"
+          class="text-[9px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded font-bold">
+          ⚠️ اطبع أولاً
+        </span>
         <button v-if="canReject(row)" @click="$emit('reject', row)"
           class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[10px] font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-colors">
           رفض

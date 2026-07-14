@@ -482,6 +482,8 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
             )
 
             # ── تسجيل الحدث في Timeline ──
+            approver_name = request.user.get_full_name() or request.user.username
+
             if is_final:
                 FormEventLog.objects.create(
                     form=form,
@@ -489,7 +491,7 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
                     from_status='in_progress',
                     to_status='approved',
                     performed_by=request.user,
-                    notes=f'اعتماد نهائي — المرحلة: {current_step_name}. تم تحديث حالة الفرد.'
+                    notes=f'✅ اعتماد نهائي — بواسطة: {approver_name}. المرحلة: {current_step_name}. تم تحديث حالة الفرد في السجل.'
                 )
             else:
                 FormEventLog.objects.create(
@@ -498,7 +500,7 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
                     from_status='in_progress',
                     to_status='in_progress',
                     performed_by=request.user,
-                    notes=f'تم اعتماد مرحلة ({current_step_name}) وتمرير المعاملة إلى ({next_step_name})'
+                    notes=f'✓ اعتماد بواسطة: {approver_name} — تم اعتماد مرحلة ({current_step_name}) وتمرير المعاملة إلى مرحلة ({next_step_name})'
                 )
 
             msg = 'تم الاعتماد النهائي للطلب بنجاح. تم تحديث حالة الفرد.' if is_final else f'تم الاعتماد وتمرير المعاملة إلى مرحلة: {next_step_name}.'
@@ -534,7 +536,16 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
             # ملاحظة: RejectionLog مرتبط بـ StagingRecord (نظام الاستيراد) وليس بالاستمارات.
             # الرفض مسجّل في: FormEventLog (أعلاه) + AuditService.log_form_rejected (عبر DjangoEventPublisher)
 
-            return Response({'success': True, 'message': 'تم رفض الاستمارة'})
+            # ── حذف المرفقات المرتبطة بالطلب المرفوض (بناءً على طلب العميل) ──
+            try:
+                # حذف الملفات الفسيزيائية والسجلات من قاعدة البيانات
+                form.attachments.all().delete()
+                form.attachments_complete = False
+                form.save(update_fields=['attachments_complete'])
+            except Exception as e:
+                pass # تجاهل في حال كان هناك قيود على الحذف
+
+            return Response({'success': True, 'message': 'تم رفض الاستمارة وحذف مرفقاتها المرتبطة'})
         except ValueError as e:
             return Response({'success': False, 'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 

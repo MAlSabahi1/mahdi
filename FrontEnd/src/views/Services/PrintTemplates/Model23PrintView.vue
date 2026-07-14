@@ -24,8 +24,8 @@
           <div class="text-right font-bold text-gray-800 leading-relaxed text-sm">
             <p>الجمهورية اليمنية</p>
             <p>وزارة الداخلية</p>
-            <p>قطاع الموارد البشرية والمالية</p>
-            <p>الإدارة العامة لشؤون الأفراد</p>
+            <p>إدارة شؤون الأفراد والخدمات</p>
+            <p>القوى البشرية الأمنية</p>
           </div>
           <div class="text-center">
             <div class="w-20 h-20 mx-auto border-2 border-gray-800 rounded-full flex items-center justify-center mb-2">
@@ -117,14 +117,14 @@
             </div>
             
             <div class="flex flex-col gap-8">
-              <span class="font-bold text-gray-700">شؤون الأفراد بالوحدة المرفوع منها</span>
+              <span class="font-bold text-gray-700">رئيس قسم الخدمات</span>
               <div class="border-b border-gray-400 border-dashed pb-2">الاسم:</div>
               <div class="border-b border-gray-400 border-dashed pb-2">التوقيع والختم:</div>
             </div>
 
             <div class="flex flex-col gap-8">
-              <span class="font-bold text-gray-700">اعتماد الإدارة العامة لشؤون الأفراد</span>
-              <div class="border-b border-gray-400 border-dashed pb-2">المدير العام:</div>
+              <span class="font-bold text-gray-700">مدير إدارة القوى البشرية</span>
+              <div class="border-b border-gray-400 border-dashed pb-2">المدير العام للمحافظة:</div>
               <div class="border-b border-gray-400 border-dashed pb-2">التوقيع والختم:</div>
             </div>
           </div>

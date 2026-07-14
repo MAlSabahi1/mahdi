@@ -812,7 +812,7 @@ function getDynamicFields(section: any) {
   // If the section is marked as auto, it means it's already rendered in the official form header
   if (section.source === 'auto') return []
   
-  const hardcodedKeys = ['military_number', 'full_name', 'current_rank', 'rank', 'unit', 'national_id', 'birth_date', 'governorate', 'residence_gov_id']
+  const hardcodedKeys = ['military_number', 'full_name', 'current_rank', 'rank', 'unit', 'national_id', 'governorate', 'residence_gov_id']
   return section.fields.filter((f: any) => !hardcodedKeys.includes(f.key))
 }
 
@@ -1540,16 +1540,82 @@ async function submitBulk() {
       if (result.isDenied) {
         if (isModel23 && lastCorrectionId) {
           const person = selectedPersonnelList.value[0]
-          const queryParams = new URLSearchParams({
-            personnelId: person.military_number,
-            old_value: formData.value.old_value || '',
-            new_value: formData.value.new_value || '',
-            reason: formData.value.reason || formData.value.notes || ''
-          }).toString()
-          router.push(`/services/print/model-23/${lastCorrectionId}?${queryParams}`)
+          const corrType = schema.value?.name || 'طلب تصحيح'
+          const txNum = `CORR-${String(lastCorrectionId).padStart(5, '0')}`
+          const dateNow = new Date().toLocaleDateString('ar-YE', { year: 'numeric', month: '2-digit', day: '2-digit' })
+          const corrTarget = (formData.value.correction_targets && formData.value.correction_targets.length > 0)
+            ? formData.value.correction_targets.join('، ') : corrType
+          let draft = {
+            documentType: 'PERSONNEL_MEMO', securityLevel: 'NORMAL',
+            referenceNo: txNum, docDate: dateNow, correspondingDate: '',
+            attachments: 'نموذج رقم (23) — كشف المطابقة', bilingual: false,
+            issuerLine1: '', issuerLine2: '', issuerLine3: '',
+            addressees: [{ prefix: 'الأخ /', name: 'المدير العام للمحافظة', suffix: 'المحترم' }],
+            involvedPersonnel: [{
+              militaryId: person.military_number, rank: person.rank_name || '',
+              name: person.full_name, nationalId: '',
+              correctName: formData.value.new_value || '',
+              wrongName: formData.value.old_value || '',
+              correctionTarget: corrTarget,
+              notes: formData.value.reason || formData.value.notes || '',
+            }],
+            subject: `طلب تصحيح بيانات — ${person.full_name}`,
+            body: `<p>نحيط سيادتكم علماً بأنه ورد إلينا طلب تصحيح بيانات للمنتسب/المنتسبين الموضحين أعلاه.</p>
+<p>نرفق لكم كشفاً بأسماء المطلوب تصحيح أسمائهم <strong>(كشف المطابقة — نموذج 23)</strong>، مع مرفقات كل فرد، وذلك لاتخاذ الإجراءات اللازمة.</p>`,
+            conclusion: '<p>والله الموفق ،،،</p>',
+            signatures: [
+              { title: 'رئيس قسم الخدمات', rank: '', name: '', showSeal: false },
+              { title: 'مدير إدارة القوى البشرية', rank: '', name: '', showSeal: true },
+            ],
+            signatureSettings: { showLabels: true, showFrame: true },
+            visibleColumns: { militaryId: true, rank: true, nationalId: false, status: false, workplace: false, serviceLocation: false, jobTitle: false, position: false, qualification: false, joinDate: false, commencementDate: false, phone: false, clarification: false, notes: true, correctName: true, wrongName: true, correctionTarget: true },
+            typography: {
+              addressee: { family: 'Cairo', size: 1.1, weight: 'font-bold', underline: true },
+              greeting: { family: 'Cairo', size: 1.0, weight: 'font-bold', underline: true },
+              subject: { family: 'Cairo', size: 1.15, weight: 'font-black', underline: true },
+              body: { family: 'Cairo', size: 1.0, weight: 'font-normal', underline: false },
+              conclusionSeparator: { family: 'Cairo', size: 1.1, weight: 'font-bold', underline: true },
+              conclusionBody: { family: 'Cairo', size: 1.0, weight: 'font-normal', underline: false },
+              signatures: { family: 'Cairo', size: 0.95, weight: 'font-bold', underline: false },
+            },
+          }
+          localStorage.setItem('official_memo_draft', JSON.stringify(draft))
+          window.open('/admin/documents/memo-preview', '_blank')
+          router.push(redirectRoute)
         } else if (isExternalForm && lastFormId) {
-          // فتح صفحة الطباعة المستقلة
-          window.open(`/services/forms/${lastFormId}/print`, '_blank')
+          // فتح منشئ المذكرات
+          const person = selectedPersonnelList.value[0]
+          const fType = schema.value?.name || ''
+          const txNum2 = `TX-${String(lastFormId).padStart(6, '0')}`
+          const dateNow2 = new Date().toLocaleDateString('ar-YE', { year: 'numeric', month: '2-digit', day: '2-digit' })
+          let draft2 = {
+            documentType: 'PERSONNEL_MEMO', securityLevel: 'NORMAL',
+            referenceNo: txNum2, docDate: dateNow2, correspondingDate: '',
+            attachments: 'نموذج إثبات حالة', bilingual: false,
+            issuerLine1: '', issuerLine2: '', issuerLine3: '',
+            addressees: [{ prefix: 'الأخ /', name: 'المدير العام للمحافظة', suffix: 'المحترم' }],
+            involvedPersonnel: [{ militaryId: person?.military_number || '', rank: person?.rank_name || '', name: person?.full_name || '', nationalId: '', status: fType, notes: '' }],
+            subject: `بخصوص طلب إثبات حالة (${fType}) — ${person?.full_name || ''}`,
+            body: `<p>نحيط سيادتكم علماً بأنه تم اعتماد طلب إثبات حالة (${fType}) للمنتسب المذكور أعلاه.</p><p>رقم المعاملة: <strong>${txNum2}</strong></p>`,
+            conclusion: '<p>والله الموفق ،،،</p>',
+            signatures: [
+              { title: 'رئيس قسم الخدمات', rank: '', name: '', showSeal: false },
+              { title: 'مدير إدارة القوى البشرية', rank: '', name: '', showSeal: true },
+            ],
+            signatureSettings: { showLabels: true, showFrame: true },
+            visibleColumns: { militaryId: true, rank: true, nationalId: false, status: true, workplace: false, serviceLocation: false, jobTitle: false, position: false, qualification: false, joinDate: false, commencementDate: false, phone: false, clarification: false, notes: true },
+            typography: {
+              addressee: { family: 'Cairo', size: 1.1, weight: 'font-bold', underline: true },
+              greeting: { family: 'Cairo', size: 1.0, weight: 'font-bold', underline: true },
+              subject: { family: 'Cairo', size: 1.15, weight: 'font-black', underline: true },
+              body: { family: 'Cairo', size: 1.0, weight: 'font-normal', underline: false },
+              conclusionSeparator: { family: 'Cairo', size: 1.1, weight: 'font-bold', underline: true },
+              conclusionBody: { family: 'Cairo', size: 1.0, weight: 'font-normal', underline: false },
+              signatures: { family: 'Cairo', size: 0.95, weight: 'font-bold', underline: false },
+            },
+          }
+          localStorage.setItem('official_memo_draft', JSON.stringify(draft2))
+          window.open('/admin/documents/memo-preview', '_blank')
           router.push(redirectRoute)
         }
       } else {

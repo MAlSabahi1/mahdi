@@ -1,159 +1,159 @@
 <template>
   <div class="print-form" dir="rtl" lang="ar">
-
-    <!-- ═══════════════════════════════════════════════
-         رأسية الاستمارة الرسمية
-    ═══════════════════════════════════════════════ -->
-    <div class="form-header">
-      <div class="header-logo">
-        <img src="/images/republic_logo.png" alt="شعار الجمهورية" class="logo-img" onerror="this.style.display='none'" />
+    <!-- Header Section -->
+    <div class="header-section">
+      <div class="header-right">
+        <p class="font-bold text-lg">الجمهورية اليمنية</p>
+        <p class="font-bold text-lg">وزارة الداخلية</p>
+        <p class="font-bold text-sm">الوكيل لقطاع الموارد البشرية</p>
+        <p class="font-bold text-sm">الادارة العامة للقوى البشرية</p>
+        <p class="font-bold text-sm">لجنة بناء الاستمارات</p>
       </div>
-      <div class="header-text">
-        <p class="ministry-name">الجمهورية اليمنية</p>
-        <p class="ministry-sub">وزارة الداخلية</p>
-        <p class="form-title">{{ formTitle }}</p>
-        <div class="form-meta-row">
-          <span>رقم المعاملة: <strong>{{ formId }}</strong></span>
-          <span>التاريخ: <strong>{{ formatDate(form?.created_at) }}</strong></span>
+      
+      <div class="header-center">
+        <div class="text-center mb-1">
+          <span class="font-mushaf text-xl">بسم الله الرحمن الرحيم</span>
         </div>
+        <img src="/images/logo/yemen_logo_clean.png" alt="الشعار" class="logo-img" onerror="this.style.display='none'" />
       </div>
-      <div class="header-logo header-logo-right">
-        <div class="qr-placeholder">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="48" height="48">
-            <rect x="2" y="2" width="8" height="8" rx="1" stroke-width="2"/>
-            <rect x="14" y="2" width="8" height="8" rx="1" stroke-width="2"/>
-            <rect x="2" y="14" width="8" height="8" rx="1" stroke-width="2"/>
-            <path d="M14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z" stroke-width="1.5"/>
-          </svg>
-          <p class="text-[8px] text-gray-500 mt-0.5">TX-{{ String(form?.id).padStart(6, '0') }}</p>
+
+      <div class="header-left">
+        <div class="header-box">
+          <div class="flex justify-between mb-2">
+            <span>الرقم:</span>
+            <span>( {{ String(form?.id || '').padStart(6, '0') }} )</span>
+          </div>
+          <div class="flex justify-between mb-2">
+            <span>التاريخ:</span>
+            <span>{{ new Date().toLocaleDateString('en-GB') }} م</span>
+          </div>
+          <div class="flex justify-between">
+            <span>المرفقات:</span>
+            <span>.....................</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- ═══ بيانات الفرد ═══ -->
-    <section class="form-section">
-      <h3 class="section-title">بيانات الفرد المعني</h3>
-      <div class="fields-grid-4">
-        <div class="field-box">
-          <label>الاسم الرباعي</label>
-          <span>{{ form?.personnel?.full_name || '—' }}</span>
+    <!-- Title Section -->
+    <div class="title-container">
+      <div class="title-badge">
+        <div class="title-badge-inner">
+          {{ formTitle }}
         </div>
-        <div class="field-box">
-          <label>الرقم العسكري</label>
-          <span class="font-mono">{{ form?.personnel?.military_number || '—' }}</span>
-        </div>
-        <div class="field-box">
-          <label>الرتبة الحالية</label>
-          <span>{{ form?.personnel?.rank || '—' }}</span>
-        </div>
-        <div class="field-box">
-          <label>الوحدة / الإدارة</label>
-          <span>{{ form?.personnel?.central_department || '—' }}</span>
-        </div>
-        <div class="field-box">
-          <label>الحالة الخدمية السابقة</label>
-          <span>{{ form?.from_status || '—' }}</span>
-        </div>
-        <div class="field-box">
-          <label>الحالة الخدمية الجديدة</label>
-          <span class="text-bold">{{ form?.to_status || '—' }}</span>
-        </div>
-        <div class="field-box">
-          <label>تاريخ النفاذ</label>
-          <span>{{ form?.effective_date ? formatDate(form.effective_date) : '—' }}</span>
-        </div>
-        <div class="field-box">
-          <label>نوع الخدمة</label>
-          <span>{{ form?.form_type_display || '—' }}</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══ الحقول الخاصة بنوع الاستمارة ═══ -->
-    <section class="form-section" v-if="specificFields.length > 0">
-      <h3 class="section-title">تفاصيل الاستمارة</h3>
-      <div class="fields-grid-3">
-        <div v-for="field in specificFields" :key="field.key" class="field-box" :class="field.wide ? 'col-span-2' : ''">
-          <label>{{ field.label }}</label>
-          <span>{{ getFieldValue(field.key) || '—' }}</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══ ملاحظات ═══ -->
-    <section class="form-section" v-if="form?.notes">
-      <h3 class="section-title">ملاحظات</h3>
-      <div class="notes-box">{{ form.notes }}</div>
-    </section>
-
-    <!-- ═══ المرفقات المطلوبة ═══ -->
-    <section class="form-section" v-if="form?.required_attachments?.length">
-      <h3 class="section-title">المستندات والوثائق المرفقة</h3>
-      <div class="attachments-table">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:30px">م</th>
-              <th>نوع المستند</th>
-              <th style="width:80px">الحالة</th>
-              <th style="width:80px">ملاحظة</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(att, idx) in form.required_attachments" :key="idx">
-              <td class="text-center">{{ Number(idx) + 1 }}</td>
-              <td>{{ translateAttachment(att) }}</td>
-              <td class="text-center">
-                <span v-if="isAttachmentPresent(att)" class="att-present">✓ مرفق</span>
-                <span v-else class="att-missing">✗ ناقص</span>
-              </td>
-              <td></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ═══ خانات التواقيع ═══ -->
-    <section class="signatures-section">
-      <div class="signature-block" v-for="sig in signatures" :key="sig.role">
-        <div class="sig-role">{{ sig.role }}</div>
-        <div class="sig-name-line">الاسم: _______________</div>
-        <div class="sig-line">التوقيع: _______________</div>
-        <div class="sig-date">التاريخ: _______________</div>
-        <div class="sig-stamp">الختم الرسمي</div>
-      </div>
-    </section>
-
-    <!-- ═══ قرار الوزارة (للخدمات الخارجية) ═══ -->
-    <section class="form-section ministry-section" v-if="form?.is_external">
-      <h3 class="section-title ministry-title">🏛 قرار الوزارة</h3>
-      <div class="fields-grid-3">
-        <div class="field-box col-span-2">
-          <label>رقم القرار / المذكرة الوزارية</label>
-          <span>{{ form?.ministry_approval_doc_id ? `مستند #${form.ministry_approval_doc_id}` : 'لم يرفق بعد' }}</span>
-        </div>
-        <div class="field-box">
-          <label>تاريخ القرار</label>
-          <span>____________________</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══ تذييل الصفحة ═══ -->
-    <div class="form-footer">
-      <div class="footer-left">
-        <p>نظام إدارة الموارد البشرية — HRMS</p>
-        <p>طُبع بواسطة: {{ form?.submitted_by || 'النظام' }}</p>
-      </div>
-      <div class="footer-center">
-        <p>سري — للاستخدام الرسمي فقط</p>
-      </div>
-      <div class="footer-right">
-        <p>{{ new Date().toLocaleDateString('ar-SA') }}</p>
-        <p class="font-mono text-xs">TX-{{ String(form?.id).padStart(6, '0') }}</p>
       </div>
     </div>
+
+    <!-- Table 1: Personal Data -->
+    <div class="section-container mt-6">
+      <h3 class="section-title">أولاً البيانات الشخصية</h3>
+      <table class="official-table">
+        <thead>
+          <tr>
+            <th>الرتبة</th>
+            <th>الرقم العسكري</th>
+            <th class="w-2/5">الاسم</th>
+            <th>الوحدة</th>
+            <th>السرية</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="font-bold">{{ form?.personnel?.rank || '—' }}</td>
+            <td class="font-bold">{{ form?.personnel?.military_number || '—' }}</td>
+            <td class="font-bold">{{ form?.personnel?.full_name || '—' }}</td>
+            <td class="font-bold">{{ form?.personnel?.central_department || form?.personnel?.workplace || '—' }}</td>
+            <td class="font-bold">{{ form?.personnel?.company || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Table 2: Birth & Residence Data -->
+    <div class="section-container">
+      <h3 class="section-title">ثانياً بيانات الميلاد والاقامة الحالية</h3>
+      <table class="official-table">
+        <thead>
+          <tr>
+            <th>الرقم الوطني</th>
+            <th>محل الميلاد</th>
+            <th>محل الاقامة الحالية</th>
+            <th>جهة الاصدار</th>
+            <th>تاريخ الاصدار</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="font-bold">{{ form?.personnel?.national_id || '—' }}</td>
+            <td class="font-bold text-sm">{{ formatLocation('birth') }}</td>
+            <td class="font-bold text-sm">{{ formatLocation('residence') }}</td>
+            <td class="font-bold">{{ form?.personnel?.id_issue_place || '—' }}</td>
+            <td class="font-bold">{{ form?.personnel?.id_issue_date || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Table 3: Status Data (Dynamic) -->
+    <div class="section-container">
+      <h3 class="section-title">ثالثاً بيــانات الحـــــالة</h3>
+      <table class="official-table">
+        <thead>
+          <tr>
+            <th v-for="field in specificFields" :key="'h-'+field.key">{{ field.label }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td v-for="field in specificFields" :key="'d-'+field.key" class="font-bold">
+              {{ field.value !== undefined ? field.value : (getFieldValue(field.key) || '—') }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Letter Body Section -->
+    <div class="letter-body mt-8 px-4 text-justify leading-loose">
+      <p class="font-bold text-lg mb-4">الأخ/ مدير عام القوى البشرية <span class="float-left ml-16">المحترم</span></p>
+      <p class="font-bold text-center mb-4">بعد التحية:-</p>
+      
+      <p class="font-bold mb-4">
+        موضحاً لكم اعلاه بيانات حالة المذكور والتي بموجبها تم ضمه على فئة ({{ form?.form_data?.category || form?.form_type_display || '—' }}) ومرفق لكم الاوليات
+      </p>
+      
+      <div class="attachments-list font-bold pr-8 mb-6">
+        <span class="ml-4">1- الطلب الشخصي المقدم من المذكور.</span>
+        <span>2 - نسخة من البطاقة العسكرية والشخصية معمدة.</span>
+        <div v-for="(att, idx) in additionalAttachments" :key="idx" class="mt-1">
+          {{ idx + 3 }}- {{ translateAttachment(att) }}.
+        </div>
+      </div>
+
+      <p class="font-bold mb-6">نأمل التوجيه الى المختصين باستكمال الاجراءات بحسب النظام.</p>
+      <p class="font-bold text-center text-lg mb-16">وتقبلوا خالص تحياتنا،،،،</p>
+    </div>
+
+    <!-- Signatures -->
+    <div class="signatures-grid px-8 mt-12">
+      <div class="text-center font-bold">
+        <p class="mb-4">قسم الخدمات</p>
+        <p class="mb-4 text-right">رتبة/ ........................</p>
+        <p class="mb-4 text-right">الاسم/ ........................</p>
+      </div>
+      <div class="text-center font-bold">
+        <p class="mb-4">مدير إدارة القوى البشرية</p>
+        <p class="mb-4 text-right">رتبة/ ........................</p>
+        <p class="mb-4 text-right">الاسم/ ........................</p>
+      </div>
+      <div class="text-center font-bold">
+        <p class="mb-4">مدير عام شرطة ....................</p>
+        <p class="mb-4 text-right">رتبة/ ........................</p>
+        <p class="mb-4 text-right">الاسم/ ........................</p>
+        <p class="text-center text-sm text-gray-500 mt-2">الختم</p>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -164,328 +164,249 @@ const props = defineProps<{
   form: any
 }>()
 
-// ━━ عنوان الاستمارة ━━
 const formTitle = computed(() => {
   const titles: Record<string, string> = {
-    martyr: 'استمارة إثبات حالة شهيد',
-    death: 'استمارة إثبات حالة وفاة',
-    retirement_age: 'استمارة إحالة للتقاعد — بلوغ السن القانوني',
-    medical_unfit: 'استمارة إثبات عدم اللياقة الصحية',
-    missing: 'استمارة إثبات حالة مفقود',
-    imprisoned: 'استمارة إثبات حالة مسجون',
-    seconded: 'استمارة انتداب خارجي',
-    escort: 'استمارة مرافق / معيات',
-    study_leave: 'استمارة تفريغ للدراسة',
-    end_of_service: 'استمارة إنهاء مدة الخدمة',
-    retired: 'استمارة إحالة للتقاعد',
-    correction: 'استمارة تصحيح بيانات',
+    martyr: 'استمارة إثبات حالة (شهيد)',
+    death: 'استمارة إثبات حالة (وفاة)',
+    retirement_age: 'استمارة إثبات حالة (بلوغ السن القانوني)',
+    medical_unfit: 'استمارة إثبات حالة (عدم اللياقة الصحية)',
+    missing: 'استمارة إثبات حالة (مفقود)',
+    imprisoned: 'استمارة إثبات حالة (مسجون)',
+    seconded: 'استمارة إثبات حالة (انتداب خارجي)',
+    escort: 'استمارة إثبات حالة (مرافق / معيات)',
+    study_leave: 'استمارة إثبات حالة (تفريغ للدراسة)',
+    end_of_service: 'استمارة إثبات حالة (إنهاء خدمة)',
+    retired: 'استمارة إثبات حالة (محال للتقاعد)',
+    correction: 'استمارة إثبات حالة (تصحيح بيانات)',
   }
-  return titles[props.form?.form_type] || props.form?.form_type_display || 'استمارة إثبات حالة'
+  return titles[props.form?.form_type] || \`استمارة إثبات حالة (\${props.form?.form_type_display || ''})\`
 })
 
-// ━━ رقم الاستمارة ━━
-const formId = computed(() => `TX-${String(props.form?.id || 0).padStart(6, '0')}`)
-
-// ━━ الحقول الخاصة بكل نوع ━━
-interface FormField { key: string; label: string; wide?: boolean }
+interface FormField { key: string; label: string; value?: any }
 
 const specificFields = computed<FormField[]>(() => {
   const type = props.form?.form_type
-  const fieldMap: Record<string, FormField[]> = {
-    martyr: [
-      { key: 'martyrdom_date', label: 'تاريخ الاستشهاد' },
-      { key: 'martyrdom_location', label: 'مكان الاستشهاد / الجبهة' },
-      { key: 'martyrdom_cause', label: 'سبب الاستشهاد', wide: true },
-      { key: 'operations_report', label: 'رقم بلاغ العمليات' },
-      { key: 'assignment_order', label: 'رقم أمر التكليف' },
-    ],
-    death: [
-      { key: 'death_date', label: 'تاريخ الوفاة' },
-      { key: 'death_cause', label: 'سبب الوفاة', wide: true },
-      { key: 'death_location', label: 'مكان الوفاة' },
-      { key: 'death_certificate', label: 'رقم شهادة الوفاة' },
-    ],
-    retirement_age: [
-      { key: 'retirement_date', label: 'تاريخ الإحالة للتقاعد' },
-      { key: 'service_years', label: 'سنوات الخدمة الفعلية' },
-      { key: 'decision_number', label: 'رقم قرار الإحالة' },
-    ],
-    medical_unfit: [
-      { key: 'medical_committee_date', label: 'تاريخ قرار اللجنة الطبية' },
-      { key: 'medical_committee_number', label: 'رقم قرار اللجنة' },
-      { key: 'diagnosis', label: 'التشخيص / سبب عدم اللياقة', wide: true },
-    ],
-    missing: [
-      { key: 'missing_date', label: 'تاريخ الاختفاء' },
-      { key: 'missing_location', label: 'آخر موقع معروف' },
-      { key: 'missing_circumstances', label: 'ظروف الاختفاء / الفقدان', wide: true },
-    ],
-    imprisoned: [
-      { key: 'imprisonment_date', label: 'تاريخ السجن' },
-      { key: 'court_name', label: 'اسم المحكمة' },
-      { key: 'verdict', label: 'الحكم الصادر', wide: true },
-    ],
-    seconded: [
-      { key: 'secondment_entity', label: 'جهة الانتداب' },
-      { key: 'secondment_start', label: 'تاريخ بداية الانتداب' },
-      { key: 'secondment_end', label: 'تاريخ نهاية الانتداب' },
-      { key: 'secondment_purpose', label: 'الغرض من الانتداب', wide: true },
-    ],
-    escort: [
-      { key: 'escorted_person', label: 'اسم الشخصية المرافَقة' },
-      { key: 'escort_start', label: 'تاريخ بداية المرافقة' },
-      { key: 'escort_end', label: 'تاريخ نهاية المرافقة' },
-    ],
-    study_leave: [
-      { key: 'university_name', label: 'اسم الجامعة / المؤسسة' },
-      { key: 'specialty', label: 'التخصص / المجال' },
-      { key: 'study_start', label: 'تاريخ بداية الدراسة' },
-      { key: 'study_end', label: 'التاريخ المتوقع للانتهاء' },
-    ],
-    end_of_service: [
-      { key: 'termination_reason', label: 'سبب إنهاء الخدمة', wide: true },
-      { key: 'decision_number', label: 'رقم قرار الإنهاء' },
-      { key: 'termination_date', label: 'تاريخ الإنهاء' },
-    ],
-    correction: [
-      { key: 'field_to_correct', label: 'الحقل المراد تصحيحه' },
-      { key: 'old_value', label: 'القيمة القديمة الخاطئة' },
-      { key: 'new_value', label: 'القيمة الصحيحة الجديدة' },
-      { key: 'correction_reason', label: 'سبب التصحيح', wide: true },
-    ],
-  }
-  return fieldMap[type] || []
-})
-
-// ━━ التواقيع حسب نوع الخدمة ━━
-const signatures = computed(() => {
-  if (props.form?.is_external) {
+  
+  if (type === 'retired') {
     return [
-      { role: 'رئيس قسم الخدمات' },
-      { role: 'مدير الموارد البشرية' },
-      { role: 'المدير العام' },
-      { role: 'ممثل الوزارة (موافقة خارجية)' },
+      { key: 'category', label: 'الفئة', value: props.form?.form_data?.category || 'محال للتقاعد' },
+      { key: 'birth_date', label: 'تاريخ الميلاد', value: props.form?.personnel?.birth_date || '—' },
+      { key: 'join_date', label: 'تاريخ الالتحاق', value: props.form?.personnel?.join_date || '—' },
+      { key: 'decision_number', label: 'رقم قرار الاحالة', value: props.form?.form_data?.decision_number || '—' },
+      { key: 'referral_date', label: 'تاريخ الاحالة', value: props.form?.form_data?.referral_date || props.form?.form_data?.retirement_date || '—' },
+      { key: 'notes', label: 'ملاحظات', value: props.form?.form_data?.notes || '—' }
     ]
   }
-  return [
-    { role: 'رئيس قسم الخدمات' },
-    { role: 'مدير الموارد البشرية' },
-    { role: 'المدير العام' },
+
+  // Fallback for other types
+  const fieldMap: Record<string, FormField[]> = {
+    martyr: [
+      { key: 'category', label: 'الفئة', value: 'شهيد' },
+      { key: 'martyrdom_date', label: 'تاريخ الاستشهاد' },
+      { key: 'martyrdom_location', label: 'مكان الاستشهاد' },
+      { key: 'operations_report', label: 'رقم بلاغ العمليات' },
+      { key: 'assignment_order', label: 'رقم أمر التكليف' },
+      { key: 'notes', label: 'ملاحظات' }
+    ],
+    death: [
+      { key: 'category', label: 'الفئة', value: 'وفاة' },
+      { key: 'death_date', label: 'تاريخ الوفاة' },
+      { key: 'death_location', label: 'مكان الوفاة' },
+      { key: 'death_certificate', label: 'رقم شهادة الوفاة' },
+      { key: 'notes', label: 'ملاحظات' }
+    ],
+    imprisoned: [
+      { key: 'category', label: 'الفئة', value: 'مسجون' },
+      { key: 'imprisonment_date', label: 'تاريخ السجن' },
+      { key: 'court_name', label: 'اسم المحكمة' },
+      { key: 'verdict', label: 'الحكم الصادر' },
+      { key: 'notes', label: 'ملاحظات' }
+    ],
+    study_leave: [
+      { key: 'category', label: 'الفئة', value: 'تفريغ للدراسة' },
+      { key: 'university_name', label: 'اسم الجامعة' },
+      { key: 'specialty', label: 'التخصص' },
+      { key: 'study_start', label: 'بداية الدراسة' },
+      { key: 'study_end', label: 'نهاية الدراسة' },
+      { key: 'notes', label: 'ملاحظات' }
+    ]
+  }
+  return fieldMap[type] || [
+      { key: 'category', label: 'الفئة', value: props.form?.form_type_display },
+      { key: 'effective_date', label: 'التاريخ الفعلي', value: props.form?.effective_date },
+      { key: 'notes', label: 'ملاحظات' }
   ]
+})
+
+const additionalAttachments = computed(() => {
+  // Return attachments from the payload minus the first two default ones.
+  const atts = props.form?.required_attachments || []
+  return atts.filter((a: any) => {
+    const t = translateAttachment(a)
+    return !t.includes('الطلب الشخصي') && !t.includes('البطاقة العسكرية')
+  })
 })
 
 function getFieldValue(key: string) {
   return props.form?.form_data?.[key] ?? ''
 }
 
-function isAttachmentPresent(attType: string | Record<string, any>) {
-  const key = typeof attType === 'string' ? attType : attType?.doc_type || attType?.key || ''
-  return props.form?.attachments?.some((a: any) => a.document_type === key)
+function formatLocation(prefix: 'birth' | 'residence') {
+  const p = props.form?.personnel
+  if (!p) return '—'
+  const gov = p[`${prefix}_governorate_name`]
+  const dist = p[`${prefix}_district_name`]
+  if (gov && dist) return `${gov} - ${dist}`
+  if (gov) return gov
+  return '—'
 }
 
 function translateAttachment(att: any) {
   if (typeof att === 'string') return att
   return att?.label || att?.name || att?.doc_type || att?.key || String(att)
 }
-
-function formatDate(dateStr?: string) {
-  if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('ar-SA', {
-    year: 'numeric', month: 'long', day: 'numeric'
-  })
-}
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&display=swap');
+
 .print-form {
-  font-family: 'Cairo', 'Noto Kufi Arabic', Arial, sans-serif;
-  direction: rtl;
-  text-align: right;
-  background: #fff;
-  color: #1a1a1a;
-  padding: 1cm 1.5cm;
-  max-width: 21cm;
+  font-family: 'Cairo', Arial, sans-serif;
+  background: white;
+  color: black;
+  width: 210mm;
+  min-height: 297mm;
+  padding: 15mm;
   margin: 0 auto;
-  font-size: 11pt;
-  line-height: 1.6;
+  box-sizing: border-box;
 }
 
-/* ━━ رأسية الاستمارة ━━ */
-.form-header {
+.font-mushaf {
+  font-family: 'Aref Ruqaa', serif;
+  font-weight: 700;
+}
+
+/* Header Grid */
+.header-section {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  border-bottom: 3px double #1a3c6e;
-  padding-bottom: 12px;
-  margin-bottom: 16px;
+  align-items: flex-start;
+  border-bottom: 4px double #1e3a8a;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
 }
 
-.header-logo { width: 80px; text-align: center; }
-.logo-img { width: 70px; height: 70px; object-fit: contain; }
-.qr-placeholder { display: flex; flex-direction: column; align-items: center; color: #666; }
-
-.header-text { text-align: center; flex: 1; }
-.ministry-name { font-size: 14pt; font-weight: 900; color: #1a3c6e; margin: 0; }
-.ministry-sub { font-size: 11pt; font-weight: 700; color: #2d5a9e; margin: 2px 0; }
-.form-title {
-  font-size: 13pt;
-  font-weight: 900;
-  color: #c0392b;
-  margin: 6px 0 4px;
-  border: 2px solid #c0392b;
-  padding: 4px 16px;
-  display: inline-block;
-  border-radius: 4px;
+.header-right {
+  flex: 1;
+  text-align: right;
+  line-height: 1.4;
+  color: #1e3a8a;
 }
-.form-meta-row {
-  font-size: 9pt;
-  color: #555;
+
+.header-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.logo-img {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+}
+
+.header-left {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+.header-box {
+  border: 2px solid #1e3a8a;
+  padding: 10px 15px;
+  width: 220px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Title Badge */
+.title-container {
   display: flex;
   justify-content: center;
-  gap: 24px;
-  margin-top: 4px;
+  margin: 20px 0;
 }
-
-/* ━━ الأقسام ━━ */
-.form-section { margin-bottom: 16px; }
-
-.section-title {
-  font-size: 10pt;
+.title-badge {
+  background-color: #dbeafe; /* light blue */
+  border: 3px solid #60a5fa; /* border blue */
+  border-radius: 8px;
+  padding: 4px 6px;
+  box-shadow: inset 0 0 0 2px white, 0 4px 6px rgba(0,0,0,0.1);
+}
+.title-badge-inner {
+  font-size: 22px;
   font-weight: 900;
-  color: #1a3c6e;
-  background: #e8eff8;
-  border-right: 4px solid #1a3c6e;
-  padding: 4px 10px;
-  margin-bottom: 10px;
-  border-radius: 2px;
+  color: #1e3a8a;
+  padding: 6px 20px;
 }
 
-/* ━━ شبكة الحقول ━━ */
-.fields-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.fields-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.col-span-2 { grid-column: span 2; }
-
-.field-box {
-  border: 1px solid #c5d5e8;
-  border-radius: 4px;
-  padding: 5px 8px;
-  background: #f8fbff;
+/* Tables */
+.section-container {
+  margin-bottom: 20px;
 }
-.field-box label {
-  display: block;
-  font-size: 7.5pt;
-  font-weight: 700;
-  color: #1a3c6e;
-  margin-bottom: 2px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-.field-box span {
-  font-size: 10pt;
-  font-weight: 600;
-  color: #1a1a1a;
-  display: block;
-  min-height: 18px;
-  border-bottom: 1px dotted #aac;
+.section-title {
+  color: #991b1b;
+  font-size: 18px;
+  font-weight: 900;
+  margin-bottom: 8px;
+  text-decoration: underline;
+  text-decoration-color: #991b1b;
+  text-underline-offset: 4px;
 }
 
-/* ━━ جدول المرفقات ━━ */
-.attachments-table table {
+.official-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 9pt;
+  text-align: center;
+  border: 2px solid #374151;
 }
-.attachments-table th {
-  background: #1a3c6e;
-  color: #fff;
-  padding: 5px 8px;
-  font-weight: 700;
-  border: 1px solid #1a3c6e;
+.official-table th {
+  background-color: #e5e7eb;
+  color: #1f2937;
+  font-weight: 800;
+  font-size: 15px;
+  border: 2px solid #374151;
+  padding: 8px;
 }
-.attachments-table td {
-  padding: 5px 8px;
-  border: 1px solid #ccd;
-}
-.attachments-table tr:nth-child(even) td { background: #f5f8fc; }
-.att-present { color: #16a34a; font-weight: 700; }
-.att-missing  { color: #dc2626; font-weight: 700; }
-
-/* ━━ ملاحظات ━━ */
-.notes-box {
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 8px 12px;
-  min-height: 48px;
-  background: #fffdf0;
-  font-size: 10pt;
-  line-height: 1.7;
+.official-table td {
+  border: 2px solid #374151;
+  padding: 8px;
+  font-size: 14px;
+  color: #000;
 }
 
-/* ━━ التواقيع ━━ */
-.signatures-section {
+/* Signatures */
+.signatures-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin: 20px 0 16px;
-  border-top: 2px solid #1a3c6e;
-  padding-top: 16px;
-}
-.signature-block {
-  border: 1px solid #aac;
-  border-radius: 6px;
-  padding: 10px;
-  text-align: center;
-  background: #f8fbff;
-}
-.sig-role {
-  font-size: 9pt;
-  font-weight: 900;
-  color: #1a3c6e;
-  margin-bottom: 12px;
-  border-bottom: 1px solid #ccd;
-  padding-bottom: 6px;
-}
-.sig-name-line, .sig-line, .sig-date {
-  font-size: 8pt;
-  color: #444;
-  margin: 10px 0;
-  text-align: right;
-}
-.sig-stamp {
-  font-size: 7pt;
-  color: #888;
-  border: 1px dashed #aaa;
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
-  line-height: 60px;
-  margin: 8px auto 0;
+  gap: 20px;
 }
 
-/* ━━ قسم الوزارة ━━ */
-.ministry-section { border: 2px solid #c0392b; border-radius: 6px; padding: 10px; }
-.ministry-title { color: #c0392b; background: #fff5f5; border-color: #c0392b; }
-
-/* ━━ التذييل ━━ */
-.form-footer {
-  border-top: 2px double #1a3c6e;
-  padding-top: 8px;
-  margin-top: 16px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 7.5pt;
-  color: #666;
-}
-
-/* ━━ طباعة ━━ */
 @media print {
-  .print-form {
-    padding: 0;
-    max-width: 100%;
-  }
   @page {
     size: A4;
-    margin: 1.5cm;
+    margin: 0;
+  }
+  body {
+    margin: 0;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .print-form {
+    padding: 10mm 15mm;
+    width: 100%;
+    height: 100vh;
+    box-shadow: none;
   }
 }
 </style>

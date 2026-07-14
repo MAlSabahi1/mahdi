@@ -91,7 +91,7 @@
 
         <template #cell-id="{ row }">
           <template v-if="row.isCorrection">
-            <RouterLink :to="`/services/print/model-23/${row.rawId}?personnelId=${row.personnel_military_number}&old_value=${row.old_value}&new_value=${row.new_value}&reason=${row.reason}`" class="text-warning-600 hover:underline font-mono font-bold">#{{ String(row.rawId).padStart(5, '0') }}</RouterLink>
+            <button @click="showCorrectionDetails(row)" class="text-warning-600 hover:underline font-mono font-bold cursor-pointer">#{{ String(row.rawId).padStart(5, '0') }}</button>
           </template>
           <template v-else>
             <RouterLink :to="`/services/forms/${row.id}`" class="text-warning-600 hover:underline font-mono font-bold">#{{ String(row.id).padStart(5, '0') }}</RouterLink>
@@ -140,10 +140,10 @@
           </button>
 
           <template v-if="row.isCorrection">
-            <RouterLink :to="`/services/print/model-23/${row.rawId}?personnelId=${row.personnel_military_number}&old_value=${row.old_value}&new_value=${row.new_value}&reason=${row.reason}`"
-              class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-[10px] font-bold hover:underline px-1">
+            <button @click="showCorrectionDetails(row)"
+              class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-[10px] font-bold hover:underline px-1 cursor-pointer">
               عرض
-            </RouterLink>
+            </button>
           </template>
           <template v-else>
             <RouterLink :to="`/services/forms/${row.id}`"
@@ -305,18 +305,137 @@ async function fetchRequests() {
 async function printRequest(req: any) {
   try {
     if (req.isCorrection) {
-      await api.post(`/personnel/corrections/${req.rawId}/mark_printed/`)
+      try { await api.post(`/personnel/corrections/${req.rawId}/mark_printed/`) } catch (_) {}
       req.is_printed = true
-      window.open(`/services/print/model-23/${req.rawId}?personnelId=${req.personnel_military_number}&old_value=${req.old_value}&new_value=${req.new_value}&reason=${req.reason}`, '_blank')
+
+      // بناء draft مذكرة التصحيح
+      const correctionType = req.form_type_display || 'طلب تصحيح'
+      const txNumber = `CORR-${String(req.rawId).padStart(5, '0')}`
+      const dateStr = new Date().toLocaleDateString('ar-YE', { year: 'numeric', month: '2-digit', day: '2-digit' })
+      const corrTarget = req.correction_targets?.join('، ') || correctionType
+      let memoDraft = {
+        documentType: 'PERSONNEL_MEMO',
+        securityLevel: 'NORMAL',
+        referenceNo: txNumber,
+        docDate: dateStr,
+        correspondingDate: '',
+        attachments: 'نموذج رقم (23) — كشف المطابقة',
+        bilingual: false,
+        issuerLine1: '', issuerLine2: '', issuerLine3: '',
+        addressees: [{ prefix: 'الأخ /', name: 'المدير العام للمحافظة', suffix: 'المحترم' }],
+        involvedPersonnel: [{
+          militaryId: req.personnel_military_number || '',
+          rank: '', name: req.personnel_name || '',
+          nationalId: '',
+          correctName: req.new_value || '',
+          wrongName: req.old_value || '',
+          correctionTarget: corrTarget,
+          notes: req.reason || req.notes || '',
+        }],
+        subject: `طلب تصحيح بيانات — ${req.personnel_name || ''}`,
+        body: `<p>نحيط سيادتكم علماً بأنه ورد إلينا طلب تصحيح بيانات للمنتسب/المنتسبين الموضحين أعلاه.</p>
+<p>نرفق لكم كشفاً بأسماء المطلوب تصحيح أسمائهم <strong>(كشف المطابقة — نموذج 23)</strong>، مع مرفقات كل فرد، وذلك لاتخاذ الإجراءات اللازمة.</p>`,
+        conclusion: '<p>والله الموفق ،،،</p>',
+        signatures: [
+          { title: 'رئيس قسم الخدمات', rank: '', name: '', showSeal: false },
+          { title: 'مدير إدارة القوى البشرية', rank: '', name: '', showSeal: true },
+        ],
+        signatureSettings: { showLabels: true, showFrame: true },
+        visibleColumns: {
+          militaryId: true, rank: true, nationalId: false, status: false,
+          workplace: false, serviceLocation: false, jobTitle: false,
+          position: false, qualification: false, joinDate: false,
+          commencementDate: false, phone: false, clarification: false, notes: true,
+          correctName: true, wrongName: true, correctionTarget: true,
+        },
+        typography: {
+          addressee: { family: 'Cairo', size: 1.1, weight: 'font-bold', underline: true },
+          greeting: { family: 'Cairo', size: 1.0, weight: 'font-bold', underline: true },
+          subject: { family: 'Cairo', size: 1.15, weight: 'font-black', underline: true },
+          body: { family: 'Cairo', size: 1.0, weight: 'font-normal', underline: false },
+          conclusionSeparator: { family: 'Cairo', size: 1.1, weight: 'font-bold', underline: true },
+          conclusionBody: { family: 'Cairo', size: 1.0, weight: 'font-normal', underline: false },
+          signatures: { family: 'Cairo', size: 0.95, weight: 'font-bold', underline: false },
+        },
+      }
+                // Try to load any generic template or just fallback to default
+          const tplStr = localStorage.getItem('memo_template_WORK_COMMENCEMENT') || localStorage.getItem('memo_template_ATTENTION_NOTICE');
+          if (tplStr && (req?.form_type === 'work_commencement' || req?.form_type === 'attention_notice')) {
+            try {
+              const tpl = JSON.parse(tplStr);
+              memoDraft = { ...memoDraft, ...tpl, referenceNo: memoDraft.referenceNo, docDate: memoDraft.docDate, involvedPersonnel: [] };
+            } catch(e) {}
+          }
+          localStorage.setItem('official_memo_draft', JSON.stringify(memoDraft))
+      window.open('/admin/documents/memo-preview', '_blank')
     } else {
-      await servicesStore.markFormPrinted(req.id)
+      try { await servicesStore.markFormPrinted(req.id) } catch (_) {}
       req.is_printed = true
-      window.open(`/services/forms/${req.id}?print=true`, '_blank')
+      // الخدمات العادية — نفس منطق TransactionsHub
+      const personnelName = req.personnel_name || ''
+      const militaryNumber = req.personnel_military_number || ''
+      const formType = req.form_type_display || req.form_type || ''
+      const txNumber = `TX-${String(req.id).padStart(6, '0')}`
+      const dateStr = new Date().toLocaleDateString('ar-YE', { year: 'numeric', month: '2-digit', day: '2-digit' })
+      let memoDraft = {
+        documentType: 'PERSONNEL_MEMO', securityLevel: 'NORMAL',
+        referenceNo: txNumber, docDate: dateStr, correspondingDate: '',
+        attachments: 'نموذج إثبات حالة', bilingual: false,
+        issuerLine1: '', issuerLine2: '', issuerLine3: '',
+        addressees: [{ prefix: 'الأخ /', name: 'المدير العام للمحافظة', suffix: 'المحترم' }],
+        involvedPersonnel: [{ militaryId: militaryNumber, rank: '', name: personnelName, nationalId: '', status: formType, workplace: '', serviceLocation: '', notes: '' }],
+        subject: `بخصوص طلب إثبات حالة (${formType}) — ${personnelName}`,
+        body: `<p>نحيط سيادتكم علماً بأنه تم اعتماد طلب إثبات حالة (${formType}) للمنتسب المذكور أعلاه.</p><p>رقم المعاملة: <strong>${txNumber}</strong></p><p>نأمل التكرم بالاطلاع واتخاذ اللازم.</p>`,
+        conclusion: '<p>والله الموفق ،،،</p>',
+        signatures: [
+          { title: 'رئيس قسم الخدمات', rank: '', name: '', showSeal: false },
+          { title: 'مدير إدارة القوى البشرية', rank: '', name: '', showSeal: true },
+        ],
+        signatureSettings: { showLabels: true, showFrame: true },
+        visibleColumns: { militaryId: true, rank: true, nationalId: false, status: true, workplace: false, serviceLocation: false, jobTitle: false, position: false, qualification: false, joinDate: false, commencementDate: false, phone: false, clarification: false, notes: true },
+        typography: {
+          addressee: { family: 'Cairo', size: 1.1, weight: 'font-bold', underline: true },
+          greeting: { family: 'Cairo', size: 1.0, weight: 'font-bold', underline: true },
+          subject: { family: 'Cairo', size: 1.15, weight: 'font-black', underline: true },
+          body: { family: 'Cairo', size: 1.0, weight: 'font-normal', underline: false },
+          conclusionSeparator: { family: 'Cairo', size: 1.1, weight: 'font-bold', underline: true },
+          conclusionBody: { family: 'Cairo', size: 1.0, weight: 'font-normal', underline: false },
+          signatures: { family: 'Cairo', size: 0.95, weight: 'font-bold', underline: false },
+        },
+      }
+                // Try to load any generic template or just fallback to default
+          const tplStr = localStorage.getItem('memo_template_WORK_COMMENCEMENT') || localStorage.getItem('memo_template_ATTENTION_NOTICE');
+          if (tplStr && (req?.form_type === 'work_commencement' || req?.form_type === 'attention_notice')) {
+            try {
+              const tpl = JSON.parse(tplStr);
+              memoDraft = { ...memoDraft, ...tpl, referenceNo: memoDraft.referenceNo, docDate: memoDraft.docDate, involvedPersonnel: [] };
+            } catch(e) {}
+          }
+          localStorage.setItem('official_memo_draft', JSON.stringify(memoDraft))
+      window.open('/admin/documents/memo-preview', '_blank')
     }
-    await fetchRequests() // Refresh state
+    await fetchRequests()
   } catch (e: any) {
     Swal.fire('خطأ', e.response?.data?.error || 'حدث خطأ أثناء طباعة الطلب', 'error')
   }
+}
+
+function showCorrectionDetails(req: any) {
+  Swal.fire({
+    title: req.form_type_display || 'تفاصيل التصحيح',
+    html: `
+      <div class="text-right text-sm space-y-2" dir="rtl">
+        <div><strong>الاسم:</strong> ${req.personnel_name}</div>
+        <div><strong>الرقم العسكري:</strong> ${req.personnel_military_number}</div>
+        <hr class="my-2 border-gray-200" />
+        <div><strong>القيمة الحالية:</strong> <span class="text-red-600 font-mono">${req.old_value || '—'}</span></div>
+        <div><strong>القيمة المقترحة:</strong> <span class="text-emerald-600 font-bold font-mono">${req.new_value || '—'}</span></div>
+        <hr class="my-2 border-gray-200" />
+        <div><strong>المبررات:</strong> ${req.notes || req.reason || '—'}</div>
+      </div>
+    `,
+    icon: 'info', confirmButtonText: 'إغلاق', confirmButtonColor: '#3b82f6',
+  })
 }
 
 async function registerApproval(req: any) {

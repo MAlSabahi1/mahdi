@@ -209,10 +209,10 @@ const searchText = ref('')
 const stageLabels: Record<string, string> = {
   all:               'الكل',
   draft:             'مسودة',
-  in_progress:       'قيد المراجعة',
-  pending_services:  'عند رئيس الخدمات',
-  pending_hr:        'عند مدير الموارد',
-  pending_director:  'عند المدير العام',
+  in_progress:       'قيد الإجراء',
+  pending_services:  'عند رئيس قسم الخدمات',
+  pending_hr:        'عند مدير إدارة القوى البشرية',
+  pending_director:  'عند المدير العام للمحافظة',
   approved:          'معتمد نهائياً',
   rejected:          'مرفوض',
   returned:          'مُرجع للتعديل',
@@ -220,12 +220,12 @@ const stageLabels: Record<string, string> = {
 }
 
 const stageOptions = [
-  { value: 'all',              label: 'الكل',              dot: 'bg-gray-400' },
-  { value: 'pending_services', label: 'عند رئيس الخدمات', dot: 'bg-amber-500' },
-  { value: 'pending_hr',       label: 'عند مدير الموارد', dot: 'bg-blue-500'  },
-  { value: 'pending_director', label: 'عند المدير العام',  dot: 'bg-purple-500'},
-  { value: 'approved',         label: 'معتمدة',            dot: 'bg-emerald-500'},
-  { value: 'rejected',         label: 'مرفوضة',            dot: 'bg-red-500'  },
+  { value: 'all',              label: 'الكل',                            dot: 'bg-gray-400' },
+  { value: 'pending_services', label: 'عند رئيس قسم الخدمات',       dot: 'bg-amber-500' },
+  { value: 'pending_hr',       label: 'عند مدير إدارة القوى البشرية', dot: 'bg-blue-500'  },
+  { value: 'pending_director', label: 'عند المدير العام للمحافظة',      dot: 'bg-purple-500'},
+  { value: 'approved',         label: 'معتمدة',                          dot: 'bg-emerald-500'},
+  { value: 'rejected',         label: 'مرفوضة',                          dot: 'bg-red-500'  },
 ]
 
 // ── الإحصائيات ──────────────────────────────────────────
@@ -255,7 +255,7 @@ const stats = computed(() => [
     valueColorClass: 'text-warning-900 dark:text-warning-300',
   },
   {
-    label: 'عند مدير الموارد', value: stageCounts.value['pending_hr'] || 0,
+    label: 'عند مدير إدارة القوى البشرية', value: stageCounts.value['pending_hr'] || 0,
     dotClass: 'bg-blue-500',
     cardClass: 'border-blue-200 bg-blue-50 dark:border-blue-500/20 dark:bg-blue-500/5',
     iconBgClass: 'bg-blue-100 dark:bg-blue-500/20',
@@ -263,7 +263,7 @@ const stats = computed(() => [
     valueColorClass: 'text-blue-900 dark:text-blue-300',
   },
   {
-    label: 'عند المدير العام', value: stageCounts.value['pending_director'] || 0,
+    label: 'عند المدير العام للمحافظة', value: stageCounts.value['pending_director'] || 0,
     dotClass: 'bg-purple-500',
     cardClass: 'border-purple-200 bg-purple-50 dark:border-purple-500/20 dark:bg-purple-500/5',
     iconBgClass: 'bg-purple-100 dark:bg-purple-500/20',
@@ -340,12 +340,14 @@ function serviceTypeColor(type: string) {
 // ── صلاحية الاعتماد حسب دور المستخدم ──────────────────
 function canApprove(req: any): boolean {
   if (req.status === 'approved' || req.status === 'rejected') return false
+  if (authStore.isAdmin) return true
   const role = authStore.user?.authz_profile?.role_name || ''
+  const roleCode = authStore.user?.authz_profile?.role_code || ''
   const pending = req.status
-  if (pending === 'pending_services' && (role.includes('رئيس الخدمات') || authStore.isAdmin)) return true
-  if (pending === 'pending_hr'       && (role.includes('مدير الموارد') || authStore.isAdmin)) return true
-  if (pending === 'pending_director' && (role.includes('المدير العام') || authStore.isAdmin)) return true
-  if ((pending === 'in_progress' || pending === 'draft') && authStore.isAdmin) return true
+  if (pending === 'pending_services' && (roleCode === 'services_dept' || role.includes('الخدمات'))) return true
+  if (pending === 'pending_hr'       && (roleCode === 'hr_director' || role.includes('القوى البشرية') || role.includes('مدير إدارة'))) return true
+  if (pending === 'pending_director' && (roleCode === 'governor_general' || role.includes('المدير العام'))) return true
+  if (pending === 'in_progress' || pending === 'draft') return false
   return false
 }
 

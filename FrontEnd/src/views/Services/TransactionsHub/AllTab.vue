@@ -170,7 +170,20 @@ function onSearch(q: string) { searchQuery.value = q }
 function formatDate(d: string) { return d ? new Date(d).toLocaleDateString('en-GB') : '-' }
 
 function getStatusLabel(s: string) {
-  const m: any = { draft: 'مسودة', in_progress: 'قيد الانتظار', approved: 'تمت الموافقة', executing: 'قيد التنفيذ', completed: 'مكتمل', rejected: 'مرفوض', cancelled: 'ملغى', returned: 'مُرجع', pending_services: 'عند رئيس الخدمات', pending_hr: 'عند مدير الموارد', pending_director: 'عند المدير العام' }
+  const m: any = {
+    draft: 'مسودة',
+    in_progress: 'قيد الإجراء',
+    approved: 'معتمد نهائياً',
+    executing: 'قيد التنفيذ',
+    completed: 'مكتمل',
+    rejected: 'مرفوض',
+    cancelled: 'ملغى',
+    returned: 'مُرجع للتعديل',
+    // الحالات القديمة — للتوافق مع البيانات الموجودة في DB
+    pending_services: 'عند رئيس قسم الخدمات',
+    pending_hr: 'عند مدير إدارة القوى البشرية',
+    pending_director: 'عند المدير العام للمحافظة',
+  }
   return m[s] || s
 }
 

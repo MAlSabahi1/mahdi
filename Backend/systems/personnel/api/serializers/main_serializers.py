@@ -238,14 +238,130 @@ class PersonnelDetailSerializer(serializers.ModelSerializer):
         return SuggestedCorrectionSerializer(corrections, many=True).data
     
     def get_documents(self, obj):
-        """المرفقات المثبّتة المرتبطة بالفرد (صور بطاقة، قرارات ترقية، إلخ)"""
         from infra.storage.models import Document
+        
         docs = Document.objects.filter(
             personnel=obj,
             status='committed',
-        ).order_by('-created_at')[:20]
-        return [
-            {
+        ).select_related('uploaded_by').order_by('-created_at')[:20]
+        
+        form_ids = [d.context_id for d in docs if d.context_type == 'StatusChangeForm' and d.context_id]
+        corr_ids = [d.context_id for d in docs if d.context_type == 'SuggestedCorrection' and d.context_id]
+        rank_ids = [d.context_id for d in docs if d.context_type == 'RankSettlement' and d.context_id]
+
+        forms_dict = {}
+        if form_ids:
+            from systems.services.models import StatusChangeForm, FormEventLog
+            forms = StatusChangeForm.objects.filter(id__in=form_ids).select_related('submitted_by')
+            form_events = FormEventLog.objects.filter(form_id__in=form_ids).select_related('performed_by').order_by('created_at')
+            events_by_form = {}
+            for ev in form_events:
+                events_by_form.setdefault(ev.form_id, []).append({
+                    'action': ev.action,
+                    'performed_by': ev.performed_by.get_full_name() or ev.performed_by.username if ev.performed_by else 'النظام',
+                    'date': ev.created_at.isoformat(),
+                    'notes': ev.notes
+                })
+            # Get catalog map for dynamic types
+            from systems.services.models import ServiceCatalog
+            catalog_map = {}
+            for sc in ServiceCatalog.objects.values('code', 'form_type', 'name_ar'):
+                catalog_map[sc['code']] = sc['name_ar']
+                if sc['form_type']:
+                    catalog_map[sc['form_type']] = sc['name_ar']
+                    
+            for f in forms:
+                ft_display = catalog_map.get(f.form_type) or dict(f.FORM_TYPE_CHOICES).get(f.form_type) or f.form_type
+                forms_dict[str(f.id)] = {
+                    'title': f"{ft_display}",
+                    'status': f.get_status_display(),
+                    'submitted_by': f.submitted_by.get_full_name() or f.submitted_by.username if f.submitted_by else 'غير معروف',
+                    'events': events_by_form.get(f.id, [])
+                }
+
+        corrs_dict = {}
+        if corr_ids:
+            from systems.personnel.models import SuggestedCorrection
+            corrs = SuggestedCorrection.objects.filter(id__in=corr_ids).select_related('requested_by', 'reviewed_by')
+            for c in corrs:
+                events = []
+                req_name = c.requested_by.get_full_name() or c.requested_by.username if c.requested_by else 'غير معروف'
+                events.append({
+                    'action': 'created',
+                    'performed_by': req_name,
+                    'date': c.requested_at.isoformat() if c.requested_at else c.created_at.isoformat(),
+                    'notes': 'تقديم طلب تصحيح بيانات'
+                })
+                if c.status in ['approved', 'rejected'] and c.reviewed_by:
+                    rev_name = c.reviewed_by.get_full_name() or c.reviewed_by.username
+                    events.append({
+                        'action': c.status,
+                        'performed_by': rev_name,
+                        'date': c.reviewed_at.isoformat() if c.reviewed_at else None,
+                        'notes': f'حالة الطلب: {c.get_status_display()}'
+                    })
+                corrs_dict[str(c.id)] = {
+                    'title': "طلب تصحيح بيانات",
+                    'status': c.get_status_display(),
+                    'submitted_by': req_name,
+                    'events': events
+                }
+
+        ranks_dict = {}
+        if rank_ids:
+            from systems.personnel.models import RankSettlement
+            ranks = RankSettlement.objects.filter(id__in=rank_ids).select_related('requested_by', 'applied_by')
+            for r in ranks:
+                events = []
+                req_name = r.requested_by.get_full_name() or r.requested_by.username if r.requested_by else 'غير معروف'
+                events.append({
+                    'action': 'created',
+                    'performed_by': req_name,
+                    'date': r.created_at.isoformat(),
+                    'notes': 'تقديم طلب تسوية رتبة'
+                })
+                if r.status in ['applied', 'rejected'] and r.applied_by:
+                    rev_name = r.applied_by.get_full_name() or r.applied_by.username
+                    events.append({
+                        'action': r.status,
+                        'performed_by': rev_name,
+                        'date': r.applied_at.isoformat() if r.applied_at else None,
+                        'notes': f'حالة الطلب: {r.get_status_display()}'
+                    })
+                ranks_dict[str(r.id)] = {
+                    'title': "قرار تسوية رتبة",
+                    'status': r.get_status_display(),
+                    'submitted_by': req_name,
+                    'events': events
+                }
+
+        result = []
+        for d in docs:
+            title = d.context_type
+            context_meta = {}
+            context_events = []
+            
+            if d.context_type == 'StatusChangeForm' and str(d.context_id) in forms_dict:
+                info = forms_dict[str(d.context_id)]
+                title = info['title']
+                context_meta = {'status': info['status'], 'submitted_by': info['submitted_by']}
+                context_events = info['events']
+            elif d.context_type == 'SuggestedCorrection' and str(d.context_id) in corrs_dict:
+                info = corrs_dict[str(d.context_id)]
+                title = info['title']
+                context_meta = {'status': info['status'], 'submitted_by': info['submitted_by']}
+                context_events = info['events']
+            elif d.context_type == 'RankSettlement' and str(d.context_id) in ranks_dict:
+                info = ranks_dict[str(d.context_id)]
+                title = info['title']
+                context_meta = {'status': info['status'], 'submitted_by': info['submitted_by']}
+                context_events = info['events']
+
+            uploaded_by_name = getattr(d.uploaded_by, 'username', 'النظام')
+            if getattr(d, 'uploaded_by', None) and getattr(d.uploaded_by, 'get_full_name', lambda: '')():
+                uploaded_by_name = d.uploaded_by.get_full_name()
+
+            result.append({
                 'id': d.id,
                 'document_type': d.document_type,
                 'document_type_display': d.get_document_type_display(),
@@ -256,9 +372,15 @@ class PersonnelDetailSerializer(serializers.ModelSerializer):
                 'file_hash': d.file_hash,
                 'version': d.version,
                 'created_at': d.created_at.isoformat() if d.created_at else None,
-            }
-            for d in docs
-        ]
+                'uploaded_by': uploaded_by_name,
+                'context_type': d.context_type,
+                'context_id': d.context_id,
+                'context_title': title,
+                'context_meta': context_meta,
+                'context_events': context_events,
+            })
+        return result
+
 
 
 class PersonnelCreateSerializer(serializers.ModelSerializer):

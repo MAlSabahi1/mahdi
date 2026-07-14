@@ -262,6 +262,16 @@
                 <label class="flex items-center gap-1.5 cursor-pointer px-2.5 py-1.5 rounded-md text-xs font-bold border transition-colors" :class="form.visibleColumns.notes ? 'bg-brand-50 border-brand-200 text-brand-700 dark:bg-brand-900/30 dark:border-brand-800' : 'bg-gray-50 border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700'">
                   <input type="checkbox" v-model="form.visibleColumns.notes" class="hidden"> الملاحظات
                 </label>
+                <!-- أعمدة التصحيح -->
+                <label class="flex items-center gap-1.5 cursor-pointer px-2.5 py-1.5 rounded-md text-xs font-bold border transition-colors" :class="form.visibleColumns.correctName ? 'bg-success-50 border-success-200 text-success-700 dark:bg-success-900/30 dark:border-success-800' : 'bg-gray-50 border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700'">
+                  <input type="checkbox" v-model="form.visibleColumns.correctName" class="hidden"> الاسم الصحيح
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer px-2.5 py-1.5 rounded-md text-xs font-bold border transition-colors" :class="form.visibleColumns.wrongName ? 'bg-error-50 border-error-200 text-error-700 dark:bg-error-900/30 dark:border-error-800' : 'bg-gray-50 border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700'">
+                  <input type="checkbox" v-model="form.visibleColumns.wrongName" class="hidden"> الاسم الخطأ
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer px-2.5 py-1.5 rounded-md text-xs font-bold border transition-colors" :class="form.visibleColumns.correctionTarget ? 'bg-warning-50 border-warning-200 text-warning-700 dark:bg-warning-900/30 dark:border-warning-800' : 'bg-gray-50 border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700'">
+                  <input type="checkbox" v-model="form.visibleColumns.correctionTarget" class="hidden"> المطلوب تصحيحه
+                </label>
               </div>
             </div>
             <div v-if="form.involvedPersonnel.length === 0" class="text-center py-6 text-warning-500 text-sm border-2 border-dashed border-warning-200 rounded-lg dark:border-warning-800/50">
@@ -354,6 +364,15 @@
                   </div>
                   <div class="w-full md:w-48 shrink-0" v-if="form.visibleColumns.clarification">
                     <input v-model="person.clarification" type="text" placeholder="الإيضاح" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800">
+                  </div>
+                  <div class="w-full md:w-48 shrink-0" v-if="form.visibleColumns.correctName">
+                    <input v-model="person.correctName" type="text" placeholder="الاسم الصحيح" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-success-500 focus:ring-1 focus:ring-success-500 dark:border-gray-600 dark:bg-gray-800">
+                  </div>
+                  <div class="w-full md:w-48 shrink-0" v-if="form.visibleColumns.wrongName">
+                    <input v-model="person.wrongName" type="text" placeholder="الاسم الخطأ" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-error-500 focus:ring-1 focus:ring-error-500 dark:border-gray-600 dark:bg-gray-800">
+                  </div>
+                  <div class="w-full md:w-48 shrink-0" v-if="form.visibleColumns.correctionTarget">
+                    <input v-model="person.correctionTarget" type="text" placeholder="المطلوب تصحيحه" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-warning-500 focus:ring-1 focus:ring-warning-500 dark:border-gray-600 dark:bg-gray-800">
                   </div>
                   <div class="flex-1 min-w-[200px]" v-if="form.visibleColumns.notes">
                     <input v-model="person.secondaryNotes" type="text" placeholder="ملاحظات" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800">
@@ -1171,7 +1190,10 @@ const defaultForm = {
     commencementDate: false,
     phone: false,
     clarification: true,
-    notes: false
+    notes: false,
+    correctName: false,
+    wrongName: false,
+    correctionTarget: false
   },
   typography: {
     addressee: { family: "'Cairo', sans-serif", size: 1.3, weight: 'font-bold', underline: false },
@@ -1249,7 +1271,7 @@ const removeSignature = (index: number) => {
 
 const addInvolvedPersonnel = () => {
   if (!form.value.involvedPersonnel) form.value.involvedPersonnel = []
-  form.value.involvedPersonnel.push({ militaryId: '', rank: '', name: '', clarification: '', workplace: '', serviceLocation: '', notes: '', secondaryNotes: '', commencementDate: '', nationalId: '', phone: '' })
+  form.value.involvedPersonnel.push({ militaryId: '', rank: '', name: '', clarification: '', workplace: '', serviceLocation: '', notes: '', secondaryNotes: '', commencementDate: '', nationalId: '', phone: '', correctName: '', wrongName: '', correctionTarget: '' })
 }
 
 const removeInvolvedPersonnel = (index: number) => {

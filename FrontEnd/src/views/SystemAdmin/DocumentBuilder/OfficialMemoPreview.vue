@@ -114,6 +114,9 @@
                     <th v-if="memo.visibleColumns?.commencementDate" class="border border-gray-400 py-2 print:py-1">تاريخ المباشرة</th>
                     <th v-if="memo.visibleColumns?.phone" class="border border-gray-400 py-2 print:py-1">رقم الهاتف</th>
                     <th v-if="memo.visibleColumns?.clarification" class="border border-gray-400 py-2 print:py-1">الإيضاح</th>
+                    <th v-if="memo.visibleColumns?.correctName" class="border border-gray-400 py-2 print:py-1">الاسم الصحيح</th>
+                    <th v-if="memo.visibleColumns?.wrongName" class="border border-gray-400 py-2 print:py-1">الاسم الخطأ</th>
+                    <th v-if="memo.visibleColumns?.correctionTarget" class="border border-gray-400 py-2 print:py-1">المطلوب تصحيحه</th>
                     <th v-if="memo.visibleColumns?.notes" class="border border-gray-400 py-2 print:py-1">ملاحظات</th>
                   </tr>
                 </thead>
@@ -134,6 +137,9 @@
                     <td v-if="memo.visibleColumns?.commencementDate" class="border border-gray-400 py-1.5 px-1 whitespace-nowrap">{{ person.commencementDate }}</td>
                     <td v-if="memo.visibleColumns?.phone" class="border border-gray-400 py-1.5 px-1">{{ person.phone }}</td>
                     <td v-if="memo.visibleColumns?.clarification" class="border border-gray-400 py-1.5 px-1">{{ person.clarification }}</td>
+                    <td v-if="memo.visibleColumns?.correctName" class="border border-gray-400 py-1.5 px-1">{{ person.correctName }}</td>
+                    <td v-if="memo.visibleColumns?.wrongName" class="border border-gray-400 py-1.5 px-1">{{ person.wrongName }}</td>
+                    <td v-if="memo.visibleColumns?.correctionTarget" class="border border-gray-400 py-1.5 px-1">{{ person.correctionTarget }}</td>
                     <td v-if="memo.visibleColumns?.notes" class="border border-gray-400 py-1.5 px-1">{{ person.secondaryNotes || person.notes }}</td>
                   </tr>
                 </tbody>
@@ -306,8 +312,6 @@ onMounted(() => {
   max-width: 100%;
   height: auto;
 }
-
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
 
 .font-cairo {
   font-family: 'Cairo', sans-serif !important;

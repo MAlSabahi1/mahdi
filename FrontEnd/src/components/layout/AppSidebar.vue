@@ -426,6 +426,10 @@ const menuGroups = computed(() => {
                 path: "/reports/graphical",
               },
               {
+                name: "تصدير الخدمات والكشوفات الشهرية",
+                path: "/reports/monthly-services",
+              },
+              {
                 name: "نافذة طلبات التصدير",
                 path: "/reports/export-requests",
               }

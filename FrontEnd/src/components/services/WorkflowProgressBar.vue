@@ -156,7 +156,7 @@ const isApproved = computed(() => props.status === 'approved')
 
 // ══ داخلي ══
 const internalSteps = computed(() => {
-  const base = props.steps.length > 0 ? props.steps : ['قسم الخدمات', 'الموارد البشرية', 'المدير العام']
+  const base = props.steps.length > 0 ? props.steps : ['رئيس قسم الخدمات', 'مدير إدارة القوى البشرية', 'المدير العام للمحافظة']
   return ['إنشاء الطلب', ...base, 'معتمد نهائياً']
 })
 

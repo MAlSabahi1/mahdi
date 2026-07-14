@@ -319,6 +319,15 @@ const router = createRouter({
       }
     },
     {
+      path: "/reports/monthly-services",
+      name: "MonthlyServicesReport",
+      component: () => import("@/views/Reports/MonthlyServicesReport.vue"),
+      meta: {
+        title: "تصدير الخدمات والكشوفات الشهرية",
+        requiresAuth: true
+      }
+    },
+    {
       path: "/reports/export-requests",
       name: "ExportRequestsManagement",
       component: () => import("@/views/Reports/ExportRequestsManagement.vue"),
