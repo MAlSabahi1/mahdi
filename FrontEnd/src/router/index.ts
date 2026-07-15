@@ -191,6 +191,26 @@ const router = createRouter({
       },
     },
     {
+      path: '/settings',
+      name: 'system-settings',
+      component: () => import('../views/Settings/SystemSettingsView.vue'),
+      meta: {
+        title: 'الإعدادات العامة للنظام',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/early-warnings',
+      name: 'early-warnings',
+      component: () => import('../views/Settings/EarlyWarningsDashboard.vue'),
+      meta: {
+        title: 'لوحة الإنذارات المبكرة',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
       path: '/audit',
       name: 'AuditLogs',
       component: () => import('@/views/Audit/AuditLogs.vue'),

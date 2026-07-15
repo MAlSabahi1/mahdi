@@ -229,8 +229,24 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
             return Response({'success': False, 'error': 'الفرد غير موجود'},
                             status=status.HTTP_404_NOT_FOUND)
 
+        # ── Business Logic Validation ──
+        if form_type == 'return_to_service':
+            status_name = personnel.current_status.name if personnel.current_status else ''
+            if any(s in status_name for s in ['في الخدمة', 'عامل', 'ميدان']):
+                return Response({
+                    'success': False, 
+                    'error': f'لا يمكن إعادة فرد وهو على رأس العمل بالفعل. (الحالة الحالية: {status_name})'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
         # ── التحقق من form_data عبر Registry ──
         form_data = d.get('form_data', {})
+        
+        # [SECURITY] Enforce personnel_master fields auto-population (Bulk Submit safety)
+        if hasattr(personnel, 'birth_date') and personnel.birth_date:
+            form_data['birth_date'] = personnel.birth_date.isoformat() if hasattr(personnel.birth_date, 'isoformat') else str(personnel.birth_date)
+        if hasattr(personnel, 'join_date') and personnel.join_date:
+            form_data['join_date'] = personnel.join_date.isoformat() if hasattr(personnel.join_date, 'isoformat') else str(personnel.join_date)
+            
         if not is_dynamic:
             is_valid, errors = FormRegistry.validate(form_type, form_data)
             if not is_valid:

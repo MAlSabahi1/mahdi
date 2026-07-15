@@ -347,7 +347,7 @@
                   </label>
                 
                 <div v-if="field.type === 'select'" class="relative z-20 bg-transparent">
-                  <select v-model="formData[field.key]" class="w-full appearance-none bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-800 dark:text-white shadow-theme-xs focus:ring-3 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-shadow ltr:pr-11 rtl:pl-11">
+                  <select v-model="formData[field.key]" :disabled="field.disabled" class="w-full appearance-none bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-800 dark:text-white shadow-theme-xs focus:ring-3 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-shadow ltr:pr-11 rtl:pl-11 disabled:opacity-50 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed">
                     <option value="" disabled>اختر...</option>
                     <option v-for="opt in getFilteredOptions(field)" :key="opt && typeof opt === 'object' ? opt.value : opt" :value="opt && typeof opt === 'object' ? opt.value : opt">
                       {{ opt && typeof opt === 'object' ? opt.label : opt }}
@@ -463,14 +463,21 @@
                 </div>
 
                 <textarea v-else-if="field.type === 'textarea'" v-model="formData[field.key]" class="w-full bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-900 dark:text-white shadow-theme-xs focus:ring-3 focus:ring-brand-500/10 focus:border-brand-500 outline-none h-24 transition-shadow"></textarea>
+                <div v-else-if="selectedPersonnelList.length > 1 && (field.source === 'personnel_master' || field.key === 'age')">
+                  <div class="w-full bg-blue-50/50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 rounded-xl px-4 py-2.5 text-sm flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                    <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    سيتم سحب بيانات كل فرد تلقائياً
+                  </div>
+                </div>
                 <div v-else>
-                  <input :type="field.type" v-model="formData[field.key]" 
-                          :readonly="field.key === 'old_value' || field.disabled"
+                  <input :type="field.key === 'age' ? 'number' : field.type" v-model="formData[field.key]" 
+                          :readonly="field.key === 'old_value' || field.disabled || field.key === 'age'"
                           :min="field.type === 'date' ? '1900-01-01' : undefined"
                           :max="field.type === 'date' && !['end_date','due_date'].includes(field.key) ? new Date().toISOString().split('T')[0] : undefined"
                           :maxlength="field.key === 'new_military_number' ? 7 : (field.key === 'new_value' && (formData.correction_type === 'national_id_correction' || formData.field_name === 'national_id') ? 11 : undefined)"
                           @change="field.type === 'date' ? validateDateField(field, $event) : undefined"
-                          :class="['w-full bg-gray-50 dark:bg-gray-800 border rounded-xl px-4 py-2.5 text-sm focus:ring-2 outline-none transition-shadow', field.type === 'date' ? 'text-left' : '', (field.key === 'old_value' || field.disabled) ? 'opacity-70 cursor-not-allowed font-bold text-gray-600 bg-gray-100 dark:bg-gray-800/50' : '', formDataErrors[field.key] ? 'border-error-500 focus:ring-error-500' : 'border-gray-200 dark:border-gray-700 focus:ring-brand-500']"
+                          :placeholder="field.key === 'age' ? 'يُحسب تلقائياً من تاريخ الميلاد' : ''"
+                          :class="['w-full bg-gray-50 dark:bg-gray-800 border rounded-xl px-4 py-2.5 text-sm focus:ring-2 outline-none transition-shadow', field.type === 'date' ? 'text-left' : '', (field.key === 'old_value' || field.disabled || field.key === 'age') ? 'opacity-70 cursor-not-allowed font-bold text-gray-600 bg-gray-100 dark:bg-gray-800/50' : '', formDataErrors[field.key] ? 'border-error-500 focus:ring-error-500' : 'border-gray-200 dark:border-gray-700 focus:ring-brand-500']"
                           :dir="field.type === 'date' ? 'ltr' : 'rtl'" />
                   <p v-if="formDataErrors[field.key]" class="text-[10px] text-error-600 font-bold mt-1.5 flex items-center gap-1"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> {{ formDataErrors[field.key] }}</p>
                 </div>
@@ -759,13 +766,15 @@ watch(() => formData.value.birth_date, (newVal) => {
   if (newVal && schema.value?.sections?.some((s:any) => s.fields?.some((f:any) => f.key === 'age'))) {
     const bdate = new Date(newVal)
     const today = new Date()
-    if (!isNaN(bdate.getTime())) {
+    if (!isNaN(bdate.getTime()) && bdate < today) {
       let calcAge = today.getFullYear() - bdate.getFullYear()
       const m = today.getMonth() - bdate.getMonth()
       if (m < 0 || (m === 0 && today.getDate() < bdate.getDate())) {
         calcAge--
       }
       formData.value.age = Math.max(0, calcAge)
+    } else {
+      formData.value.age = ''
     }
   }
 })
@@ -1144,6 +1153,34 @@ async function addPersonnel(person: any) {
       text: `هذا الفرد مسجل كـ (${statusStr || 'غير نشط'}) في النظام، ولا يمكن إنشاء أي معاملات جديدة له (باستثناء العودة للخدمة أو تصحيح البيانات).`
     })
     return
+  }
+
+  // 1.5 منع إعادة خدمة لمن هو في الخدمة بالفعل، أو تحديد سبب الإعادة آلياً
+  if (type === 'return_to_service') {
+    const isActive = statusStr.includes('في الخدمة') || statusStr.includes('عامل') || statusStr.includes('ميدان');
+    if (isActive) {
+      Swal.fire({
+        icon: 'error',
+        title: 'لا يمكن عمل إعادة خدمة',
+        text: `الفرد المختار متواجد بالفعل على رأس العمل (حالته: ${statusStr}). إعادة الخدمة تتم للمنقطعين والفصل والسجن فقط.`
+      })
+      return
+    }
+    
+    // Auto-select reason based on status
+    if (statusStr.includes('سجن') || statusStr.includes('مسجون')) {
+      formData.value.return_reason = 'sentence_end' // انتهاء محكومية/سجن
+    } else if (statusStr.includes('فصل') || statusStr.includes('مفصول') || statusStr.includes('فرار') || statusStr.includes('منقطع')) {
+      formData.value.return_reason = 'committee' // قرار لجنة
+    } else if (statusStr.includes('أسر') || statusStr.includes('أسير')) {
+      formData.value.return_reason = 'amnesty' // عفو أو تحرير
+    }
+
+    // Disable the reason field if auto-selected
+    if (formData.value.return_reason && schema.value?.sections?.[0]?.fields) {
+      const reasonField = schema.value.sections[0].fields.find((f: any) => f.key === 'return_reason')
+      if (reasonField) reasonField.disabled = true
+    }
   }
 
   // 2. التحقق من الباك إند إذا كانت هناك معاملة معلقة لأي نوع

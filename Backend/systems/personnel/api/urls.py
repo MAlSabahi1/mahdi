@@ -71,6 +71,7 @@ from rest_framework.routers import DefaultRouter
 from django.urls import path, include
 from . import views
 from .views.reports_views import WorkforceSummaryReportView, HierarchicalWorkforceView
+from .views.early_warnings_views import EarlyWarningsEngineView
 
 router = DefaultRouter()
 router.register(r'corrections', views.SuggestedCorrectionViewSet, basename='suggested-corrections')
@@ -85,5 +86,6 @@ urlpatterns = [
     path('check-national-id/', views.CheckNationalIdView.as_view(), name='check-national-id'),
     path('<str:military_number>/update-national-id/', views.UpdateNationalIdView.as_view(), name='update-national-id'),
     path('schema/', views.PersonnelViewSet.as_view({'get': 'schema'}), name='personnel-schema'),
+    path('early-warnings/', EarlyWarningsEngineView.as_view(), name='early-warnings-engine'),
     path('', include(router.urls)),
 ]

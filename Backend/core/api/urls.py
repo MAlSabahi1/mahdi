@@ -1,6 +1,7 @@
 """Core URLs - مسارات API القواميس والهيكل التنظيمي"""
 from rest_framework.routers import DefaultRouter
 from . import views
+from .settings_views import SystemSettingViewSet
 
 router = DefaultRouter()
 
@@ -33,6 +34,9 @@ router.register(r'transition-rules', views.StateTransitionRuleViewSet, basename=
 
 # Notifications
 router.register(r'notifications', views.NotificationRecordViewSet, basename='notification')
+
+# System Settings
+router.register(r'system-settings', SystemSettingViewSet, basename='system-setting')
 
 from django.urls import path
 

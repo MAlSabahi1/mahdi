@@ -243,6 +243,43 @@ class Command(BaseCommand):
                     {"doc_type": "certified_id", "label": "نسخة معمدة من البطاقة العسكرية والبطاقة الشخصية", "required": True}
                 ]
             },
+            'service_extension': {
+                "label": "تمديد خدمة",
+                "sections": [{
+                    "title": "بيانات التمديد",
+                    "source": "user_input",
+                    "fields": [
+                        {"key": "extension_reason", "label": "سبب التمديد", "type": "select", "options": [{"label":"بلوغ السن القانوني", "value":"age"}, {"label":"إكمال المدة القانونية", "value":"period"}], "required": True},
+                        {"key": "decision_number", "label": "رقم قرار التمديد", "type": "text", "required": True},
+                        {"key": "decision_date", "label": "تاريخ القرار", "type": "date", "required": True},
+                        {"key": "extension_years", "label": "مدة التمديد (بالسنوات)", "type": "number", "required": True},
+                        {"key": "end_date", "label": "تاريخ نهاية التمديد المتوقع", "type": "date", "required": True},
+                        {"key": "notes", "label": "ملاحظات ومبررات التمديد", "type": "textarea", "required": False}
+                    ]
+                }],
+                "attachments": [
+                    {"doc_type": "extension_order", "label": "قرار تمديد الخدمة (وزاري/رئاسي)", "required": True},
+                    {"doc_type": "personal_request", "label": "مذكرة الرفع بالاحتياج الماسة للفرد", "required": True}
+                ]
+            },
+            'return_to_service': {
+                "label": "إعادة للخدمة",
+                "sections": [{
+                    "title": "بيانات الإعادة للخدمة",
+                    "source": "user_input",
+                    "fields": [
+                        {"key": "return_reason", "label": "سبب الإعادة", "type": "select", "options": [{"label":"قرار عفو", "value":"amnesty"}, {"label":"انتهاء محكومية/سجن", "value":"sentence_end"}, {"label":"قرار لجنة شؤون الأفراد", "value":"committee"}, {"label":"أخرى", "value":"other"}], "required": True},
+                        {"key": "decision_number", "label": "رقم قرار الإعادة", "type": "text", "required": True},
+                        {"key": "decision_date", "label": "تاريخ القرار", "type": "date", "required": True},
+                        {"key": "return_date", "label": "تاريخ العودة الفعلي", "type": "date", "required": True},
+                        {"key": "notes", "label": "ملاحظات إضافية", "type": "textarea", "required": False}
+                    ]
+                }],
+                "attachments": [
+                    {"doc_type": "return_decision", "label": "قرار/أمر الإعادة للخدمة", "required": True},
+                    {"doc_type": "personal_request", "label": "طلب العودة (إن وجد)", "required": False}
+                ]
+            },
             'imprisoned': {
                 "label": "إثبات حالة (مسجون)",
                 "sections": [{
@@ -251,22 +288,19 @@ class Command(BaseCommand):
                     "fields": [
                         {"key": "category", "label": "الفئة", "type": "text", "required": True, "disabled": True, "value": "سجناء"},
                         {"key": "case_type", "label": "نوع القضية", "type": "text", "required": True},
-                        {"key": "ruling_type", "label": "نوع الحكم", "type": "text", "required": False},
                         {"key": "ruling_date", "label": "تاريخ الحكم", "type": "date", "required": False},
                         {"key": "ruling_duration", "label": "مدة الحكم", "type": "text", "required": False},
-                        {"key": "sentence_start_date", "label": "مدة الحكم (من)", "type": "date", "required": False},
-                        {"key": "sentence_end_date", "label": "مدة الحكم (إلى)", "type": "date", "required": False},
                         {"key": "arrest_date", "label": "تاريخ التوقيف", "type": "date", "required": True},
                         {"key": "arrest_authority", "label": "جهة التوقيف", "type": "text", "required": True},
                         {"key": "notes", "label": "ملاحظات", "type": "textarea", "required": False}
                     ]
                 }],
                 "attachments": [
-                    {"doc_type": "ruling_copy", "label": "نسخة من الحكم (إن وجد)", "required": False},
-                    {"doc_type": "prosecution_memo", "label": "مذكرة من النيابة", "required": False},
-                    {"doc_type": "personnel_id", "label": "صورة البطاقة الشخصية/العسكرية", "required": True},
-                    {"doc_type": "legal_power_of_attorney", "label": "وكالة شرعية", "required": True},
-                    {"doc_type": "agent_id", "label": "صورة البطاقة الشخصية للوكيل", "required": True}
+                    {"doc_type": "court_ruling", "label": "نسخة من الحكم", "required": False},
+                    {"doc_type": "memo", "label": "مذكرة توضح بأن الفرد لازال في السجن من النيابة", "required": True},
+                    {"doc_type": "national_id_front", "label": "صورة البطاقة الشخصية/العسكرية", "required": True},
+                    {"doc_type": "power_of_attorney", "label": "وكالة شرعية", "required": True},
+                    {"doc_type": "attorney_id", "label": "صورة البطاقة الشخصية للوكيل", "required": True}
                 ]
             },
             'escort': {
@@ -276,8 +310,8 @@ class Command(BaseCommand):
                     "source": "user_input",
                     "fields": [
                         {"key": "category", "label": "الفئة", "type": "text", "required": True, "disabled": True, "value": "المعيات"},
-                        {"key": "vip_name", "label": "اسم الشخصية", "type": "text", "required": True},
-                        {"key": "vip_position", "label": "منصب الشخصية", "type": "text", "required": True},
+                        {"key": "dignitary_name", "label": "اسم الشخصية", "type": "text", "required": True},
+                        {"key": "dignitary_position", "label": "منصب الشخصية", "type": "text", "required": True},
                         {"key": "order_source", "label": "مصدر الأمر", "type": "text", "required": True},
                         {"key": "start_date", "label": "تاريخ البدء", "type": "date", "required": True},
                         {"key": "end_date", "label": "تاريخ الانتهاء", "type": "date", "required": True}

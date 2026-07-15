@@ -457,6 +457,8 @@ const fieldTranslations: Record<string, string> = {
   vip_name: 'اسم الشخصية',
   vip_position: 'منصب الشخصية',
   order_source: 'مصدر الامر',
+  order_copy: 'نسخة من أمر التكليف بالمرافقة',
+  'order copy': 'نسخة من أمر التكليف بالمرافقة',
   study_order: 'نسخة من أمر التفرغ الدراسي',
   'study order': 'نسخة من أمر التفرغ الدراسي',
   secondment_place: 'جهة الانتداب',
@@ -570,11 +572,13 @@ const dynamicSpecificFields = computed<FormField[]>(() => {
   const ORDER_MAP: Record<string, string[]> = {
     death: ['case_type', 'death_date', 'occurrence_context', 'death_location'],
     martyr: ['martyrdom_date', 'occurrence_context', 'martyrdom_location'],
-    imprisoned: ['case_type', 'arrest_date', 'ruling_type', 'ruling_duration', 'arrest_authority', 'sentence_start_date', 'sentence_end_date', 'ruling_date'],
+    imprisoned: ['case_type', 'ruling_date', 'ruling_duration', 'arrest_date', 'arrest_authority'],
     seconded: ['secondment_place', 'reason', 'order_source', 'start_date', 'end_date'],
+    escort: ['dignitary_name', 'dignitary_position', 'order_source', 'start_date', 'end_date'],
     study_leave: ['study_type', 'institution', 'order_source', 'duration', 'start_date', 'end_date'],
     end_of_service: ['birth_date', 'join_date', 'age', 'gender'],
     retirement_age: ['birth_date', 'join_date', 'age', 'gender'],
+    retired: ['birth_date', 'join_date', 'decision_number', 'referral_date'],
     medical_unfit: ['disease_type', 'medical_source', 'disability_percentage', 'injury_context'],
     missing: ['missing_date', 'missing_location', 'court_ruling_date', 'legal_status']
   }
@@ -701,13 +705,6 @@ const letterText = computed(() => {
     ]
   }
 
-  // النص الخاص باستمارة التقاعد
-  if (ft === 'retired') {
-    return [
-      `موضحاً لكم اعلاه بيانات حالة المذكور والتي بموجبها تم ضمه على فئة (بلوغ السن القانوني) ومرفق لكم الاوليات:\n١- الطلب الشخصي المقدم من المذكور.                  ٢- نسخة من البطاقة العسكرية والشخصية معمدة.`,
-      `نأمل التوجيه الى المختصين باستكمال الاجراءات بحسب النظام.`
-    ]
-  }
 
   // النص الخاص باستمارة منتدب
   if (ft === 'seconded') {

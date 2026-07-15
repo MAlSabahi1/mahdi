@@ -239,6 +239,47 @@ _FORMS = {
         min_documents=2,
     ),
 
+    # ── استمارة: تمديد خدمة ──
+    'service_extension': FormDefinition(
+        form_type='service_extension',
+        label='استمارة تمديد خدمة',
+        target_status='في الخدمة',
+        description='نموذج تمديد خدمة لمن بلغوا السن القانوني أو المدة',
+        fields=(
+            FormField('extension_reason', 'سبب التمديد', 'select', options=['بلوغ السن القانوني', 'إكمال المدة القانونية'], required=True),
+            FormField('decision_number', 'رقم قرار التمديد', 'text', required=True),
+            FormField('decision_date', 'تاريخ القرار', 'date', required=True),
+            FormField('extension_years', 'مدة التمديد (بالسنوات)', 'number', required=True),
+            FormField('end_date', 'تاريخ نهاية التمديد', 'date', required=True),
+            FormField('notes', 'ملاحظات ومبررات التمديد', 'textarea'),
+        ),
+        attachments=(
+            AttachmentSpec('extension_order', 'قرار تمديد الخدمة (وزاري/رئاسي)', required=True),
+            AttachmentSpec('personal_request', 'مذكرة الرفع بالاحتياج', required=True),
+        ),
+        min_documents=2,
+    ),
+
+    # ── استمارة: إعادة للخدمة ──
+    'return_to_service': FormDefinition(
+        form_type='return_to_service',
+        label='استمارة إعادة للخدمة',
+        target_status='في الخدمة',
+        description='نموذج إعادة الأفراد إلى الخدمة الفعالة بعد الانقطاع أو الفصل',
+        fields=(
+            FormField('return_reason', 'سبب الإعادة', 'select', options=['قرار عفو', 'انتهاء محكومية/سجن', 'قرار لجنة شؤون الأفراد', 'أخرى'], required=True),
+            FormField('decision_number', 'رقم قرار الإعادة', 'text', required=True),
+            FormField('decision_date', 'تاريخ القرار', 'date', required=True),
+            FormField('return_date', 'تاريخ العودة الفعلي', 'date', required=True),
+            FormField('notes', 'ملاحظات إضافية', 'textarea'),
+        ),
+        attachments=(
+            AttachmentSpec('return_decision', 'قرار/أمر الإعادة للخدمة', required=True),
+            AttachmentSpec('personal_request', 'طلب العودة (إن وجد)', required=False),
+        ),
+        min_documents=1,
+    ),
+
     # ── استمارة 7: مسجون ──
     'imprisoned': FormDefinition(
         form_type='imprisoned',
@@ -248,21 +289,18 @@ _FORMS = {
         fields=(
             FormField('category', 'الفئة', 'text', required=True, disabled=True, default='سجناء'),
             FormField('case_type', 'نوع القضية', 'text'),
-            FormField('ruling_type', 'نوع الحكم', 'text', required=False),
             FormField('ruling_date', 'تاريخ الحكم', 'date', required=False),
             FormField('ruling_duration', 'مدة الحكم', 'text', required=False),
-            FormField('sentence_start_date', 'مدة الحكم (من)', 'date', required=False),
-            FormField('sentence_end_date', 'مدة الحكم (إلى)', 'date', required=False),
             FormField('arrest_date', 'تاريخ التوقيف', 'date'),
             FormField('arrest_authority', 'جهة التوقيف', 'text'),
             FormField('notes', 'ملاحظات', 'textarea', required=False),
         ),
         attachments=(
-            AttachmentSpec('court_ruling', 'نسخة من الحكم القضائي'),
-            AttachmentSpec('memo', 'مذكرة النيابة (رهن التحقيق)', required=False),
+            AttachmentSpec('court_ruling', 'نسخة من الحكم', required=False),
+            AttachmentSpec('memo', 'مذكرة توضح بأن الفرد لازال في السجن من النيابة'),
             AttachmentSpec('national_id_front', 'صورة البطاقة الشخصية/العسكرية'),
             AttachmentSpec('power_of_attorney', 'وكالة شرعية'),
-            AttachmentSpec('attorney_id', 'صورة بطاقة الوكيل'),
+            AttachmentSpec('attorney_id', 'صورة البطاقة الشخصية للوكيل'),
         ),
         min_documents=4,
     ),

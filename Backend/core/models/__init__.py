@@ -48,6 +48,9 @@ from .workflow import StateTransitionRule
 # ── الإشعارات ──
 from .notification import NotificationRecord
 
+# ── إعدادات النظام ──
+from .settings import SystemSetting
+
 
 def __getattr__(name):
     """
@@ -112,4 +115,6 @@ __all__ = [
     'StateTransitionRule',
     # Notifications
     'NotificationRecord',
+    # Settings
+    'SystemSetting',
 ]

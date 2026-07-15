@@ -204,6 +204,14 @@ const menuGroups = computed(() => {
               {
                 name: "admin.compliance_tracker",
                 path: "/admin/dashboard/compliance",
+              },
+              {
+                name: "الإعدادات العامة للنظام",
+                path: "/settings",
+              },
+              {
+                name: "الإنذارات المبكرة",
+                path: "/early-warnings",
               }
             ]
           },

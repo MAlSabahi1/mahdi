@@ -410,6 +410,15 @@ class PersonnelCreateSerializer(serializers.ModelSerializer):
             'geo_location': {'allow_null': True, 'required': False},
             'expense_status': {'allow_null': True, 'allow_blank': True, 'required': False},
             'id_issue_place': {'allow_null': True, 'allow_blank': True, 'required': False},
+            'birth_governorate': {'allow_null': True, 'required': False},
+            'birth_district': {'allow_null': True, 'required': False},
+            'birth_sub_district': {'allow_null': True, 'required': False},
+            'birth_village': {'allow_null': True, 'required': False},
+            'residence_governorate': {'allow_null': True, 'required': False},
+            'residence_district': {'allow_null': True, 'required': False},
+            'residence_sub_district': {'allow_null': True, 'required': False},
+            'residence_village': {'allow_null': True, 'required': False},
+            'id_issue_date': {'allow_null': True, 'required': False},
         }
     
     def validate_military_number(self, value):

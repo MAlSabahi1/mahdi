@@ -293,7 +293,7 @@
               <select v-model="form.current_rank" @change="validateRankLogic" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
                 :class="{'border-error-500 focus:border-error-500 focus:ring-error-500/20': validationErrors.current_rank}">
                 <option :value="null">...</option>
-                <option v-for="r in coreStore.ranks" :key="r.id" :value="r.id" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">{{ r.name }}</option>
+                <option v-for="r in filteredRanks" :key="r.id" :value="r.id" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">{{ r.name }}</option>
               </select>
               <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
                 <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -871,25 +871,33 @@ function handleClickOutside(e: MouseEvent) {
 
 const groupedDepartments = computed(() => {
   const groups = []
+  const adminId = form.security_admin
+  
   if (coreStore.centralDepartments.length) {
     groups.push({
       label: 'الإدارات المركزية (قطاعات متخصصة)',
-      options: coreStore.centralDepartments.map((d: any) => ({ value: `central_${d.id}`, label: d.name }))
+      options: coreStore.centralDepartments
+                 .filter((d: any) => !adminId || d.security_admin === adminId)
+                 .map((d: any) => ({ value: `central_${d.id}`, label: d.name }))
     })
   }
   if (coreStore.branches.length) {
     groups.push({
       label: 'الفروع الرئيسية',
-      options: coreStore.branches.map((b: any) => ({ value: `branch_${b.id}`, label: b.name }))
+      options: coreStore.branches
+                 .filter((b: any) => !adminId || b.security_admin === adminId)
+                 .map((b: any) => ({ value: `branch_${b.id}`, label: b.name }))
     })
   }
   if (coreStore.districtPolices.length) {
     groups.push({
       label: 'شرط المديريات والمناطق',
-      options: coreStore.districtPolices.map((d: any) => ({ value: `district_${d.id}`, label: d.name }))
+      options: coreStore.districtPolices
+                 .filter((d: any) => !adminId || d.security_admin === adminId)
+                 .map((d: any) => ({ value: `district_${d.id}`, label: d.name }))
     })
   }
-  return groups
+  return groups.filter(g => g.options.length > 0)
 })
 
 const filteredGroupedDepartments = computed(() => {
@@ -1202,6 +1210,24 @@ const computedCategoryName = computed(() => {
     }
   }
   return ''
+})
+
+// Filter Ranks based on Military Number
+const filteredRanks = computed(() => {
+  if (!form.military_number || form.military_number.length < 2) return coreStore.ranks;
+  
+  const prefix = form.military_number.substring(0, 2);
+  const firstDigit = form.military_number[0];
+  
+  if (prefix === '60') {
+    // ضباط
+    return coreStore.ranks.filter((r: any) => r.is_officer === true);
+  } else if ((firstDigit === '7' || firstDigit === '5') && prefix !== '60') {
+    // أفراد
+    return coreStore.ranks.filter((r: any) => r.is_officer === false);
+  }
+  
+  return coreStore.ranks;
 })
 
 const filteredForceTypes = computed(() => {
