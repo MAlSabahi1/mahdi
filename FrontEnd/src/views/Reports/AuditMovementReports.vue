@@ -7,6 +7,12 @@
             <h2 class="text-2xl font-bold text-gray-800 dark:text-white/90">{{ reportInfo.title }}</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ reportInfo.subtitle }}</p>
           </div>
+          
+          <month-filter 
+            v-model="selectedMonth" 
+            @change="fetchData" 
+          />
+
           <div class="flex gap-2">
             <button @click="$router.push('/reports')" class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-all focus:outline-none print:hidden">
               <svg class="h-4.5 w-4.5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -29,6 +35,7 @@
               :title="reportInfo.title" 
               :subtitle="reportInfo.subtitle" 
               :reportType="reportId"
+              :selectedMonth="selectedMonth"
             />
 
             <!-- Sub-Tabs for report_24 (Absence and AWOL) -->
@@ -71,10 +78,12 @@
   import ReportHeader from '@/components/reports/ReportHeader.vue'
   import ReportFooter from '@/components/reports/ReportFooter.vue'
   import DetailedReportTable from '@/components/reports/DetailedReportTable.vue'
+  import MonthFilter from '@/components/reports/MonthFilter.vue'
 
   const route = useRoute()
   const reportData = ref([])
   const loading = ref(false)
+  const selectedMonth = ref('')
 
   const reportId = computed(() => {
     const id = route.params.id as string
@@ -208,7 +217,10 @@
     loading.value = true
     try {
       const res = await api.get('/reports/detailed-reports/audit-movement/', {
-        params: { report_id: reportId.value }
+        params: { 
+          report_id: reportId.value,
+          month: selectedMonth.value || undefined
+        }
       })
       reportData.value = res.data.data || []
     } catch (error) {

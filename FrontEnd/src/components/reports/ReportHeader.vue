@@ -56,7 +56,7 @@
     <!-- Center Title -->
     <div class="mt-4 text-center">
       <h2 class="text-xl font-bold text-gray-900 border-b border-gray-900 inline-block pb-1 px-4">
-        {{ title }} لشهر ( {{ currentMonth }} ) {{ currentYear }}م
+        {{ title }} لشهر ( {{ displayMonth }} ) {{ displayYear }}م
       </h2>
     </div>
   </div>
@@ -105,16 +105,37 @@ const governorateName = computed(() => {
   return '............'
 })
 
-defineProps<{
+const props = defineProps<{
   title: string
+  selectedMonth?: string
 }>()
 
 const dateObj = new Date()
 const arabicMonths = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
-const currentMonth = arabicMonths[dateObj.getMonth()]
-const currentYear = dateObj.getFullYear()
+
+const displayMonth = computed(() => {
+  if (props.selectedMonth) {
+    const parts = props.selectedMonth.split('-')
+    if (parts.length === 2) {
+      const m = parseInt(parts[1], 10) - 1
+      if (m >= 0 && m < 12) return arabicMonths[m]
+    }
+  }
+  return arabicMonths[dateObj.getMonth()]
+})
+
+const displayYear = computed(() => {
+  if (props.selectedMonth) {
+    const parts = props.selectedMonth.split('-')
+    if (parts.length === 2) {
+      return parts[0]
+    }
+  }
+  return dateObj.getFullYear()
+})
 
 const formattedDate = computed(() => {
+  const currentYear = dateObj.getFullYear()
   const d = String(dateObj.getDate()).padStart(2, '0')
   const m = String(dateObj.getMonth() + 1).padStart(2, '0')
   return `${d} / ${m} / ${currentYear} م`

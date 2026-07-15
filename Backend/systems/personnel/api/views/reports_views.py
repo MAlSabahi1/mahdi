@@ -13,6 +13,21 @@ class WorkforceSummaryReportView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
+    def parse_month_range(self):
+        import calendar
+        from datetime import date
+        month_str = self.request.query_params.get('month', '').strip()
+        if not month_str:
+            return None, None
+        try:
+            year, month = map(int, month_str.split('-'))
+            date_from = date(year, month, 1)
+            last_day  = calendar.monthrange(year, month)[1]
+            date_to   = date(year, month, last_day)
+            return date_from, date_to
+        except (ValueError, AttributeError):
+            return None, None
+
     def get(self, request, *args, **kwargs):
         level = request.query_params.get('level', 'central')
         
@@ -72,6 +87,10 @@ class WorkforceSummaryReportView(APIView):
             request.user, PersonnelMaster.objects.all(), 'personnel.view.*'
         ).filter(current_status__classification__startswith='active')
         
+        date_from, date_to = self.parse_month_range()
+        if date_from:
+            qs = qs.filter(updated_at__date__gte=date_from, updated_at__date__lte=date_to)
+        
         if level == 'all':
             qs = qs.annotate(
                 unit_name=Coalesce('central_department__name', 'branch__name', 'district_police__name')
@@ -127,6 +146,21 @@ from django.http import HttpResponse
 class HierarchicalWorkforceView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def parse_month_range(self):
+        import calendar
+        from datetime import date
+        month_str = self.request.query_params.get('month', '').strip()
+        if not month_str:
+            return None, None
+        try:
+            year, month = map(int, month_str.split('-'))
+            date_from = date(year, month, 1)
+            last_day  = calendar.monthrange(year, month)[1]
+            date_to   = date(year, month, last_day)
+            return date_from, date_to
+        except (ValueError, AttributeError):
+            return None, None
+
     def get(self, request):
         export = request.query_params.get('export', 'false') == 'true'
         
@@ -134,6 +168,10 @@ class HierarchicalWorkforceView(APIView):
         qs = PermissionService.get_scoped_queryset(
             request.user, PersonnelMaster.objects.all(), 'personnel.view.*'
         )
+        
+        date_from, date_to = self.parse_month_range()
+        if date_from:
+            qs = qs.filter(updated_at__date__gte=date_from, updated_at__date__lte=date_to)
         
         # 1. Aggregate down to the Unit level
         aggs = qs.values(

@@ -21,6 +21,13 @@
         </div>
       </div>
 
+      <!-- Filters Panel -->
+      <month-filter 
+        v-model="selectedMonth" 
+        @change="fetchData" 
+        class="mb-4"
+      />
+
       <!-- Print Content Wrapper -->
       <div class="printable-area print:block print:w-full print:absolute print:top-0 print:left-0 print:bg-white print:z-50">
         <!-- Print Header -->
@@ -28,6 +35,7 @@
           :title="reportInfo.title" 
           :subtitle="reportInfo.subtitle" 
           :reportType="reportId"
+          :selectedMonth="selectedMonth"
         />
 
         <div class="mt-6">
@@ -52,10 +60,12 @@ import AdminLayout from '@/components/layout/AdminLayout.vue'
 import ReportHeader from '@/components/reports/ReportHeader.vue'
 import ReportFooter from '@/components/reports/ReportFooter.vue'
 import DetailedReportTable from '@/components/reports/DetailedReportTable.vue'
+import MonthFilter from '@/components/reports/MonthFilter.vue'
 
 const route = useRoute()
 const reportData = ref([])
 const loading = ref(false)
+const selectedMonth = ref('')
 
 const reportId = computed(() => route.params.id as string)
 
@@ -88,9 +98,12 @@ const columns = [
 const fetchData = async () => {
   loading.value = true
   try {
-    const res = await api.get('/reports/detailed-reports/audit-movement/', {
-      params: { report_id: `report_${reportId.value}_mock` }
-    }).catch(() => ({ data: { data: [] } }))
+    const res = await api.get('/reports/detailed-reports/temp-inactive/', {
+      params: { 
+        report_id: reportId.value,
+        month: selectedMonth.value || undefined
+      }
+    })
     
     reportData.value = res.data?.data || []
   } catch (error) {

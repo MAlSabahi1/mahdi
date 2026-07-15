@@ -41,11 +41,20 @@
       </nav>
     </div>
 
+    <!-- Filters Panel -->
+    <month-filter 
+      v-model="selectedMonth" 
+      @change="fetchReport" 
+    />
+
     <!-- Report Container -->
     <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-hidden printable-area print:border-2 print:border-black print:p-4 print:shadow-none print:bg-transparent">
       <div class="p-4 md:p-6 print:p-0">
         <!-- Official Print Header -->
-        <ReportHeader title="خلاصة القوة العاملة بحسب الرتبة" />
+        <ReportHeader 
+          title="خلاصة القوة العاملة بحسب الرتبة" 
+          :selectedMonth="selectedMonth" 
+        />
         <ReportTable 
           :data="filteredReportData" 
           :loading="loading"
@@ -125,6 +134,7 @@ import AdminLayout from '@/components/layout/AdminLayout.vue'
 import ReportTable from '@/components/tables/ReportTable.vue'
 import ReportHeader from '@/components/reports/ReportHeader.vue'
 import ReportFooter from '@/components/reports/ReportFooter.vue'
+import MonthFilter from '@/components/reports/MonthFilter.vue'
 
 // Ranks Arrays based on the physical paper
 const officerRanks = ['عميد', 'عقيد', 'مقدم', 'رائد', 'نقيب', 'ملازم أول', 'ملازم ثاني']
@@ -150,6 +160,7 @@ const loading = ref(true)
 const reportData = ref<any[]>([])
 const grandTotals = ref<Record<string, number>>({})
 const searchQuery = ref('')
+const selectedMonth = ref('')
 
 const filteredReportData = computed(() => {
   if (!searchQuery.value) return reportData.value
@@ -168,7 +179,10 @@ const fetchReport = async () => {
   loading.value = true
   try {
     const res = await api.get('/personnel/reports/workforce-summary/', {
-      params: { level: currentLevel.value }
+      params: { 
+        level: currentLevel.value,
+        month: selectedMonth.value || undefined
+      }
     })
     reportData.value = res.data.data
     grandTotals.value = res.data.totals

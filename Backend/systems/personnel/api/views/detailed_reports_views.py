@@ -9,23 +9,48 @@ from ...models import PersonnelMaster
 
 class BaseDetailedReportView(APIView):
     """
-    Base view for detailed personnel reports (Models 4 to 11).
+    Base view for detailed personnel reports (Models 4-25).
+    Supports optional ?month=YYYY-MM filter for monthly reporting.
     """
-    permission_classes = [IsAuthenticated] # Should be BaseReportPermission in production
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         from infra.authorization.services.permission_service import PermissionService
         qs = PersonnelMaster.objects.select_related(
-            'current_rank', 
-            'current_status', 
-            'central_department', 
-            'branch', 
+            'current_rank',
+            'current_status',
+            'central_department',
+            'branch',
             'district_police',
             'qualification'
         ).filter(is_deleted=False)
         return PermissionService.get_scoped_queryset(
             self.request.user, qs, 'personnel.view.*'
         )
+
+    def parse_month_range(self):
+        """
+        Parse ?month=YYYY-MM query param.
+        Returns (date_from, date_to) or (None, None) if not provided.
+        Usage:
+            date_from, date_to = self.parse_month_range()
+            if date_from:
+                qs = qs.filter(updated_at__date__gte=date_from,
+                               updated_at__date__lte=date_to)
+        """
+        import calendar
+        from datetime import date
+        month_str = self.request.query_params.get('month', '').strip()
+        if not month_str:
+            return None, None
+        try:
+            year, month = map(int, month_str.split('-'))
+            date_from = date(year, month, 1)
+            last_day  = calendar.monthrange(year, month)[1]
+            date_to   = date(year, month, last_day)
+            return date_from, date_to
+        except (ValueError, AttributeError):
+            return None, None
 
     def get_unit_name(self, p):
         if p.central_department:
@@ -64,19 +89,21 @@ class ActiveForceReportView(BaseDetailedReportView):
         elif level_filter == 'district':
             qs = qs.filter(district_police__isnull=False)
 
-        # Pagination could be added here for large datasets, but for reports we usually return all or paginate explicitly
+        # فلتر شهري: يعرض من انتقل إلى القوة العاملة خلال الشهر المحدد
+        date_from, date_to = self.parse_month_range()
+        if date_from:
+            qs = qs.filter(updated_at__date__gte=date_from, updated_at__date__lte=date_to)
+
         data_list = []
         for idx, p in enumerate(qs, start=1):
             row = self.format_base_data(p, idx)
-            row["service_type"] = p.current_status.name if p.current_status else "قوة عاملة"
-            row["national_id"] = p.national_id
-            row["qualification"] = p.qualification.name if p.qualification else "بدون مؤهل"
+            row['service_type']  = p.current_status.name if p.current_status else 'قوة عاملة'
+            row['national_id']   = p.national_id
+            row['qualification'] = p.qualification.name if p.qualification else 'بدون مؤهل'
             data_list.append(row)
 
-        return Response({
-            "data": data_list,
-            "total_count": len(data_list)
-        })
+        return Response({'data': data_list, 'total_count': len(data_list),
+                         'month_filter': request.query_params.get('month', 'الكل')})
 
 
 class TempInactiveReportsView(BaseDetailedReportView):
@@ -102,6 +129,11 @@ class TempInactiveReportsView(BaseDetailedReportView):
         target_status = status_map.get(report_id)
         if target_status:
             qs = qs.filter(current_status__name__contains=target_status)
+
+        # فلتر شهري: من انتقل إلى هذه الحالة خلال الشهر المحدد
+        date_from, date_to = self.parse_month_range()
+        if date_from:
+            qs = qs.filter(updated_at__date__gte=date_from, updated_at__date__lte=date_to)
 
         data_list = []
         
@@ -187,10 +219,8 @@ class TempInactiveReportsView(BaseDetailedReportView):
 
             data_list.append(row)
 
-        return Response({
-            "data": data_list,
-            "total_count": len(data_list)
-        })
+        return Response({'data': data_list, 'total_count': len(data_list),
+                         'month_filter': request.query_params.get('month', 'الكل')})
 
 
 class PermInactiveReportsView(BaseDetailedReportView):
@@ -201,42 +231,136 @@ class PermInactiveReportsView(BaseDetailedReportView):
         report_id = request.query_params.get('report_id')
         qs = self.get_queryset().filter(current_status__classification='inactive_perm')
 
+        # ═══════════════════════════════════════════════════════════════
+        # نموذج 14 — كشف مرشحين للتقاعد (تجميعي تلقائي)
+        # ═══════════════════════════════════════════════════════════════
+        # هذا الكشف يجمع تلقائياً كل من انطبقت عليه إحدى الحالات الثلاث:
+        #   • كبار السن (بلوغ السن القانوني)      ← استمارة retirement_age
+        #   • إنهاء المدة (نهاية الخدمة التعاقدية) ← استمارة end_of_service
+        #   • عدم اللياقة الصحية                   ← استمارة medical_unfit
+        # لا يحتاج هذا الكشف استمارة منفصلة «مرشح تقاعد».
+        # عند اعتماد «استمارة محال للتقاعد» للفرد تتغير حالته إلى «متقاعدين»
+        # فيختفي تلقائياً من هذا الكشف ومن كشفه الأصلي في نفس الوقت.
+        # ═══════════════════════════════════════════════════════════════
+        if report_id == 'report_14':
+            # ═══════════════════════════════════════════════════════════════
+            # الحالات الثلاث التي تُشكّل «مرشحي التقاعد» — مطابقة جدول الـ 25 حالة حرفياً:
+            #   • «بلوغ السن القانوني»  ← الاسم الحرفي في قاعدة البيانات
+            #   • «إنهاء المدة القانونية» ← الاسم الحرفي في قاعدة البيانات
+            #   • «عدم لياقة»            ← الاسم الحرفي في قاعدة البيانات
+            # ═══════════════════════════════════════════════════════════════
+            # أسماء الحالات الثلاث كما هي حرفياً في جدول الـ 25 حالة
+            RETIREMENT_CANDIDATE_STATUSES = [
+                'بلوغ السن القانوني',     # استمارة retirement_age → كشف 12
+                'إنهاء المدة القانونية',  # استمارة end_of_service  → كشف 13
+                'عدم لياقة',             # استمارة medical_unfit   → كشف 15
+            ]
+
+            # خريطة: اسم الحالة → form_type للـ Fallback
+            STATUS_TO_FORM_TYPE = {
+                'بلوغ السن القانوني':    ['retirement_age'],
+                'إنهاء المدة القانونية': ['end_of_service'],
+                'عدم لياقة':            ['medical_unfit'],
+            }
+
+            candidate_qs = self.get_queryset().filter(
+                current_status__classification='inactive_perm',
+                current_status__name__in=RETIREMENT_CANDIDATE_STATUSES
+            )
+
+            # فلتر شهري: من أصبح مرشحاً للتقاعد خلال الشهر المحدد
+            date_from, date_to = self.parse_month_range()
+            if date_from:
+                candidate_qs = candidate_qs.filter(
+                    updated_at__date__gte=date_from,
+                    updated_at__date__lte=date_to
+                )
+
+            from systems.services.infrastructure.models.status_change import StatusChangeForm as SCForm
+
+            data_list = []
+            for idx, p in enumerate(candidate_qs, start=1):
+                row = self.format_base_data(p, idx)
+                row['birth_date']  = p.birth_date or 'غير مدخل'
+                row['join_date']   = p.join_date  or 'غير مدخل'
+                # نوع الحالة: يعرض الاسم الحرفي من قاعدة البيانات مباشرة
+                status_name        = p.current_status.name if p.current_status else 'غير محدد'
+                row['status_type'] = status_name
+                row['procedures']  = 'مستكمل'
+
+                perm_details = p.perm_status_details or {}
+
+                # Fallback: اقرأ من آخر استمارة معتمدة إذا كانت التفاصيل فارغة
+                if not perm_details:
+                    form_types = STATUS_TO_FORM_TYPE.get(status_name, [])
+                    if form_types:
+                        last_form = SCForm.objects.filter(
+                            personnel=p,
+                            form_type__in=form_types,
+                            status='approved'
+                        ).order_by('-updated_at').first()
+                        if last_form and last_form.form_data:
+                            perm_details = last_form.form_data
+
+                # حقول مشتركة بين الحالات الثلاث
+                # حقول خاصة بحالة عدم اللياقة فقط
+                row['disease_type']     = perm_details.get('disease_type', '')
+                row['disability_ratio'] = perm_details.get(
+                    'disability_ratio', perm_details.get('disability_percentage', ''))
+                row['incident_type']    = perm_details.get(
+                    'incident_type', perm_details.get('injury_context', ''))
+
+                data_list.append(row)
+
+            return Response({'data': data_list, 'total_count': len(data_list),
+                             'month_filter': request.query_params.get('month', 'الكل')})
+
+        # ═══════════════════════════════════════════════════════════════
+        # نماذج 12, 13, 15, 16, 17 — كشوفات الحالات الفردية
+        # ═══════════════════════════════════════════════════════════════
         status_map = {
             'report_12': 'بلوغ السن',
             'report_13': 'إنهاء المدة',
-            'report_14': 'مرشح تقاعد',
             'report_15': 'عدم لياقة',
             'report_17': 'متقاعد'
         }
-        
-        # In a real app we might map 'متوفى' and 'شهيد' to report_16, for simplicity we filter generally or specifically
+
         target_status = status_map.get(report_id)
         if target_status:
-            qs = qs.filter(current_status__name__contains=target_status)
+            qs = qs.filter(current_status__name__icontains=target_status)
         elif report_id == 'report_16':
-            qs = qs.filter(Q(current_status__name__contains='شهيد') | Q(current_status__name__contains='شهداء') | Q(current_status__name__contains='متوفى') | Q(current_status__name__contains='وفيات'))
+            qs = qs.filter(
+                Q(current_status__name__icontains='شهيد') |
+                Q(current_status__name__icontains='شهداء') |
+                Q(current_status__name__icontains='متوفى') |
+                Q(current_status__name__icontains='وفيات')
+            )
 
-        # خريطة form_type للتقارير 12-17 للبحث في StatusChangeForm ك**Fallback**
+        # فلتر شهري: من انتقل إلى هذه الحالة النهائية خلال الشهر المحدد
+        date_from, date_to = self.parse_month_range()
+        if date_from:
+            qs = qs.filter(updated_at__date__gte=date_from, updated_at__date__lte=date_to)
+
+        # خريطة form_type للبحث في StatusChangeForm كـ Fallback
         perm_report_form_type = {
             'report_12': 'retirement_age',
             'report_13': 'end_of_service',
-            'report_14': 'retirement_candidate',
             'report_15': 'medical_unfit',
             'report_16': ['martyr', 'death'],
             'report_17': 'retired',
         }
-        
+
         from systems.services.infrastructure.models.status_change import StatusChangeForm as SCForm
 
         data_list = []
         for idx, p in enumerate(qs, start=1):
             row = self.format_base_data(p, idx)
-            row["birth_date"] = p.birth_date or "غير مدخل"
-            row["join_date"] = p.join_date or "غير مدخل"
-            
+            row['birth_date'] = p.birth_date or 'غير مدخل'
+            row['join_date']  = p.join_date  or 'غير مدخل'
+
             perm_details = p.perm_status_details or {}
-            
-            # ── Fallback: إذا كان perm_status_details فارغاً، نقرأ من آخر استمارة معتمدة ──
+
+            # Fallback: إذا كان perm_status_details فارغاً، نقرأ من آخر استمارة معتمدة
             if not perm_details and report_id in perm_report_form_type:
                 ft = perm_report_form_type[report_id]
                 form_types = ft if isinstance(ft, list) else [ft]
@@ -247,35 +371,35 @@ class PermInactiveReportsView(BaseDetailedReportView):
                 ).order_by('-updated_at').first()
                 if last_form and last_form.form_data:
                     perm_details = last_form.form_data
-            
+
             if report_id == 'report_12':
-                row["personal_request"] = perm_details.get("personal_request", "غير مدخل")
+                row['personal_request'] = 'مستكمل'
             elif report_id == 'report_13':
-                row["total_years"] = perm_details.get("total_years", "غير مدخل")
-                row["person_request"] = perm_details.get("person_request", "غير مدخل")
-            elif report_id == 'report_14':
-                row["reason"] = perm_details.get("reason", "غير مدخل")
-                row["procedures"] = perm_details.get("procedures", "غير مدخل")
+                row['total_years']   = perm_details.get('age', perm_details.get('total_years', 'غير مدخل'))
+                row['person_request'] = 'مستكمل'
             elif report_id == 'report_15':
-                row["disease_type"] = perm_details.get("disease_type", "غير مدخل")
-                row["disability_ratio"] = perm_details.get("disability_ratio", perm_details.get("disability_percentage", "غير مدخل"))
-                row["incident_date"] = perm_details.get("incident_date", perm_details.get("injury_date", "غير مدخل"))
-                row["medical_source"] = perm_details.get("medical_source", "غير مدخل")
-                row["incident_type"] = perm_details.get("incident_type", perm_details.get("injury_context", "غير مدخل"))
+                row['disease_type']     = perm_details.get('disease_type', 'غير مدخل')
+                row['disability_ratio'] = perm_details.get(
+                    'disability_ratio', perm_details.get('disability_percentage', 'غير مدخل'))
+                row['incident_date']    = perm_details.get(
+                    'incident_date', perm_details.get('injury_date', 'غير مدخل'))
+                row['medical_source']   = perm_details.get('medical_source', 'غير مدخل')
+                row['incident_type']    = perm_details.get(
+                    'incident_type', perm_details.get('injury_context', 'غير مدخل'))
             elif report_id == 'report_16':
-                row["case_type"] = p.current_status.name if p.current_status else "غير مدخل"
-                row["death_date"] = perm_details.get("death_date", perm_details.get("martyrdom_date", "غير مدخل"))
-                row["incident_type"] = perm_details.get("incident_type", perm_details.get("occurrence_context", "غير مدخل"))
+                row['case_type']    = p.current_status.name if p.current_status else 'غير مدخل'
+                row['death_date']   = perm_details.get(
+                    'death_date', perm_details.get('martyrdom_date', 'غير مدخل'))
+                row['incident_type'] = perm_details.get(
+                    'incident_type', perm_details.get('occurrence_context', 'غير مدخل'))
             elif report_id == 'report_17':
-                row["decision_number"] = perm_details.get("decision_number", "غير مدخل")
-                row["decision_date"] = perm_details.get("decision_date", "غير مدخل")
+                row['decision_number'] = perm_details.get('decision_number', 'غير مدخل')
+                row['decision_date']   = perm_details.get('decision_date',   'غير مدخل')
 
             data_list.append(row)
 
-        return Response({
-            "data": data_list,
-            "total_count": len(data_list)
-        })
+        return Response({'data': data_list, 'total_count': len(data_list),
+                         'month_filter': request.query_params.get('month', 'الكل')})
 
 
 class AuditMovementReportsView(BaseDetailedReportView):
@@ -286,6 +410,9 @@ class AuditMovementReportsView(BaseDetailedReportView):
         report_id = request.query_params.get('report_id')
         from systems.services.infrastructure.models.status_change import StatusChangeForm as SCForm
 
+        date_from, date_to = self.parse_month_range()
+        month_label = request.query_params.get('month', 'الكل')
+
         # ── نموذج 23: المطلوب تصحيح أسمائهم — من جدول SuggestedCorrection ──
         if report_id == 'report_23':
             from systems.personnel.models import SuggestedCorrection
@@ -295,32 +422,37 @@ class AuditMovementReportsView(BaseDetailedReportView):
                 field_name__in=['full_name', 'name_correction'],
                 status='pending'
             ).order_by('created_at')
-            
+            # فلتر شهري: تصحيحات الأسماء المقدمة خلال الشهر
+            if date_from:
+                corrections = corrections.filter(
+                    created_at__date__gte=date_from,
+                    created_at__date__lte=date_to
+                )
             data_list = []
             for idx, c in enumerate(corrections, start=1):
                 p = c.personnel
                 data_list.append({
-                    "index": idx,
-                    "rank": p.current_rank.name if p.current_rank else "غير محدد",
-                    "military_number": p.military_number,
-                    "full_name": p.full_name,
-                    "national_id": p.national_id,
-                    "wrong_name": c.old_value or p.full_name,
-                    "correction_target": c.new_value or "غير مدخل",
-                    "notes": c.notes or ""
+                    'index': idx,
+                    'rank': p.current_rank.name if p.current_rank else 'غير محدد',
+                    'military_number': p.military_number,
+                    'full_name': p.full_name,
+                    'national_id': p.national_id,
+                    'wrong_name': c.old_value or p.full_name,
+                    'correction_target': c.new_value or 'غير مدخل',
+                    'notes': c.notes or ''
                 })
-            return Response({"data": data_list, "total_count": len(data_list)})
+            return Response({'data': data_list, 'total_count': len(data_list),
+                             'month_filter': month_label})
 
         # ── نموذج 25: الملتحقين بالعدوان — من حالة PersonnelMaster ──
         if report_id == 'report_25':
-            qs = self.get_queryset().filter(
-                current_status__name__icontains='العدوان'
-            )
+            qs = self.get_queryset().filter(current_status__name__icontains='العدوان')
+            if date_from:
+                qs = qs.filter(updated_at__date__gte=date_from, updated_at__date__lte=date_to)
             data_list = []
             for idx, p in enumerate(qs, start=1):
                 row = self.format_base_data(p, idx)
-                row["national_id"] = p.national_id
-                # حاول قراءة التفاصيل من audit_movement_details أو StatusChangeForm
+                row['national_id'] = p.national_id
                 details = p.audit_movement_details or {}
                 if not details:
                     last_form = SCForm.objects.filter(
@@ -328,10 +460,11 @@ class AuditMovementReportsView(BaseDetailedReportView):
                     ).order_by('-updated_at').first()
                     if last_form and last_form.form_data:
                         details = last_form.form_data
-                row["reporter_entity"] = details.get("reporter_entity", "غير مدخل")
-                row["taken_procedures"] = details.get("taken_procedures", "غير مدخل")
+                row['reporter_entity']   = details.get('reporter_entity', 'غير مدخل')
+                row['taken_procedures']  = details.get('taken_procedures', 'غير مدخل')
                 data_list.append(row)
-            return Response({"data": data_list, "total_count": len(data_list)})
+            return Response({'data': data_list, 'total_count': len(data_list),
+                             'month_filter': month_label})
 
         # ── نماذج 18-22, 24أ, 24ب: تقرأ من StatusChangeForm حسب نوع الاستمارة ──
         # خريطة التقرير → (form_type, الحقول المطلوبة)
@@ -346,7 +479,7 @@ class AuditMovementReportsView(BaseDetailedReportView):
         }
 
         ft = form_type_map.get(report_id)
-        
+
         # إذا كان النوع معروفاً، نقرأ من StatusChangeForm مباشرة
         if ft:
             scforms = SCForm.objects.select_related(
@@ -355,6 +488,12 @@ class AuditMovementReportsView(BaseDetailedReportView):
                 form_type__icontains=ft,
                 status='approved'
             ).order_by('-updated_at')
+            # فلتر شهري: استمارات تمت الموافقة عليها خلال الشهر المحدد
+            if date_from:
+                scforms = scforms.filter(
+                    updated_at__date__gte=date_from,
+                    updated_at__date__lte=date_to
+                )
 
             data_list = []
             for idx, f in enumerate(scforms, start=1):
@@ -403,10 +542,12 @@ class AuditMovementReportsView(BaseDetailedReportView):
                     row["stop_reason"] = fd.get("stop_reason", fd.get("reason", "غير مدخل"))
                     row["continuous_absence_duration"] = fd.get("continuous_absence_duration", fd.get("duration", "غير مدخل"))
                 data_list.append(row)
-            
-            return Response({"data": data_list, "total_count": len(data_list)})
+
+            return Response({'data': data_list, 'total_count': len(data_list),
+                             'month_filter': month_label})
 
         # Fallback عام إذا لم يُعرف النوع
-        return Response({"data": [], "total_count": 0, "message": "نوع التقرير غير محدد"})
+        return Response({'data': [], 'total_count': 0, 'month_filter': month_label,
+                         'message': 'نوع التقرير غير محدد'})
 
 

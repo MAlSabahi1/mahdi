@@ -449,7 +449,7 @@ export const useServicesStore = defineStore('services', () => {
     loading.value = true
     error.value = null
     try {
-      const response = await api.get(`/service-cycle/forms/schema/?type=${type}`)
+      const response = await api.get(`/service-cycle/forms/schema/?type=${type}&_t=${Date.now()}`)
       if (response.data?.success) {
         currentSchema.value = response.data.data
         return response.data.data

@@ -68,7 +68,7 @@
                 </td>
                 <td class="px-4 py-3 text-center border-l border-gray-200 dark:border-gray-700 font-mono">{{ row.military_number }}</td>
                 <td class="px-4 py-3 font-bold text-right border-l border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white">{{ row.full_name }}</td>
-                <td class="px-4 py-3 text-center border-l border-gray-200 dark:border-gray-700">{{ row.reason || row.case_type || '-' }}</td>
+                <td class="px-4 py-3 text-center border-l border-gray-200 dark:border-gray-700">{{ row.status_type || row.reason || row.case_type || '-' }}</td>
                 <td class="px-4 py-3 text-center border-l border-gray-200 dark:border-gray-700 font-mono">{{ row.birth_date || '-' }}</td>
                 <td class="px-4 py-3 text-center border-l border-gray-200 dark:border-gray-700 font-mono">{{ row.join_date || '-' }}</td>
                 
@@ -84,7 +84,7 @@
             </template>
           </ReportTable>
           
-          <div class="mt-8 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 print:block">
+          <div class="mt-8 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 print:hidden">
             <h4 class="font-bold text-gray-800 dark:text-white mb-2 text-lg print:text-black flex items-center gap-2">
               <span class="bg-red-600 text-white px-3 py-1 rounded-full text-sm print:border print:border-black print:text-black print:bg-white">توضيح</span>
             </h4>

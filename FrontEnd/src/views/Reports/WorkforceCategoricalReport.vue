@@ -41,11 +41,20 @@
       </nav>
     </div>
 
+    <!-- Filters Panel -->
+    <month-filter 
+      v-model="selectedMonth" 
+      @change="fetchReport" 
+    />
+
     <!-- Report Container -->
     <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-hidden printable-area print:overflow-visible print:border-none print:shadow-none print:bg-transparent">
       <div class="p-6 print:p-0">
         <!-- Official Print Header -->
-        <ReportHeader title="خلاصة فئوية للقوة العاملة" />
+        <ReportHeader 
+          title="خلاصة فئوية للقوة العاملة" 
+          :selectedMonth="selectedMonth" 
+        />
 
         <ReportTable 
           :data="filteredReportData" 
@@ -120,9 +129,7 @@ import AdminLayout from '@/components/layout/AdminLayout.vue'
 import ReportTable from '@/components/tables/ReportTable.vue'
 import ReportHeader from '@/components/reports/ReportHeader.vue'
 import ReportFooter from '@/components/reports/ReportFooter.vue'
-
-// Categories from backend data or fixed
-const categories = ref<string[]>([])
+import MonthFilter from '@/components/reports/MonthFilter.vue'
 
 const levels = [
   { id: 'all', name: 'الكل' },
@@ -136,8 +143,10 @@ const currentLevelName = computed(() => levels.find(l => l.id === currentLevel.v
 
 const loading = ref(false)
 const reportData = ref<any[]>([])
+const categories = ref<string[]>([])
 const grandTotals = ref<Record<string, number>>({})
 const searchQuery = ref('')
+const selectedMonth = ref('')
 
 const filteredReportData = computed(() => {
   if (!searchQuery.value) return reportData.value
@@ -156,7 +165,10 @@ const fetchReport = async () => {
   loading.value = true
   try {
     const res = await api.get('/reports/categorical-summary/', {
-      params: { level: currentLevel.value }
+      params: { 
+        level: currentLevel.value,
+        month: selectedMonth.value || undefined
+      }
     })
     reportData.value = res.data.data
     grandTotals.value = res.data.totals

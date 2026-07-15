@@ -12,6 +12,21 @@ class CategoricalWorkforceReportView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
+    def parse_month_range(self):
+        import calendar
+        from datetime import date
+        month_str = self.request.query_params.get('month', '').strip()
+        if not month_str:
+            return None, None
+        try:
+            year, month = map(int, month_str.split('-'))
+            date_from = date(year, month, 1)
+            last_day  = calendar.monthrange(year, month)[1]
+            date_to   = date(year, month, last_day)
+            return date_from, date_to
+        except (ValueError, AttributeError):
+            return None, None
+
     def get(self, request, *args, **kwargs):
         level = request.query_params.get('level', 'central')
         
@@ -74,6 +89,10 @@ class CategoricalWorkforceReportView(APIView):
             self.request.user, qs, 'personnel.view.*'
         )
         
+        date_from, date_to = self.parse_month_range()
+        if date_from:
+            qs = qs.filter(updated_at__date__gte=date_from, updated_at__date__lte=date_to)
+        
         if level == 'all':
             qs = qs.annotate(
                 unit_name=Coalesce('central_department__name', 'branch__name', 'district_police__name')
@@ -132,6 +151,21 @@ class NonWorkforceReportView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
+    def parse_month_range(self):
+        import calendar
+        from datetime import date
+        month_str = self.request.query_params.get('month', '').strip()
+        if not month_str:
+            return None, None
+        try:
+            year, month = map(int, month_str.split('-'))
+            date_from = date(year, month, 1)
+            last_day  = calendar.monthrange(year, month)[1]
+            date_to   = date(year, month, last_day)
+            return date_from, date_to
+        except (ValueError, AttributeError):
+            return None, None
+
     def get(self, request, *args, **kwargs):
         level = request.query_params.get('level', 'central')
         
@@ -161,6 +195,10 @@ class NonWorkforceReportView(APIView):
         qs = PermissionService.get_scoped_queryset(
             self.request.user, qs, 'personnel.view.*'
         )
+        
+        date_from, date_to = self.parse_month_range()
+        if date_from:
+            qs = qs.filter(updated_at__date__gte=date_from, updated_at__date__lte=date_to)
         
         # فلترة بناءً على المستوى المطلوب (إذا لم يكن 'all')
         if level != 'all':

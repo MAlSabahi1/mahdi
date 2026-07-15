@@ -283,15 +283,57 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
             if form_type not in ['returned_to_service', 'correction']:
                 return Response({'success': False, 'error': f'لا يمكن إنشاء هذه المعاملة لأن الفرد مسجل كـ ({personnel.current_status.name}) في النظام.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 2. التحقق من وجود معاملة سابقة قيد الإجراء لنفس النوع ونفس الفرد
+        # 4. تحققات إدارية صارمة (Business Rules Validations)
+        from datetime import date
+        today = date.today()
+        
+        if form_type == 'end_of_service':
+            if not personnel.join_date:
+                return Response({'success': False, 'error': 'لا يمكن تقديم استمارة "إنهاء مدة": تاريخ الالتحاق بالخدمة غير مسجل للفرد في النظام. يرجى تحديث بياناته الأساسية أولاً.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            service_years = today.year - personnel.join_date.year - ((today.month, today.day) < (personnel.join_date.month, personnel.join_date.day))
+            if service_years < 20:
+                return Response({'success': False, 'error': f'التحقق الإداري فشل: لا يمكن تقديم استمارة "إنهاء مدة". النظام يشترط إمضاء 20 عاماً في الخدمة كحد أدنى. (مدة خدمة المذكور حالياً هي {service_years} سنة فقط).'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if form_type == 'retirement_age':
+            if not personnel.birth_date:
+                return Response({'success': False, 'error': 'لا يمكن تقديم استمارة "بلوغ السن القانوني": تاريخ الميلاد غير مسجل للفرد في النظام. يرجى تحديث بياناته الأساسية أولاً.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            age = today.year - personnel.birth_date.year - ((today.month, today.day) < (personnel.birth_date.month, personnel.birth_date.day))
+            if age < 50:
+                return Response({'success': False, 'error': f'التحقق الإداري فشل: لا يمكن تقديم استمارة "بلوغ السن القانوني". السن القانوني للتقاعد هو 50 عاماً كحد أدنى. (عمر المذكور حالياً هو {age} سنة فقط).'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # تحققات منع تواريخ مستقبلية
+        if form_type in ['death', 'martyr']:
+            death_date_str = form_data.get('death_date') or form_data.get('martyrdom_date')
+            if death_date_str:
+                from datetime import datetime
+                try:
+                    d_date = datetime.strptime(death_date_str, '%Y-%m-%d').date()
+                    if d_date > today:
+                        return Response({'success': False, 'error': 'التحقق الإداري فشل: لا يمكن أن يكون تاريخ الوفاة/الاستشهاد في المستقبل.'}, status=status.HTTP_400_BAD_REQUEST)
+                except ValueError:
+                    pass
+
+        if form_type == 'missing':
+            missing_date_str = form_data.get('missing_date')
+            if missing_date_str:
+                from datetime import datetime
+                try:
+                    m_date = datetime.strptime(missing_date_str, '%Y-%m-%d').date()
+                    if m_date > today:
+                        return Response({'success': False, 'error': 'التحقق الإداري فشل: لا يمكن أن يكون تاريخ الفقدان في المستقبل.'}, status=status.HTTP_400_BAD_REQUEST)
+                except ValueError:
+                    pass
+
+        # 2. التحقق من وجود أي معاملة سابقة قيد الإجراء لنفس الفرد
         existing_pending = StatusChangeForm.objects.filter(
             personnel=personnel,
-            form_type=form_type,
             status__in=['draft', 'in_progress', 'pending_services', 'pending_hr', 'pending_director', 'returned']
         ).first()
         
         if existing_pending:
-            return Response({'success': False, 'error': f'يوجد معاملة سابقة من نفس النوع قيد الإجراء (رقم: {existing_pending.id})'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'success': False, 'error': f'لا يمكن إنشاء استمارة جديدة: يوجد معاملة سابقة (نوع: {existing_pending.form_type_display or existing_pending.form_type}) قيد الإجراء لهذا الفرد (رقم المعاملة: {existing_pending.id}). يرجى استكمالها أو إلغائها أولاً.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # ── الإنشاء ──
         if is_dynamic:
@@ -616,6 +658,21 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
                 {'success': False, 'error': f'نوع غير صالح: {ft}'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+    @action(detail=False, methods=['get'])
+    def check_pending(self, request):
+        personnel_id = request.query_params.get('personnel_id')
+        if not personnel_id:
+            return Response({'has_pending': False})
+        
+        pending = StatusChangeForm.objects.filter(
+            personnel_id=personnel_id,
+            status__in=['draft', 'in_progress', 'pending_services', 'pending_hr', 'pending_director', 'returned']
+        ).first()
+        
+        if pending:
+            return Response({'has_pending': True, 'pending_id': pending.id, 'form_type': pending.form_type_display or pending.form_type})
+        return Response({'has_pending': False})
     @action(detail=False, methods=['get'])
     def export(self, request):
         qs = self.get_queryset()

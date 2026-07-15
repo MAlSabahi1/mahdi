@@ -1,11 +1,18 @@
 <template>
   <admin-layout>
     <div class="space-y-6 pb-20">
+      <!-- Toolbar for filtering -->
+      <month-filter 
+        v-model="selectedMonth" 
+        @change="fetchData" 
+      />
+
       <!-- Header -->
       <report-header 
         :title="reportInfo.title" 
         :subtitle="reportInfo.subtitle" 
         :reportType="reportId"
+        :selectedMonth="selectedMonth"
       />
 
       <!-- Data Table -->
@@ -25,10 +32,12 @@ import api from '@/lib/api'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import ReportHeader from '@/components/reports/ReportHeader.vue'
 import DetailedReportTable from '@/components/reports/DetailedReportTable.vue'
+import MonthFilter from '@/components/reports/MonthFilter.vue'
 
 const route = useRoute()
 const reportData = ref([])
 const loading = ref(false)
+const selectedMonth = ref('')
 
 const reportId = computed(() => {
   const id = route.params.id as string
@@ -114,7 +123,10 @@ const fetchData = async () => {
   loading.value = true
   try {
     const res = await api.get('/reports/detailed-reports/perm-inactive/', {
-      params: { report_id: reportId.value }
+      params: { 
+        report_id: reportId.value,
+        month: selectedMonth.value || undefined
+      }
     })
     reportData.value = res.data.data || []
   } catch (error) {

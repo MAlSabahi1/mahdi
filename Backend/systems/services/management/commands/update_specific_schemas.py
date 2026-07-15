@@ -190,9 +190,10 @@ class Command(BaseCommand):
                     "fields": [
                         {"key": "category", "label": "الفئة", "type": "text", "required": True, "disabled": True, "value": "عدم اللياقة الصحية"},
                         {"key": "disease_type", "label": "نوع المرض أو الإصابة", "type": "text", "required": True},
-                        {"key": "decision_source", "label": "مصدر القرار", "type": "text", "required": True},
+                        {"key": "medical_source", "label": "مصدر القرار", "type": "text", "required": True},
                         {"key": "disability_percentage", "label": "نسبة العجز", "type": "number", "required": True},
-                        {"key": "reason", "label": "سبب الحالة", "type": "text", "required": True},
+                        {"key": "injury_context", "label": "سبب الحالة", "type": "select", "options": [{"value": "أثناء الواجب", "label": "أثناء الواجب"}, {"value": "طبيعية", "label": "طبيعية"}], "required": True},
+                        {"key": "injury_date", "label": "تاريخ الوقوع", "type": "date", "required": True},
                         {"key": "notes", "label": "ملاحظات", "type": "textarea", "required": False}
                     ]
                 }],
@@ -214,7 +215,7 @@ class Command(BaseCommand):
                         {"key": "birth_date", "label": "تاريخ الميلاد", "type": "date", "required": True},
                         {"key": "join_date", "label": "تاريخ الالتحاق", "type": "date", "required": True},
                         {"key": "age", "label": "العمر", "type": "number", "required": True},
-                        {"key": "gender", "label": "الجنس", "type": "select", "options": [{"value": "M", "label": "ذكر"}, {"value": "F", "label": "أنثى"}], "required": True},
+                        {"key": "gender", "label": "الجنس", "type": "select", "options": [{"value": "M", "label": "ذكر"}, {"value": "F", "label": "أنثى"}], "required": True, "default": "M"},
                         {"key": "notes", "label": "ملاحظات", "type": "textarea", "required": False}
                     ]
                 }],
@@ -320,9 +321,9 @@ class Command(BaseCommand):
                     "fields": [
                         {"key": "category", "label": "الفئة", "type": "text", "required": True, "disabled": True, "value": "مفرغين للدراسة"},
                         {"key": "study_type", "label": "نوع الدراسة", "type": "text", "required": True},
-                        {"key": "institution", "label": "جهة الدراسة", "type": "text", "required": True},
+                        {"key": "institution", "label": "مكان الدراسة", "type": "text", "required": True},
                         {"key": "order_source", "label": "مصدر الأمر", "type": "text", "required": True},
-                        {"key": "duration", "label": "مدة الدراسة", "type": "text", "required": True},
+                        {"key": "duration", "label": "مدة الدراسة", "type": "duration_picker", "required": True},
                         {"key": "start_date", "label": "تاريخ البدء", "type": "date", "required": True},
                         {"key": "end_date", "label": "تاريخ الانتهاء", "type": "date", "required": True}
                     ]

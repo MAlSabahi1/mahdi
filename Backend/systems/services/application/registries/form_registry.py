@@ -105,7 +105,7 @@ _FORMS = {
             FormField('birth_date', 'تاريخ الميلاد', 'date', disabled=True),
             FormField('join_date', 'تاريخ الالتحاق بالخدمة', 'date', disabled=True),
             FormField('age', 'العمر', 'number'),
-            FormField('gender', 'الجنس', 'select', options=('ذكر', 'أنثى')),
+            FormField('gender', 'الجنس', 'select', options=('ذكر', 'أنثى'), default='ذكر'),
         ),
         attachments=(
             AttachmentSpec('personal_request', 'الطلب الشخصي'),
@@ -175,12 +175,11 @@ _FORMS = {
         description='الدليل: ص 36 — نموذج 15 — أمراض ومشوهين',
         fields=(
             FormField('category', 'الفئة', 'text', required=True, disabled=True, default='عدم اللياقة الصحية'),
-            FormField('disease_type', 'نوع المرض', 'text'),
+            FormField('disease_type', 'نوع المرض أو الإصابة', 'text'),
+            FormField('medical_source', 'مصدر القرار', 'text'),
             FormField('disability_percentage', 'نسبة العجز', 'number'),
-            FormField('medical_source', 'مصدر القرار الطبي', 'text'),
-            FormField('injury_context', 'حالة الوقوع', 'select',
-                      options=('أثناء الواجب', 'طبيعية')),
-            FormField('injury_date', 'تاريخ الوقوع', 'date'),
+            FormField('injury_context', 'سبب الحالة', 'select', options=('أثناء الواجب', 'طبيعية')),
+            FormField('injury_date', 'تاريخ الوقوع', 'date', required=True),
         ),
         attachments=(
             AttachmentSpec('medical_report', 'القرار الطبي الأصل (اللجنة الطبية)'),
@@ -202,8 +201,8 @@ _FORMS = {
             FormField('category', 'الفئة', 'text', required=True, disabled=True, default='إنهاء مدة'),
             FormField('birth_date', 'تاريخ الميلاد', 'date'),
             FormField('join_date', 'تاريخ الالتحاق بالخدمة', 'date'),
-            FormField('service_years', 'سنوات الخدمة', 'number'),
-            FormField('gender', 'الجنس', 'select', options=('ذكر', 'أنثى')),
+            FormField('age', 'العمر', 'number'),
+            FormField('gender', 'الجنس', 'select', options=('ذكر', 'أنثى'), default='ذكر'),
         ),
         attachments=(
             AttachmentSpec('personal_request', 'الطلب الشخصي من الفرد'),
@@ -321,16 +320,16 @@ _FORMS = {
     # ── استمارة 10: مفرغ للدراسة ──
     'study_leave': FormDefinition(
         form_type='study_leave',
-        label='استمارة إثبات حالة — مفرغ للدراسة',
+        label='إثبات حالة (مفرغ للدراسة)',
         target_status='مفرغين للدراسة',
         description='الدليل: ص 42 — نموذج 8',
         fields=(
             FormField('category', 'الفئة', 'text', required=True, disabled=True, default='مفرغين للدراسة'),
             FormField('study_type', 'نوع الدراسة', 'select',
                       options=('دبلوم', 'بكالوريوس', 'ماجستير', 'دكتوراه', 'دورة تخصصية')),
-            FormField('institution', 'جهة الدراسة', 'text'),
+            FormField('institution', 'مكان الدراسة', 'text'),
             FormField('order_source', 'مصدر الأمر / رقم قرار الإيفاد', 'text'),
-            FormField('duration', 'مدة الدراسة', 'text'),
+            FormField('duration', 'مدة الدراسة (رقم)', 'number'),
             FormField('start_date', 'تاريخ البدء', 'date'),
             FormField('end_date', 'تاريخ الانتهاء', 'date'),
         ),

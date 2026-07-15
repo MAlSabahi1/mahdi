@@ -441,6 +441,26 @@
                     {{ formData[field.key] }}
                   </div>
                 </div>
+                <div v-else-if="field.type === 'duration_picker'" class="flex gap-3 mt-1">
+                  <!-- سنوات -->
+                  <div class="flex-1 flex flex-col relative">
+                    <label class="text-[10px] text-gray-500 mb-1 font-bold">سنوات</label>
+                    <input type="number" min="0" max="30" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none text-center" 
+                           @input="updateDurationPicker(field.key, 'years', $event)" :value="getDurationPart(field.key, 'years')" />
+                  </div>
+                  <!-- أشهر -->
+                  <div class="flex-1 flex flex-col relative">
+                    <label class="text-[10px] text-gray-500 mb-1 font-bold">أشهر</label>
+                    <input type="number" min="0" max="11" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none text-center" 
+                           @input="updateDurationPicker(field.key, 'months', $event)" :value="getDurationPart(field.key, 'months')" />
+                  </div>
+                  <!-- أيام -->
+                  <div class="flex-1 flex flex-col relative">
+                    <label class="text-[10px] text-gray-500 mb-1 font-bold">أيام</label>
+                    <input type="number" min="0" max="30" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none text-center" 
+                           @input="updateDurationPicker(field.key, 'days', $event)" :value="getDurationPart(field.key, 'days')" />
+                  </div>
+                </div>
 
                 <textarea v-else-if="field.type === 'textarea'" v-model="formData[field.key]" class="w-full bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-900 dark:text-white shadow-theme-xs focus:ring-3 focus:ring-brand-500/10 focus:border-brand-500 outline-none h-24 transition-shadow"></textarea>
                 <div v-else>
@@ -735,6 +755,21 @@ watch([() => localHeaderData.id_issue_date, () => selectedPersonnelList.value[0]
 const formData = ref<any>({})
 const formDataErrors = reactive<Record<string, string>>({})
 
+watch(() => formData.value.birth_date, (newVal) => {
+  if (newVal && schema.value?.sections?.some((s:any) => s.fields?.some((f:any) => f.key === 'age'))) {
+    const bdate = new Date(newVal)
+    const today = new Date()
+    if (!isNaN(bdate.getTime())) {
+      let calcAge = today.getFullYear() - bdate.getFullYear()
+      const m = today.getMonth() - bdate.getMonth()
+      if (m < 0 || (m === 0 && today.getDate() < bdate.getDate())) {
+        calcAge--
+      }
+      formData.value.age = Math.max(0, calcAge)
+    }
+  }
+})
+
 watch(() => formData.value, (newVal) => {
   if (!schema.value?.sections) return
   const allFields = schema.value.sections.flatMap((s:any) => s.fields || [])
@@ -795,6 +830,52 @@ const submittedCount = ref(0)
 
 // Location Cascade State
 const locationState = reactive<Record<string, any>>({})
+const durationState = ref<Record<string, {years: number, months: number, days: number}>>({})
+
+function getDurationPart(key: string, part: 'years'|'months'|'days') {
+  if (!durationState.value[key]) {
+    durationState.value[key] = { years: 0, months: 0, days: 0 }
+  }
+  return durationState.value[key][part] || ''
+}
+
+function updateDurationPicker(key: string, part: 'years'|'months'|'days', event: Event) {
+  const val = parseInt((event.target as HTMLInputElement).value) || 0
+  if (!durationState.value[key]) {
+    durationState.value[key] = { years: 0, months: 0, days: 0 }
+  }
+  durationState.value[key][part] = val
+  
+  // Format string: e.g. "سنة و 5 أشهر و 4 أيام"
+  const y = durationState.value[key].years
+  const m = durationState.value[key].months
+  const d = durationState.value[key].days
+  
+  let parts = []
+  
+  if (y > 0) {
+    if (y === 1) parts.push('سنة')
+    else if (y === 2) parts.push('سنتين')
+    else if (y >= 3 && y <= 10) parts.push(`${y} سنوات`)
+    else parts.push(`${y} سنة`)
+  }
+  
+  if (m > 0) {
+    if (m === 1) parts.push('شهر')
+    else if (m === 2) parts.push('شهرين')
+    else if (m >= 3 && m <= 10) parts.push(`${m} أشهر`)
+    else parts.push(`${m} شهر`)
+  }
+  
+  if (d > 0) {
+    if (d === 1) parts.push('يوم')
+    else if (d === 2) parts.push('يومين')
+    else if (d >= 3 && d <= 10) parts.push(`${d} أيام`)
+    else parts.push(`${d} يوم`)
+  }
+  
+  formData.value[key] = parts.length > 0 ? parts.join(' و ') : ''
+}
 const governorates = ref<any[]>([])
 const districtsCache = ref<Record<number, any[]>>({})
 const subDistrictsCache = ref<Record<number, any[]>>({})
@@ -1065,25 +1146,23 @@ async function addPersonnel(person: any) {
     return
   }
 
-  // 2. التحقق من الباك إند إذا كانت هناك معاملة معلقة لنفس الفرد ونفس النوع
+  // 2. التحقق من الباك إند إذا كانت هناك معاملة معلقة لأي نوع
   if (category === 'form' || category === 'rank_settlement') {
     try {
-      const checkRes = await api.get('/service-cycle/forms/', { params: { personnel: person.military_number, type: type } })
-      const pendingForms = checkRes.data?.results?.filter((f: any) => 
-        ['draft', 'in_progress', 'pending_services', 'pending_hr', 'pending_director', 'returned'].includes(f.status)
-      )
-      if (pendingForms && pendingForms.length > 0) {
-        const pending = pendingForms[0]
+      const checkRes = await api.get('/service-cycle/forms/check_pending/', { params: { personnel_id: person.id } })
+      if (checkRes.data?.has_pending) {
+        const pendingId = checkRes.data.pending_id
+        const pendingType = checkRes.data.form_type
         Swal.fire({
           icon: 'warning',
           title: 'طلب قيد الإجراء',
-          html: `<p class="text-sm text-gray-700 text-right mb-3">يوجد معاملة سابقة من نفس النوع قيد الإجراء لهذا الفرد.</p><p class="text-xs font-mono text-gray-500 text-right">رقم المعاملة: <b class="text-blue-600">TX-${String(pending.id).padStart(6, '0')}</b> — الحالة: ${pending.status}</p>`,
+          html: `<p class="text-sm text-gray-700 text-right mb-3">لا يمكن إنشاء معاملة جديدة: يوجد معاملة سابقة (نوع: ${pendingType}) قيد الإجراء لهذا الفرد.</p><p class="text-xs font-mono text-gray-500 text-right">رقم المعاملة: <b class="text-blue-600">TX-${String(pendingId).padStart(6, '0')}</b></p>`,
           confirmButtonText: 'عرض المعاملة المعلقة',
           showCancelButton: true,
           cancelButtonText: 'إلغاء',
           confirmButtonColor: '#2563eb',
         }).then(r => {
-          if (r.isConfirmed) router.push(`/services/forms/${pending.id}`)
+          if (r.isConfirmed) router.push(`/services/forms/${pendingId}`)
         })
         return
       }

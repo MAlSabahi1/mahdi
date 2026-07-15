@@ -107,32 +107,35 @@
         <!-- Section 1: Personal Data (Modern UI) -->
         <div class="section-container">
           <h3 class="section-title">أولاً: البيانات الشخصية</h3>
-          <table class="official-table">
-            <thead>
-              <tr>
-                <th class="w-[12%]">الرتبة</th>
-                <th class="w-[18%]">الرقم العسكري</th>
-                <th class="w-[38%]">الاسم</th>
-                <th class="w-[16%]">الوحدة</th>
-                <th class="w-[16%]">{{ form?.form_type === 'martyr' ? 'نوع الحالة' : 'السرية' }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="font-bold">{{ form?.personnel?.rank || form?.personnel?.rank_name || form?.personnel?.current_rank?.name || '—' }}</td>
-                <td class="font-bold font-sans tracking-widest text-[15px]">{{ form?.personnel?.military_number || '—' }}</td>
-                <td class="font-bold">{{ form?.personnel?.full_name || '—' }}</td>
-                <td class="font-bold">{{ form?.personnel?.security_admin_name || form?.personnel?.security_admin || form?.personnel?.central_department_name || form?.personnel?.central_department || '—' }}</td>
-                <td class="font-bold">{{ form?.personnel?.central_department_name || form?.personnel?.branch_name || form?.personnel?.division_name || form?.personnel?.unit_name || '—' }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="table-wrapper">
+            <table class="official-table">
+              <thead>
+                <tr>
+                  <th class="w-[12%]">الرتبة</th>
+                  <th class="w-[18%]">الرقم العسكري</th>
+                  <th class="w-[38%]">الاسم</th>
+                  <th class="w-[16%]">الوحدة</th>
+                  <th class="w-[16%]">{{ form?.form_type === 'martyr' ? 'نوع الحالة' : 'السرية' }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="font-bold">{{ form?.personnel?.rank || form?.personnel?.rank_name || form?.personnel?.current_rank?.name || '—' }}</td>
+                  <td class="font-bold font-sans tracking-widest text-[15px]">{{ form?.personnel?.military_number || '—' }}</td>
+                  <td class="font-bold">{{ form?.personnel?.full_name || '—' }}</td>
+                  <td class="font-bold">{{ form?.personnel?.security_admin_name || form?.personnel?.security_admin || form?.personnel?.central_department_name || form?.personnel?.central_department || '—' }}</td>
+                  <td class="font-bold">{{ form?.personnel?.central_department_name || form?.personnel?.branch_name || form?.personnel?.division_name || form?.personnel?.unit_name || '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- Section 2: Birth & Residence Data -->
         <div class="section-container mt-1">
           <h3 class="section-title">ثانياً: بيانات الميلاد والاقامة الحالية</h3>
-          <table class="official-table">
+          <div class="table-wrapper">
+            <table class="official-table">
             <thead>
               <tr>
                 <th class="w-[20%]">الرقم الوطني</th>
@@ -150,10 +153,10 @@
                 <td class="p-0 align-top" style="padding: 0 !important; height: 1px;">
                   <div class="grid grid-cols-4 w-full h-full text-center" style="grid-template-rows: auto 1fr; gap: 0;">
                     <!-- Headers -->
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 bg-gray-100/60 flex items-center justify-center leading-none">المحافظة</div>
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 bg-gray-100/60 flex items-center justify-center leading-none">المديرية</div>
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 bg-gray-100/60 flex items-center justify-center leading-none">العزلة</div>
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-black py-0.5 bg-gray-100/60 flex items-center justify-center leading-none">القرية</div>
+                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">المحافظة</div>
+                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">المديرية</div>
+                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">العزلة</div>
+                    <div class="text-[8px] tracking-tighter font-normal border-b border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">القرية</div>
                     
                     <!-- Data -->
                     <div class="py-1 px-0.5 font-bold text-[9px] border-l border-black flex items-center justify-center leading-tight break-words whitespace-normal">{{ getLocationObj('birth').gov }}</div>
@@ -167,10 +170,10 @@
                 <td class="p-0 align-top" style="padding: 0 !important; height: 1px;">
                   <div class="grid grid-cols-4 w-full h-full text-center" style="grid-template-rows: auto 1fr; gap: 0;">
                     <!-- Headers -->
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 bg-gray-100/60 flex items-center justify-center leading-none">المحافظة</div>
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 bg-gray-100/60 flex items-center justify-center leading-none">المديرية</div>
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 bg-gray-100/60 flex items-center justify-center leading-none">العزلة</div>
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-black py-0.5 bg-gray-100/60 flex items-center justify-center leading-none">القرية</div>
+                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">المحافظة</div>
+                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">المديرية</div>
+                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">العزلة</div>
+                    <div class="text-[8px] tracking-tighter font-normal border-b border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">القرية</div>
                     
                     <!-- Data -->
                     <div class="py-1 px-0.5 font-bold text-[9px] border-l border-black flex items-center justify-center leading-tight break-words whitespace-normal">{{ getLocationObj('residence').gov }}</div>
@@ -185,12 +188,14 @@
               </tr>
             </tbody>
           </table>
+          </div>
         </div>
 
         <!-- Section 3: Status Data (Dynamic) -->
         <div class="section-container mt-2">
           <h3 class="section-title">ثالثاً بيــانات الحـــــالة</h3>
-          <table class="official-table">
+          <div class="table-wrapper">
+            <table class="official-table">
             <thead>
               <tr>
                 <th v-for="field in dynamicSpecificFields" :key="'h-'+field.key" :style="{ width: getFieldWidth(field.key, dynamicSpecificFields.length, dynamicSpecificFields) }">
@@ -203,10 +208,10 @@
                 <td v-for="field in dynamicSpecificFields" :key="'d-'+field.key" :class="[field.key === 'martyrdom_location' || field.key === 'death_location' ? 'p-0 align-top' : 'font-bold text-[14px]']" :style="field.key === 'martyrdom_location' || field.key === 'death_location' ? 'padding: 0 !important; height: 1px;' : ''">
                   <div v-if="field.key === 'martyrdom_location' || field.key === 'death_location'" class="grid grid-cols-4 w-full h-full text-center" style="grid-template-rows: auto 1fr; gap: 0;">
                     <!-- Headers -->
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 bg-gray-100/60 flex items-center justify-center leading-none">المحافظة</div>
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 bg-gray-100/60 flex items-center justify-center leading-none">المديرية</div>
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 bg-gray-100/60 flex items-center justify-center leading-none">العزلة</div>
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-black py-0.5 bg-gray-100/60 flex items-center justify-center leading-none">القرية</div>
+                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">المحافظة</div>
+                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">المديرية</div>
+                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">العزلة</div>
+                    <div class="text-[8px] tracking-tighter font-normal border-b border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">القرية</div>
                     
                     <!-- Data -->
                     <div class="py-1 px-0.5 font-bold text-[9px] border-l border-black flex items-center justify-center leading-tight break-words whitespace-normal">{{ parseLocationString(field.value).gov }}</div>
@@ -221,12 +226,14 @@
               </tr>
             </tbody>
           </table>
+          </div>
         </div>
 
         <!-- Section 4: Attachments -->
         <div class="section-container mt-2 mb-1">
           <h3 class="section-title">المرفقــات : -</h3>
-          <table class="official-table">
+          <div class="table-wrapper">
+            <table class="official-table">
             <thead>
               <tr>
                 <th class="w-[8%]">م</th>
@@ -244,6 +251,7 @@
               </tr>
             </tbody>
           </table>
+          </div>
         </div>
 
         <!-- Letter Body Section -->
@@ -443,18 +451,23 @@ const fieldTranslations: Record<string, string> = {
   arrest_authority: 'جهة التوقيف',
   study_type: 'نوع الدراسة',
   institution: 'جهة الدراسة',
-  duration: 'المدة',
+  duration: 'مدة الدراسة',
   start_date: 'تاريخ البدء',
   end_date: 'تاريخ الانتهاء',
   vip_name: 'اسم الشخصية',
   vip_position: 'منصب الشخصية',
   order_source: 'مصدر الامر',
+  study_order: 'نسخة من أمر التفرغ الدراسي',
+  'study order': 'نسخة من أمر التفرغ الدراسي',
   secondment_place: 'جهة الانتداب',
-  reason: 'السبب',
+  destination: 'جهة الانتداب',
+  delegate_to: 'جهة الانتداب',
+  delegate_purpose: 'سبب الانتداب',
+  reason: 'سبب الانتداب',
   decision_number: 'رقم القرار',
   referral_date: 'تاريخ الاحالة',
   retirement_date: 'تاريخ التقاعد',
-  disease_type: 'نوع المرض',
+  disease_type: 'نوع المرض أو الإصابة',
   decision_source: 'مصدر القرار',
   disability_percentage: 'نسبة العجز',
   notes: 'ملاحظات',
@@ -490,10 +503,11 @@ const fieldTranslations: Record<string, string> = {
   'legal power of attorney': 'وكالة شرعية',
   personnel_id: 'صورة الهوية (فرد)',
   'personnel id': 'صورة الهوية (فرد)',
-  prosecution_memo: 'مذكرة النيابة',
-  'prosecution memo': 'مذكرة النيابة',
+  national_id_front: 'صورة البطاقة (أمامي)',
+  'national id front': 'صورة البطاقة (أمامي)',
+  secondment_order: 'نسخة من الأمر',
+  'secondment order': 'نسخة من الأمر',
   ruling_copy: 'نسخة من الحكم',
-  'ruling copy': 'نسخة من الحكم',
   // حقول FormRegistry المضافة
   death_cause: 'سبب الوفاة',
   death_location: 'مكان الوفاة',
@@ -502,12 +516,13 @@ const fieldTranslations: Record<string, string> = {
   court_ruling_date: 'تاريخ الحكم الشرعي',
   legal_status: 'حالة الإجراءات',
   medical_source: 'مصدر القرار الطبي',
-  injury_context: 'حالة الوقوع',
+  injury_context: 'سبب الحالة',
   injury_date: 'تاريخ الوقوع',
+  original_medical_decision: 'القرار الطبي الأصل',
+  recent_photo: 'صورة حديثة',
   service_years: 'سنوات الخدمة',
   dignitary_name: 'اسم الشخصية',
   dignitary_position: 'منصب الشخصية',
-  destination: 'جهة الانتداب',
   settlement_type: 'نوع التسوية',
   to_rank: 'الرتبة المستهدفة',
   demotion_reason: 'سبب التنزيل',
@@ -555,7 +570,13 @@ const dynamicSpecificFields = computed<FormField[]>(() => {
   const ORDER_MAP: Record<string, string[]> = {
     death: ['case_type', 'death_date', 'occurrence_context', 'death_location'],
     martyr: ['martyrdom_date', 'occurrence_context', 'martyrdom_location'],
-    imprisoned: ['case_type', 'arrest_date', 'ruling_type', 'ruling_duration', 'arrest_authority', 'sentence_start_date', 'sentence_end_date', 'ruling_date']
+    imprisoned: ['case_type', 'arrest_date', 'ruling_type', 'ruling_duration', 'arrest_authority', 'sentence_start_date', 'sentence_end_date', 'ruling_date'],
+    seconded: ['secondment_place', 'reason', 'order_source', 'start_date', 'end_date'],
+    study_leave: ['study_type', 'institution', 'order_source', 'duration', 'start_date', 'end_date'],
+    end_of_service: ['birth_date', 'join_date', 'age', 'gender'],
+    retirement_age: ['birth_date', 'join_date', 'age', 'gender'],
+    medical_unfit: ['disease_type', 'medical_source', 'disability_percentage', 'injury_context'],
+    missing: ['missing_date', 'missing_location', 'court_ruling_date', 'legal_status']
   }
 
   const ft = props.form?.form_type || ''
@@ -577,6 +598,24 @@ const dynamicSpecificFields = computed<FormField[]>(() => {
     if (key === 'case_type') {
       if (ft === 'imprisoned') label = 'نوع القضية'
       else label = 'نوع الحالة'
+    }
+    // Handle aliases for seconded
+    if (ft === 'seconded') {
+      if (key === 'destination' || key === 'delegate_to' || key === 'secondment_place') label = 'جهة الانتداب'
+      if (key === 'reason' || key === 'delegate_purpose' || key === 'purpose') label = 'سبب الانتداب'
+      if (key === 'start_date' || key === 'duration_from' || key === 'date_from') label = 'تاريخ البدء'
+      if (key === 'end_date' || key === 'duration_to' || key === 'date_to') label = 'تاريخ الانتهاء'
+    }
+    // Handle aliases for study_leave
+    if (ft === 'study_leave') {
+      if (key === 'institution') label = 'مكان الدراسة'
+      if (key === 'duration') label = 'مدة الدراسة'
+    }
+    
+    // Translate gender value if present
+    if (key === 'gender') {
+      if (finalValue === 'M') finalValue = 'ذكر'
+      if (finalValue === 'F') finalValue = 'أنثى'
     }
 
     const isDate = finalValue ? String(finalValue).match(/^\d{4}-\d{2}-\d{2}/) !== null : false
@@ -666,6 +705,22 @@ const letterText = computed(() => {
   if (ft === 'retired') {
     return [
       `موضحاً لكم اعلاه بيانات حالة المذكور والتي بموجبها تم ضمه على فئة (بلوغ السن القانوني) ومرفق لكم الاوليات:\n١- الطلب الشخصي المقدم من المذكور.                  ٢- نسخة من البطاقة العسكرية والشخصية معمدة.`,
+      `نأمل التوجيه الى المختصين باستكمال الاجراءات بحسب النظام.`
+    ]
+  }
+
+  // النص الخاص باستمارة منتدب
+  if (ft === 'seconded') {
+    return [
+      `موضحاً لكم اعلاه بيانات حالة المذكور والتي بموجبها تم ضمه على فئة (المنتدبين) ومرفق لكم الاوليات\n١- نسخة من الامر.                  ٢- نسخة من البطاقة العسكرية والشخصية معمدة.`,
+      `نأمل التوجيه الى المختصين باستكمال الاجراءات بحسب النظام.`
+    ]
+  }
+
+  // النص الخاص باستمارة مفرغ للدراسة
+  if (ft === 'study_leave') {
+    return [
+      `موضحاً لكم اعلاه بيانات حالة المذكور والتي بموجبها تم ضمه على فئة (المفرغين للدراسة) ومرفق لكم الاوليات\n١- نسخة من الامر.                  ٢- نسخة من البطاقة العسكرية والشخصية معمدة.`,
       `نأمل التوجيه الى المختصين باستكمال الاجراءات بحسب النظام.`
     ]
   }
@@ -800,30 +855,50 @@ function translateAttachment(att: any) {
 .section-container {
   width: 100%;
 }
+.table-wrapper {
+  width: 100%;
+  border: 2px solid #000;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 2px;
+}
 .official-table {
   width: 100%;
   border-collapse: collapse;
   text-align: center;
-  border: 2px solid #000;
+  background-color: transparent;
+  table-layout: fixed;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 .official-table th {
-  background-color: var(--th-bg-color, #e8ede1);
-  color: var(--th-text-color, #1a2415);
+  background-color: var(--th-bg-color, #e8ede1) !important;
+  box-shadow: inset 0 0 0 1000px var(--th-bg-color, #e8ede1) !important;
+  color: var(--th-text-color, #1a2415) !important;
   font-family: 'Cairo', sans-serif;
   font-weight: 700;
   font-size: 12px;
-  border: 1.5px solid #000;
+  border-bottom: 1.5px solid #000;
+  border-left: 1.5px solid #000;
   padding: 3px;
   -webkit-print-color-adjust: exact !important;
   print-color-adjust: exact !important;
 }
 .official-table td {
-  border: 1.5px solid #000;
+  border-bottom: 1.5px solid #000;
+  border-left: 1.5px solid #000;
   padding: 3px 2px;
   font-family: 'Cairo', sans-serif;
   font-weight: 600;
   font-size: 12.5px;
   color: #0f172a;
+}
+.official-table th:last-child,
+.official-table td:last-child {
+  border-left: none;
+}
+.official-table tbody tr:last-child td {
+  border-bottom: none;
 }
 </style>
 
@@ -839,6 +914,12 @@ function translateAttachment(att: any) {
     margin: 0 !important;
     padding: 0 !important;
     background: white !important;
+  }
+  
+  /* Force background colors to print even if 'Background Graphics' is unchecked in print dialog */
+  .print-bg-gray {
+    background-color: #f3f4f6 !important;
+    box-shadow: inset 0 0 0 1000px #f3f4f6 !important;
   }
 
   /* Force colors on ALL elements, regardless of Tailwind or Scoped CSS */

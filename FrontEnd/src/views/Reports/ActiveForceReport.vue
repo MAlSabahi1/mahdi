@@ -44,6 +44,12 @@
       </div>
 
       <!-- Filters Panel -->
+      <month-filter 
+        v-model="selectedMonth" 
+        @change="fetchData" 
+        class="mb-4"
+      />
+      
       <div class="bg-white dark:bg-gray-900 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 print:hidden">
         <div class="flex flex-col md:flex-row items-end gap-4">
           <div class="w-full md:w-1/3">
@@ -116,6 +122,7 @@
               :title="`كشف القوة العاملة فعلياً (${group.unit})`" 
               subtitle="يعرض القوة العاملة النشطة والمنتظمة في الدوام" 
               reportType="report_4"
+              :selectedMonth="selectedMonth"
             />
           </div>
 
@@ -202,11 +209,13 @@ import api from '@/lib/api'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import ReportHeader from '@/components/reports/ReportHeader.vue'
 import ReportFooter from '@/components/reports/ReportFooter.vue'
+import MonthFilter from '@/components/reports/MonthFilter.vue'
 
 const selectedLevel = ref('all')
 const searchQuery = ref('')
 const reportData = ref([])
 const loading = ref(false)
+const selectedMonth = ref('')
 const printingUnit = ref<string | null>(null)
 
 const expandedGroups = ref<Record<string, boolean>>({})
@@ -289,7 +298,10 @@ const fetchData = async () => {
   loading.value = true
   try {
     const res = await api.get('/reports/detailed-reports/active-force/', {
-      params: { level: selectedLevel.value }
+      params: { 
+        level: selectedLevel.value,
+        month: selectedMonth.value || undefined
+      }
     })
     reportData.value = res.data.data || []
   } catch (error) {
