@@ -102,8 +102,8 @@ _FORMS = {
         description='الدليل: ص 33 — تُستخدم عند بلوغ الفرد السن القانوني للتقاعد',
         fields=(
             FormField('category', 'الفئة', 'text', required=True, disabled=True, default='كبار سن'),
-            FormField('birth_date', 'تاريخ الميلاد', 'date'),
-            FormField('join_date', 'تاريخ الالتحاق بالخدمة', 'date'),
+            FormField('birth_date', 'تاريخ الميلاد', 'date', disabled=True),
+            FormField('join_date', 'تاريخ الالتحاق بالخدمة', 'date', disabled=True),
             FormField('age', 'العمر', 'number'),
             FormField('gender', 'الجنس', 'select', options=('ذكر', 'أنثى')),
         ),
@@ -122,12 +122,12 @@ _FORMS = {
         description='الدليل: ص 34 — تُستخدم لتوثيق الوفاة الطبيعية',
         fields=(
             FormField('category', 'الفئة', 'text', required=True, disabled=True, default='وفيات'),
+            FormField('case_type', 'نوع الحالة', 'text'),
             FormField('death_date', 'تاريخ الوفاة', 'date'),
-            FormField('death_cause', 'سبب الوفاة', 'textarea'),
+            FormField('occurrence_context', 'سبب الوفاة', 'select',
+                      options=('طبيعي', 'أثناء الواجب')),
             FormField('death_location', 'مكان الوفاة', 'location_cascade',
                       help_text='محافظة → مديرية → عزلة/قرية — يمكن الكتابة يدوياً'),
-            FormField('occurrence_context', 'حالة الوقوع', 'select',
-                      options=('أثناء الواجب', 'طبيعية')),
         ),
         attachments=(
             AttachmentSpec('death_certificate', 'شهادة الوفاة'),
@@ -299,11 +299,10 @@ _FORMS = {
         fields=(
             FormField('category', 'الفئة', 'text', required=True, disabled=True, default='الشهداء'),
             FormField('martyrdom_date', 'تاريخ الاستشهاد', 'date'),
-            FormField('martyrdom_cause', 'سبب الاستشهاد', 'textarea'),
+            FormField('occurrence_context', 'سبب الاستشهاد', 'select',
+                      options=('طبيعي', 'أثناء الواجب')),
             FormField('martyrdom_location', 'مكان الاستشهاد', 'location_cascade',
                       help_text='محافظة → مديرية → عزلة/قرية — يمكن الكتابة يدوياً'),
-            FormField('occurrence_context', 'حالة الوقوع', 'select',
-                      options=('أثناء الواجب',)),
         ),
         attachments=(
             AttachmentSpec('death_certificate', 'شهادة الوفاة'),

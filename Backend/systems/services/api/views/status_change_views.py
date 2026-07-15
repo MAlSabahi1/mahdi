@@ -58,6 +58,13 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = StatusChangeForm.objects.select_related(
             'personnel', 'personnel__current_rank',
+            'personnel__central_department', 'personnel__branch',
+            'personnel__division', 'personnel__unit',
+            'personnel__security_admin',
+            'personnel__birth_governorate', 'personnel__birth_district',
+            'personnel__birth_sub_district', 'personnel__birth_village',
+            'personnel__residence_governorate', 'personnel__residence_district',
+            'personnel__residence_sub_district', 'personnel__residence_village',
             'from_status', 'to_status', 'submitted_by',
         ).order_by('-created_at')
 
@@ -123,9 +130,32 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
                 'military_number': p.military_number,
                 'full_name': p.full_name,
                 'rank': p.current_rank.name if p.current_rank else '',
+                'rank_name': p.current_rank.name if p.current_rank else '',
                 'rank_id': p.current_rank.id if p.current_rank else None,
-                'central_department': p.central_department.name if getattr(p, 'central_department', None) else '',
+                'national_id': p.national_id or '',
+                'birth_date': str(p.birth_date) if p.birth_date else '',
+                'join_date': str(p.join_date) if p.join_date else '',
+                # الهيكل التنظيمي
                 'security_admin': p.security_admin.name if getattr(p, 'security_admin', None) else '',
+                'security_admin_name': p.security_admin.name if getattr(p, 'security_admin', None) else '',
+                'central_department': p.central_department.name if getattr(p, 'central_department', None) else '',
+                'central_department_name': p.central_department.name if getattr(p, 'central_department', None) else '',
+                'branch_name': p.branch.name if getattr(p, 'branch', None) else '',
+                'division_name': p.division.name if getattr(p, 'division', None) else '',
+                'unit_name': p.unit.name if getattr(p, 'unit', None) else '',
+                # بيانات الهوية
+                'id_issue_date': str(p.id_issue_date) if getattr(p, 'id_issue_date', None) else '',
+                'id_issue_place': p.id_issue_place if getattr(p, 'id_issue_place', None) else '',
+                # بيانات الميلاد (أسماء نصية كاملة: محافظة - مديرية - عزلة - قرية)
+                'birth_governorate_name': p.birth_governorate.name_ar if getattr(p, 'birth_governorate', None) else '',
+                'birth_district_name': p.birth_district.name_ar if getattr(p, 'birth_district', None) else '',
+                'birth_sub_district_name': p.birth_sub_district.name_ar if getattr(p, 'birth_sub_district', None) else '',
+                'birth_village_name': p.birth_village.name_ar if getattr(p, 'birth_village', None) else '',
+                # بيانات الإقامة (أسماء نصية كاملة)
+                'residence_governorate_name': p.residence_governorate.name_ar if getattr(p, 'residence_governorate', None) else '',
+                'residence_district_name': p.residence_district.name_ar if getattr(p, 'residence_district', None) else '',
+                'residence_sub_district_name': p.residence_sub_district.name_ar if getattr(p, 'residence_sub_district', None) else '',
+                'residence_village_name': p.residence_village.name_ar if getattr(p, 'residence_village', None) else '',
             } if p else None,
             'from_status': form.from_status.name if form.from_status else None,
             'to_status': form.to_status.name if form.to_status else None,

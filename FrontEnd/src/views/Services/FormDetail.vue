@@ -484,67 +484,8 @@ async function fetchFormDetails() {
 
 async function printForm() {
   if (!form.value) return
-
-  // ── بناء draft المذكرة من بيانات المعاملة وفتح منشئ المذكرات ──
-  const f = form.value
-  const personnelName = f.personnel?.full_name || f.personnel_name || ''
-  const militaryNumber = f.personnel?.military_number || f.personnel_military_number || ''
-  const formType = f.form_type_display || f.form_type || ''
-  const txNumber = `TX-${String(f.id).padStart(6, '0')}`
-  const today = new Date()
-  const dateStr = today.toLocaleDateString('ar-YE', { year: 'numeric', month: '2-digit', day: '2-digit' })
-
-  const memoDraft = {
-    documentType: 'PERSONNEL_MEMO',
-    securityLevel: 'NORMAL',
-    referenceNo: txNumber,
-    docDate: dateStr,
-    correspondingDate: '',
-    attachments: 'نموذج إثبات حالة',
-    bilingual: false,
-    issuerLine1: '', issuerLine2: '', issuerLine3: '',
-    addressees: [
-      { prefix: 'الأخ /', name: 'المدير العام للمحافظة', suffix: 'المحترم' }
-    ],
-    involvedPersonnel: [
-      {
-        militaryId: militaryNumber,
-        rank: f.personnel?.rank_display || '',
-        name: personnelName,
-        nationalId: '', status: formType,
-        workplace: '', serviceLocation: '', notes: '',
-      }
-    ],
-    subject: `بخصوص طلب إثبات حالة (${formType}) — ${personnelName}`,
-    body: `<p>نحيط سيادتكم علماً بأنه تم اعتماد طلب إثبات حالة (${formType}) للمنتسب المذكور أعلاه.</p><p>رقم المعاملة: <strong>${txNumber}</strong></p><p>نأمل التكرم بالاطلاع واتخاذ اللازم.</p>`,
-    conclusion: '<p>والله الموفق ،،،</p>',
-    signatures: [
-      { title: 'رئيس قسم الخدمات', rank: '', name: '', showSeal: false },
-      { title: 'مدير إدارة القوى البشرية', rank: '', name: '', showSeal: true },
-    ],
-    signatureSettings: { showLabels: true, showFrame: true },
-    visibleColumns: {
-      militaryId: true, rank: true, nationalId: false,
-      status: true, workplace: false, serviceLocation: false,
-      jobTitle: false, position: false, qualification: false,
-      joinDate: false, commencementDate: false, phone: false,
-      clarification: false, notes: true,
-    },
-    typography: {
-      addressee:  { family: 'Cairo', size: 1.1, weight: 'font-bold', underline: true },
-      greeting:   { family: 'Cairo', size: 1.0, weight: 'font-bold', underline: true },
-      subject:    { family: 'Cairo', size: 1.15, weight: 'font-black', underline: true },
-      body:       { family: 'Cairo', size: 1.0, weight: 'font-normal', underline: false },
-      conclusionSeparator: { family: 'Cairo', size: 1.1, weight: 'font-bold', underline: true },
-      conclusionBody: { family: 'Cairo', size: 1.0, weight: 'font-normal', underline: false },
-      signatures: { family: 'Cairo', size: 0.95, weight: 'font-bold', underline: false },
-    },
-  }
-
-  localStorage.setItem('official_memo_draft', JSON.stringify(memoDraft))
-  window.open(router.resolve('/admin/documents/memo-builder').href, '_blank')
+  window.open(router.resolve(`/services/forms/${form.value.id}/print`).href, '_blank')
 }
-
 async function submitNote() {
   if (!newNote.value.trim()) return
   try {

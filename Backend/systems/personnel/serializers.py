@@ -81,6 +81,11 @@ class PersonnelListSerializer(serializers.ModelSerializer):
     residence_village_id = serializers.IntegerField(read_only=True)
     id_issue_date = serializers.DateField(read_only=True)
     id_issue_place = serializers.CharField(read_only=True)
+    # أسماء المواقع الجغرافية كنصوص
+    birth_governorate_name = serializers.CharField(source='birth_governorate.name_ar', read_only=True, default=None)
+    birth_district_name = serializers.CharField(source='birth_district.name_ar', read_only=True, default=None)
+    residence_governorate_name = serializers.CharField(source='residence_governorate.name_ar', read_only=True, default=None)
+    residence_district_name = serializers.CharField(source='residence_district.name_ar', read_only=True, default=None)
     
     class Meta:
         model = PersonnelMaster
@@ -109,6 +114,7 @@ class PersonnelListSerializer(serializers.ModelSerializer):
             'phone_number', 'birth_date', 'join_date',
             'birth_gov_id', 'birth_district_id', 'birth_sub_district_id', 'birth_village_id',
             'residence_gov_id', 'residence_district_id', 'residence_sub_district_id', 'residence_village_id',
+            'birth_governorate_name', 'birth_district_name', 'residence_governorate_name', 'residence_district_name',
             'id_issue_date', 'id_issue_place',
             'expense_status', 'expense_status_display', 'appointment_info', 'notes',
             'is_complete', 'is_data_clean', 'data_quality_score',
@@ -181,6 +187,11 @@ class PersonnelDetailSerializer(serializers.ModelSerializer):
     residence_district_id = serializers.IntegerField(read_only=True)
     residence_sub_district_id = serializers.IntegerField(read_only=True)
     residence_village_id = serializers.IntegerField(read_only=True)
+    # أسماء المواقع الجغرافية كنصوص
+    birth_governorate_name = serializers.CharField(source='birth_governorate.name_ar', read_only=True, default=None)
+    birth_district_name = serializers.CharField(source='birth_district.name_ar', read_only=True, default=None)
+    residence_governorate_name = serializers.CharField(source='residence_governorate.name_ar', read_only=True, default=None)
+    residence_district_name = serializers.CharField(source='residence_district.name_ar', read_only=True, default=None)
     # بيانات محسوبة
     age = serializers.IntegerField(read_only=True)
     service_years = serializers.IntegerField(read_only=True)
@@ -220,6 +231,7 @@ class PersonnelDetailSerializer(serializers.ModelSerializer):
             'qualification', 'qualification_detail',
             'birth_gov_id', 'birth_district_id', 'birth_sub_district_id', 'birth_village_id',
             'residence_gov_id', 'residence_district_id', 'residence_sub_district_id', 'residence_village_id',
+            'birth_governorate_name', 'birth_district_name', 'residence_governorate_name', 'residence_district_name',
             'id_issue_date', 'id_issue_place',
             'geo_location', 'geo_location_name',
             'photo', 'fingerprint_hash',

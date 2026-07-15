@@ -123,6 +123,8 @@ class Command(BaseCommand):
                     "source": "user_input",
                     "fields": [
                         {"key": "category", "label": "الفئة", "type": "text", "required": True, "disabled": True, "value": "كبار سن"},
+                        {"key": "birth_date", "label": "تاريخ الميلاد", "type": "date", "required": False, "disabled": True, "source": "personnel_master"},
+                        {"key": "join_date", "label": "تاريخ الالتحاق", "type": "date", "required": False, "disabled": True, "source": "personnel_master"},
                         {"key": "age", "label": "العمر", "type": "number", "required": True},
                         {"key": "gender", "label": "الجنس", "type": "select", "options": [{"value": "M", "label": "ذكر"}, {"value": "F", "label": "أنثى"}], "required": True}
                     ]
