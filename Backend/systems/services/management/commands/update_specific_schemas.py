@@ -141,11 +141,10 @@ class Command(BaseCommand):
                     "source": "user_input",
                     "fields": [
                         {"key": "category", "label": "الفئة", "type": "text", "required": True, "disabled": True, "value": "وفيات"},
-                        {"key": "status_type", "label": "نوع الحالة", "type": "text", "required": True},
-                        {"key": "incident_status", "label": "حالة الوقوع", "type": "text", "required": False},
+                        {"key": "case_type", "label": "نوع الحالة", "type": "text", "required": False},
                         {"key": "death_date", "label": "تاريخ الوفاة", "type": "date", "required": True},
-                        {"key": "death_reason", "label": "سبب الوفاة", "type": "text", "required": True},
-                        {"key": "death_place", "label": "مكان الوفاة", "type": "text", "required": True},
+                        {"key": "occurrence_context", "label": "سبب الوفاة", "type": "select", "options": [{"value": "طبيعي", "label": "طبيعي"}, {"value": "أثناء الواجب", "label": "أثناء الواجب"}], "required": True},
+                        {"key": "death_location", "label": "مكان الوفاة", "type": "location_cascade", "required": True},
                         {"key": "notes", "label": "ملاحظات", "type": "textarea", "required": False}
                     ]
                 }],
@@ -297,8 +296,8 @@ class Command(BaseCommand):
                     "fields": [
                         {"key": "category", "label": "الفئة", "type": "text", "required": True, "disabled": True, "value": "الشهداء"},
                         {"key": "martyrdom_date", "label": "تاريخ الاستشهاد", "type": "date", "required": True},
-                        {"key": "martyrdom_reason", "label": "سبب الاستشهاد", "type": "text", "required": True},
-                        {"key": "martyrdom_place", "label": "مكان الاستشهاد", "type": "text", "required": True},
+                        {"key": "occurrence_context", "label": "سبب الاستشهاد", "type": "select", "options": [{"value": "طبيعي", "label": "طبيعي"}, {"value": "أثناء الواجب", "label": "أثناء الواجب"}], "required": True},
+                        {"key": "martyrdom_location", "label": "مكان الاستشهاد", "type": "location_cascade", "required": True},
                         {"key": "notes", "label": "ملاحظات", "type": "textarea", "required": False}
                     ]
                 }],
