@@ -164,7 +164,6 @@ class Command(BaseCommand):
                     "source": "user_input",
                     "fields": [
                         {"key": "category", "label": "الفئة", "type": "text", "required": True, "disabled": True, "value": "مفقودين"},
-                        {"key": "procedure_status", "label": "حالة الإجراءات", "type": "select", "options": ["مستكمل", "غير مستكمل"], "required": True},
                         {"key": "missing_place", "label": "محل الفقدان", "type": "text", "required": True},
                         {"key": "missing_date", "label": "تاريخ الفقدان", "type": "date", "required": True},
                         {"key": "ruling_date", "label": "تاريخ الحكم (إن وجد)", "type": "date", "required": False},

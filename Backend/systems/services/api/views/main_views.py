@@ -1,3 +1,5 @@
+
+
 """
 Services Views - واجهات API دورة الكشوفات
 المرحلة 4: Export, Import, Staging, Reconciliation, Reports, Rejections, Webhooks
@@ -61,7 +63,7 @@ class ExportView(BaseViewSet):
         locked_columns_str = request.query_params.get('locked_columns', '')
         statuses_str = request.query_params.get('statuses', '')
         security_admins_id = request.query_params.get('security_admins')
-        central_departments_id = request.query_params.get('central_departments')
+        central_departments_id = request.query_params.get('central_departments') or request.query_params.get('directorate_id')
         branches_id = request.query_params.get('branches')
         district_polices_id = request.query_params.get('district_polices')
         split_by = request.query_params.get('split_by')
@@ -85,7 +87,7 @@ class ExportView(BaseViewSet):
         from systems.personnel.models import PersonnelMaster
         qs = PersonnelMaster.objects.all()
 
-        entity_name = "محافظة/إدارة"
+        entity_name = "الوزارة"
         sec_admin = None
         cen_dept = None
         
@@ -163,6 +165,7 @@ class ExportView(BaseViewSet):
             protected_arabic = None
             editable_arabic = None
             raw_columns = None
+            selected_cols = None
             if columns_str:
                 selected_cols = [c.strip() for c in columns_str.split(',') if c.strip()]
                 locked_cols = [c.strip() for c in locked_columns_str.split(',') if c.strip()] if locked_columns_str else []
@@ -231,6 +234,7 @@ class ExportView(BaseViewSet):
                 security_admin=sec_admin,
                 central_department=cen_dept,
             )
+            print(f"DEBUG: entity_name={entity_name}, mode={export_mode}, qs_count={qs.count()}")
             file_output, filename = service.export_and_log()
             resp = FileResponse(
                 file_output,
@@ -813,29 +817,60 @@ class ReportViewSet(IdempotencyMixin, BaseViewSet):
     @action(detail=False, methods=['get'], url_path='monthly_pdf')
     def monthly_pdf(self, request):
         month = request.query_params.get('month')
+        directorate_id = request.query_params.get('directorate')
+        export_type = request.query_params.get('type', 'all')
+        
         if not month:
             return Response({'success': False, 'error': 'month parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
             
         try:
             from systems.services.application.services.pdf_export_service import PdfExportService
-            from systems.personnel.models import PersonnelMaster
+            from systems.services.infrastructure.models import StatusChangeForm
+            from core.models import CentralDepartment
             
-            # مجرد بيانات تجريبية لاختبار عمل المحرك
-            test_personnel = list(PersonnelMaster.objects.all()[:5].values('id', 'military_number', 'full_name', 'current_rank__name'))
-            for p in test_personnel:
-                p['rank'] = p.pop('current_rank__name', '')
-                p['status_notes'] = 'اختبار المحرك'
+            # فلترة الاستمارات المعتمدة في الشهر المطلوب
+            forms_query = StatusChangeForm.objects.filter(
+                status='approved',
+                created_at__startswith=month
+            ).select_related('personnel', 'personnel__current_rank')
+            
+            directorate = None
+            if directorate_id and directorate_id != 'all':
+                forms_query = forms_query.filter(personnel__central_department_id=directorate_id)
+                directorate = CentralDepartment.objects.filter(id=directorate_id).first()
                 
-            svc = PdfExportService(service_month=month)
+            if export_type == 'corrections':
+                # افتراض أن كشوفات التصحيح هي نماذج طلب تعديل/تصحيح (هنا نعتمد على أنواع معينة أو يمكن تصفيتها)
+                # في الوقت الحالي، سنصدر كل الاستمارات كأنها تصحيح إذا تم اختيارها
+                form_title = 'كشوفات تصحيح الأوضاع الشهرية (مع المرفقات)'
+                context_types = ['CorrectionRequestForm', 'StatusChangeForm']
+            else:
+                form_title = 'سجل الإجراءات والخدمات الشهرية (مع المرفقات)'
+                context_types = ['StatusChangeForm', 'General']
+                
+            # بناء قائمة الأفراد
+            personnel_list = []
+            for form in forms_query:
+                personnel_list.append({
+                    'id': form.personnel.id,
+                    'military_number': form.personnel.military_number,
+                    'full_name': form.personnel.full_name,
+                    'rank': form.personnel.current_rank.name if form.personnel.current_rank else '',
+                    'status_notes': f"{form.get_form_type_display()} - {form.status_notes or ''}"
+                })
+                
+            # إزالة التكرار (قد يكون للفرد أكثر من إجراء)
+            unique_personnel = {p['id']: p for p in personnel_list}.values()
             
-            # جلب مرفقات اختبارية أو استمارات
+            svc = PdfExportService(service_month=month, central_department=directorate)
+            
             file_bytes = svc.export_form_with_attachments(
-                form_title='كشف اختباري لعمليات الدمج (PDF)',
-                personnel_list=test_personnel,
-                context_types=['StatusChangeForm', 'General']
+                form_title=form_title,
+                personnel_list=list(unique_personnel),
+                context_types=context_types
             )
             
-            filename = f"monthly_report_{month}.pdf"
+            filename = f"monthly_services_{export_type}_{month}.pdf"
             resp = FileResponse(
                 file_bytes,
                 content_type='application/pdf',
@@ -845,6 +880,8 @@ class ReportViewSet(IdempotencyMixin, BaseViewSet):
             resp['X-Export-Filename'] = filename
             return resp
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return Response(
                 {'success': False, 'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR

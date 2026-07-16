@@ -147,10 +147,11 @@
           <div v-if="!hiddenFields?.includes('qualification')" class="lg:col-span-2">
             <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">{{ $t('personnel.qualification') || 'المؤهل العلمي' }}</label>
             <div class="relative z-20 bg-transparent">
-              <select v-model="form.qualification" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
+              <select v-model="form.qualification" :class="{'border-error-500': validationErrors.qualification}" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
                 <option :value="null">...</option>
                 <option v-for="q in coreStore.qualifications" :key="q.id" :value="q.id" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">{{ q.name }}</option>
               </select>
+              <p v-if="validationErrors.qualification" class="mt-1 text-xs text-error-500">{{ validationErrors.qualification }}</p>
               <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
                 <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
               </span>
@@ -1281,8 +1282,40 @@ function validateRankLogic() {
   }
 }
 
+function validateQualificationLogic() {
+  validationErrors.qualification = ''
+  
+  if (form.job_title) {
+    const job = coreStore.jobTitles.find((j: any) => j.id === form.job_title)
+    if (job && job.category) {
+      const cat = coreStore.jobCategories.find((c: any) => c.id === job.category)
+      if (cat && cat.name.includes('تخصصي')) {
+        if (!form.qualification) {
+          validationErrors.qualification = 'الفئة التخصصية تتطلب إدخال المؤهل العلمي (جامعي فأعلى)'
+        } else {
+          const qual = coreStore.qualifications.find((q: any) => q.id === form.qualification)
+          if (qual) {
+            const validQuals = ['جامعي', 'ماجستير', 'دكتوراه', 'دكتوراة', 'بكالوريوس', 'ليسانس']
+            if (!validQuals.some(vq => qual.name.includes(vq))) {
+              validationErrors.qualification = `الفئة التخصصية تتطلب مؤهلاً جامعياً فأعلى. المؤهل الحالي "${qual.name}" غير كافٍ.`
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 watch(() => form.military_number, () => {
   validateRankLogic()
+})
+
+watch(() => form.job_title, () => {
+  validateQualificationLogic()
+})
+
+watch(() => form.qualification, () => {
+  validateQualificationLogic()
 })
 
 function checkValidity() {
@@ -1322,6 +1355,12 @@ function checkValidity() {
   
   validateRankLogic()
   if (validationErrors.current_rank || validationErrors.force_classification) {
+    isValid = false
+  }
+
+  // Qualification vs Category Rule (تخصصي -> جامعي)
+  validateQualificationLogic()
+  if (validationErrors.qualification) {
     isValid = false
   }
   
@@ -1371,8 +1410,15 @@ async function handleSubmit() {
   parts.push(nameParts.surname)
   form.full_name = parts.join(' ')
 
+  // Inject category from job_title if missing in form
+  let injectedCategory = null
+  if (form.job_title) {
+    const job = coreStore.jobTitles.find((j: any) => j.id === form.job_title)
+    if (job && job.category) injectedCategory = job.category
+  }
+
   // Clean empty strings to null for API
-  const payload = { ...form }
+  const payload = { ...form, category: injectedCategory }
   console.log("PAYLOAD TO SEND:", payload)
   Object.keys(payload).forEach(key => {
     if (payload[key as keyof typeof payload] === '') {

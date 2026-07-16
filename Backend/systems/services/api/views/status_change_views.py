@@ -37,6 +37,21 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
     """
     permission_classes = [IsAuthenticated]
 
+    def _check_month_lock(self):
+        """التحقق من إقفال الشهر بعد يوم 20"""
+        user = self.request.user
+        # الاستثناءات للصلاحيات الاستثنائية
+        if user.is_superuser or user.has_perm('services.can_bypass_month_lock'):
+            return None
+            
+        today = timezone.localtime().date()
+        if today.day > 20:
+            return Response({
+                'success': False, 
+                'error': 'إقفال الشهر قد تم، ولا يمكن التعديل أو إنشاء حركات بعد تاريخ 20 من الشهر الحالي، إلا بصلاحيات استثنائية.'
+            }, status=status.HTTP_403_FORBIDDEN)
+        return None
+
     @property
     def repo(self):
         return DjangoStatusChangeFormRepository()
@@ -212,6 +227,9 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
         if not mil or not form_type:
             return Response({'success': False, 'error': 'الرقم العسكري ونوع الاستمارة مطلوبان'},
                             status=status.HTTP_400_BAD_REQUEST)
+
+        lock_response = self._check_month_lock()
+        if lock_response: return lock_response
 
         # ── التحقق من النوع عبر Registry أو Catalog ──
         from systems.services.models import ServiceCatalog
@@ -416,6 +434,9 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def submit(self, request, pk=None):
+        lock_response = self._check_month_lock()
+        if lock_response: return lock_response
+        
         try:
             form = self.get_object()
             from systems.services.models import ServiceCatalog, FormEventLog
@@ -481,6 +502,9 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
+        lock_response = self._check_month_lock()
+        if lock_response: return lock_response
+        
         try:
             form = self.get_object()
             if getattr(form, 'status', None) != 'in_progress':
@@ -598,6 +622,9 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
+        lock_response = self._check_month_lock()
+        if lock_response: return lock_response
+        
         try:
             form = self.get_object()
             reason = request.data.get('reason', 'تم الرفض')

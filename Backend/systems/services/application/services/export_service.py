@@ -483,25 +483,26 @@ class ExcelExportService:
                     )
 
         # ── حماية الورقة ──
-        worksheet.protect(
-            password,
-            {
-                'select_locked_cells':   False,
-                'select_unlocked_cells': True,
-                'format_cells':          False,
-                'format_columns':        False,
-                'format_rows':           False,
-                'insert_columns':        False,
-                'delete_columns':        False,
-                'insert_rows':           False,
-                'delete_rows':           False,
-                'sort':                  True,
-                'autofilter':            True,
-                'pivot_tables':          False,
-                'objects':               True,  # ضروري جداً لكي يعمل سهم القائمة المنسدلة في بعض نسخ الإكسل!
-                'scenarios':             False,
-            }
-        )
+        if self.entity_name != 'الوزارة':
+            worksheet.protect(
+                password,
+                {
+                    'select_locked_cells':   False,
+                    'select_unlocked_cells': True,
+                    'format_cells':          False,
+                    'format_columns':        False,
+                    'format_rows':           False,
+                    'insert_columns':        False,
+                    'delete_columns':        False,
+                    'insert_rows':           False,
+                    'delete_rows':           False,
+                    'sort':                  True,
+                    'autofilter':            True,
+                    'pivot_tables':          False,
+                    'objects':               True,  # ضروري جداً لكي يعمل سهم القائمة المنسدلة في بعض نسخ الإكسل!
+                    'scenarios':             False,
+                }
+            )
 
     def create_protected_excel(self) -> BytesIO:
         """إنشاء ملف Excel محمي (وضع multi أو single)."""
@@ -590,7 +591,8 @@ class ExcelExportService:
                     first_sheet = False
 
         meta_ws.hide() # إخفاء ورقة البيانات بعد تنشيط ورقة أخرى لكي تعمل بنجاح
-        meta_ws.protect(password) # حماية ورقة البيانات المخفية بكلمة مرور لمنع العبث ببيانات القوائم المنسدلة ومعادلات VLOOKUP
+        if self.entity_name != 'الوزارة':
+            meta_ws.protect(password) # حماية ورقة البيانات المخفية بكلمة مرور لمنع العبث ببيانات القوائم المنسدلة ومعادلات VLOOKUP
         
         workbook.close()
         output.seek(0)

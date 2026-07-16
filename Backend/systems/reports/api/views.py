@@ -1,3 +1,4 @@
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -352,9 +353,29 @@ class MonthlyServicesReportView(APIView):
         year = request.query_params.get('year')
         status_param = request.query_params.get('status', 'all')
         
+        # Advanced filters on personnel
+        rank_id = request.query_params.get('rank')
+        category_id = request.query_params.get('category')
+        security_admin_id = request.query_params.get('security_admin')
+        central_department_id = request.query_params.get('central_department')
+        branch_id = request.query_params.get('branch')
+        district_police_id = request.query_params.get('district_police')
+        position_id = request.query_params.get('position')
+        qualification_id = request.query_params.get('qualification')
+        force_class = request.query_params.get('force_classification')  # active / inactive
+        military_number_search = request.query_params.get('military_number')
+        name_search = request.query_params.get('name')
+        
         from systems.services.models import StatusChangeForm, ServiceCatalog
         
-        qs = StatusChangeForm.objects.select_related('personnel', 'personnel__current_rank', 'submitted_by')
+        qs = StatusChangeForm.objects.select_related(
+            'personnel', 'personnel__current_rank', 'submitted_by',
+            'personnel__qualification', 'personnel__security_admin',
+            'personnel__central_department', 'personnel__branch',
+            'personnel__district_police', 'personnel__position',
+            'personnel__job_title', 'personnel__category',
+            'personnel__current_status'
+        )
         
         if year:
             qs = qs.filter(created_at__year=year)
@@ -363,6 +384,32 @@ class MonthlyServicesReportView(APIView):
             
         if status_param != 'all':
             qs = qs.filter(status=status_param)
+        
+        # Advanced personnel filters
+        if rank_id:
+            qs = qs.filter(personnel__current_rank_id=rank_id)
+        if category_id:
+            qs = qs.filter(personnel__category_id=category_id)
+        if security_admin_id:
+            qs = qs.filter(personnel__security_admin_id=security_admin_id)
+        if central_department_id:
+            qs = qs.filter(personnel__central_department_id=central_department_id)
+        if branch_id:
+            qs = qs.filter(personnel__branch_id=branch_id)
+        if district_police_id:
+            qs = qs.filter(personnel__district_police_id=district_police_id)
+        if position_id:
+            qs = qs.filter(personnel__position_id=position_id)
+        if qualification_id:
+            qs = qs.filter(personnel__qualification_id=qualification_id)
+        if force_class == 'active':
+            qs = qs.filter(personnel__current_status__classification__startswith='active')
+        elif force_class == 'inactive':
+            qs = qs.exclude(personnel__current_status__classification__startswith='active')
+        if military_number_search:
+            qs = qs.filter(personnel__military_number__icontains=military_number_search)
+        if name_search:
+            qs = qs.filter(personnel__full_name__icontains=name_search)
             
         # Scope by user permissions
         from infra.authorization.services.permission_service import PermissionService
@@ -399,12 +446,25 @@ class MonthlyServicesReportView(APIView):
                 'index': index,
                 'rank': p.current_rank.name if p.current_rank else 'بدون رتبة',
                 'military_number': p.military_number,
+                'national_id': p.national_id or 'غير مدخل',
                 'full_name': p.full_name,
-                'unit': unit,
-                'service_type': ft_display,
-                'status': form.get_status_display(),
-                'created_at': form.created_at.isoformat(),
-                'submitted_by': form.submitted_by.get_full_name() or form.submitted_by.username if form.submitted_by else 'النظام'
+                'unit': p.security_admin.name if p.security_admin else 'غير مدخل',
+                'directorate': p.central_department.name if p.central_department else 'غير مدخل',
+                'department': p.district_police.name if p.district_police else 'غير مدخل',
+                'affiliated_unit': p.branch.name if p.branch else 'غير مدخل',
+                'position': p.position.name if p.position else 'غير مدخل',
+                'job_title': p.job_title.name if p.job_title else 'غير مدخل',
+                'category': p.category.name if p.category else 'غير مدخل',
+                'status': p.current_status.name if p.current_status else 'غير مدخل',
+                'status_type': ft_display,
+                'force_classification': 'قوة عاملة' if p.current_status and 'active' in p.current_status.classification else 'قوة غير عاملة',
+                'qualification': p.qualification.name if p.qualification else 'غير مدخل',
+                'phone': p.phone_number or 'غير مدخل',
+                'old_military_number': p.old_military_number or 'غير مدخل',
+                'expense_status': dict(p.EXPENSE_STATUS_CHOICES).get(p.expense_status, 'غير مدخل') if hasattr(p, 'EXPENSE_STATUS_CHOICES') else 'غير مدخل',
+                'appointment_info': p.appointment_info or 'غير مدخل',
+                'quality': f"{p.data_quality_score}%",
+                'join_date': str(p.join_date) if p.join_date else 'غير مدخل',
             })
             
         return Response({

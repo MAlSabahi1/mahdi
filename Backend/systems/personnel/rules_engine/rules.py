@@ -326,4 +326,29 @@ class UniqueLeadershipPositionRule(BusinessRule):
                     _(f'لا يمكن تعيين منصب ({pos_name}). هذا المنصب مشغول حالياً بواسطة الفرد: {existing.full_name} ({existing.military_number}). يرجى تفريغ منصبه أولاً أو إحالته للتقاعد لإفساح المجال.')
                 )
 
+class QualificationCategoryRule(BusinessRule):
+    """
+    قاعدة التوافق بين المؤهل التعليمي والفئة التخصصية.
+    إذا تم اختيار الفئة "تخصصية"، يجب ألا يقل المؤهل عن "جامعي".
+    """
+    def execute(self, context: ValidationContext) -> None:
+        instance = context.instance
+        if instance.category_id and hasattr(instance, 'category') and instance.category:
+            if 'تخصصي' in instance.category.name:
+                if not instance.qualification_id:
+                    context.add_error(
+                        'qualification',
+                        _('الفئة التخصصية تتطلب إدخال المؤهل العلمي (يجب أن يكون جامعياً فأعلى).')
+                    )
+                else:
+                    if hasattr(instance, 'qualification') and instance.qualification:
+                        qual_name = instance.qualification.name
+                        # نعتبر المؤهلات الجامعية وما فوقها
+                        valid_quals = ['جامعي', 'ماجستير', 'دكتوراه', 'دكتوراة', 'بكالوريوس', 'ليسانس']
+                        if not any(vq in qual_name for vq in valid_quals):
+                            context.add_error(
+                                'qualification',
+                                _(f'الفئة التخصصية تتطلب مؤهلاً جامعياً فأعلى. المؤهل الحالي "{qual_name}" غير كافٍ.')
+                            )
+
 

@@ -85,7 +85,8 @@ class RulesEngine:
             NoStateOverlapRule,
             AdministrativePositionRule,
             PositionImmutabilityRule,
-            UniqueLeadershipPositionRule
+            UniqueLeadershipPositionRule,
+            QualificationCategoryRule
         )
         
         engine = cls()
@@ -100,4 +101,5 @@ class RulesEngine:
         engine.register_rule(PositionImmutabilityRule())
         engine.register_rule(UniqueLeadershipPositionRule())
         engine.register_rule(NoStateOverlapRule())
+        engine.register_rule(QualificationCategoryRule())
         return engine

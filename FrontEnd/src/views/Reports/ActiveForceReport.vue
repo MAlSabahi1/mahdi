@@ -205,6 +205,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, nextTick } from 'vue'
+import { exportToCSV } from "@/utils/export"
 import api from '@/lib/api'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import ReportHeader from '@/components/reports/ReportHeader.vue'
@@ -333,7 +334,7 @@ const printSingleUnit = (unit: string) => {
 }
 
 const exportExcel = () => {
-  alert('ميزة التصدير إلى إكسل قيد التطوير حالياً وسيتم ربطها بنظام التصدير المركزي قريباً.')
+  exportToCSV([], reportData.value, 'ActiveForceReport_Export.csv')
 }
 
 onMounted(() => {

@@ -514,8 +514,7 @@ const fieldTranslations: Record<string, string> = {
   death_cause: 'سبب الوفاة',
   death_location: 'مكان الوفاة',
   missing_date: 'تاريخ الفقدان',
-  missing_location: 'مكان الفقدان',
-  court_ruling_date: 'تاريخ الحكم الشرعي',
+  missing_place: 'مكان الفقدان',
   legal_status: 'حالة الإجراءات',
   medical_source: 'مصدر القرار الطبي',
   injury_context: 'سبب الحالة',
@@ -531,6 +530,14 @@ const fieldTranslations: Record<string, string> = {
   due_date: 'تاريخ الاستحقاق',
   new_military_number: 'الرقم العسكري الجديد',
   university_degree_type: 'نوع المؤهل الجامعي',
+  legal_ruling: 'حكم شرعي بالفقدان',
+  'legal ruling': 'حكم شرعي بالفقدان',
+  newspaper_ad: 'إعلان الجريدة',
+  'newspaper ad': 'إعلان الجريدة',
+  heirs_certificate: 'حكم انحصار ورثة',
+  'heirs certificate': 'حكم انحصار ورثة',
+  missing_report: 'بلاغ الفقدان',
+  'missing report': 'بلاغ الفقدان',
 }
 
 function translateField(key: string) {
@@ -580,7 +587,7 @@ const dynamicSpecificFields = computed<FormField[]>(() => {
     retirement_age: ['birth_date', 'join_date', 'age', 'gender'],
     retired: ['birth_date', 'join_date', 'decision_number', 'referral_date'],
     medical_unfit: ['disease_type', 'medical_source', 'disability_percentage', 'injury_context'],
-    missing: ['missing_date', 'missing_location', 'court_ruling_date', 'legal_status']
+    missing: ['missing_date', 'missing_place', 'ruling_date']
   }
 
   const ft = props.form?.form_type || ''

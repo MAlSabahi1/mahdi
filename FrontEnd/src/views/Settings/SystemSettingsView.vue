@@ -195,7 +195,7 @@ const getCount = (tabId: string) =>
 const fetchSettings = async () => {
   loading.value = true
   try {
-    const res = await api.get('/system-settings/')
+    const res = await api.get('/dictionaries/system-settings/')
     const data = res.data.results ?? res.data
     allSettings.value = data.map((s: any) => ({
       ...s,
@@ -211,7 +211,7 @@ const fetchSettings = async () => {
 const saveSetting = async (setting: any) => {
   saving.value = setting.id
   try {
-    await api.patch(`/system-settings/${setting.id}/`, { value: setting._edit })
+    await api.patch(`/dictionaries/system-settings/${setting.id}/`, { value: setting._edit })
     setting.value = setting._edit
     savedId.value = setting.id
     setTimeout(() => { savedId.value = null }, 2500)

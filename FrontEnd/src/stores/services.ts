@@ -126,12 +126,12 @@ export const useServicesStore = defineStore('services', () => {
     }
   }
 
-  async function exportSheet(directorateId: number, month: string) {
+  async function exportSheet(directorateId: number | string, month: string) {
     loading.value = true
     error.value = null
     try {
       const response = await api.get('/service-cycle/export/', {
-        params: { directorate_id: directorateId, month },
+        params: { directorate_id: directorateId, month, mode: 'multi' },
         responseType: 'blob' // Important for file download
       })
       
@@ -156,6 +156,44 @@ export const useServicesStore = defineStore('services', () => {
       return true
     } catch (err: any) {
       error.value = 'فشل عملية التصدير'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function exportPdf(month: string, directorateId: string | number = '', type: string = 'all') {
+    loading.value = true
+    error.value = null
+    try {
+      const params: any = { month, type }
+      if (directorateId && directorateId !== 'all') {
+        params.directorate = directorateId
+      }
+      const response = await api.get('/service-cycle/reports/monthly_pdf/', {
+        params,
+        responseType: 'blob'
+      })
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      let fileName = `monthly_services_${type}_${month}.pdf`
+      const disposition = response.headers['content-disposition']
+      if (disposition && disposition.indexOf('filename=') !== -1) {
+        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition)
+        if (matches != null && matches[1]) {
+          fileName = matches[1].replace(/['"]/g, '')
+        }
+      }
+      link.setAttribute('download', fileName)
+      document.body.appendChild(link)
+      link.click()
+      link.parentNode?.removeChild(link)
+      
+      return true
+    } catch (err: any) {
+      error.value = 'فشل عملية تصدير الـ PDF'
       throw err
     } finally {
       loading.value = false
@@ -674,6 +712,7 @@ export const useServicesStore = defineStore('services', () => {
     rejectStaging,
     bulkApproveStaging,
     exportSheet,
+    exportPdf,
     importSheet,
     checkTaskStatus,
     rejectionsRecords,

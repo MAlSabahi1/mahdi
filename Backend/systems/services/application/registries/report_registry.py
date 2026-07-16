@@ -279,9 +279,8 @@ _REPORTS = {
         columns=_BASE + (
             ReportColumn('location', 'محل الخدمة', 'personnel.location'),
             ReportColumn('missing_date', 'تاريخ الفقدان', 'form_data.missing_date'),
-            ReportColumn('court_ruling_status', 'حكم شرعي بالفقدان (مستكمل/غير مستكمل)'),
-            ReportColumn('power_of_attorney_status', 'وكالة شرعية (مستكمل/غير مستكمل)'),
-            ReportColumn('heir_ruling_status', 'حكم انحصار ورثة (مستكمل/غير مستكمل)'),
+            ReportColumn('is_complete', 'مستكمل'),
+            ReportColumn('is_incomplete', 'غير مستكمل'),
         ),
         description='نموذج 11 — الدليل ص 26',
     ),

@@ -215,7 +215,22 @@ class TempInactiveReportsView(BaseDetailedReportView):
                 row["duration_to"] = temp_details.get("duration_to", temp_details.get("end_date", "غير مدخل"))
             elif report_id == 'report_11':
                 row["missing_date"] = temp_details.get("missing_date", "غير مدخل")
-                row["procedures_status"] = temp_details.get("legal_status", temp_details.get("procedures_status", "غير مستكمل"))
+                
+                # Fetch attachments status from the most recent form if not already queried
+                local_form = locals().get('last_form')
+                if not local_form:
+                    local_form = SCForm.objects.filter(
+                        personnel=p,
+                        form_type__icontains='missing',
+                        status='approved'
+                    ).order_by('-updated_at').first()
+                
+                if local_form:
+                    row["is_complete"] = "✔" if local_form.attachments_complete else ""
+                    row["is_incomplete"] = "" if local_form.attachments_complete else "✔"
+                else:
+                    row["is_complete"] = ""
+                    row["is_incomplete"] = "✔"
 
             data_list.append(row)
 

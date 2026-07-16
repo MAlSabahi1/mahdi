@@ -2,7 +2,7 @@
   <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] relative z-10 overflow-visible">
 
     <!-- ─── DataTable Toolbar ─────────────────────────────── -->
-    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 px-5 py-4 border-b border-gray-200 dark:border-gray-800">
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 px-5 py-4 border-b border-gray-200 dark:border-gray-800 print:hidden">
 
       <!-- Right Side (RTL): Search & Tools -->
       <div class="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full md:w-auto md:flex-1">
@@ -167,17 +167,25 @@
         </div>
       </div>
 
-      <div ref="tableContainerRef" class="max-w-full overflow-x-auto custom-scrollbar">
-        <table class="min-w-full">
+      <div ref="tableContainerRef" class="max-w-full overflow-x-auto print:overflow-visible print:max-w-none custom-scrollbar">
+        <table class="min-w-full print:w-full print:table-fixed">
+          <!-- Print column widths -->
+          <colgroup class="hidden print:table-column-group">
+            <col
+              v-for="col in columns"
+              :key="'cg-' + col.key"
+              :style="{ width: col.printWidth || 'auto' }"
+            />
+          </colgroup>
           <thead>
             <!-- Group Headers Row -->
-            <tr v-if="columnGroups && columnGroups.length > 0" class="border-b border-gray-200 dark:border-gray-700">
+            <tr v-if="columnGroups && columnGroups.length > 0" class="border-b border-gray-200 dark:border-gray-700 print:border-black print:border-2">
               <template v-for="(group, gi) in columnGroups" :key="gi">
                 <th
                   v-if="visibleColsInGroup(group.keys) > 0"
                   :colspan="visibleColsInGroup(group.keys)"
                   :class="[
-                    'border-e border-gray-200 dark:border-gray-700 text-center px-4 py-2.5',
+                    'border-e border-gray-200 dark:border-gray-700 text-center px-4 py-2.5 print:px-1 print:py-1 print:text-[10px] print:border-black print:border',
                     group.highlighted ? 'bg-brand-50/40 dark:bg-brand-500/5' : ''
                   ]"
                 >
@@ -191,15 +199,15 @@
             </tr>
 
             <!-- Column Headers Row -->
-            <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+            <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 print:border-black print:border-2">
               <template v-for="col in columns" :key="col.key">
                 <th
                   v-if="isColVisible(col.key)"
-                  :class="['border-e border-gray-200 dark:border-gray-700 px-5 py-3 text-start whitespace-nowrap', col.class || '']"
+                  :class="['border-e border-gray-200 dark:border-gray-700 px-5 py-3 text-start whitespace-nowrap print:whitespace-normal print:break-words print:p-0.5 print:text-[6px] print:leading-tight print:border-black print:border', col.class || '']"
                   :style="{ minWidth: col.minWidth || 'auto' }"
                 >
                   <div class="flex items-center justify-between gap-2 cursor-pointer group">
-                    <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">{{ col.label }}</p>
+                    <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors print:text-[7px] print:leading-tight print:whitespace-normal print:break-words">{{ col.label }}</p>
                     <svg class="h-3 w-3 text-gray-400 opacity-50 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
                     </svg>
@@ -217,17 +225,17 @@
             <tr
               v-for="(row, index) in data"
               :key="row[rowKey]"
-              class="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+              class="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group print:border-black print:border"
             >
               <!-- Data Columns -->
               <template v-for="col in columns" :key="col.key">
                 <td
                   v-if="isColVisible(col.key)"
-                  :class="['border-e border-gray-200 dark:border-gray-700 px-5 py-4 max-w-[150px] sm:max-w-[250px] truncate', col.tdClass || '']"
+                  :class="['border-e border-gray-200 dark:border-gray-700 px-5 py-4 max-w-[150px] sm:max-w-[250px] truncate print:max-w-none print:whitespace-normal print:break-words print:overflow-visible print:text-wrap print:p-0.5 print:border-black print:border', col.tdClass || '']"
                   :title="row[col.key] ? String(row[col.key]) : ''"
                 >
                   <slot :name="`cell-${col.key}`" :row="row" :value="row[col.key]" :index="index">
-                    <p class="text-gray-500 text-theme-sm dark:text-gray-400 truncate">{{ row[col.key] ?? '—' }}</p>
+                    <p class="text-gray-500 text-theme-sm dark:text-gray-400 truncate print:whitespace-normal print:break-words print:overflow-visible print:text-wrap print:text-[7px] print:leading-tight">{{ row[col.key] ?? '—' }}</p>
                   </slot>
                 </td>
               </template>
@@ -244,15 +252,17 @@
       </div>
 
       <!-- Pagination -->
-      <TablePagination
-        :currentPage="currentPage"
-        :totalPages="totalPages"
-        :totalCount="totalCount"
-        :pageSize="pageSize"
-        :visiblePages="computedVisiblePages"
-        @change-page="(p: number) => $emit('change-page', p)"
-        @change-page-size="(s: number) => $emit('change-page-size', s)"
-      />
+      <div class="print:hidden">
+        <TablePagination
+          :currentPage="currentPage"
+          :totalPages="totalPages"
+          :totalCount="totalCount"
+          :pageSize="pageSize"
+          :visiblePages="computedVisiblePages"
+          @change-page="(p: number) => $emit('change-page', p)"
+          @change-page-size="(s: number) => $emit('change-page-size', s)"
+        />
+      </div>
     </template>
   </div>
 </template>
@@ -267,6 +277,7 @@ export interface DataTableColumn {
   key: string
   label: string
   minWidth?: string
+  printWidth?: string
   class?: string
   tdClass?: string
 }

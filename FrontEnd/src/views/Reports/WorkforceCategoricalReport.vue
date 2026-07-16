@@ -124,6 +124,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { exportToCSV } from "@/utils/export"
 import api from '@/lib/api'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import ReportTable from '@/components/tables/ReportTable.vue'
@@ -195,7 +196,7 @@ const printReport = () => {
 
 // Export to Excel (Placeholder)
 const exportExcel = () => {
-  alert('ميزة التصدير لملف إكسل سيتم تفعيلها قريباً')
+  exportToCSV([], reportData.value, 'WorkforceCategoricalReport_Export.csv')
 }
 </script>
 

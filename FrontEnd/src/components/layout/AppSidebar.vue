@@ -206,11 +206,11 @@ const menuGroups = computed(() => {
                 path: "/admin/dashboard/compliance",
               },
               {
-                name: "الإعدادات العامة للنظام",
+                name: "admin.system_settings",
                 path: "/settings",
               },
               {
-                name: "الإنذارات المبكرة",
+                name: "admin.early_warnings",
                 path: "/early-warnings",
               }
             ]
@@ -258,7 +258,7 @@ const menuGroups = computed(() => {
                 path: "/admin/documents/list",
               },
               {
-                name: "منشئ المذكرات الرسمية",
+                name: "admin.memo_builder",
                 path: "/admin/documents/memo-builder",
                 new: true
               }

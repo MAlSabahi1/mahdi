@@ -113,6 +113,9 @@ urlpatterns = [
     path('reports/download/<str:filename>/', views.ReportViewSet.as_view({
         'get': 'download'
     }), name='report-download'),
+    path('reports/monthly_pdf/', views.ReportViewSet.as_view({
+        'get': 'monthly_pdf'
+    }), name='report-monthly-pdf'),
 
     # Admin — إدارة الاستمارات والنماذج المخصصة (مدير فقط)
     path('admin/', include(admin_router.urls)),

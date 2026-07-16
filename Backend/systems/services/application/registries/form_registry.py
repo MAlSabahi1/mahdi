@@ -148,12 +148,10 @@ _FORMS = {
         description='الدليل: ص 35 — نموذج 11 — المفقودين (مؤقتاً)',
         fields=(
             FormField('category', 'الفئة', 'text', required=True, disabled=True, default='مفقودين'),
-            FormField('missing_date', 'تاريخ الفقدان', 'date'),
-            FormField('missing_location', 'مكان الفقدان', 'location_cascade',
-                      help_text='محافظة → مديرية → عزلة/قرية — يمكن الكتابة يدوياً'),
-            FormField('court_ruling_date', 'تاريخ الحكم الشرعي', 'date', required=False),
-            FormField('legal_status', 'حالة الإجراءات', 'select',
-                      options=('مستكمل', 'غير مستكمل')),
+            FormField('missing_place', 'محل الفقدان', 'text', required=True),
+            FormField('missing_date', 'تاريخ الفقدان', 'date', required=True),
+            FormField('ruling_date', 'تاريخ الحكم (إن وجد)', 'date', required=False),
+            FormField('notes', 'ملاحظات', 'textarea', required=False),
         ),
         attachments=(
             AttachmentSpec('status_change_order', 'بلاغ الفقدان'),

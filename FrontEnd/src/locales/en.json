@@ -645,7 +645,10 @@
     "initial_seeding": "Initial Seeding Wizard",
     "snapshots": "Archive & Monthly Snapshots",
     "system_telemetry": "System Telemetry & Tasks",
-    "dynamic_forms": "Dynamic Forms Builder"
+    "dynamic_forms": "Dynamic Forms Builder",
+    "system_settings": "System Settings",
+    "early_warnings": "Early Warnings",
+    "memo_builder": "Official Memo Builder"
   },
   "services.export_config": "Form Export Configuration",
   "services.monthly_exports": "Monthly Consolidated Reports",

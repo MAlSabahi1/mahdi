@@ -662,7 +662,10 @@
     "initial_seeding": "معالج التأسيس الأولي",
     "snapshots": "الأرشيف واللقطة الشهرية",
     "system_telemetry": "تليمتري النظام والمهام",
-    "dynamic_forms": "الاستمارات الديناميكية"
+    "dynamic_forms": "الاستمارات الديناميكية",
+    "system_settings": "الإعدادات العامة للنظام",
+    "early_warnings": "الإنذارات المبكرة",
+    "memo_builder": "منشئ المذكرات الرسمية"
   },
   "blank_page": {
     "title": "صفحة قيد التطوير",

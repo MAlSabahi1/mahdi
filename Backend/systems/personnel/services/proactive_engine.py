@@ -28,14 +28,15 @@ URGENCY_INFO = 'info'
 
 # ── خريطة الحالات المؤقتة → نوع الاستمارة ────────────────────────────────────
 TEMP_STATUS_MAP = {
-    'مفرغين للدراسة': 'study_leave',
-    'منتدبين لدى جهات': 'seconded',
-    'سجناء': 'imprisoned',
-    'مفرغين للمرافقة': 'escort',
+    'المفرغين للدراسة': 'study_leave',
+    'المنتدبين لدى جهات': 'seconded',
+    'السجناء': 'imprisoned',
+    'المفرغين للمرافقة': 'escort',
 }
 
 # ── الحالات النشطة المعتبرة ───────────────────────────────────────────────────
 ACTIVE_STATUSES = ['في الخدمة', 'عامل', 'ميدان', 'نشط', 'موجود']
+ALL_TRACKED_STATUSES = ACTIVE_STATUSES + list(TEMP_STATUS_MAP.keys())
 
 
 def calc_age_and_service(person):
@@ -93,11 +94,10 @@ def run_engine_scan():
         'temp_warning_days': temp_warning_days,
     }
 
-    # ── 2. جلب الأفراد مع العلاقات ─────────────────────────────────────
     personnel = PersonnelMaster.objects.select_related(
         'current_status', 'current_rank', 'security_admin', 'branch', 'unit'
     ).filter(
-        current_status__name__in=ACTIVE_STATUSES
+        current_status__name__in=ALL_TRACKED_STATUSES
     )
 
     warnings = []
