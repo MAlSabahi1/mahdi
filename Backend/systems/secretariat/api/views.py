@@ -3,14 +3,16 @@ from django_filters.rest_framework import DjangoFilterBackend
 from ..models import (
     Correspondence, Task, Circular, CorrespondenceAttachment,
     MeetingMinutes, DocumentWorkRequest, InventoryItem, InventoryRequest,
-    Custody, AttendanceLog, FinancialAllocation, Expense, CorrespondenceReferral
+    Custody, AttendanceLog, FinancialAllocation, Expense, CorrespondenceReferral,
+    OfficialMemoTemplate
 )
 from .serializers import (
     CorrespondenceSerializer, TaskSerializer, CircularSerializer,
     CorrespondenceAttachmentSerializer, MeetingMinutesSerializer,
     DocumentWorkRequestSerializer, InventoryItemSerializer,
     InventoryRequestSerializer, CustodySerializer, AttendanceLogSerializer,
-    FinancialAllocationSerializer, ExpenseSerializer, CorrespondenceReferralSerializer
+    FinancialAllocationSerializer, ExpenseSerializer, CorrespondenceReferralSerializer,
+    OfficialMemoTemplateSerializer
 )
 from infra.security.permissions import ABACPermission, filter_by_department_scope, get_user_profile
 
@@ -351,3 +353,12 @@ class CorrespondenceReferralViewSet(BaseSecretariatViewSet):
             referred_by=self.request.user,
             security_admin=security_admin
         )
+
+
+class OfficialMemoTemplateViewSet(BaseSecretariatViewSet):
+    queryset = OfficialMemoTemplate.objects.all()
+    serializer_class = OfficialMemoTemplateSerializer
+    filterset_fields = ['document_type']
+    search_fields = ['name']
+    ordering_fields = ['name', 'created_at']
+    required_permission = 'secretariat.view.all'

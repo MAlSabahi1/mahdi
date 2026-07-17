@@ -545,3 +545,22 @@ class Expense(SoftDeletableModel):
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
+
+
+class OfficialMemoTemplate(SoftDeletableModel):
+    name = models.CharField(max_length=255, verbose_name=_('اسم القالب'))
+    document_type = models.CharField(max_length=50, default='MEMO', verbose_name=_('نوع المستند'))
+    content = models.JSONField(verbose_name=_('محتوى القالب كامل'))
+    
+    security_admin = models.ForeignKey(SecurityAdministration, on_delete=models.PROTECT, related_name='memo_templates', verbose_name=_('إدارة الأمن'))
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_memo_templates', verbose_name=_('منشئ القالب'))
+    
+    history = HistoricalRecords()
+
+    class Meta:
+        verbose_name = _('قالب مذكرة رسمية')
+        verbose_name_plural = _('قوالب المذكرات الرسمية')
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name

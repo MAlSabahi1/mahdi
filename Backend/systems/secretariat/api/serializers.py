@@ -2,7 +2,8 @@ from rest_framework import serializers
 from ..models import (
     Correspondence, Task, Circular, CorrespondenceAttachment,
     MeetingMinutes, DocumentWorkRequest, InventoryItem, InventoryRequest,
-    Custody, AttendanceLog, FinancialAllocation, Expense, CorrespondenceReferral
+    Custody, AttendanceLog, FinancialAllocation, Expense, CorrespondenceReferral,
+    OfficialMemoTemplate
 )
 from systems.personnel.models import PersonnelMaster
 from core.models import SecurityAdministration
@@ -197,3 +198,13 @@ class FinancialAllocationSerializer(serializers.ModelSerializer):
         from django.db.models import Sum
         result = obj.expenses.aggregate(total=Sum('amount'))
         return result['total'] or 0.00
+
+
+class OfficialMemoTemplateSerializer(serializers.ModelSerializer):
+    created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
+    security_admin_name = serializers.CharField(source='security_admin.name', read_only=True)
+
+    class Meta:
+        model = OfficialMemoTemplate
+        fields = '__all__'
+        read_only_fields = ('created_by', 'security_admin')

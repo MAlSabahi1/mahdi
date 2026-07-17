@@ -106,24 +106,6 @@ const flatColumns = computed(() => {
 
 <style scoped>
 @media print {
-  @page {
-    size: A4 landscape !important;
-    margin: 0.5cm !important;
-  }
-  body * {
-    visibility: hidden;
-  }
-  .printable-area, .printable-area * {
-    visibility: visible;
-  }
-  .printable-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    border: none !important;
-    box-shadow: none !important;
-  }
   /* Perfect Print Grid */
   :deep(table) {
     width: 100% !important;

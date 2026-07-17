@@ -154,7 +154,7 @@ function handleCreateMemo() {
     // مسودة افتراضية أولية
     draft = {
       documentType: 'CORRECTION',
-      includeTable: true,
+      includeTable: false,
       subject: 'طلب تصحيح بيانات منتسب',
       referenceNo: 'CORR-' + String(corr.id).padStart(5, '0'),
       addressees: [

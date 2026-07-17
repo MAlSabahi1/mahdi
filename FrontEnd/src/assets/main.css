@@ -765,10 +765,6 @@ span.flatpickr-weekday,
 }
 
 @media print {
-  @page {
-    size: A4 landscape;
-    margin: 1cm;
-  }
   
   /* Print borders for all tables */
   table {

@@ -497,6 +497,7 @@ class SuggestedCorrectionSerializer(serializers.ModelSerializer):
     )
     # معلومات المذكرة الوزارية (فقط بعد الموافقة)
     approval_document_url = serializers.SerializerMethodField()
+    supporting_document_url = serializers.SerializerMethodField()
 
     # ── الحقل الذي يقبل الرقم العسكري كـ write_only للإنشاء ──
     # (personnel FK يقبل PK لكن الفرونت يرسل الرقم العسكري)
@@ -519,6 +520,7 @@ class SuggestedCorrectionSerializer(serializers.ModelSerializer):
             'status', 'status_display',
             # المرفقات
             'supporting_document',       # وثيقة الطلب (بطاقة / نموذج 23)
+            'supporting_document_url',   # رابط وثيقة الطلب
             'approval_document',         # مذكرة الوزارة (تُملأ عند الموافقة)
             'approval_document_url',
             # التواصل الداخلي والبيانات المرنة
@@ -538,6 +540,16 @@ class SuggestedCorrectionSerializer(serializers.ModelSerializer):
         """رابط تحميل المذكرة الوزارية المرفقة عند الموافقة"""
         if obj.approval_document and obj.approval_document.file:
             return obj.approval_document.file.url
+        return None
+
+    def get_supporting_document_url(self, obj):
+        """رابط تحميل المستند الداعم المرفق"""
+        request = self.context.get('request')
+        if obj.supporting_document and obj.supporting_document.file:
+            url = obj.supporting_document.file.url
+            if request:
+                return request.build_absolute_uri(url)
+            return url
         return None
 
     def validate_personnel(self, value):

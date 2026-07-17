@@ -28,7 +28,7 @@
         <!-- Document 1: The Cover Memo -->
         <div class="a4-page portrait bg-white mx-auto shadow-2xl relative overflow-hidden flex flex-col print-page-break">
           
-          <div class="relative z-10 pt-2 pb-12 flex-1 flex flex-col memo-content-wrapper">
+          <div class="relative z-10 pt-2 pb-4 flex-1 flex flex-col memo-content-wrapper">
           
           <!-- Official Report Header (Edge to edge) -->
           <OfficialMemoHeader 
@@ -226,6 +226,53 @@
           </div> <!-- Close content wrapper -->
         </div> <!-- Close Memo Page (a4-page) -->
 
+        <!-- Document 2: Model 23 Matching List / Correction List (Landscape) -->
+        <div v-if="memo.documentType === 'CORRECTION'" class="a4-page landscape-section bg-white mx-auto shadow-2xl relative overflow-hidden flex flex-col print-page-break p-8">
+          <AuditMovementReports reportIdProp="23" :isEmbedded="true" :monthProp="memoMonth" />
+        </div>
+
+        <!-- Document 3: Attachments (Subsequent portrait pages) -->
+        <div 
+          v-for="(att, aIdx) in allAttachments" 
+          :key="'att-preview-'+aIdx" 
+          class="a4-page portrait bg-white mx-auto shadow-2xl relative overflow-hidden flex flex-col justify-center items-center print-page-break p-8"
+        >
+          <!-- Header for attachment context -->
+          <div class="w-full flex justify-between items-center mb-4 pb-2 border-b border-gray-300 font-cairo text-sm text-gray-700">
+            <div>
+              <span class="text-gray-500">نوع الوثيقة:</span>
+              <span class="mr-1 font-bold">{{ att.document_type_display }}</span>
+            </div>
+            <div>
+              <span class="text-gray-500">تخص الموظف:</span>
+              <span class="mr-1 font-bold">{{ att.personnel_name }}</span>
+            </div>
+          </div>
+          
+          <template v-if="!att.url.toLowerCase().endsWith('.pdf')">
+            <img v-show="!att._imageError" :src="resolveAttachmentUrl(att.url)" @error="att._imageError = resolveAttachmentUrl(att.url)" class="max-w-full max-h-[90%] object-contain rounded-lg shadow-sm" alt="مرفق" />
+            <div v-if="att._imageError" class="text-center p-8 bg-red-50 border-2 border-red-200 border-dashed rounded-xl w-full max-w-2xl mt-4">
+              <p class="font-bold text-red-700 text-lg mb-2">فشل تحميل الصورة</p>
+              <p class="text-gray-700 text-sm dir-ltr font-mono bg-white p-2 border rounded shadow-inner break-all">{{ att._imageError }}</p>
+            </div>
+          </template>
+          <template v-else>
+            <div class="text-center p-10 border-2 border-dashed border-gray-400 bg-gray-50 rounded-xl my-auto w-full max-w-2xl">
+              <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+              </svg>
+              <p class="font-bold text-gray-800 text-2xl mb-2">هذا المرفق بصيغة PDF</p>
+              <p class="text-gray-600 text-lg mb-4">النظام لا يمكنه دمج ملفات PDF داخل حزمة الطباعة المباشرة.</p>
+              <a :href="resolveAttachmentUrl(att.url)" target="_blank" class="text-brand-600 font-bold underline text-lg">اضغط هنا لفتح وطباعة المرفق بشكل مستقل</a>
+            </div>
+          </template>
+          
+          <!-- Footer for attachment context -->
+          <div class="w-full text-center mt-auto pt-4 text-xs text-gray-500 font-mono tracking-wider">
+            REF: ATT-{{ att.form_id }}-{{ aIdx }} | {{ new Date().toLocaleString('en-GB') }}
+          </div>
+        </div>
+
 
       </div>
     </div>
@@ -233,11 +280,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import OfficialMemoHeader from '@/components/common/OfficialMemoHeader.vue'
 import OfficialMemoFooter from '@/components/common/OfficialMemoFooter.vue'
+import CorrectionListPrintForm from '@/views/Services/PrintTemplates/CorrectionListPrintForm.vue'
+import AuditMovementReports from '@/views/Reports/AuditMovementReports.vue'
 
 import { useServicesStore } from '@/stores/services'
 import { useCorrectionStore } from '@/stores/correction'
@@ -248,7 +297,137 @@ const correctionStore = useCorrectionStore()
 
 const loading = ref(true)
 const memo = ref<any>({})
+
+const mappedCorrections = computed(() => {
+  if (!memo.value?.involvedPersonnel) return []
+  return memo.value.involvedPersonnel.map((p: any) => ({
+    rank: p.rank,
+    military_number: p.militaryId,
+    full_name: p.wrongName,
+    new_value: p.correctName,
+    notes: `المطلوب تصحيح: ${p.correctionTarget} \n المبررات: ${p.notes || p.secondaryNotes}`
+  }))
+})
+
+const memoMonth = computed(() => {
+  if (!memo.value?.docDate) return ''
+  const cleanDate = memo.value.docDate.replace('م', '').trim()
+  if (cleanDate.includes('-')) {
+    const parts = cleanDate.split('-')
+    if (parts[0].length === 4) return `${parts[0]}-${parts[1]}`
+  } else if (cleanDate.includes('/')) {
+    const parts = cleanDate.split('/')
+    if (parts[2].length === 4) return `${parts[2]}-${parts[1]}`
+  }
+  return ''
+})
+
 const loadedForms = ref<any[]>([])
+
+const allAttachments = computed(() => {
+  const list: any[] = []
+  for (const form of loadedForms.value) {
+    if (form.form_type === 'CORRECTION' || form.correction_type) {
+      if (form.supporting_document_url) {
+        list.push({
+          url: form.supporting_document_url,
+          document_type: 'correction_supporting_document',
+          document_type_display: 'المستند الداعم لطلب التصحيح',
+          personnel_name: form.personnel_name || form.personnel?.full_name || 'غير محدد',
+          form_id: form.id
+        })
+      }
+    } else {
+      if (form.attachments && form.attachments.length > 0) {
+        for (const att of form.attachments) {
+          list.push({
+            url: att.file || att.file_url || att.url || att.document_path || '',
+            document_type: att.document_type || att.label || '',
+            document_type_display: translateAttachmentType(att),
+            personnel_name: form.personnel?.full_name || form.full_name || 'غير محدد',
+            form_id: form.id
+          })
+        }
+      }
+    }
+  }
+  return list
+})
+
+function translateAttachmentType(att: any) {
+  const key = att.document_type_display || att.document_type || att.label || att.name || att.title || ''
+  if (!key) return 'مرفق إضافي'
+  const normalizedKey = String(key).toLowerCase().trim()
+  const map: Record<string, string> = {
+    attorney_id: 'هوية الوكيل',
+    power_of_attorney: 'وكالة شرعية',
+    legal_power_of_attorney: 'وكالة شرعية',
+    'legal power of attorney': 'وكالة شرعية',
+    photo: 'صورة شخصية',
+    id_card: 'هوية شخصية',
+    birth_certificate: 'شهادة ميلاد',
+    death_certificate: 'شهادة وفاة',
+    medical_report: 'تقرير طبي',
+    'national id front': 'الوجه الأمامي للهوية الوطنية',
+    'national_id_front': 'الوجه الأمامي للهوية الوطنية',
+    'national id back': 'الوجه الخلفي للهوية الوطنية',
+    'national_id_back': 'الوجه الخلفي للهوية الوطنية',
+    memo: 'مذكرة',
+    court_ruling: 'حكم محكمة',
+    'court ruling': 'حكم محكمة',
+    appointment_ruling: 'حكم تنصيب',
+    'appointment ruling': 'حكم تنصيب',
+    heir_ruling: 'انحصار ورثة',
+    'heir ruling': 'انحصار ورثة',
+    order_copy: 'نسخة من أمر التكليف',
+    'order copy': 'نسخة من أمر التكليف',
+    study_order: 'نسخة من أمر التفرغ الدراسي',
+    'study order': 'نسخة من أمر التفرغ الدراسي',
+    certified_id: 'نسخة من البطاقة العسكرية/الشخصية',
+    'certified id': 'نسخة من البطاقة العسكرية/الشخصية',
+    personal_request: 'الطلب الشخصي',
+    'personal request': 'الطلب الشخصي',
+    approval_document: 'مذكرة الاعتماد',
+    'approval document': 'مذكرة الاعتماد',
+    ministry_approval: 'موافقة الوزارة',
+    'ministry approval': 'موافقة الوزارة',
+    agent_id: 'هوية الوكيل',
+    'agent id': 'هوية الوكيل',
+    personnel_id: 'صورة الهوية',
+    'personnel id': 'صورة الهوية',
+    secondment_order: 'نسخة من الأمر',
+    'secondment order': 'نسخة من الأمر',
+    ruling_copy: 'نسخة من الحكم',
+    'ruling copy': 'نسخة من الحكم',
+    legal_ruling: 'حكم شرعي بالفقدان',
+    'legal ruling': 'حكم شرعي بالفقدان',
+    newspaper_ad: 'إعلان الجريدة',
+    'newspaper ad': 'إعلان الجريدة',
+    original_medical_decision: 'القرار الطبي الأصل',
+    recent_photo: 'صورة حديثة'
+  }
+  return map[normalizedKey] || String(key).replace(/_/g, ' ')
+}
+
+function resolveAttachmentUrl(url: string) {
+  if (!url) return ''
+  if (url.startsWith('http://backend:') || url.startsWith('http://api:')) {
+    try {
+      const urlObj = new URL(url)
+      url = `http://127.0.0.1:8000${urlObj.pathname}${urlObj.search}`
+    } catch(e) {}
+  }
+  if (url.startsWith('http')) return url
+  if (!url.startsWith('/media') && !url.startsWith('/api') && !url.startsWith('/')) {
+    url = '/media/' + url
+  } else if (url.startsWith('/') && !url.startsWith('/media') && !url.startsWith('/api')) {
+    url = '/media' + url
+  }
+  if (!url.startsWith('/')) url = '/' + url
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1'
+  const baseUrl = apiUrl.split('/api')[0] || 'http://127.0.0.1:8000'
+  return `${baseUrl}${url}`
+}
 
 const loadMemo = async () => {
   const draftStr = localStorage.getItem('official_memo_draft')
@@ -382,6 +561,18 @@ onMounted(() => {
 }
 
 @media print {
+  /* Reset layout structure on all parent containers to allow correct page rotation flow */
+  html, body, #app, #app > div, .print-container {
+    display: block !important;
+    position: static !important;
+    overflow: visible !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   body * {
     visibility: hidden;
   }
@@ -392,23 +583,45 @@ onMounted(() => {
     visibility: visible;
   }
   #print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 21cm;
-    height: 29.7cm;
-    margin: 0;
-    padding: 0;
-    box-shadow: none;
-  }
-  @page {
-    size: A4 portrait;
-    margin: 0;
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
   }
   
+  .a4-page.portrait {
+    width: 21cm !important;
+    height: 29.7cm !important;
+    max-height: 29.7cm !important;
+    overflow: hidden !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+  
+  .a4-page.landscape-section {
+    width: 29.7cm !important;
+    height: 21cm !important;
+    max-height: 21cm !important;
+    overflow: hidden !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
+    padding: 0.5cm !important;
+    background: white !important;
+  }
+
   .print-page-break {
-    page-break-after: always;
-    break-after: page;
+    page-break-after: always !important;
+    break-after: page !important;
   }
   
   /* Ensure the form page containers act perfectly like an A4 page */
@@ -429,6 +642,22 @@ onMounted(() => {
   /* Clean up the border inside print */
   .form-page-container .outer-border {
     border: none !important; /* Avoid double borders if we want a clean print */
+  }
+}
+</style>
+
+<style>
+@page {
+  size: A4 portrait;
+  margin: 0 !important;
+}
+@page landscape-page {
+  size: A4 landscape;
+  margin: 0 !important;
+}
+@media print {
+  .landscape-section {
+    page: landscape-page !important;
   }
 }
 </style>

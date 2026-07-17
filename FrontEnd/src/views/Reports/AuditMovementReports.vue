@@ -1,8 +1,8 @@
   <template>
-    <admin-layout>
-      <div class="space-y-6 pb-20">
+    <component :is="isEmbedded ? 'div' : AdminLayout">
+      <div :class="isEmbedded ? 'embedded-report-view' : 'standalone-report-page space-y-6 pb-20'">
         <!-- Screen Header -->
-        <div class="flex flex-wrap items-center justify-between gap-4 print:hidden">
+        <div v-if="!isEmbedded" class="flex flex-wrap items-center justify-between gap-4 print:hidden">
           <div>
             <h2 class="text-2xl font-bold text-gray-800 dark:text-white/90">{{ reportInfo.title }}</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ reportInfo.subtitle }}</p>
@@ -28,8 +28,8 @@
         </div>
 
         <!-- Print Content Wrapper -->
-        <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-hidden printable-area print:overflow-visible print:border-none print:shadow-none print:bg-transparent">
-          <div class="p-6 print:p-0">
+        <div :class="isEmbedded ? '' : 'rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-hidden printable-area print:overflow-visible print:border-none print:shadow-none print:bg-transparent'">
+          <div :class="isEmbedded ? 'p-0' : 'p-6 print:p-0'">
             <!-- Print Header -->
             <report-header 
               :title="reportInfo.title" 
@@ -39,7 +39,7 @@
             />
 
             <!-- Sub-Tabs for report_24 (Absence and AWOL) -->
-            <div v-if="reportId === 'report_24a' || reportId === 'report_24b'" class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-2 flex gap-2 w-max print:hidden mb-4">
+            <div v-if="!isEmbedded && (reportId === 'report_24a' || reportId === 'report_24b')" class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-2 flex gap-2 w-max print:hidden mb-4">
               <router-link 
                 :to="{ name: 'AuditMovementReports', params: { id: '24a' } }"
                 class="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
@@ -67,7 +67,7 @@
           </div>
         </div>
       </div>
-    </admin-layout>
+    </component>
   </template>
 
   <script setup lang="ts">
@@ -80,12 +80,23 @@
   import DetailedReportTable from '@/components/reports/DetailedReportTable.vue'
   import MonthFilter from '@/components/reports/MonthFilter.vue'
 
+  const props = withDefaults(defineProps<{
+    isEmbedded?: boolean
+    reportIdProp?: string
+    monthProp?: string
+  }>(), {
+    isEmbedded: false,
+    reportIdProp: '',
+    monthProp: ''
+  })
+
   const route = useRoute()
   const reportData = ref([])
   const loading = ref(false)
   const selectedMonth = ref('')
 
   const reportId = computed(() => {
+    if (props.reportIdProp) return `report_${props.reportIdProp}`
     const id = route.params.id as string
     return `report_${id}`
   })
@@ -274,7 +285,52 @@
     fetchData()
   })
 
+  watch(() => props.monthProp, (newVal) => {
+    selectedMonth.value = newVal || ''
+    fetchData()
+  })
+
   onMounted(() => {
+    if (props.monthProp) {
+      selectedMonth.value = props.monthProp
+    }
     fetchData()
   })
   </script>
+
+  <style>
+  @media print {
+    @page standalone-landscape-page {
+      size: A4 landscape;
+      margin: 0.5cm !important;
+    }
+    
+    body:has(.standalone-report-page) {
+      background-color: white !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    body:has(.standalone-report-page) .standalone-report-page {
+      page: standalone-landscape-page !important;
+      width: 29.7cm !important;
+      height: 21cm !important;
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
+      z-index: 9999 !important;
+      background: white !important;
+      box-sizing: border-box !important;
+      padding: 0.5cm !important;
+    }
+
+    body:has(.standalone-report-page) * {
+      visibility: hidden;
+    }
+
+    body:has(.standalone-report-page) .standalone-report-page,
+    body:has(.standalone-report-page) .standalone-report-page * {
+      visibility: visible;
+    }
+  }
+  </style>

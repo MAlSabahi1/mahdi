@@ -1046,6 +1046,7 @@ import { useCoreStore } from '@/stores/core'
 import { useAuthStore } from '@/stores/auth'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import CKEditorComponent from '@/components/common/CKEditorComponent.vue'
+import api from '@/lib/api'
 
 const router = useRouter()
 const route = useRoute()
@@ -1516,31 +1517,60 @@ const resetForm = () => {
 }
 
 // === Full Templates & Presets Management ===
-const savedPresets = ref(JSON.parse(localStorage.getItem('memoTypographyPresets') || '[]'))
+const savedPresets = ref<any[]>([])
 const selectedPresetIndex = ref('')
 const newPresetName = ref('')
 
-const savePreset = () => {
+const fetchTemplates = async () => {
+  try {
+    const response = await api.get('/secretariat/memo-templates/')
+    savedPresets.value = response.data.map((item: any) => ({
+      id: item.id,
+      name: item.name,
+      fullTemplate: item.content
+    }))
+  } catch (error) {
+    console.error('Failed to fetch memo templates:', error)
+    // fallback to localStorage
+    savedPresets.value = JSON.parse(localStorage.getItem('memoTypographyPresets') || '[]')
+  }
+}
+
+const savePreset = async () => {
   if (!newPresetName.value) {
     alert('يرجى إدخال اسم للقالب أولاً')
     return
   }
-  const presets = JSON.parse(localStorage.getItem('memoTypographyPresets') || '[]')
-  presets.push({
-    name: newPresetName.value,
-    typography: JSON.parse(JSON.stringify(form.value.typography)),
-    fullTemplate: JSON.parse(JSON.stringify(form.value)) // Save the whole form!
-  })
-  localStorage.setItem('memoTypographyPresets', JSON.stringify(presets))
-  savedPresets.value = presets
-  newPresetName.value = ''
-  alert('تم حفظ القالب بالكامل بنجاح في المكتبة!')
+  try {
+    await api.post('/secretariat/memo-templates/', {
+      name: newPresetName.value,
+      document_type: form.value.documentType || 'MEMO',
+      content: JSON.parse(JSON.stringify(form.value))
+    })
+    await fetchTemplates()
+    newPresetName.value = ''
+    alert('تم حفظ القالب بالكامل بنجاح في قاعدة البيانات!')
+  } catch (error) {
+    console.error('Failed to save template:', error)
+    // fallback to localStorage
+    const presets = JSON.parse(localStorage.getItem('memoTypographyPresets') || '[]')
+    presets.push({
+      name: newPresetName.value,
+      typography: JSON.parse(JSON.stringify(form.value.typography)),
+      fullTemplate: JSON.parse(JSON.stringify(form.value)) // Save the whole form!
+    })
+    localStorage.setItem('memoTypographyPresets', JSON.stringify(presets))
+    savedPresets.value = presets
+    newPresetName.value = ''
+    alert('تم حفظ القالب محلياً في المتصفح!')
+  }
 }
 
 const loadPreset = () => {
   if (selectedPresetIndex.value === '') return
   if(confirm('هل أنت متأكد من تحميل هذا القالب؟ سيتم استبدال محتوى المذكرة الحالي.')) {
-    const preset = savedPresets.value[selectedPresetIndex.value]
+    const idx = Number(selectedPresetIndex.value)
+    const preset = savedPresets.value[idx]
     if (preset) {
       if (preset.fullTemplate) {
         // Load entire template if available
@@ -1549,6 +1579,8 @@ const loadPreset = () => {
         // Fallback for old typography-only presets
         form.value.typography = JSON.parse(JSON.stringify(preset.typography))
       }
+      editingPresetIndex.value = idx
+      localStorage.setItem('official_memo_edit_index', idx.toString())
     }
   }
 }
@@ -1565,31 +1597,66 @@ const previewMemo = () => {
 }
 
 
-const saveAsNewTemplate = () => {
+const saveAsNewTemplate = async () => {
   const name = prompt("أدخل اسماً للقالب الجديد (مثال: قالب تصحيح خاص):")
   if (!name) return
-  let presets = JSON.parse(localStorage.getItem('memoTypographyPresets') || '[]')
-  presets.push({
-    name: name,
-    fullTemplate: JSON.parse(JSON.stringify(form.value))
-  })
-  localStorage.setItem('memoTypographyPresets', JSON.stringify(presets))
-  editingPresetIndex.value = presets.length - 1
-  localStorage.setItem('official_memo_edit_index', editingPresetIndex.value.toString())
-  alert('تم حفظ القالب بنجاح!')
+  try {
+    const response = await api.post('/secretariat/memo-templates/', {
+      name: name,
+      document_type: form.value.documentType || 'MEMO',
+      content: JSON.parse(JSON.stringify(form.value))
+    })
+    await fetchTemplates()
+    const idx = savedPresets.value.findIndex((p: any) => p.id === response.data.id)
+    if (idx !== -1) {
+      editingPresetIndex.value = idx
+      localStorage.setItem('official_memo_edit_index', idx.toString())
+    }
+    alert('تم حفظ القالب بنجاح في قاعدة البيانات!')
+  } catch (error) {
+    console.error('Failed to save as new template:', error)
+    let presets = JSON.parse(localStorage.getItem('memoTypographyPresets') || '[]')
+    presets.push({
+      name: name,
+      fullTemplate: JSON.parse(JSON.stringify(form.value))
+    })
+    localStorage.setItem('memoTypographyPresets', JSON.stringify(presets))
+    editingPresetIndex.value = presets.length - 1
+    localStorage.setItem('official_memo_edit_index', editingPresetIndex.value.toString())
+    savedPresets.value = presets
+    alert('تم حفظ القالب محلياً!')
+  }
 }
 
-const saveExistingTemplate = () => {
+const saveExistingTemplate = async () => {
   if (editingPresetIndex.value === null) {
-    saveAsNewTemplate()
+    await saveAsNewTemplate()
     return
   }
-  let presets = JSON.parse(localStorage.getItem('memoTypographyPresets') || '[]')
-  
-  if (presets[editingPresetIndex.value]) {
-    presets[editingPresetIndex.value].fullTemplate = JSON.parse(JSON.stringify(form.value))
-    localStorage.setItem('memoTypographyPresets', JSON.stringify(presets))
-    alert('تم حفظ التعديلات على القالب بنجاح!')
+  const preset = savedPresets.value[editingPresetIndex.value]
+  if (!preset) return
+
+  if (preset.id) {
+    try {
+      await api.put(`/secretariat/memo-templates/${preset.id}/`, {
+        name: preset.name,
+        document_type: form.value.documentType || 'MEMO',
+        content: JSON.parse(JSON.stringify(form.value))
+      })
+      await fetchTemplates()
+      alert('تم حفظ التعديلات على القالب بنجاح في قاعدة البيانات!')
+    } catch (error) {
+      console.error('Failed to update template:', error)
+      alert('حدث خطأ أثناء حفظ التعديلات على الخادم.')
+    }
+  } else {
+    let presets = JSON.parse(localStorage.getItem('memoTypographyPresets') || '[]')
+    if (presets[editingPresetIndex.value]) {
+      presets[editingPresetIndex.value].fullTemplate = JSON.parse(JSON.stringify(form.value))
+      localStorage.setItem('memoTypographyPresets', JSON.stringify(presets))
+      savedPresets.value = presets
+      alert('تم حفظ التعديلات محلياً!')
+    }
   }
 }
 
@@ -1603,7 +1670,8 @@ const createNewTemplate = () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await fetchTemplates()
   const editIdxStr = localStorage.getItem('official_memo_edit_index')
   if (editIdxStr !== null) {
     editingPresetIndex.value = parseInt(editIdxStr)
