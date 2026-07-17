@@ -576,7 +576,6 @@ class StrictInitialImportService:
                 corrected_name = re.sub(r'\s+', ' ', corrected_name).strip()
                 row_dict['تصحيح الاسم من واقع البطاقة'] = corrected_name
                 
-                # التحقق من أن الاسم يحتوي على حروف عربية ومسافات فقط (لا أرقام ولا رموز كـ + وغيرها)
                 if not re.match(r'^[\u0621-\u064A\s]+$', corrected_name):
                     row_errors.append({"field": "تصحيح الاسم من واقع البطاقة", "message": "الاسم المصحح يجب أن يحتوي على حروف عربية فقط (يمنع استخدام الأرقام أو الرموز)"})
                 elif len(corrected_name.split()) < 2:

@@ -19,8 +19,20 @@
       v-if="isOpen"
       class="absolute start-0 mt-2 w-56 rounded-xl border border-gray-150 bg-white p-3 shadow-lg z-50 dark:border-gray-800 dark:bg-gray-900 text-start"
     >
-      <div class="text-xs font-bold text-gray-400 mb-2 select-none px-2">{{ $t?.('common.displayed_columns') || 'الأعمدة المعروضة' }}</div>
-      <div class="space-y-1 max-h-64 overflow-y-auto pe-1">
+      <div class="flex items-center justify-between text-xs font-bold text-gray-400 mb-2 select-none px-2">
+        <span>{{ $t?.('common.displayed_columns') || 'الأعمدة المعروضة' }}</span>
+        <span>({{ visibleCount }} من {{ columns.length }})</span>
+      </div>
+      <div class="flex items-center gap-2 px-2 mb-2 pb-2 border-b border-gray-100 dark:border-gray-800">
+        <button @click="selectAll" class="text-xs font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors">
+          تحديد الكل
+        </button>
+        <span class="text-gray-300 dark:text-gray-700">|</span>
+        <button @click="deselectAll" class="text-xs font-bold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
+          إلغاء الكل
+        </button>
+      </div>
+      <div class="space-y-1 max-h-64 overflow-y-auto pe-1 custom-scrollbar">
         <label
           v-for="col in columns"
           :key="col.key"
@@ -39,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 interface Column {
   key: string
@@ -47,9 +59,19 @@ interface Column {
   visible: boolean
 }
 
-defineProps<{
+const props = defineProps<{
   columns: Column[]
 }>()
 
 const isOpen = ref(false)
+
+const visibleCount = computed(() => props.columns.filter(c => c.visible).length)
+
+function selectAll() {
+  props.columns.forEach(c => c.visible = true)
+}
+
+function deselectAll() {
+  props.columns.forEach(c => c.visible = false)
+}
 </script>

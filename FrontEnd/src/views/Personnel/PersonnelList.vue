@@ -9,56 +9,67 @@
       <!-- ═══════════════════════════════════════════════════════ -->
       <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
         <!-- Stats Cards -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1 w-full">
-          <div class="rounded-xl border border-gray-200 bg-white p-3.5 dark:border-gray-800 dark:bg-white/[0.03]">
-            <div class="flex items-center gap-3">
-              <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 dark:bg-brand-500/10">
-                <svg class="h-4.5 w-4.5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 flex-1 w-full">
+          <!-- Total Card -->
+          <div class="relative overflow-hidden rounded-[20px] bg-gradient-to-br from-indigo-500 via-brand-600 to-brand-800 p-5 shadow-lg shadow-brand-500/20 text-white transition-transform hover:-translate-y-1 group">
+            <div class="absolute -right-6 -top-6 opacity-20 group-hover:scale-110 transition-transform duration-500">
+              <svg class="h-24 w-24" fill="currentColor" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            </div>
+            <div class="relative z-10 flex flex-col h-full justify-between gap-3">
+              <div class="flex items-center gap-2 text-white/80">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                <p class="text-sm font-semibold tracking-wide">{{ $t?.('personnel.total') || 'الإجمالي' }}</p>
               </div>
               <div>
-                <p class="text-theme-xs text-gray-500 dark:text-gray-400">{{ $t?.('personnel.total') || 'الإجمالي' }}</p>
-                <p class="text-base font-bold text-gray-900 dark:text-white">{{ personnelStore.totalCount }}</p>
+                <p class="text-3xl font-black tracking-tight">{{ personnelStore.totalCount }}</p>
               </div>
             </div>
           </div>
-          <div class="rounded-xl border border-gray-200 bg-white p-3.5 dark:border-gray-800 dark:bg-white/[0.03]">
-            <div class="flex items-center gap-3">
-              <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-success-50 dark:bg-success-500/10">
-                <svg class="h-4.5 w-4.5 text-success-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+
+          <!-- Active Card -->
+          <div class="relative overflow-hidden rounded-[20px] bg-gradient-to-br from-emerald-400 to-emerald-600 p-5 shadow-lg shadow-emerald-500/20 text-white transition-transform hover:-translate-y-1 group">
+            <div class="absolute -right-6 -top-6 opacity-20 group-hover:scale-110 transition-transform duration-500">
+              <svg class="h-24 w-24" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
+            <div class="relative z-10 flex flex-col h-full justify-between gap-3">
+              <div class="flex items-center gap-2 text-white/80">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <p class="text-sm font-semibold tracking-wide">{{ $t?.('personnel.active') || 'موجود' }}</p>
               </div>
               <div>
-                <p class="text-theme-xs text-gray-500 dark:text-gray-400">{{ $t?.('personnel.active') || 'موجود' }}</p>
-                <p class="text-base font-bold text-success-600 dark:text-success-400">{{ activeCount }}</p>
+                <p class="text-3xl font-black tracking-tight">{{ activeCount }}</p>
               </div>
             </div>
           </div>
-          <div class="rounded-xl border border-gray-200 bg-white p-3.5 dark:border-gray-800 dark:bg-white/[0.03]">
-            <div class="flex items-center gap-3">
-              <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-warning-50 dark:bg-warning-500/10">
-                <svg class="h-4.5 w-4.5 text-warning-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
+
+          <!-- Incomplete Card -->
+          <div class="relative overflow-hidden rounded-[20px] bg-gradient-to-br from-amber-400 to-amber-600 p-5 shadow-lg shadow-amber-500/20 text-white transition-transform hover:-translate-y-1 group">
+            <div class="absolute -right-6 -top-6 opacity-20 group-hover:scale-110 transition-transform duration-500">
+              <svg class="h-24 w-24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
+            </div>
+            <div class="relative z-10 flex flex-col h-full justify-between gap-3">
+              <div class="flex items-center gap-2 text-white/80">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
+                <p class="text-sm font-semibold tracking-wide">{{ $t?.('personnel.incomplete') || 'بيانات ناقصة' }}</p>
               </div>
               <div>
-                <p class="text-theme-xs text-gray-500 dark:text-gray-400">{{ $t?.('personnel.incomplete') || 'بيانات ناقصة' }}</p>
-                <p class="text-base font-bold text-warning-600 dark:text-warning-400">{{ incompleteCount }}</p>
+                <p class="text-3xl font-black tracking-tight">{{ incompleteCount }}</p>
               </div>
             </div>
           </div>
-          <div class="rounded-xl border border-gray-200 bg-white p-3.5 dark:border-gray-800 dark:bg-white/[0.03]">
-            <div class="flex items-center gap-3">
-              <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-error-50 dark:bg-error-500/10">
-                <svg class="h-4.5 w-4.5 text-error-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                </svg>
+
+          <!-- Inactive Card -->
+          <div class="relative overflow-hidden rounded-[20px] bg-gradient-to-br from-rose-500 to-rose-700 p-5 shadow-lg shadow-rose-500/20 text-white transition-transform hover:-translate-y-1 group">
+            <div class="absolute -right-6 -top-6 opacity-20 group-hover:scale-110 transition-transform duration-500">
+              <svg class="h-24 w-24" fill="currentColor" viewBox="0 0 24 24"><path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+            </div>
+            <div class="relative z-10 flex flex-col h-full justify-between gap-3">
+              <div class="flex items-center gap-2 text-white/80">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                <p class="text-sm font-semibold tracking-wide">{{ $t?.('personnel.inactive') || 'غير موجود' }}</p>
               </div>
               <div>
-                <p class="text-theme-xs text-gray-500 dark:text-gray-400">{{ $t?.('personnel.inactive') || 'غير موجود' }}</p>
-                <p class="text-base font-bold text-error-600 dark:text-error-400">{{ inactiveCount }}</p>
+                <p class="text-3xl font-black tracking-tight">{{ inactiveCount }}</p>
               </div>
             </div>
           </div>
@@ -265,6 +276,14 @@
           </p>
         </template>
 
+        <!-- ── Custom Cell: Current Month Variable ───────────── -->
+        <template #cell-current_month_variable="{ value }">
+          <span v-if="value" class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50">
+            {{ value }}
+          </span>
+          <span v-else class="text-gray-400 text-xs">—</span>
+        </template>
+
         <!-- ── Custom Cell: Quality Score ─────────────────────── -->
         <template #cell-data_quality_score="{ value }">
           <div class="flex items-center gap-2">
@@ -323,6 +342,7 @@ const tableColumns = computed<DataTableColumn[]>(() => [
   { key: 'military_number', label: t('personnel.military_number') || 'الرقم العسكري' },
   { key: 'national_id', label: t('personnel.national_id') || 'الرقم الوطني' },
   { key: 'full_name', label: t('personnel.full_name') || 'الاسم الكامل' },
+  { key: 'current_month_variable', label: 'المتغير الحالي' },
   { key: 'security_admin_name', label: t('personnel.administration') || 'الوحدة' },
   { key: 'sub_administration', label: 'السرية / الإدارة / المديرية' },
   { key: 'division_name', label: 'القسم_فرع السرية' },
@@ -411,21 +431,40 @@ function changePageSize(size: number) {
 // ── Export ──────────────────────────────────────────────────
 async function exportData() {
   try {
+    const result = await Swal.fire({
+      title: 'خيارات التصدير',
+      text: 'الرجاء اختيار نوع الكشف المراد تصديره',
+      icon: 'question',
+      showCancelButton: true,
+      showDenyButton: true,
+      confirmButtonText: 'تصدير الكشف الشهري الرسمي',
+      denyButtonText: 'تصدير عادي',
+      cancelButtonText: 'إلغاء'
+    })
+
+    if (!result.isConfirmed && !result.isDenied) {
+      return
+    }
+
     const params: any = {}
     if (filters.value.current_rank) params.current_rank = filters.value.current_rank
     if (filters.value.current_status) params.current_status = filters.value.current_status
     if (filters.value.governorate) params.governorate = filters.value.governorate
+    
+    if (result.isConfirmed) {
+      params.split_by = 'official_monthly_roster'
+    }
 
     const response = await api.get('/personnel/export_csv/', {
       params,
       responseType: 'blob'
     })
 
-    const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' })
+    const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'personnel.csv'
+    a.download = result.isConfirmed ? 'الكشف_الشهري_الرسمي.xlsx' : 'personnel.xlsx'
     document.body.appendChild(a)
     a.click()
     window.URL.revokeObjectURL(url)

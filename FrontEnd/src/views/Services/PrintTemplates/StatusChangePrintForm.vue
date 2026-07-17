@@ -151,36 +151,12 @@
                 
                 <!-- Birth Place Grid -->
                 <td class="p-0 align-top" style="padding: 0 !important; height: 1px;">
-                  <div class="grid grid-cols-4 w-full h-full text-center" style="grid-template-rows: auto 1fr; gap: 0;">
-                    <!-- Headers -->
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">المحافظة</div>
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">المديرية</div>
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">العزلة</div>
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">القرية</div>
-                    
-                    <!-- Data -->
-                    <div class="py-1 px-0.5 font-bold text-[9px] border-l border-black flex items-center justify-center leading-tight break-words whitespace-normal">{{ getLocationObj('birth').gov }}</div>
-                    <div class="py-1 px-0.5 font-bold text-[9px] border-l border-black flex items-center justify-center leading-tight break-words whitespace-normal">{{ getLocationObj('birth').dist }}</div>
-                    <div class="py-1 px-0.5 font-bold text-[9px] border-l border-black flex items-center justify-center leading-tight break-words whitespace-normal">{{ getLocationObj('birth').subDist }}</div>
-                    <div class="py-1 px-0.5 font-bold text-[9px] flex items-center justify-center leading-tight break-words whitespace-normal">{{ getLocationObj('birth').village }}</div>
-                  </div>
+                  <PrintLocationGrid :locationObj="getLocationObj('birth')" />
                 </td>
 
                 <!-- Residence Grid -->
                 <td class="p-0 align-top" style="padding: 0 !important; height: 1px;">
-                  <div class="grid grid-cols-4 w-full h-full text-center" style="grid-template-rows: auto 1fr; gap: 0;">
-                    <!-- Headers -->
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">المحافظة</div>
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">المديرية</div>
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">العزلة</div>
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">القرية</div>
-                    
-                    <!-- Data -->
-                    <div class="py-1 px-0.5 font-bold text-[9px] border-l border-black flex items-center justify-center leading-tight break-words whitespace-normal">{{ getLocationObj('residence').gov }}</div>
-                    <div class="py-1 px-0.5 font-bold text-[9px] border-l border-black flex items-center justify-center leading-tight break-words whitespace-normal">{{ getLocationObj('residence').dist }}</div>
-                    <div class="py-1 px-0.5 font-bold text-[9px] border-l border-black flex items-center justify-center leading-tight break-words whitespace-normal">{{ getLocationObj('residence').subDist }}</div>
-                    <div class="py-1 px-0.5 font-bold text-[9px] flex items-center justify-center leading-tight break-words whitespace-normal">{{ getLocationObj('residence').village }}</div>
-                  </div>
+                  <PrintLocationGrid :locationObj="getLocationObj('residence')" />
                 </td>
 
                 <td class="font-bold align-middle">{{ form?.form_data?.id_issue_place || form?.form_data?.id_issuer || form?.personnel?.id_issue_place || form?.personnel?.id_issuer || '—' }}</td>
@@ -206,19 +182,7 @@
             <tbody>
               <tr>
                 <td v-for="field in dynamicSpecificFields" :key="'d-'+field.key" :class="[field.key === 'martyrdom_location' || field.key === 'death_location' ? 'p-0 align-top' : 'font-bold text-[14px]']" :style="field.key === 'martyrdom_location' || field.key === 'death_location' ? 'padding: 0 !important; height: 1px;' : ''">
-                  <div v-if="field.key === 'martyrdom_location' || field.key === 'death_location'" class="grid grid-cols-4 w-full h-full text-center" style="grid-template-rows: auto 1fr; gap: 0;">
-                    <!-- Headers -->
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">المحافظة</div>
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">المديرية</div>
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-l border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">العزلة</div>
-                    <div class="text-[8px] tracking-tighter font-normal border-b border-black py-0.5 print-bg-gray flex items-center justify-center leading-none">القرية</div>
-                    
-                    <!-- Data -->
-                    <div class="py-1 px-0.5 font-bold text-[9px] border-l border-black flex items-center justify-center leading-tight break-words whitespace-normal">{{ parseLocationString(field.value).gov }}</div>
-                    <div class="py-1 px-0.5 font-bold text-[9px] border-l border-black flex items-center justify-center leading-tight break-words whitespace-normal">{{ parseLocationString(field.value).dist }}</div>
-                    <div class="py-1 px-0.5 font-bold text-[9px] border-l border-black flex items-center justify-center leading-tight break-words whitespace-normal">{{ parseLocationString(field.value).subDist }}</div>
-                    <div class="py-1 px-0.5 font-bold text-[9px] flex items-center justify-center leading-tight break-words whitespace-normal">{{ parseLocationString(field.value).village }}</div>
-                  </div>
+                  <PrintLocationGrid v-if="field.key === 'martyrdom_location' || field.key === 'death_location'" :locationObj="parseLocationString(field.value)" />
                   <span v-else :class="field.isDate || field.isNumber ? 'font-sans tracking-wider text-[13px] whitespace-nowrap inline-block' : ''" :dir="field.isDate || field.isNumber ? 'ltr' : 'rtl'">
                     {{ field.isDate ? formatDate(field.value) : (field.value !== undefined && field.value !== null && field.value !== '' ? field.value : '—') }}
                   </span>
@@ -351,6 +315,7 @@
 import { ref, computed } from 'vue'
 import yemenLogo from '@/assets/yemen_logo.jpg'
 import { useAuthStore } from '@/stores/auth'
+import PrintLocationGrid from '@/components/common/PrintLocationGrid.vue'
 
 const authStore = useAuthStore()
 

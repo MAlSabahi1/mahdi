@@ -78,6 +78,7 @@ class PersonnelListSerializer(serializers.ModelSerializer):
     military_number_type = serializers.DictField(read_only=True)
     national_id_status = serializers.CharField(read_only=True)
     national_id_status_display = serializers.CharField(read_only=True)
+    current_month_variable = serializers.SerializerMethodField()
     
     class Meta:
         model = PersonnelMaster
@@ -109,12 +110,18 @@ class PersonnelListSerializer(serializers.ModelSerializer):
             'id_issue_date', 'id_issue_place',
             'expense_status', 'expense_status_display', 'appointment_info', 'notes',
             'is_complete', 'is_data_clean', 'data_quality_score',
-            'has_pending_correction',
+            'has_pending_correction', 'current_month_variable',
             'updated_at',
         ]
     
     def get_has_pending_correction(self, obj):
         return obj.suggested_corrections.filter(status='pending').exists()
+
+    def get_current_month_variable(self, obj):
+        latest = obj.monthly_variables.order_by('-month').first()
+        if latest:
+            return latest.variable_value
+        return None
 
 
 @extend_schema_serializer(component_name='PersonnelDetail')
@@ -183,6 +190,7 @@ class PersonnelDetailSerializer(serializers.ModelSerializer):
     service_years = serializers.IntegerField(read_only=True)
     recent_events = serializers.SerializerMethodField()
     pending_corrections = serializers.SerializerMethodField()
+    monthly_variables = serializers.SerializerMethodField()
     documents = serializers.SerializerMethodField()
     military_number_type = serializers.DictField(read_only=True)
     national_id_status = serializers.CharField(read_only=True)
@@ -223,7 +231,7 @@ class PersonnelDetailSerializer(serializers.ModelSerializer):
             'expense_status', 'expense_status_display', 'appointment_info',
             'is_complete', 'is_data_clean',
             'data_quality_score', 'notes',
-            'recent_events', 'pending_corrections', 'documents',
+            'recent_events', 'pending_corrections', 'monthly_variables', 'documents',
             'created_at', 'updated_at',
         ]
     
@@ -236,6 +244,10 @@ class PersonnelDetailSerializer(serializers.ModelSerializer):
     def get_pending_corrections(self, obj):
         corrections = obj.suggested_corrections.filter(status='pending')
         return SuggestedCorrectionSerializer(corrections, many=True).data
+
+    def get_monthly_variables(self, obj):
+        variables = obj.monthly_variables.all().order_by('-month')
+        return HistoricalMonthlyVariablesSerializer(variables, many=True).data
     
     def get_documents(self, obj):
         from infra.storage.models import Document

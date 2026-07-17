@@ -28,36 +28,39 @@
       <div v-else-if="person" class="space-y-6">
         
         <!-- Top Profile Card -->
-        <div class="relative overflow-hidden rounded-[24px] bg-white ring-1 ring-inset ring-gray-200 shadow-sm dark:bg-gray-900 dark:ring-gray-800">
-          
-          <div class="p-6 md:p-8">
+        <div class="relative overflow-hidden rounded-[24px] bg-white shadow-xl shadow-brand-500/5 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+          <!-- Background Abstract Elements -->
+          <div class="absolute top-0 right-0 -mt-20 -mr-20 w-64 h-64 rounded-full bg-gradient-to-br from-brand-100 to-brand-50 opacity-50 blur-3xl dark:from-brand-900/20 dark:to-brand-800/10"></div>
+          <div class="absolute bottom-0 left-0 -mb-20 -ml-20 w-64 h-64 rounded-full bg-gradient-to-tr from-indigo-100 to-indigo-50 opacity-50 blur-3xl dark:from-indigo-900/20 dark:to-indigo-800/10"></div>
+
+          <div class="relative p-6 md:p-8">
             <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-8">
               
               <!-- Left Side: Identity & Meta -->
               <div class="flex flex-col md:flex-row items-center md:items-start gap-6 w-full xl:w-auto">
                 
-                <!-- Avatar: Soft & Elegant -->
-                <div class="relative flex h-20 w-20 sm:h-24 sm:w-24 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100/50 text-brand-600 dark:from-gray-800 dark:to-gray-800/50 dark:text-brand-400 ring-1 ring-inset ring-brand-100/50 dark:ring-gray-700 shadow-inner">
-                  <span class="text-3xl sm:text-4xl font-bold tracking-tighter">{{ person.full_name?.substring(0, 1) || '؟' }}</span>
+                <!-- Avatar: Premium Glass -->
+                <div class="relative flex h-20 w-20 sm:h-24 sm:w-24 shrink-0 items-center justify-center rounded-[1.25rem] bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-500/30 ring-4 ring-white dark:ring-gray-900">
+                  <span class="text-3xl sm:text-4xl font-bold tracking-tighter drop-shadow-md">{{ person.full_name?.substring(0, 1) || '؟' }}</span>
                 </div>
 
                 <!-- Core Information -->
-                <div class="flex flex-col items-center md:items-start text-center md:text-start flex-1 min-w-0">
+                <div class="flex flex-col items-center md:items-start text-center md:text-start flex-1 min-w-0 mt-2 md:mt-0">
                   
                   <!-- Name & Tags -->
-                  <div class="mb-4 flex flex-col md:flex-row items-center md:items-center gap-3">
-                    <h1 class="text-2xl sm:text-[28px] font-bold text-gray-900 dark:text-white leading-tight tracking-tight truncate max-w-xl">
+                  <div class="mb-5 flex flex-col md:flex-row items-center gap-3">
+                    <h1 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white leading-tight tracking-tight drop-shadow-sm max-w-xl">
                       {{ person.full_name }}
                     </h1>
-                    <div class="flex items-center gap-2 mt-1 md:mt-0">
+                    <div class="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-2 md:mt-0">
                       <!-- Status Badge -->
-                      <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700">
-                        <span class="h-1.5 w-1.5 rounded-full" :class="getStatusColor(person.status?.classification).split(' ')[0]"></span>
+                      <span class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold tracking-wide border border-gray-100 bg-white text-gray-700 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                        <span class="h-2 w-2 rounded-full" :class="getStatusColor(person.status?.classification).split(' ')[0]"></span>
                         {{ person.status?.name || $t('personnel.unspecified') || 'غير محدد' }}
                       </span>
                       <!-- Rank Badge -->
-                      <span v-if="person.rank?.name" class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700">
-                        <svg class="h-3.5 w-3.5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <span v-if="person.rank?.name" class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold tracking-wide border border-brand-100 bg-brand-50 text-brand-700 shadow-sm dark:border-brand-500/20 dark:bg-brand-500/10 dark:text-brand-300">
+                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                         </svg>
                         {{ person.rank.name }}
@@ -66,28 +69,28 @@
                   </div>
 
                   <!-- Data Row -->
-                  <div class="flex flex-wrap items-center justify-center md:justify-start gap-x-8 gap-y-4">
+                  <div class="flex flex-wrap items-center justify-center md:justify-start gap-x-8 gap-y-4 bg-gray-50/80 dark:bg-gray-800/50 p-3.5 rounded-xl border border-gray-100 dark:border-gray-800 w-full md:w-auto">
                     <!-- Data Block 1 -->
                     <div class="flex flex-col items-center md:items-start">
-                      <dt class="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">{{ $t('personnel.military_number') }}</dt>
-                      <dd class="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                      <dt class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1">{{ $t('personnel.military_number') }}</dt>
+                      <dd class="flex items-center gap-1.5 text-sm font-bold text-gray-900 dark:text-white">
                         <svg class="h-4 w-4 text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
                         </svg>
                         {{ person.military_number }}
                       </dd>
                     </div>
 
-                    <div class="hidden md:block h-8 w-px bg-gray-200 dark:bg-gray-800"></div>
+                    <div class="hidden md:block h-8 w-px bg-gray-200 dark:bg-gray-700"></div>
 
                     <!-- Data Block 2 -->
                     <div class="flex flex-col items-center md:items-start">
-                      <dt class="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">{{ $t('personnel.details.workplace') }}</dt>
-                      <dd class="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                      <dt class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1">{{ $t('personnel.details.workplace') }}</dt>
+                      <dd class="flex items-center gap-1.5 text-sm font-bold text-gray-900 dark:text-white">
                         <svg class="h-4 w-4 text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1v1H9V7zm5 0h1v1h-1V7zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1v1H9V7zm5 0h1v1h-1V7zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1z" />
                         </svg>
-                        <span class="truncate max-w-xs xl:max-w-md">{{ person.branch_name || person.security_admin_name || $t('common.unspecified') }}</span>
+                        <span class="truncate max-w-[200px] xl:max-w-md">{{ person.branch_name || person.security_admin_name || $t('common.unspecified') }}</span>
                       </dd>
                     </div>
                   </div>
@@ -96,21 +99,21 @@
               </div>
 
               <!-- Right Side: Actions -->
-              <div class="flex flex-wrap items-center justify-center xl:justify-end gap-3 w-full xl:w-auto print-hide mt-2 xl:mt-0 pt-6 xl:pt-0 border-t border-gray-100 dark:border-gray-800 xl:border-0">
-                <button @click="printProfile" class="flex items-center justify-center rounded-lg border border-gray-200 bg-white h-10 w-10 text-gray-500 shadow-theme-xs hover:bg-gray-50 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300 transition-colors" title="طباعة">
-                  <svg class="h-4.5 w-4.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div class="flex flex-wrap items-center justify-center xl:justify-end gap-3 w-full xl:w-auto print-hide mt-4 xl:mt-0 pt-6 xl:pt-0 border-t border-gray-100 dark:border-gray-800 xl:border-0 relative z-10">
+                <button @click="printProfile" class="flex items-center justify-center rounded-xl border border-gray-200 bg-white/80 backdrop-blur h-11 w-11 text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-800/80 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white transition-all" title="طباعة">
+                  <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                   </svg>
                 </button>
-                <button @click="openSettlementModal" class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
-                  <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                <button @click="openSettlementModal" class="flex items-center gap-2 rounded-xl border border-gray-200 bg-white/80 backdrop-blur px-5 py-2.5 text-sm font-bold text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800/80 dark:text-gray-200 dark:hover:bg-gray-700 transition-all">
+                  <svg class="h-4.5 w-4.5 text-gray-400 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18" />
                   </svg>
                   {{ $t('settlements.request_settlement') || 'تسوية' }}
                 </button>
-                <button @click="router.push(`/personnel/${person.military_number}/edit`)" class="flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 transition-colors">
-                  <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                <button @click="router.push(`/personnel/${person.military_number}/edit`)" class="flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-brand-500/30 hover:from-brand-600 hover:to-brand-700 hover:shadow-brand-500/40 transition-all transform hover:-translate-y-0.5">
+                  <svg class="h-4.5 w-4.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                   </svg>
                   {{ $t('personnel.edit_profile') }}
                 </button>
@@ -136,6 +139,7 @@
               <!-- Icons -->
               <svg v-if="tab.id === 'basic'" class="h-5 w-5" :class="activeTab === tab.id ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
               <svg v-else-if="tab.id === 'events'" class="h-5 w-5" :class="activeTab === tab.id ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <svg v-else-if="tab.id === 'monthly_vars'" class="h-5 w-5" :class="activeTab === tab.id ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
               <svg v-else-if="tab.id === 'docs'" class="h-5 w-5" :class="activeTab === tab.id ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
               <svg v-else-if="tab.id === 'corrections'" class="h-5 w-5" :class="activeTab === tab.id ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
               
@@ -326,13 +330,18 @@
             <p class="text-gray-500 dark:text-gray-400 text-sm">{{ $t('personnel.details.no_events') }}</p>
           </div>
         </div>
+        
+        <!-- Tab 3: Monthly Variables -->
+        <div v-if="activeTab === 'monthly_vars'">
+          <MonthlyVariablesTab :person="person" />
+        </div>
 
-        <!-- Tab 3: Documents -->
+        <!-- Tab 4: Documents -->
         <div v-if="activeTab === 'docs'">
           <DocumentsTab :person="person" />
         </div>
 
-        <!-- Tab 4: Corrections -->
+        <!-- Tab 5: Corrections -->
         <div v-if="activeTab === 'corrections'">
           <CorrectionTab :person="person" />
         </div>
@@ -472,6 +481,7 @@ function printProfile() {
 
 import CorrectionTab from './components/CorrectionTab.vue'
 import DocumentsTab from './components/DocumentsTab.vue'
+import MonthlyVariablesTab from './components/MonthlyVariablesTab.vue'
 
 const loading = ref(true)
 const errorMsg = ref('')
@@ -482,6 +492,7 @@ const activeTab = ref('basic')
 const tabs = computed(() => [
   { id: 'basic', name: t('personnel.tabs.basic_info') || 'البيانات الشخصية' },
   { id: 'events', name: t('personnel.tabs.events') || 'السجل التاريخي', badge: person.value?.recent_events?.length || 0 },
+  { id: 'monthly_vars', name: 'المتغيرات الشهرية', badge: person.value?.monthly_variables?.length || 0 },
   { id: 'docs', name: t('personnel.tabs.documents') || 'المرفقات', badge: person.value?.documents?.length || 0 },
   { id: 'corrections', name: t('personnel.tabs.corrections') || 'تصحيح البيانات', badge: person.value?.pending_corrections?.length || 0 },
 ])

@@ -112,10 +112,18 @@ class SecurityAdministrationViewSet(DictionaryViewSetMixin, BaseModelViewSet):
     search_fields = ['name', 'code']
     ordering = ['name']
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if hasattr(self.request.user, 'profile'):
+            admin_ids = self.request.user.profile.get_accessible_security_admin_ids()
+            if admin_ids is not None:
+                qs = qs.filter(id__in=admin_ids)
+        return qs
+
     @extend_schema(summary='شجرة الهيكل الأمني الهرمية', tags=['security-org'])
     @action(detail=False, methods=['get'])
     def tree(self, request):
-        qs = SecurityAdministration.objects.filter(is_active=True)
+        qs = self.get_queryset().filter(is_active=True)
         serializer = SecurityAdminTreeSerializer(qs, many=True)
         return Response({'success': True, 'data': serializer.data})
 
@@ -131,6 +139,14 @@ class CentralDepartmentViewSet(DictionaryViewSetMixin, BaseModelViewSet):
     search_fields = ['name', 'code']
     ordering = ['security_admin', 'order', 'name']
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if hasattr(self.request.user, 'profile'):
+            admin_ids = self.request.user.profile.get_accessible_security_admin_ids()
+            if admin_ids is not None:
+                qs = qs.filter(security_admin_id__in=admin_ids)
+        return qs
+
 
 @extend_schema_view(
     list=extend_schema(summary='قائمة الفروع', tags=['security-org']),
@@ -143,6 +159,14 @@ class BranchViewSet(DictionaryViewSetMixin, BaseModelViewSet):
     search_fields = ['name', 'code']
     ordering = ['security_admin', 'order', 'name']
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if hasattr(self.request.user, 'profile'):
+            admin_ids = self.request.user.profile.get_accessible_security_admin_ids()
+            if admin_ids is not None:
+                qs = qs.filter(security_admin_id__in=admin_ids)
+        return qs
+
 
 @extend_schema_view(
     list=extend_schema(summary='قائمة أمن المديريات', tags=['security-org']),
@@ -154,6 +178,14 @@ class DistrictPoliceViewSet(DictionaryViewSetMixin, BaseModelViewSet):
     filterset_fields = ['security_admin', 'is_active']
     search_fields = ['name', 'code']
     ordering = ['security_admin', 'order', 'name']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if hasattr(self.request.user, 'profile'):
+            admin_ids = self.request.user.profile.get_accessible_security_admin_ids()
+            if admin_ids is not None:
+                qs = qs.filter(security_admin_id__in=admin_ids)
+        return qs
 
 
 @extend_schema_view(

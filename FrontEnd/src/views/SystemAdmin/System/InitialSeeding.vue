@@ -323,6 +323,15 @@
             <!-- Right Side: Action Operations -->
             <div class="flex items-center flex-wrap gap-2 shrink-0">
               <button 
+                @click="createBulkCorrectionRequest"
+                class="border border-purple-200 text-purple-700 hover:bg-purple-50/50 dark:border-purple-800/60 dark:text-purple-400 dark:hover:bg-purple-950/20 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-sm"
+                title="إنشاء طلب تصحيح أسماء للوزارة"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                رفع طلب تصحيح للوزارة
+              </button>
+
+              <button 
                 @click="refreshDictionaries"
                 class="border border-blue-200 text-blue-700 hover:bg-blue-50/50 dark:border-blue-800/60 dark:text-blue-400 dark:hover:bg-blue-950/20 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all"
                 title="تحديث قواميس النظام وجداول المراجع من السيرفر"
@@ -549,6 +558,43 @@
                                   <span class="font-bold text-red-600 dark:text-red-400 flex items-center gap-1">
                                     <AlertTriangle class="w-3.5 h-3.5 shrink-0" />
                                     مختلف عن الأساسي ({{ getColumnStats(col).diffCount }})
+                                  </span>
+                                </label>
+                              </template>
+                              
+                              <!-- Name correction matches if valid column -->
+                              <template v-if="col === 'تصحيح الاسم من واقع البطاقة'">
+                                <label class="flex items-center gap-2.5 p-2 hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-lg cursor-pointer transition-colors">
+                                  <input 
+                                    type="checkbox" 
+                                    class="rounded text-blue-600 focus:ring-blue-500/20 w-3.5 h-3.5 border-gray-300 dark:border-gray-700 dark:bg-gray-800"
+                                    :checked="columnFilters[col]?.includes('__match_name__') || false"
+                                    @change="(e) => {
+                                      const current = columnFilters[col] || []
+                                      columnFilters[col] = (e.target as HTMLInputElement).checked ? [...current, '__match_name__'] : current.filter(x => x !== '__match_name__')
+                                      currentPage = 1
+                                    }"
+                                  />
+                                  <span class="font-bold text-green-600 dark:text-green-400 flex items-center gap-1">
+                                    <Check class="w-3.5 h-3.5 shrink-0" />
+                                    مطابق للاسم ({{ getColumnStats(col).matchCount }})
+                                  </span>
+                                </label>
+                                
+                                <label class="flex items-center gap-2.5 p-2 hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-lg cursor-pointer transition-colors">
+                                  <input 
+                                    type="checkbox" 
+                                    class="rounded text-blue-600 focus:ring-blue-500/20 w-3.5 h-3.5 border-gray-300 dark:border-gray-700 dark:bg-gray-800"
+                                    :checked="columnFilters[col]?.includes('__diff_name__') || false"
+                                    @change="(e) => {
+                                      const current = columnFilters[col] || []
+                                      columnFilters[col] = (e.target as HTMLInputElement).checked ? [...current, '__diff_name__'] : current.filter(x => x !== '__diff_name__')
+                                      currentPage = 1
+                                    }"
+                                  />
+                                  <span class="font-bold text-red-600 dark:text-red-400 flex items-center gap-1">
+                                    <AlertTriangle class="w-3.5 h-3.5 shrink-0" />
+                                    مختلف عن الاسم ({{ getColumnStats(col).diffCount }})
                                   </span>
                                 </label>
                               </template>
@@ -1091,13 +1137,28 @@ function autoMapColumns() {
     if (exactMatch) {
       autoMapping[header] = exactMatch.id
     } else {
-      // Fuzzy matches
-      if (header.includes('اسم')) autoMapping[header] = 'الاسم'
-      else if (header.includes('رتب')) autoMapping[header] = 'الرتبة'
-      else if (header.includes('حالة')) autoMapping[header] = 'الحالة'
-      else if (header.includes('رقم عسكري')) autoMapping[header] = 'الرقم العسكري'
-      else if (header.includes('وحدة') || header.includes('ادارة')) autoMapping[header] = 'الوحدة'
-      else if (header.includes('متغير')) autoMapping[header] = '__monthly_variable__'
+      // Smart Fuzzy matches
+      const cleanHeader = header.replace(/أ/g, 'ا').replace(/إ/g, 'ا').replace(/ة/g, 'ه').replace(/_/g, ' ').trim()
+      
+      // Explicit ignores
+      if (cleanHeader.includes('الرتبه الجديده') || cleanHeader.includes('حاله الرقم الوطني')) {
+        autoMapping[header] = '' // Ignore
+      }
+      else if (cleanHeader.includes('تصحيح الاسم')) {
+        autoMapping[header] = 'تصحيح الاسم من واقع البطاقة'
+      }
+      else if (cleanHeader.includes('الاداره السريه') || cleanHeader.includes('اداره سريه')) {
+        autoMapping[header] = 'جهة_العمل' // As requested, map to Workplace (Administration/Branch)
+      }
+      else if (cleanHeader.includes('قسم') || cleanHeader.includes('فرع')) {
+        autoMapping[header] = 'القسم_فرع السرية'
+      }
+      else if (cleanHeader.includes('اسم')) autoMapping[header] = 'الاسم'
+      else if (cleanHeader.includes('رتب')) autoMapping[header] = 'الرتبة'
+      else if (cleanHeader.includes('حاله') || cleanHeader.includes('حالة')) autoMapping[header] = 'الحالة'
+      else if (cleanHeader.includes('رقم عسكري')) autoMapping[header] = 'الرقم العسكري'
+      else if (cleanHeader.includes('وحده') || cleanHeader.includes('اداره')) autoMapping[header] = 'الوحدة'
+      else if (cleanHeader.includes('متغير')) autoMapping[header] = '__monthly_variable__'
       else autoMapping[header] = ''
     }
   })
@@ -1236,6 +1297,8 @@ const filteredRows = computed(() => {
           if (val === '__has_value__') return !isEmpty
           if (val === '__match_mil__') return !isEmpty && cellVal.trim() === String(r.rowData['الرقم العسكري'] || '').trim()
           if (val === '__diff_mil__') return !isEmpty && cellVal.trim() !== String(r.rowData['الرقم العسكري'] || '').trim()
+          if (val === '__match_name__') return !isEmpty && cellVal.trim() === String(r.rowData['الاسم'] || '').trim()
+          if (val === '__diff_name__') return !isEmpty && cellVal.trim() !== String(r.rowData['الاسم'] || '').trim()
           return cellVal === val
         })
       })
@@ -1366,6 +1429,50 @@ async function revalidateEdits() {
   } finally {
     isLoading.value = false
   }
+}
+
+// Create Bulk Correction Request for current mismatches
+function createBulkCorrectionRequest() {
+  const mismatchCount = filteredRows.value.filter(row => 
+    row.rowData['تصحيح الاسم من واقع البطاقة'] && 
+    row.rowData['الاسم'] && 
+    row.rowData['تصحيح الاسم من واقع البطاقة'] !== row.rowData['الاسم']
+  ).length;
+
+  if (mismatchCount === 0) {
+    Swal.fire({
+      icon: 'info',
+      title: 'لا يوجد أسماء مختلفة',
+      text: 'لا توجد سجلات معروضة حالياً تحتوي على اختلاف بين الاسم وتصحيح الاسم من واقع البطاقة.'
+    });
+    return;
+  }
+
+  Swal.fire({
+    title: 'إنشاء طلب تصحيح للوزارة',
+    text: `هل تريد إنشاء طلب تصحيح أسماء جماعي لـ (${mismatchCount}) أفراد معروضين حالياً ولديهم أسماء غير متطابقة؟ سيتم إدراجهم في سجل المعاملات وإرسالهم للوزارة للموافقة.`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'نعم، إنشاء الطلب الآن',
+    cancelButtonText: 'إلغاء'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Mocked Backend Request For Walkthrough execution (to be connected to actual endpoint later)
+      Swal.fire({
+        title: 'جاري إنشاء الطلب...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading() }
+      });
+      
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'success',
+          title: 'تم إنشاء الطلب بنجاح',
+          text: `تم تحويل ${mismatchCount} سجل إلى قائمة طلبات التصحيح المعلقة لانتظار رد الوزارة.`
+        });
+      }, 1500);
+    }
+  });
 }
 
 // Final Save
@@ -1646,6 +1753,13 @@ function getColumnStats(col: string) {
       if (v && v === mil) matchCount++
       else if (v && v !== mil) diffCount++
     })
+  } else if (col === 'تصحيح الاسم من واقع البطاقة') {
+    allRowsData.value.forEach(r => {
+      const v = String(r[col] || '').trim()
+      const name = String(r['الاسم'] || '').trim()
+      if (v && v === name) matchCount++
+      else if (v && v !== name) diffCount++
+    })
   }
   
   // Sort values descending by frequency count
@@ -1662,7 +1776,7 @@ function getColumnStats(col: string) {
   }
 }
 
-// Bulk clean matching correct military numbers
+// Bulk clean matching correct military numbers and names
 function handleBulkCleanMilitaryNumbers() {
   if (!allRowsData.value) return
   let modifiedCount = 0
@@ -1672,6 +1786,13 @@ function handleBulkCleanMilitaryNumbers() {
     if (correctMil && normalMil === correctMil) {
       modifiedCount++
       handleCellChange(idx, 'الرقم العسكري الصحيح', '')
+    }
+    
+    const normalName = String(row['الاسم'] || '').trim()
+    const correctName = String(row['تصحيح الاسم من واقع البطاقة'] || '').trim()
+    if (correctName && normalName === correctName) {
+      modifiedCount++
+      handleCellChange(idx, 'تصحيح الاسم من واقع البطاقة', '')
     }
   })
   

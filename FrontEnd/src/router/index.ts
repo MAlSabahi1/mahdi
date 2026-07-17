@@ -545,6 +545,16 @@ const router = createRouter({
       }
     },
     {
+      path: '/admin/documents/library',
+      name: 'DocumentLibrary',
+      component: () => import('@/views/SystemAdmin/DocumentBuilder/DocumentLibrary.vue'),
+      meta: {
+        title: 'مركز الوثائق والمراسلات',
+        requiresAuth: true,
+        requiresAdmin: true
+      }
+    },
+    {
       path: '/admin/documents/memo-preview',
       name: 'OfficialMemoPreview',
       component: () => import('@/views/SystemAdmin/DocumentBuilder/OfficialMemoPreview.vue'),
@@ -922,6 +932,15 @@ const router = createRouter({
       component: () => import('@/views/Services/PrintTemplates/FormPrintView.vue'),
       meta: {
         title: 'طباعة الاستمارة الرسمية',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/services/corrections/:id/print',
+      name: 'CorrectionPrintView',
+      component: () => import('@/views/Services/PrintTemplates/CorrectionPrintView.vue'),
+      meta: {
+        title: 'طباعة كشف المطابقة',
         requiresAuth: true,
       },
     },

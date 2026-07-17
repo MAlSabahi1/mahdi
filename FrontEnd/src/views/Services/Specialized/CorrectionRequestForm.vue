@@ -1374,9 +1374,9 @@ async function submitBulk() {
   isSubmitting.value = false
 
   if (successCount > 0) {
-    const isModel23 = type === 'name_correction' && successCount === 1;
+    const isCorrection = category === 'correction' && successCount === 1;
     const isExternalForm = schema.value?.approval_type === 'external' && successCount === 1;
-    const showPrintButton = isModel23 || isExternalForm;
+    const showPrintButton = isCorrection || isExternalForm;
     
     let htmlContent = `تم رفع <b>${successCount}</b> طلب للمراجعة.`
     if (errorCount > 0) {
@@ -1398,57 +1398,8 @@ async function submitBulk() {
       }
     }).then(async (result) => {
       if (result.isDenied) {
-        if (isModel23 && lastCorrectionId) {
-          const person = selectedPersonnelList.value[0]
-          const corrType = schema.value?.name || 'طلب تصحيح'
-          const txNum = `CORR-${String(lastCorrectionId).padStart(5, '0')}`
-          const dateNow = new Date().toLocaleDateString('ar-YE', { year: 'numeric', month: '2-digit', day: '2-digit' })
-          const corrTarget = (formData.value.correction_targets && formData.value.correction_targets.length > 0)
-            ? formData.value.correction_targets.join('، ') : corrType
-          let draft = {
-            documentType: 'PERSONNEL_MEMO', securityLevel: 'NORMAL',
-            referenceNo: txNum, docDate: dateNow, correspondingDate: '',
-            attachments: 'نموذج رقم (23) — كشف المطابقة', bilingual: false,
-            issuerLine1: '', issuerLine2: '', issuerLine3: '',
-            addressees: [{ prefix: 'الأخ /', name: 'المدير العام للمحافظة', suffix: 'المحترم' }],
-            involvedPersonnel: [{
-              militaryId: person.military_number, rank: person.rank_name || '',
-              name: person.full_name, nationalId: '',
-              correctName: formData.value.new_value || '',
-              wrongName: formData.value.old_value || '',
-              correctionTarget: corrTarget,
-              notes: formData.value.reason || formData.value.notes || '',
-            }],
-            subject: `طلب تصحيح بيانات — ${person.full_name}`,
-            body: `<p>نحيط سيادتكم علماً بأنه ورد إلينا طلب تصحيح بيانات للمنتسب/المنتسبين الموضحين أعلاه.</p>
-<p>نرفق لكم كشفاً بأسماء المطلوب تصحيح أسمائهم <strong>(كشف المطابقة — نموذج 23)</strong>، مع مرفقات كل فرد، وذلك لاتخاذ الإجراءات اللازمة.</p>`,
-            conclusion: '<p>والله الموفق ،،،</p>',
-            signatures: [
-              { title: 'رئيس قسم الخدمات', rank: '', name: '', showSeal: false },
-              { title: 'مدير إدارة القوى البشرية', rank: '', name: '', showSeal: true },
-            ],
-            signatureSettings: { showLabels: true, showFrame: true },
-            visibleColumns: { militaryId: true, rank: true, nationalId: false, status: false, workplace: false, serviceLocation: false, jobTitle: false, position: false, qualification: false, joinDate: false, commencementDate: false, phone: false, clarification: false, notes: true, correctName: true, wrongName: true, correctionTarget: true },
-            typography: {
-              addressee: { family: 'Cairo', size: 1.1, weight: 'font-bold', underline: true },
-              greeting: { family: 'Cairo', size: 1.0, weight: 'font-bold', underline: true },
-              subject: { family: 'Cairo', size: 1.15, weight: 'font-black', underline: true },
-              body: { family: 'Cairo', size: 1.0, weight: 'font-normal', underline: false },
-              conclusionSeparator: { family: 'Cairo', size: 1.1, weight: 'font-bold', underline: true },
-              conclusionBody: { family: 'Cairo', size: 1.0, weight: 'font-normal', underline: false },
-              signatures: { family: 'Cairo', size: 0.95, weight: 'font-bold', underline: false },
-            },
-          }
-                    const tplStr = localStorage.getItem('memo_template_CORRECTION');
-          if (tplStr) {
-            try {
-              const tpl = JSON.parse(tplStr);
-              draft = { ...draft, ...tpl, referenceNo: draft.referenceNo, docDate: draft.docDate, involvedPersonnel: [] };
-            } catch(e) {}
-          }
-          localStorage.setItem('official_memo_draft', JSON.stringify(draft))
-          window.open('/admin/documents/memo-preview', '_blank')
-          router.push('/services/transactions?tab=internal')
+        if (isCorrection && lastCorrectionId) {
+          router.push(`/services/corrections/${lastCorrectionId}/print`)
         } else if (isExternalForm && lastFormId) {
           try { await servicesStore.markFormPrinted(lastFormId) } catch(_) {}
           // فتح منشئ المذكرات

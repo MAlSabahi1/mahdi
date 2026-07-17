@@ -1375,7 +1375,7 @@ async function submitBulk() {
           const dateNow = new Date().toLocaleDateString('ar-YE', { year: 'numeric', month: '2-digit', day: '2-digit' })
           const corrTarget = (formData.value.correction_targets && formData.value.correction_targets.length > 0)
             ? formData.value.correction_targets.join('، ') : corrType
-          let draft = {
+          const draft = {
             documentType: 'PERSONNEL_MEMO', securityLevel: 'NORMAL',
             referenceNo: txNum, docDate: dateNow, correspondingDate: '',
             attachments: 'نموذج رقم (23) — كشف المطابقة', bilingual: false,
@@ -1418,7 +1418,7 @@ async function submitBulk() {
           const fType = schema.value?.name || ''
           const txNum2 = `TX-${String(lastFormId).padStart(6, '0')}`
           const dateNow2 = new Date().toLocaleDateString('ar-YE', { year: 'numeric', month: '2-digit', day: '2-digit' })
-          let draft2 = {
+          const draft2 = {
             documentType: 'PERSONNEL_MEMO', securityLevel: 'NORMAL',
             referenceNo: txNum2, docDate: dateNow2, correspondingDate: '',
             attachments: 'نموذج إثبات حالة', bilingual: false,

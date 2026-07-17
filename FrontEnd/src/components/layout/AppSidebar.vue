@@ -258,9 +258,13 @@ const menuGroups = computed(() => {
                 path: "/admin/documents/list",
               },
               {
+                name: "مركز الوثائق والمراسلات",
+                path: "/admin/documents/library",
+                new: true
+              },
+              {
                 name: "admin.memo_builder",
                 path: "/admin/documents/memo-builder",
-                new: true
               }
             ]
           },

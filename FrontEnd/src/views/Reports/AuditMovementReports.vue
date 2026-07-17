@@ -222,7 +222,43 @@
           month: selectedMonth.value || undefined
         }
       })
-      reportData.value = res.data.data || []
+      
+      let data = res.data.data || []
+      
+      // معالجة خاصة لبيانات كشف المطابقة (تصحيح الأسماء) لتنظيف الملاحظات وعكس الاسم الصحيح/الخطأ
+      if (reportId.value === 'report_23') {
+        data = data.map((item: any) => {
+          let rawNotes = item.notes || item.reason || ''
+          let target = '—'
+          let notes = rawNotes
+          
+          if (typeof rawNotes === 'string') {
+            const targetMatch = rawNotes.match(/المطلوب تصحيح[هة]:\s*([\s\S]*?)(?=\s*المبررات:|$)/)
+            if (targetMatch && targetMatch[1]) {
+              target = targetMatch[1].trim()
+              const reasonMatch = rawNotes.match(/المبررات:\s*([\s\S]*)/)
+              notes = reasonMatch && reasonMatch[1] ? reasonMatch[1].trim() : '—'
+            }
+          }
+          
+          if (target === '—') {
+            if (item.field_name === 'full_name' || item.correction_type === 'name_correction') target = 'تصحيح الاسم'
+            else if (item.field_name === 'national_id' || item.correction_type === 'national_id_correction') target = 'تصحيح الرقم الوطني'
+            else if (item.field_name === 'military_number' || item.correction_type === 'military_number_correction') target = 'تصحيح الرقم العسكري'
+            else target = item.field_name || item.correction_type || 'تحديث بيانات'
+          }
+          
+          return {
+            ...item,
+            full_name: item.new_value || item.correct_name || item.full_name || item.personnel_name || '', // الاسم الصحيح (الجديد المعتمد)
+            wrong_name: item.full_name || item.personnel_name || item.old_value || '', // الاسم الخطأ (القديم)
+            correction_target: target,
+            notes: notes
+          }
+        })
+      }
+      
+      reportData.value = data
     } catch (error) {
       console.error(`Failed to fetch report ${reportId.value}`, error)
     } finally {

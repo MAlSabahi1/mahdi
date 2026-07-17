@@ -90,12 +90,27 @@
                     </div>
 
                     <!-- Level 4: Sub-Districts -->
-                    <div v-show="district.expanded" class="pr-8 mt-2 space-y-2 border-r-2 border-gray-100 dark:border-gray-800">
+                    <div v-if="district.expanded" class="pr-8 mt-2 space-y-2 border-r-2 border-gray-100 dark:border-gray-800">
                       <div v-for="sub in district.children" :key="sub.id" class="relative">
                         <div class="absolute right-[-32px] top-4 w-8 h-0.5 bg-gray-100 dark:bg-gray-800"></div>
-                        <div class="flex items-center gap-2 p-2 rounded-xl bg-gray-50/30 dark:bg-gray-800/10 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors">
-                          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                          <span class="text-sm text-gray-600 dark:text-gray-400">{{ sub.name }}</span>
+                        <div class="flex flex-col gap-2 p-2 rounded-xl bg-gray-50/30 dark:bg-gray-800/10 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors">
+                          <div class="flex items-center gap-2 cursor-pointer" @click="sub.expanded = !sub.expanded">
+                            <button v-if="sub.children && sub.children.length > 0" class="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors">
+                              <ChevronDown v-if="sub.expanded" class="w-3.5 h-3.5 text-gray-500" />
+                              <ChevronLeft v-else class="w-3.5 h-3.5 text-gray-500" />
+                            </button>
+                            <span v-else class="w-4 h-4 inline-block"></span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
+                            <span class="text-sm text-gray-600 dark:text-gray-400 font-bold">{{ sub.name }}</span>
+                          </div>
+
+                          <!-- Level 5: Villages -->
+                          <div v-if="sub.expanded" class="pr-6 mt-1 space-y-1">
+                            <div v-for="village in sub.children" :key="village.id" class="flex items-center gap-2 py-1 px-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                              <span class="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                              <span class="text-xs text-gray-500 dark:text-gray-400">{{ village.name }}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -150,7 +165,12 @@ const fetchTree = async () => {
           expanded: false,
           children: (dist.sub_districts || []).map((sub: any) => ({
             id: sub.id,
-            name: sub.name_ar
+            name: sub.name_ar,
+            expanded: false,
+            children: (sub.villages || []).map((v: any) => ({
+              id: v.id,
+              name: v.name_ar
+            }))
           }))
         }))
       }))

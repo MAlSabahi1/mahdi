@@ -249,6 +249,51 @@ class PersonnelViewSet(BaseModelViewSet):
         serializer = PersonnelActiveVariableSerializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
+    @extend_schema(
+        summary='إنشاء طلبات تصحيح جماعية (للتأسيس الأولي)',
+        tags=['personnel'],
+        request=SuggestedCorrectionSerializer(many=True),
+    )
+    @action(detail=False, methods=['post'], url_path='bulk-corrections')
+    def bulk_corrections(self, request):
+        """إنشاء طلبات تصحيح جماعية للأسماء أو غيرها"""
+        items = request.data.get('data', [])
+        if not items:
+            return Response({'error': 'لم يتم إرسال بيانات'}, status=400)
+            
+        created_count = 0
+        from .models import SuggestedCorrection, PersonnelMaster
+        
+        for item in items:
+            military_number = item.get('military_number')
+            new_value = item.get('new_value')
+            field_name = item.get('field_name', 'full_name')
+            correction_type = item.get('correction_type', 'name_correction')
+            
+            if not military_number or not new_value:
+                continue
+                
+            try:
+                personnel = PersonnelMaster.objects.get(military_number=military_number)
+                SuggestedCorrection.objects.create(
+                    personnel=personnel,
+                    field_name=field_name,
+                    old_value=personnel.full_name if field_name == 'full_name' else '',
+                    new_value=new_value,
+                    correction_type=correction_type,
+                    status='pending',
+                    requested_by=request.user,
+                )
+                created_count += 1
+            except PersonnelMaster.DoesNotExist:
+                continue
+                
+        return Response({
+            'success': True,
+            'message': f'تم إنشاء {created_count} طلب تصحيح بنجاح، وتم إحالتها للوزارة.',
+            'created_count': created_count
+        })
+
     @extend_schema(summary='إضافة أو تعديل متغير شهري من شبكة البيانات (Inline Edit)', tags=['personnel'])
     @action(detail=False, methods=['post', 'patch'], url_path='upsert-variable')
     def upsert_variable(self, request):

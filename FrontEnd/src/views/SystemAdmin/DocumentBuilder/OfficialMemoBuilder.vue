@@ -5,24 +5,41 @@
       <!-- Top Action Bar -->
       <div class="flex justify-between items-center bg-white rounded-2xl border border-gray-200 p-5 shadow-sm dark:bg-gray-900 dark:border-gray-800 sticky top-4 z-40">
         <div>
-          <h1 class="text-xl font-bold text-gray-900 dark:text-white">منشئ المذكرات الرسمية</h1>
+          <h1 class="text-xl font-bold text-gray-900 dark:text-white">
+            {{ route.query.type === 'ATTENTION_NOTICE' ? 'منشئ لفت نظر / عقوبة' : route.query.type === 'WORK_COMMENCEMENT' ? 'منشئ مباشرة عمل' : route.query.type === 'CIRCULAR' ? 'منشئ تعميم' : route.query.type === 'MEMO' ? 'منشئ مذكرة تغطية' : 'منشئ المذكرات الرسمية' }}
+          </h1>
           <p class="text-sm text-gray-500 dark:text-gray-400">التصميم الحكومي الاحترافي المعتمد للخطابات والتعاميم</p>
         </div>
-        <div class="flex gap-3">
+        <div class="flex gap-2 flex-wrap">
           <button @click="resetForm"
-            class="rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 transition-colors dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 cursor-pointer">
+            class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 transition-colors dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 cursor-pointer">
             إفراغ الحقول
           </button>
+          <button @click="createNewTemplate"
+            class="flex items-center gap-1 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700 shadow-theme-xs hover:bg-brand-100 transition-colors dark:border-brand-800/50 dark:bg-brand-900/30 dark:text-brand-300 dark:hover:bg-brand-900/50 cursor-pointer">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            مسودة جديدة
+          </button>
+          <button @click="saveAsNewTemplate"
+            class="flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-700 transition-colors cursor-pointer">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+            حفظ كقالب جديد
+          </button>
+          <button @click="saveExistingTemplate"
+            class="flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-indigo-700 transition-colors cursor-pointer">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+            حفظ التعديلات
+          </button>
           <button @click="previewMemo"
-            class="flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 transition-colors cursor-pointer">
-            <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-            معاينة وطباعة المذكرة
+            class="flex items-center gap-1 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-black transition-colors cursor-pointer">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+            معاينة
           </button>
         </div>
       </div>
 
       <!-- Document Type Selection -->
-      <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm relative overflow-visible">
+      <div v-if="!route.query.type" class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm relative overflow-visible">
         <h3 class="mb-5 text-lg font-bold text-gray-900 dark:text-white border-b border-gray-100 pb-3 dark:border-gray-800">نوع المذكرة وتخصيصاتها</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -32,6 +49,7 @@
                 <option value="MEMO">مذكرة عادية / تغطية</option>
                 <option value="CIRCULAR">تعميم</option>
                 <option value="PERSONNEL_MEMO">مذكرة لأفراد</option>
+                <option value="CORRECTION">مذكرة تصحيح بيانات</option>
                 <option value="ATTENTION_NOTICE">لفت نظر / عقوبة</option>
                 <option value="WORK_COMMENCEMENT">مباشرة عمل</option>
               </select>
@@ -193,17 +211,18 @@
           </div>
 
           <!-- Involved Personnel (Table for Memos that involve Personnel) -->
-          <div v-if="['ATTENTION_NOTICE', 'WORK_COMMENCEMENT', 'PERSONNEL_MEMO'].includes(form.documentType)" class="rounded-xl border border-warning-200 bg-warning-50/50 p-4 dark:border-warning-900/30 dark:bg-warning-900/10 mt-6">
+          <div v-if="['ATTENTION_NOTICE', 'WORK_COMMENCEMENT', 'PERSONNEL_MEMO', 'CORRECTION'].includes(form.documentType)" class="rounded-xl border border-warning-200 bg-warning-50/50 p-4 dark:border-warning-900/30 dark:bg-warning-900/10 mt-6">
             <div class="flex items-center justify-between mb-4">
               <div>
                 <label class="block text-sm font-bold text-warning-800 dark:text-warning-200">الأفراد المعنيون (الجدول المخصص)</label>
                 <p class="text-xs text-warning-600 dark:text-warning-400 mt-1">سيتم عرض هؤلاء الأفراد في جدول رسمي أعلى نص المذكرة مباشرة.</p>
               </div>
-              <div class="flex gap-2">
+              <div class="flex gap-2" v-if="form.documentType !== 'CORRECTION'">
                 <button type="button" @click="showPersonnelModal = true" class="text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 flex items-center gap-1 px-3 py-2 rounded-lg shadow-sm transition-colors cursor-pointer">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                   البحث في النظام
                 </button>
+
                 <button type="button" @click="addInvolvedPersonnel" class="text-xs font-bold text-warning-700 hover:text-warning-800 dark:text-warning-400 flex items-center gap-1 bg-white dark:bg-gray-800 px-3 py-2 rounded-lg border border-warning-300 dark:border-warning-700 shadow-sm transition-colors cursor-pointer">
                   + إضافة يدوية
                 </button>
@@ -211,12 +230,18 @@
             </div>
             
             <!-- Dynamic Columns Selector -->
-            <div v-if="form.documentType === 'PERSONNEL_MEMO'" class="bg-white dark:bg-gray-800 rounded-lg p-3 mb-4 border border-warning-200 dark:border-warning-800 shadow-sm">
-              <h4 class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">
-                <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path></svg>
-                الأعمدة الظاهرة في الجدول (اختر ما تريد طباعته)
-              </h4>
-              <div class="flex flex-wrap gap-2 select-none">
+            <div v-if="['PERSONNEL_MEMO', 'CORRECTION'].includes(form.documentType)" class="bg-white dark:bg-gray-800 rounded-lg p-3 mb-4 border border-warning-200 dark:border-warning-800 shadow-sm">
+              <div class="flex items-center justify-between mb-3 border-b border-gray-100 dark:border-gray-700 pb-3">
+                <h4 class="text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                  <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path></svg>
+                  الأعمدة الظاهرة في الجدول (اختر ما تريد طباعته)
+                </h4>
+                <label class="flex items-center gap-2 cursor-pointer bg-brand-50 dark:bg-brand-900/30 px-3 py-1.5 rounded-lg border border-brand-200 dark:border-brand-800">
+                  <input type="checkbox" v-model="form.includeTable" class="w-4 h-4 text-brand-600 rounded border-gray-300 focus:ring-brand-500 cursor-pointer">
+                  <span class="text-xs font-bold text-brand-800 dark:text-brand-300">تضمين وطباعة الجدول داخل المذكرة</span>
+                </label>
+              </div>
+              <div class="flex flex-wrap gap-2 select-none" :class="{'opacity-50 pointer-events-none': form.includeTable === false}" v-if="form.documentType === 'PERSONNEL_MEMO'">
                 <label class="flex items-center gap-1.5 cursor-pointer px-2.5 py-1.5 rounded-md text-xs font-bold border transition-colors" :class="form.visibleColumns.militaryId ? 'bg-brand-50 border-brand-200 text-brand-700 dark:bg-brand-900/30 dark:border-brand-800' : 'bg-gray-50 border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700'">
                   <input type="checkbox" v-model="form.visibleColumns.militaryId" class="hidden"> الرقم العسكري
                 </label>
@@ -263,15 +288,9 @@
                   <input type="checkbox" v-model="form.visibleColumns.notes" class="hidden"> الملاحظات
                 </label>
                 <!-- أعمدة التصحيح -->
-                <label class="flex items-center gap-1.5 cursor-pointer px-2.5 py-1.5 rounded-md text-xs font-bold border transition-colors" :class="form.visibleColumns.correctName ? 'bg-success-50 border-success-200 text-success-700 dark:bg-success-900/30 dark:border-success-800' : 'bg-gray-50 border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700'">
-                  <input type="checkbox" v-model="form.visibleColumns.correctName" class="hidden"> الاسم الصحيح
-                </label>
-                <label class="flex items-center gap-1.5 cursor-pointer px-2.5 py-1.5 rounded-md text-xs font-bold border transition-colors" :class="form.visibleColumns.wrongName ? 'bg-error-50 border-error-200 text-error-700 dark:bg-error-900/30 dark:border-error-800' : 'bg-gray-50 border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700'">
-                  <input type="checkbox" v-model="form.visibleColumns.wrongName" class="hidden"> الاسم الخطأ
-                </label>
-                <label class="flex items-center gap-1.5 cursor-pointer px-2.5 py-1.5 rounded-md text-xs font-bold border transition-colors" :class="form.visibleColumns.correctionTarget ? 'bg-warning-50 border-warning-200 text-warning-700 dark:bg-warning-900/30 dark:border-warning-800' : 'bg-gray-50 border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700'">
-                  <input type="checkbox" v-model="form.visibleColumns.correctionTarget" class="hidden"> المطلوب تصحيحه
-                </label>
+                
+                
+                
               </div>
             </div>
             <div v-if="form.involvedPersonnel.length === 0" class="text-center py-6 text-warning-500 text-sm border-2 border-dashed border-warning-200 rounded-lg dark:border-warning-800/50">
@@ -281,17 +300,19 @@
             <div v-else class="space-y-3">
               <div v-for="(person, index) in form.involvedPersonnel" :key="index" class="flex flex-col md:flex-row gap-3 items-center bg-white dark:bg-gray-800 p-2.5 rounded-lg border border-warning-200 dark:border-warning-800/50 shadow-sm">
                 
-                <div class="flex gap-2 w-full md:w-auto">
-                  <div class="w-28 shrink-0">
-                    <input v-model="person.militaryId" type="text" placeholder="الرقم العسكري" class="block w-full h-10 rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700">
+                <div class="flex flex-col md:flex-row gap-3 items-center" v-if="form.documentType !== 'CORRECTION'">
+                  <div class="flex gap-2 w-full md:w-auto">
+                    <div class="w-28 shrink-0">
+                      <input v-model="person.militaryId" type="text" placeholder="الرقم العسكري" class="block w-full h-10 rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700">
+                    </div>
+                    <div class="w-24 shrink-0">
+                      <input v-model="person.rank" type="text" placeholder="الرتبة" class="block w-full h-10 rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700">
+                    </div>
                   </div>
-                  <div class="w-24 shrink-0">
-                    <input v-model="person.rank" type="text" placeholder="الرتبة" class="block w-full h-10 rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700">
+                  
+                  <div class="flex-1 w-full min-w-[200px]">
+                    <input v-model="person.name" type="text" placeholder="الاسم الرباعي أو الخماسي" class="block w-full h-10 rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700">
                   </div>
-                </div>
-                
-                <div class="flex-1 w-full min-w-[200px]">
-                  <input v-model="person.name" type="text" placeholder="الاسم الرباعي أو الخماسي" class="block w-full h-10 rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700">
                 </div>
 
                 <!-- Dynamic Columns -->
@@ -317,7 +338,7 @@
                   <!-- Sub Row for Work Commencement -->
                   <div class="flex flex-col md:flex-row gap-2 bg-gray-50 dark:bg-gray-900/50 p-2 rounded border border-gray-200 dark:border-gray-700 mt-1">
                     <div class="w-full md:w-32 shrink-0">
-                      <input v-model="person.commencementDate" type="date" placeholder="تاريخ المباشرة" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800">
+                      <input v-model="person.commencementDate" type="text" placeholder="تاريخ المباشرة" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800">
                     </div>
                     <div class="w-full md:w-32 shrink-0">
                       <input v-model="person.nationalId" type="text" placeholder="الرقم الوطني" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800">
@@ -331,6 +352,36 @@
                   </div>
                 </div>
 
+
+                <!-- CORRECTION Custom Layout -->
+                <div v-if="form.documentType === 'CORRECTION'">
+                  <div class="grid grid-cols-1 md:grid-cols-6 gap-3 mt-2">
+                    <div class="col-span-1">
+                      <label class="block text-[0.65rem] font-bold text-gray-500 mb-1">الرقم العسكري</label>
+                      <input v-model="person.militaryId" type="text" placeholder="أدخل الرقم" class="block w-full h-9 rounded border border-gray-300 bg-gray-50 px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-900">
+                    </div>
+                    <div class="col-span-1">
+                      <label class="block text-[0.65rem] font-bold text-gray-500 mb-1">الرتبة</label>
+                      <input v-model="person.rank" type="text" placeholder="الرتبة" class="block w-full h-9 rounded border border-gray-300 bg-gray-50 px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-900">
+                    </div>
+                    <div class="col-span-2">
+                      <label class="block text-[0.65rem] font-bold text-brand-600 mb-1">الاسم الصحيح (المعتمد)</label>
+                      <input v-model="person.correctName" type="text" placeholder="الاسم الصحيح" class="block w-full h-9 rounded border border-brand-300 bg-brand-50 px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-brand-700 dark:bg-brand-900/20 font-bold">
+                    </div>
+                    <div class="col-span-2">
+                      <label class="block text-[0.65rem] font-bold text-error-600 mb-1">الاسم الخطأ (القديم)</label>
+                      <input v-model="person.wrongName" type="text" placeholder="الاسم الخطأ" class="block w-full h-9 rounded border border-error-300 bg-error-50 px-2 py-1 text-xs focus:border-error-500 focus:ring-1 focus:ring-error-500 dark:border-error-700 dark:bg-error-900/20">
+                    </div>
+                    <div class="col-span-3">
+                      <label class="block text-[0.65rem] font-bold text-gray-500 mb-1">المطلوب تصحيحه</label>
+                      <input v-model="person.correctionTarget" type="text" placeholder="مثال: الاسم الثاني، اللقب..." class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800">
+                    </div>
+                    <div class="col-span-3">
+                      <label class="block text-[0.65rem] font-bold text-gray-500 mb-1">ملاحظات إضافية</label>
+                      <input v-model="person.notes" type="text" placeholder="ملاحظات" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800">
+                    </div>
+                  </div>
+                </div>
                 <div class="flex flex-wrap gap-2 w-full mt-2 bg-gray-50 dark:bg-gray-900/50 p-2 rounded border border-gray-200 dark:border-gray-700" v-else-if="form.documentType === 'PERSONNEL_MEMO'">
                   <div class="w-full md:w-32 shrink-0" v-if="form.visibleColumns.nationalId">
                     <input v-model="person.nationalId" type="text" placeholder="الرقم الوطني" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800">
@@ -348,7 +399,7 @@
                     <input v-model="person.qualification" type="text" placeholder="المؤهل" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800">
                   </div>
                   <div class="w-full md:w-32 shrink-0" v-if="form.visibleColumns.joinDate">
-                    <input v-model="person.joinDate" type="date" placeholder="تاريخ التجنيد" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800">
+                    <input v-model="person.joinDate" type="text" placeholder="تاريخ التجنيد" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800">
                   </div>
                   <div class="w-full md:w-32 shrink-0" v-if="form.visibleColumns.workplace">
                     <input v-model="person.workplace" type="text" placeholder="مكان العمل" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800">
@@ -357,7 +408,7 @@
                     <input v-model="person.serviceLocation" type="text" placeholder="محل الخدمة" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800">
                   </div>
                   <div class="w-full md:w-32 shrink-0" v-if="form.visibleColumns.commencementDate">
-                    <input v-model="person.commencementDate" type="date" placeholder="تاريخ المباشرة" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800">
+                    <input v-model="person.commencementDate" type="text" placeholder="تاريخ المباشرة" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800">
                   </div>
                   <div class="w-full md:w-32 shrink-0" v-if="form.visibleColumns.phone">
                     <input v-model="person.phone" type="text" placeholder="الهاتف" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800">
@@ -365,22 +416,18 @@
                   <div class="w-full md:w-48 shrink-0" v-if="form.visibleColumns.clarification">
                     <input v-model="person.clarification" type="text" placeholder="الإيضاح" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800">
                   </div>
-                  <div class="w-full md:w-48 shrink-0" v-if="form.visibleColumns.correctName">
-                    <input v-model="person.correctName" type="text" placeholder="الاسم الصحيح" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-success-500 focus:ring-1 focus:ring-success-500 dark:border-gray-600 dark:bg-gray-800">
-                  </div>
+                  
                   <div class="w-full md:w-48 shrink-0" v-if="form.visibleColumns.wrongName">
                     <input v-model="person.wrongName" type="text" placeholder="الاسم الخطأ" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-error-500 focus:ring-1 focus:ring-error-500 dark:border-gray-600 dark:bg-gray-800">
                   </div>
-                  <div class="w-full md:w-48 shrink-0" v-if="form.visibleColumns.correctionTarget">
-                    <input v-model="person.correctionTarget" type="text" placeholder="المطلوب تصحيحه" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-warning-500 focus:ring-1 focus:ring-warning-500 dark:border-gray-600 dark:bg-gray-800">
-                  </div>
+                  
                   <div class="flex-1 min-w-[200px]" v-if="form.visibleColumns.notes">
                     <input v-model="person.secondaryNotes" type="text" placeholder="ملاحظات" class="block w-full h-9 rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800">
                   </div>
                 </div>
 
                 <div class="w-full sm:w-auto flex justify-end shrink-0">
-                  <button type="button" @click="removeInvolvedPersonnel(index)" class="p-2 text-error-500 hover:bg-error-50 rounded-md transition-colors cursor-pointer">
+                  <button type="button" @click="removeInvolvedPersonnel(Number(index))" class="p-2 text-error-500 hover:bg-error-50 rounded-md transition-colors cursor-pointer">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                   </button>
                 </div>
@@ -423,7 +470,7 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-5">
           <div v-for="(sig, index) in form.signatures" :key="index" class="rounded-xl border border-gray-100 bg-gray-50/50 p-4 dark:border-gray-800 dark:bg-gray-800/20 relative group">
-            <button @click="removeSignature(index)" class="absolute top-3 left-3 text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-full w-8 h-8 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100">
+            <button @click="removeSignature(Number(index))" class="absolute top-3 left-3 text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-full w-8 h-8 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
             </button>
             <h4 class="font-bold text-gray-800 dark:text-gray-200 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2 text-center pr-8">جهة التوقيع رقم {{ Number(index) + 1 }}</h4>
@@ -499,7 +546,7 @@
       <div class="p-5 border-b border-brand-100 dark:border-brand-800 bg-brand-50/30 dark:bg-brand-900/10 flex justify-between items-center">
         <h3 class="text-lg font-bold text-brand-900 dark:text-brand-300 flex items-center gap-2">
           <svg class="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"></path></svg>
-          إعدادات التنسيق المتقدمة (لوحة تحكم المشرف)
+          مكتبة القوالب الجاهزة وإعدادات التنسيق المتقدمة
         </h3>
       </div>
       
@@ -898,18 +945,110 @@
         </div>
       </div>
     </div>
+
+    <!-- Service Data Import Modal -->
+    <div v-if="showServiceImportModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4" dir="rtl">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-emerald-50 dark:bg-emerald-900/20 flex justify-between items-center shrink-0">
+          <h3 class="text-lg font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+            استيراد بيانات من كشف / خدمة
+          </h3>
+          <button @click="showServiceImportModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+        
+        <div class="p-6 overflow-y-auto flex-1 space-y-6">
+          <!-- Service Selector -->
+          <div>
+            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">اختر الخدمة / نوع الطلب</label>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-colors" :class="selectedServiceForImport === 'CORRECTION' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30' : 'border-gray-200 hover:bg-gray-50 text-gray-600 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800'">
+                <input type="radio" v-model="selectedServiceForImport" value="CORRECTION" class="w-4 h-4 text-emerald-600">
+                <span class="font-bold">طلبات تصحيح البيانات</span>
+              </label>
+              <label class="flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-colors opacity-50 cursor-not-allowed border-gray-200 text-gray-400 dark:border-gray-700">
+                <input type="radio" disabled class="w-4 h-4 text-gray-400">
+                <span class="font-bold">خدمات التقاعد والإخلاء (قريباً)</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Fetch Actions -->
+          <div v-if="selectedServiceForImport === 'CORRECTION'" class="space-y-4 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+            <div>
+              <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">البحث برقم الطلب (CORR-ID)</label>
+              <div class="flex gap-2">
+                <input v-model="serviceImportSearchId" type="text" placeholder="مثال: 23" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                <button @click="fetchServiceDataById" :disabled="serviceImportLoading" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 rounded-lg font-bold text-sm disabled:opacity-50 flex items-center gap-2 whitespace-nowrap cursor-pointer">
+                  <svg v-if="serviceImportLoading" class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  <span v-else>بحث واستيراد</span>
+                </button>
+              </div>
+            </div>
+            
+            <div class="relative">
+              <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                <div class="w-full border-t border-gray-300 dark:border-gray-700"></div>
+              </div>
+              <div class="relative flex justify-center">
+                <span class="px-2 bg-gray-50 dark:bg-gray-900/50 text-sm text-gray-500">أو</span>
+              </div>
+            </div>
+            
+            <div>
+              <button @click="fetchServiceDataRecent" :disabled="serviceImportLoading" class="w-full bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 py-2 rounded-lg font-bold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                عرض أحدث الطلبات المعلقة للاختيار منها
+              </button>
+            </div>
+          </div>
+          
+          <!-- Results Table -->
+          <div v-if="serviceImportList.length > 0" class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden mt-6">
+            <div class="max-h-60 overflow-y-auto">
+              <table class="w-full text-sm text-right">
+                <thead class="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 sticky top-0">
+                  <tr>
+                    <th class="px-4 py-2">رقم الطلب</th>
+                    <th class="px-4 py-2">الاسم</th>
+                    <th class="px-4 py-2">الرقم العسكري</th>
+                    <th class="px-4 py-2">الإجراء</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                  <tr v-for="item in serviceImportList" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td class="px-4 py-2 font-mono font-bold">CORR-{{ String(item.id).padStart(5, '0') }}</td>
+                    <td class="px-4 py-2">{{ item.personnel_name || item.full_name || '—' }}</td>
+                    <td class="px-4 py-2 font-mono">{{ item.military_number || item.personnel_military_number || '—' }}</td>
+                    <td class="px-4 py-2">
+                      <button @click="importFromServiceList(item)" class="text-xs bg-emerald-100 text-emerald-700 hover:bg-emerald-200 px-3 py-1.5 rounded-md font-bold transition-colors cursor-pointer">
+                        استيراد للمذكرة
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
   </AdminLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useCoreStore } from '@/stores/core'
 import { useAuthStore } from '@/stores/auth'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import CKEditorComponent from '@/components/common/CKEditorComponent.vue'
 
 const router = useRouter()
+const route = useRoute()
 const coreStore = useCoreStore()
 const authStore = useAuthStore()
 
@@ -920,6 +1059,7 @@ onMounted(() => {
 })
 const showPersonnelModal = ref(false)
 const searchQuery = ref('')
+const editingPresetIndex = ref<number | null>(null)
 
 const showEntityModalForIndex = ref<number | null>(null)
 const entitySearchQuery = ref('')
@@ -968,7 +1108,7 @@ const filterByAuth = (items: any[], type: string) => {
   
   // Defensively extract the user's assigned security_admin_id from anywhere possible
   const profileAdminId = profile?.security_admin_id || 
-                         (profile?.security_admin && typeof profile.security_admin === 'object' && profile.security_admin !== null ? profile.security_admin.id : profile?.security_admin) ||
+                         ((profile as any)?.security_admin && typeof (profile as any).security_admin === 'object' && (profile as any).security_admin !== null ? (profile as any).security_admin.id : (profile as any)?.security_admin) ||
                          (user as any)?.security_admin_id ||
                          (user as any)?.governorate_id;
 
@@ -1099,7 +1239,90 @@ const selectEntityFromDb = (entity: any) => {
 }
 
 import { usePersonnelStore } from '@/stores/personnel'
+import { useCorrectionStore } from '@/stores/correction'
+
 const personnelStore = usePersonnelStore()
+const correctionStore = useCorrectionStore()
+
+// === Service Data Import Logic ===
+const showServiceImportModal = ref(false)
+const selectedServiceForImport = ref('CORRECTION')
+const serviceImportSearchId = ref('')
+const serviceImportLoading = ref(false)
+const serviceImportList = ref<any[]>([])
+
+async function fetchServiceDataById() {
+  if (!serviceImportSearchId.value) return
+  serviceImportLoading.value = true
+  try {
+    if (selectedServiceForImport.value === 'CORRECTION') {
+      const item = await correctionStore.fetchCorrectionById(serviceImportSearchId.value)
+      serviceImportList.value = item ? [item] : []
+    }
+  } catch (e) {
+    alert('لم يتم العثور على طلب بهذا الرقم.')
+    serviceImportList.value = []
+  } finally {
+    serviceImportLoading.value = false
+  }
+}
+
+async function fetchServiceDataRecent() {
+  serviceImportLoading.value = true
+  try {
+    if (selectedServiceForImport.value === 'CORRECTION') {
+      const list = await correctionStore.fetchAllPendingCorrections(1)
+      serviceImportList.value = list
+    }
+  } catch (e) {
+    serviceImportList.value = []
+  } finally {
+    serviceImportLoading.value = false
+  }
+}
+
+function importFromServiceList(item: any) {
+  if (selectedServiceForImport.value === 'CORRECTION') {
+    let target = '—'
+    let rawNotes = item.notes || item.reason || ''
+    if (typeof rawNotes === 'string') {
+      const targetMatch = rawNotes.match(/المطلوب تصحيح[هة]:\s*([\s\S]*?)(?=\s*المبررات:|$)/)
+      if (targetMatch && targetMatch[1]) target = targetMatch[1].trim()
+    }
+    if (target === '—') {
+      if (item.field_name === 'full_name' || item.correction_type === 'name_correction') target = 'تصحيح الاسم'
+      else if (item.field_name === 'national_id' || item.correction_type === 'national_id_correction') target = 'تصحيح الرقم الوطني'
+      else if (item.field_name === 'military_number' || item.correction_type === 'military_number_correction') target = 'تصحيح الرقم العسكري'
+      else target = item.field_name || item.correction_type || 'تحديث بيانات'
+    }
+
+    if (!form.value.involvedPersonnel) form.value.involvedPersonnel = []
+    
+    // Check if already imported
+    const exists = form.value.involvedPersonnel.some((p: any) => 
+      p.militaryId === (item.military_number || item.personnel_military_number) && 
+      p.name === (item.full_name || item.personnel_name)
+    )
+    
+    if (!exists) {
+      form.value.involvedPersonnel.push({
+        militaryId: item.military_number || item.personnel_military_number || '',
+        rank: item.rank || item.personnel_rank || '',
+        name: item.full_name || item.personnel_name || item.old_value || '',
+        correctName: item.correct_name || item.new_value || '',
+        correctionTarget: target,
+        nationalId: '', status: '', jobTitle: '', position: '', qualification: '', joinDate: '', workplace: '', serviceLocation: '', commencementDate: '', phone: '', clarification: '', notes: '', secondaryNotes: '', wrongName: ''
+      })
+    }
+
+    form.value.visibleColumns.correctName = true
+    form.value.visibleColumns.correctionTarget = true
+    form.value.referenceNo = 'CORR-' + String(item.id).padStart(5, '0')
+  }
+  
+  showServiceImportModal.value = false
+  alert('تم استيراد البيانات بنجاح وإضافتها إلى جدول الأفراد المعنيين!')
+}
 
 let searchTimeout: any = null
 watch(searchQuery, (newVal) => {
@@ -1224,6 +1447,14 @@ const defaultForm = {
 const form = ref(JSON.parse(JSON.stringify(defaultForm)))
 
 const handleDocumentTypeChange = () => {
+  if (!form.value.involvedPersonnel) form.value.involvedPersonnel = []
+
+  if (['ATTENTION_NOTICE', 'WORK_COMMENCEMENT', 'PERSONNEL_MEMO'].includes(form.value.documentType)) {
+    if (form.value.involvedPersonnel.length === 0) {
+      form.value.involvedPersonnel.push({ militaryId: '', rank: '', name: '', clarification: '', workplace: '', serviceLocation: '', notes: '', secondaryNotes: '', commencementDate: '', nationalId: '', phone: '', correctName: '', wrongName: '', correctionTarget: '' })
+    }
+  }
+
   if (form.value.documentType === 'ATTENTION_NOTICE') {
     form.value.subject = 'لفت نظر'
     form.value.addressees = [{ prefix: 'الأخ /', type: 'TEXT', entityId: null, name: 'المذكور أعلاه', suffix: 'المحترم' }]
@@ -1284,7 +1515,7 @@ const resetForm = () => {
   }
 }
 
-// === Typography Presets Management ===
+// === Full Templates & Presets Management ===
 const savedPresets = ref(JSON.parse(localStorage.getItem('memoTypographyPresets') || '[]'))
 const selectedPresetIndex = ref('')
 const newPresetName = ref('')
@@ -1297,19 +1528,28 @@ const savePreset = () => {
   const presets = JSON.parse(localStorage.getItem('memoTypographyPresets') || '[]')
   presets.push({
     name: newPresetName.value,
-    typography: JSON.parse(JSON.stringify(form.value.typography))
+    typography: JSON.parse(JSON.stringify(form.value.typography)),
+    fullTemplate: JSON.parse(JSON.stringify(form.value)) // Save the whole form!
   })
   localStorage.setItem('memoTypographyPresets', JSON.stringify(presets))
   savedPresets.value = presets
   newPresetName.value = ''
-  alert('تم حفظ القالب بنجاح!')
+  alert('تم حفظ القالب بالكامل بنجاح في المكتبة!')
 }
 
 const loadPreset = () => {
   if (selectedPresetIndex.value === '') return
-  const preset = savedPresets.value[selectedPresetIndex.value]
-  if (preset) {
-    form.value.typography = JSON.parse(JSON.stringify(preset.typography))
+  if(confirm('هل أنت متأكد من تحميل هذا القالب؟ سيتم استبدال محتوى المذكرة الحالي.')) {
+    const preset = savedPresets.value[selectedPresetIndex.value]
+    if (preset) {
+      if (preset.fullTemplate) {
+        // Load entire template if available
+        form.value = JSON.parse(JSON.stringify(preset.fullTemplate))
+      } else if (preset.typography) {
+        // Fallback for old typography-only presets
+        form.value.typography = JSON.parse(JSON.stringify(preset.typography))
+      }
+    }
   }
 }
 
@@ -1324,15 +1564,76 @@ const previewMemo = () => {
   window.open(router.resolve('/admin/documents/memo-preview').href, '_blank')
 }
 
+
+const saveAsNewTemplate = () => {
+  const name = prompt("أدخل اسماً للقالب الجديد (مثال: قالب تصحيح خاص):")
+  if (!name) return
+  let presets = JSON.parse(localStorage.getItem('memoTypographyPresets') || '[]')
+  presets.push({
+    name: name,
+    fullTemplate: JSON.parse(JSON.stringify(form.value))
+  })
+  localStorage.setItem('memoTypographyPresets', JSON.stringify(presets))
+  editingPresetIndex.value = presets.length - 1
+  localStorage.setItem('official_memo_edit_index', editingPresetIndex.value.toString())
+  alert('تم حفظ القالب بنجاح!')
+}
+
+const saveExistingTemplate = () => {
+  if (editingPresetIndex.value === null) {
+    saveAsNewTemplate()
+    return
+  }
+  let presets = JSON.parse(localStorage.getItem('memoTypographyPresets') || '[]')
+  
+  if (presets[editingPresetIndex.value]) {
+    presets[editingPresetIndex.value].fullTemplate = JSON.parse(JSON.stringify(form.value))
+    localStorage.setItem('memoTypographyPresets', JSON.stringify(presets))
+    alert('تم حفظ التعديلات على القالب بنجاح!')
+  }
+}
+
+
+const createNewTemplate = () => {
+  if(confirm('هل أنت متأكد من إنشاء قالب جديد؟ سيتم فقدان التعديلات الحالية غير المحفوظة.')) {
+    localStorage.removeItem('official_memo_draft')
+    localStorage.removeItem('official_memo_edit_index')
+    editingPresetIndex.value = null
+    form.value = JSON.parse(JSON.stringify(defaultForm))
+  }
+}
+
 onMounted(() => {
+  const editIdxStr = localStorage.getItem('official_memo_edit_index')
+  if (editIdxStr !== null) {
+    editingPresetIndex.value = parseInt(editIdxStr)
+  }
+
   const draftStr = localStorage.getItem('official_memo_draft')
   if (draftStr) {
     try {
       const draft = JSON.parse(draftStr)
+      if (draft.includeTable === undefined) draft.includeTable = true
+      // Migrate correction personnel data
+      if (draft.documentType === 'CORRECTION' && draft.involvedPersonnel) {
+        draft.involvedPersonnel.forEach((p: any) => {
+          if (!p.wrongName && p.name) {
+            p.wrongName = p.name;
+          }
+        });
+      }
       form.value = { ...defaultForm, ...draft }
       
-      // Migrate signatures if it's an old object format
-      if (draft.signatures && !Array.isArray(draft.signatures)) {
+      // Migrate old 'signers' array to 'signatures'
+      if (draft.signers && Array.isArray(draft.signers) && draft.signers.length > 0) {
+        form.value.signatures = draft.signers.map((s: any) => ({
+          title: s.role || '',
+          rank: s.rank || '',
+          name: s.name || '',
+          showSeal: s.id === 2 || s.role?.includes('مدير عام')
+        }))
+      } else if (draft.signatures && !Array.isArray(draft.signatures)) {
+        // Migrate signatures if it's an old object format
         form.value.signatures = [
           { title: draft.signatures.preparer?.title || '', rank: draft.signatures.preparer?.rank || '', name: draft.signatures.preparer?.name || '', showSeal: false },
           { title: draft.signatures.reviewer?.title || '', rank: draft.signatures.reviewer?.rank || '', name: draft.signatures.reviewer?.name || '', showSeal: false },
@@ -1365,7 +1666,17 @@ onMounted(() => {
       // Migration for older drafts
       if (!form.value.documentType) form.value.documentType = 'MEMO'
       if (!form.value.involvedPersonnel) form.value.involvedPersonnel = []
-      if (form.value.addressees && form.value.addressees.length > 0) {
+      
+      // Migrate old 'to' array to 'addressees'
+      if (draft.to && Array.isArray(draft.to) && draft.to.length > 0 && (!draft.addressees || draft.addressees.length === 0)) {
+        form.value.addressees = draft.to.map((a: any) => ({
+          prefix: a.title?.startsWith('الإخوة') ? 'الإخوة /' : 'الأخ /',
+          type: 'TEXT',
+          entityId: null,
+          name: a.title?.replace(/^(الأخ |الإخوة |معالي )?\/?\s*/, '') || '',
+          suffix: a.honorific || 'المحترم'
+        }))
+      } else if (form.value.addressees && form.value.addressees.length > 0) {
         if (!('prefix' in form.value.addressees[0])) {
           form.value.addressees = form.value.addressees.map((a: any) => ({
             prefix: a.name.startsWith('الإخوة') ? 'الإخوة /' : (a.name ? 'الأخ /' : ''),
@@ -1378,7 +1689,52 @@ onMounted(() => {
       } else {
         form.value.addressees = [{ prefix: 'الأخ /', type: 'TEXT', entityId: null, name: draft.to_name || '', suffix: 'المحترم' }]
       }
+
     } catch(e) {}
+  } else if (route.query.type) {
+    // If no draft and we are creating a specific type from Library
+    form.value.documentType = route.query.type as string
+    handleDocumentTypeChange()
   }
+
+  // Auto-populate issuer lines using coreStore
+  const populateIssuerLines = () => {
+    if (!form.value.issuerLine1) form.value.issuerLine1 = 'وزارة الداخلية'
+    
+    if (authStore.user?.authz_profile) {
+      const profile = authStore.user.authz_profile
+      
+      // Line 2: Central Dept OR Sec Admin (Governorate)
+      if (!form.value.issuerLine2) {
+        if (profile.central_department_id) {
+          const dept = coreStore.centralDepartments.find((d: any) => d.id === profile.central_department_id)
+          if (dept) form.value.issuerLine2 = dept.name
+        } else if (profile.security_admin_id) {
+          const admin = coreStore.securityAdmins.find((a: any) => a.id === profile.security_admin_id)
+          if (admin) form.value.issuerLine2 = admin.name
+        }
+      }
+      
+      // Line 3: Branch (for Central Depts) OR District (for Govs)
+      if (!form.value.issuerLine3) {
+        if (profile.branch_id) {
+          const branch = coreStore.branches.find((b: any) => b.id === profile.branch_id)
+          if (branch) form.value.issuerLine3 = branch.name
+        } else if (profile.district_police_id) {
+          const district = coreStore.districtPolices.find((d: any) => d.id === profile.district_police_id)
+          if (district) form.value.issuerLine3 = district.name
+        }
+      }
+    }
+  }
+
+  const loadCoreRefsAndPopulate = async () => {
+    if (!coreStore.centralDepartments.length) {
+      await coreStore.fetchAllReferences()
+    }
+    populateIssuerLines()
+  }
+  
+  loadCoreRefsAndPopulate()
 })
 </script>

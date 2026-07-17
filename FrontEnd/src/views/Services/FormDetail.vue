@@ -518,7 +518,7 @@ async function approveForm(ministryDocId?: number) {
       Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم اعتماد المعاملة بنجاح', showConfirmButton: false, timer: 2000 })
       fetchFormDetails()
     } catch (err: any) {
-      let errorMsg = err.response?.data?.error || 'حدث خطأ أثناء اعتماد المعاملة'
+      const errorMsg = err.response?.data?.error || 'حدث خطأ أثناء اعتماد المعاملة'
       Swal.fire({ icon: 'error', title: 'خطأ', text: errorMsg })
     }
     return

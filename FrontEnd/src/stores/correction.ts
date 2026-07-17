@@ -83,6 +83,20 @@ export const useCorrectionStore = defineStore('correction', () => {
     }
   }
 
+  // Fetch a single correction by ID
+  async function fetchCorrectionById(id: string) {
+    loading.value = true
+    try {
+      const response = await api.get(`/personnel/corrections/${id}/`)
+      return response.data
+    } catch (err) {
+      console.error('Failed to fetch correction by ID:', err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   // Submit a new correction
   async function submitCorrection(data: any) {
     loading.value = true
@@ -217,6 +231,7 @@ export const useCorrectionStore = defineStore('correction', () => {
     totalItems,
     fetchCorrections,
     fetchAllPendingCorrections,
+    fetchCorrectionById,
     submitCorrection,
     approveCorrection,
     rejectCorrection,

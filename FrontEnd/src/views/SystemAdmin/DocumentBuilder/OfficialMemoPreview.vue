@@ -14,16 +14,21 @@
           </button>
         </div>
       </div>
+      
+
 
       <!-- Loading State -->
       <div v-if="loading" class="max-w-[21cm] mx-auto p-12 bg-white text-center shadow-2xl">
         <p>جاري التحميل...</p>
       </div>
 
-      <!-- The A4 Print Page -->
-      <div v-else class="a4-page portrait bg-white mx-auto shadow-2xl relative overflow-hidden flex flex-col" id="print-area">
+      <!-- The A4 Print Pages (Bundle) -->
+      <div v-else class="flex flex-col gap-8 print-bundle-container" id="print-area">
         
-        <div class="relative z-10 pt-2 pb-12 flex-1 flex flex-col memo-content-wrapper">
+        <!-- Document 1: The Cover Memo -->
+        <div class="a4-page portrait bg-white mx-auto shadow-2xl relative overflow-hidden flex flex-col print-page-break">
+          
+          <div class="relative z-10 pt-2 pb-12 flex-1 flex flex-col memo-content-wrapper">
           
           <!-- Official Report Header (Edge to edge) -->
           <OfficialMemoHeader 
@@ -43,7 +48,7 @@
           <!-- Memo Body Content with standard official margins -->
           <div class="px-10 mt-0 flex-1 flex flex-col">
           <!-- Type-Specific Dynamic Tables (If needed) -->
-          <div v-if="memo.involvedPersonnel && memo.involvedPersonnel.length > 0 && ['ATTENTION_NOTICE', 'WORK_COMMENCEMENT', 'PERSONNEL_MEMO'].includes(memo.documentType)" class="mb-4 overflow-hidden rounded-xl border border-gray-400 shadow-sm print:shadow-none print:border-gray-800">
+          <div v-if="memo.includeTable !== false && memo.involvedPersonnel && memo.involvedPersonnel.length > 0 && ['ATTENTION_NOTICE', 'WORK_COMMENCEMENT', 'PERSONNEL_MEMO', 'CORRECTION'].includes(memo.documentType)" class="mb-8 print:mb-10 overflow-hidden rounded-xl border border-gray-400 shadow-sm print:shadow-none print:border-gray-800">
               <table class="w-full text-center border-collapse text-[1.1rem]" v-if="memo.documentType === 'ATTENTION_NOTICE'">
                 <thead>
                   <tr class="bg-gray-100 print:bg-gray-100 font-bold text-gray-800">
@@ -96,6 +101,32 @@
                 </tbody>
               </table>
 
+              
+              <table class="w-full text-center border-collapse text-[0.85rem] print:text-[0.8rem] font-cairo" v-else-if="memo.documentType === 'CORRECTION'">
+                <thead>
+                  <tr class="bg-gray-100 print:bg-gray-100 font-bold text-gray-800">
+                    <th class="border border-gray-400 py-1 print:py-0.5 w-8">م</th>
+                    <th class="border border-gray-400 py-1 print:py-0.5 w-16">الرتبة</th>
+                    <th class="border border-gray-400 py-1 print:py-0.5 w-24">الرقم العسكري</th>
+                    <th class="border border-gray-400 py-1 print:py-0.5 min-w-[140px] w-1/5">الاسم الصحيح</th>
+                    <th class="border border-gray-400 py-1 print:py-0.5 min-w-[140px] w-1/5">الاسم الخطأ</th>
+                    <th class="border border-gray-400 py-1 print:py-0.5 min-w-[100px]">المطلوب تصحيحه</th>
+                    <th class="border border-gray-400 py-1 print:py-0.5 min-w-[100px]">ملاحظات</th>
+                  </tr>
+                </thead>
+                <tbody class="font-medium text-gray-900">
+                  <tr v-for="(person, i) in memo.involvedPersonnel" :key="i" class="hover:bg-gray-50 bg-white print:bg-white transition-colors">
+                    <td class="border border-gray-400 py-0.5 px-1 bg-gray-50 print:bg-gray-50">{{ Number(i) + 1 }}</td>
+                    <td class="border border-gray-400 py-0.5 px-1 whitespace-nowrap">{{ person.rank }}</td>
+                    <td class="border border-gray-400 py-0.5 px-1 font-mono tracking-wider whitespace-nowrap">{{ person.militaryId }}</td>
+                    <td class="border border-gray-400 py-0.5 px-1 text-center font-bold text-[0.8rem] print:text-[0.75rem] leading-tight">{{ person.correctName }}</td>
+                    <td class="border border-gray-400 py-0.5 px-1 text-center line-through text-gray-500 text-[0.8rem] print:text-[0.75rem] leading-tight">{{ person.wrongName || person.name }}</td>
+                    <td class="border border-gray-400 py-0.5 px-1 text-gray-700 text-[0.75rem] print:text-[0.7rem] leading-tight">{{ person.correctionTarget }}</td>
+                    <td class="border border-gray-400 py-0.5 px-1 text-[0.75rem] print:text-[0.7rem] leading-tight">{{ person.notes || person.secondaryNotes }}</td>
+                  </tr>
+                </tbody>
+              </table>
+
               <table class="w-full text-center border-collapse text-[0.85rem] print:text-[0.75rem]" v-else-if="memo.documentType === 'PERSONNEL_MEMO'">
                 <thead>
                   <tr class="bg-gray-100 print:bg-gray-100 font-bold text-gray-800">
@@ -122,7 +153,7 @@
                 </thead>
                 <tbody class="font-medium text-gray-900">
                   <tr v-for="(person, i) in memo.involvedPersonnel" :key="i" class="hover:bg-gray-50 bg-white print:bg-white transition-colors">
-                    <td class="border border-gray-400 py-1.5 px-1 bg-gray-50 print:bg-gray-50">{{ Number(i) + 1 }}</td>
+                    <td class="border border-gray-400 py-0.5 px-1 bg-gray-50 print:bg-gray-50">{{ Number(i) + 1 }}</td>
                     <td v-if="memo.visibleColumns?.rank" class="border border-gray-400 py-1.5 px-1">{{ person.rank }}</td>
                     <td v-if="memo.visibleColumns?.militaryId" class="border border-gray-400 py-1.5 px-1 font-mono tracking-wider">{{ person.militaryId }}</td>
                     <td class="border border-gray-400 py-1.5 px-2 text-right">{{ person.name }}</td>
@@ -147,7 +178,7 @@
             </div>
 
           <!-- Addressees -->
-          <div class="mb-6 memo-addressees px-8">
+          <div class="mb-6 mt-4 print:mt-6 memo-addressees px-8">
             <div v-for="(addr, i) in memo.addressees" :key="i" class="flex justify-between items-end mb-2 leading-none" :class="[memo.typography?.addressee?.weight || 'font-bold', { 'underline underline-offset-4': memo.typography?.addressee?.underline }]" :style="{ fontSize: getFontSize(memo.typography?.addressee?.size, 1.3), fontFamily: memo.typography?.addressee?.family || 'Cairo' }">
               <div class="flex items-baseline">
                 <span v-if="addr.prefix" class="ml-2">{{ addr.prefix }}</span>
@@ -192,7 +223,10 @@
 
           </div> <!-- Close Body Content Wrapper -->
 
-        </div>
+          </div> <!-- Close content wrapper -->
+        </div> <!-- Close Memo Page (a4-page) -->
+
+
       </div>
     </div>
   </AdminLayout>
@@ -205,14 +239,42 @@ import AdminLayout from '@/components/layout/AdminLayout.vue'
 import OfficialMemoHeader from '@/components/common/OfficialMemoHeader.vue'
 import OfficialMemoFooter from '@/components/common/OfficialMemoFooter.vue'
 
+import { useServicesStore } from '@/stores/services'
+import { useCorrectionStore } from '@/stores/correction'
+
 const router = useRouter()
+const servicesStore = useServicesStore()
+const correctionStore = useCorrectionStore()
+
 const loading = ref(true)
 const memo = ref<any>({})
+const loadedForms = ref<any[]>([])
 
-const loadMemo = () => {
+const loadMemo = async () => {
   const draftStr = localStorage.getItem('official_memo_draft')
   if (draftStr) {
     memo.value = JSON.parse(draftStr)
+    
+    // Fetch all linked forms data if present
+    if (memo.value.linkedForms && memo.value.linkedForms.length > 0) {
+      for (const lf of memo.value.linkedForms) {
+        try {
+          let itemData = null;
+          if (lf.type === 'CORRECTION') {
+            itemData = await correctionStore.fetchCorrectionById(lf.id)
+            if (itemData) itemData.form_type = 'CORRECTION'
+          } else {
+            // Treat as generic service form
+            itemData = await servicesStore.fetchFormById(lf.id)
+          }
+          if (itemData) {
+            loadedForms.value.push(itemData)
+          }
+        } catch(e) {
+          console.error('Failed to load linked form', lf, e)
+        }
+      }
+    }
   } else {
     router.replace('/admin/documents/memo-builder')
   }
@@ -235,6 +297,8 @@ const closePreview = () => {
     router.back()
   }, 100)
 }
+
+
 
 onMounted(() => {
   loadMemo()
@@ -340,6 +404,31 @@ onMounted(() => {
   @page {
     size: A4 portrait;
     margin: 0;
+  }
+  
+  .print-page-break {
+    page-break-after: always;
+    break-after: page;
+  }
+  
+  /* Ensure the form page containers act perfectly like an A4 page */
+  .form-page-container {
+    width: 21cm !important;
+    min-height: 29.7cm !important;
+    background: white;
+  }
+  
+  /* Target the inner container of StatusChangePrintForm to ensure it fills the page */
+  .form-page-container > .print-preview-container {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 29.7cm !important;
+    zoom: 1 !important; /* Reset zoom because we're nesting it */
+  }
+  
+  /* Clean up the border inside print */
+  .form-page-container .outer-border {
+    border: none !important; /* Avoid double borders if we want a clean print */
   }
 }
 </style>

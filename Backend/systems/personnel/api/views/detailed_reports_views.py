@@ -431,10 +431,12 @@ class AuditMovementReportsView(BaseDetailedReportView):
         # ── نموذج 23: المطلوب تصحيح أسمائهم — من جدول SuggestedCorrection ──
         if report_id == 'report_23':
             from systems.personnel.models import SuggestedCorrection
+            # ── الاستعلام يشمل كل طلبات تصحيح الاسم بغض النظر عن field_name ──
+            # correction_type='name_correction' هو المعيار الثابت الذي يُرسله الفرونت إند دائماً
             corrections = SuggestedCorrection.objects.select_related(
                 'personnel__current_rank'
             ).filter(
-                field_name__in=['full_name', 'name_correction'],
+                correction_type='name_correction',
                 status='pending'
             ).order_by('created_at')
             # فلتر شهري: تصحيحات الأسماء المقدمة خلال الشهر
@@ -446,6 +448,29 @@ class AuditMovementReportsView(BaseDetailedReportView):
             data_list = []
             for idx, c in enumerate(corrections, start=1):
                 p = c.personnel
+                # تحديد المطلوب تصحيحه من notes إذا كان مخزناً هناك، وإلا من field_name
+                raw_notes = c.notes or ''
+                correction_target = ''
+                parsed_notes = raw_notes
+                import re
+                target_match = re.search(r'المطلوب تصحيح[هة]:\s*([\s\S]*?)(?=\s*المبررات:|$)', raw_notes)
+                reason_match = re.search(r'المبررات:\s*([\s\S]*)', raw_notes)
+                if target_match and target_match.group(1).strip():
+                    correction_target = target_match.group(1).strip()
+                    parsed_notes = reason_match.group(1).strip() if reason_match else '—'
+                else:
+                    # fallback: استخدم field_name كمطلوب تصحيحه
+                    field_label_map = {
+                        'full_name': 'الاسم الكامل',
+                        'name_correction': 'تصحيح الاسم',
+                        'first_name': 'الاسم الأول',
+                        'second_name': 'الاسم الثاني',
+                        'third_name': 'الاسم الثالث',
+                        'fourth_name': 'الاسم الرابع',
+                        'last_name': 'اللقب',
+                    }
+                    correction_target = field_label_map.get(c.field_name, c.field_name or 'تصحيح الاسم')
+
                 data_list.append({
                     'index': idx,
                     'rank': p.current_rank.name if p.current_rank else 'غير محدد',
@@ -453,8 +478,9 @@ class AuditMovementReportsView(BaseDetailedReportView):
                     'full_name': p.full_name,
                     'national_id': p.national_id,
                     'wrong_name': c.old_value or p.full_name,
-                    'correction_target': c.new_value or 'غير مدخل',
-                    'notes': c.notes or ''
+                    'correct_name': c.new_value or 'غير مدخل',
+                    'correction_target': correction_target,
+                    'notes': parsed_notes
                 })
             return Response({'data': data_list, 'total_count': len(data_list),
                              'month_filter': month_label})

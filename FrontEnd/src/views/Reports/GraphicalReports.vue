@@ -499,7 +499,7 @@ const fetchStatsAndAnalytics = async () => {
 
     // 3. Overall Ranks & Officers vs NCOs
     if (a.rank_distribution && a.rank_distribution.length) {
-      let sortedRanks = [...a.rank_distribution]
+      const sortedRanks = [...a.rank_distribution]
       sortedRanks.sort((a, b) => {
         let i = rankHierarchy.indexOf(a.name || 'بدون')
         let j = rankHierarchy.indexOf(b.name || 'بدون')
@@ -583,12 +583,12 @@ const fetchWorkforceData = async () => {
     const res = await api.get(`/personnel/reports/workforce-summary/?level=${workforceLevel.value}`)
     const data = res.data.data // Array of units
 
-    let allRanksSet = new Set<string>()
+    const allRanksSet = new Set<string>()
     data.forEach((unit: any) => {
       Object.keys(unit.ranks).forEach(rank => allRanksSet.add(rank))
     })
 
-    let sortedRanks = Array.from(allRanksSet).sort((a, b) => {
+    const sortedRanks = Array.from(allRanksSet).sort((a, b) => {
       let i = rankHierarchy.indexOf(a)
       let j = rankHierarchy.indexOf(b)
       if (i === -1) i = 99

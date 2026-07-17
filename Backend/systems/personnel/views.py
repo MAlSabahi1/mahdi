@@ -319,7 +319,14 @@ class PersonnelViewSet(PermissionRequiredMixin, BaseModelViewSet):
             export_fields.insert(idx, 'full_name')
 
         grouped_data = {}
-        if split_by in ['security_admin', 'central_department', 'branch']:
+        if split_by == 'official_monthly_roster':
+            grouped_data = {
+                'قوة عاملة': [p for p in qs if p.current_status and p.current_status.classification in ('active_full', 'active_part')],
+                'غير عاملة': [p for p in qs if p.current_status and p.current_status.classification in ('inactive_temp', 'inactive_perm')],
+                'كاملة': list(qs),
+                'غياب': [p for p in qs if p.current_status and 'غياب' in p.current_status.name]
+            }
+        elif split_by in ['security_admin', 'central_department', 'branch']:
             for person in qs:
                 group_obj = getattr(person, split_by, None)
                 group_name = group_obj.name if group_obj else 'غير محدد'

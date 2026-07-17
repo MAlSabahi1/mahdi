@@ -860,7 +860,7 @@ function updateDurationPicker(key: string, part: 'years'|'months'|'days', event:
   const m = durationState.value[key].months
   const d = durationState.value[key].days
   
-  let parts = []
+  const parts = []
   
   if (y > 0) {
     if (y === 1) parts.push('سنة')
@@ -1607,7 +1607,7 @@ async function submitBulk() {
       if (!msg && err.response?.data && typeof err.response.data === 'object') {
         try {
           const extractErrors = (obj: any): string[] => {
-            let errors: string[] = []
+            const errors: string[] = []
             for (const [key, val] of Object.entries(obj)) {
               if (typeof val === 'string') errors.push(`${key}: ${val}`)
               else if (Array.isArray(val)) errors.push(`${key}: ${val.join(', ')}`)
@@ -1661,7 +1661,7 @@ async function submitBulk() {
           const dateNow = new Date().toLocaleDateString('ar-YE', { year: 'numeric', month: '2-digit', day: '2-digit' })
           const corrTarget = (formData.value.correction_targets && formData.value.correction_targets.length > 0)
             ? formData.value.correction_targets.join('، ') : corrType
-          let draft = {
+          const draft = {
             documentType: 'PERSONNEL_MEMO', securityLevel: 'NORMAL',
             referenceNo: txNum, docDate: dateNow, correspondingDate: '',
             attachments: 'نموذج رقم (23) — كشف المطابقة', bilingual: false,
@@ -1704,7 +1704,7 @@ async function submitBulk() {
           const fType = schema.value?.name || ''
           const txNum2 = `TX-${String(lastFormId).padStart(6, '0')}`
           const dateNow2 = new Date().toLocaleDateString('ar-YE', { year: 'numeric', month: '2-digit', day: '2-digit' })
-          let draft2 = {
+          const draft2 = {
             documentType: 'PERSONNEL_MEMO', securityLevel: 'NORMAL',
             referenceNo: txNum2, docDate: dateNow2, correspondingDate: '',
             attachments: 'نموذج إثبات حالة', bilingual: false,

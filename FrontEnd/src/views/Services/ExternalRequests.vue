@@ -159,6 +159,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import DataTable from '@/components/tables/DataTable.vue'
@@ -176,6 +177,7 @@ const columns = [
   { key: 'date', label: 'تاريخ التقديم' },
 ]
 
+const router = useRouter()
 const servicesStore = useServicesStore()
 const allRequests = ref<any[]>([])
 const activeTab = ref('needs_print')
@@ -308,66 +310,8 @@ async function printRequest(req: any) {
       try { await api.post(`/personnel/corrections/${req.rawId}/mark_printed/`) } catch (_) {}
       req.is_printed = true
 
-      // بناء draft مذكرة التصحيح
-      const correctionType = req.form_type_display || 'طلب تصحيح'
-      const txNumber = `CORR-${String(req.rawId).padStart(5, '0')}`
-      const dateStr = new Date().toLocaleDateString('ar-YE', { year: 'numeric', month: '2-digit', day: '2-digit' })
-      const corrTarget = req.correction_targets?.join('، ') || correctionType
-      let memoDraft = {
-        documentType: 'PERSONNEL_MEMO',
-        securityLevel: 'NORMAL',
-        referenceNo: txNumber,
-        docDate: dateStr,
-        correspondingDate: '',
-        attachments: 'نموذج رقم (23) — كشف المطابقة',
-        bilingual: false,
-        issuerLine1: '', issuerLine2: '', issuerLine3: '',
-        addressees: [{ prefix: 'الأخ /', name: 'المدير العام للمحافظة', suffix: 'المحترم' }],
-        involvedPersonnel: [{
-          militaryId: req.personnel_military_number || '',
-          rank: '', name: req.personnel_name || '',
-          nationalId: '',
-          correctName: req.new_value || '',
-          wrongName: req.old_value || '',
-          correctionTarget: corrTarget,
-          notes: req.reason || req.notes || '',
-        }],
-        subject: `طلب تصحيح بيانات — ${req.personnel_name || ''}`,
-        body: `<p>نحيط سيادتكم علماً بأنه ورد إلينا طلب تصحيح بيانات للمنتسب/المنتسبين الموضحين أعلاه.</p>
-<p>نرفق لكم كشفاً بأسماء المطلوب تصحيح أسمائهم <strong>(كشف المطابقة — نموذج 23)</strong>، مع مرفقات كل فرد، وذلك لاتخاذ الإجراءات اللازمة.</p>`,
-        conclusion: '<p>والله الموفق ،،،</p>',
-        signatures: [
-          { title: 'رئيس قسم الخدمات', rank: '', name: '', showSeal: false },
-          { title: 'مدير إدارة القوى البشرية', rank: '', name: '', showSeal: true },
-        ],
-        signatureSettings: { showLabels: true, showFrame: true },
-        visibleColumns: {
-          militaryId: true, rank: true, nationalId: false, status: false,
-          workplace: false, serviceLocation: false, jobTitle: false,
-          position: false, qualification: false, joinDate: false,
-          commencementDate: false, phone: false, clarification: false, notes: true,
-          correctName: true, wrongName: true, correctionTarget: true,
-        },
-        typography: {
-          addressee: { family: 'Cairo', size: 1.1, weight: 'font-bold', underline: true },
-          greeting: { family: 'Cairo', size: 1.0, weight: 'font-bold', underline: true },
-          subject: { family: 'Cairo', size: 1.15, weight: 'font-black', underline: true },
-          body: { family: 'Cairo', size: 1.0, weight: 'font-normal', underline: false },
-          conclusionSeparator: { family: 'Cairo', size: 1.1, weight: 'font-bold', underline: true },
-          conclusionBody: { family: 'Cairo', size: 1.0, weight: 'font-normal', underline: false },
-          signatures: { family: 'Cairo', size: 0.95, weight: 'font-bold', underline: false },
-        },
-      }
-                // Try to load any generic template or just fallback to default
-          const tplStr = localStorage.getItem('memo_template_WORK_COMMENCEMENT') || localStorage.getItem('memo_template_ATTENTION_NOTICE');
-          if (tplStr && (req?.form_type === 'work_commencement' || req?.form_type === 'attention_notice')) {
-            try {
-              const tpl = JSON.parse(tplStr);
-              memoDraft = { ...memoDraft, ...tpl, referenceNo: memoDraft.referenceNo, docDate: memoDraft.docDate, involvedPersonnel: [] };
-            } catch(e) {}
-          }
-          localStorage.setItem('official_memo_draft', JSON.stringify(memoDraft))
-      window.open('/admin/documents/memo-preview', '_blank')
+      const routeUrl = router.resolve(`/services/corrections/${req.rawId}/print`).href
+      window.open(routeUrl, '_blank')
     } else {
       try { await servicesStore.markFormPrinted(req.id) } catch (_) {}
       req.is_printed = true
