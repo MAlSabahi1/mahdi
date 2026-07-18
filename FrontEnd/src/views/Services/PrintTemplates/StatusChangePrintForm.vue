@@ -37,52 +37,52 @@
       <div class="border-[1.5px] border-gray-900 rounded-lg p-2 pt-2 pb-0 flex justify-between items-start text-sm font-bold text-gray-900 relative bg-white mx-1 mt-1">
         
         <!-- Right: Logo/Republic Info (Dynamic) -->
-        <div class="text-right w-1/3 space-y-1 pr-1 leading-tight font-amiri">
-          <img src="/images/yemen_calligraphy_cropped.png" alt="الجمهورية اليمنية" class="h-7 w-auto inline-block mb-1" />
-          <p class="text-[14px]">وزارة الداخلية</p>
+        <div class="text-right w-1/3 space-y-1 pr-2 leading-tight" style="font-family: 'Cairo', sans-serif !important;">
+          <img src="/images/yemen_calligraphy_cropped.png" alt="الجمهورية اليمنية" class="h-8 w-auto inline-block mb-1 print:h-8" />
+          <p class="text-[15px] font-bold">وزارة الداخلية</p>
           
           <template v-if="isCentralAdmin">
-            <p class="text-[13.5px]">وكيل قطاع الموارد البشرية</p>
-            <p class="text-[13.5px]">الإدارة العامة للقوى البشرية</p>
-            <p class="text-[13.5px]">لجنة بناء الامدادات</p>
+            <p class="text-[15px] font-bold">وكيل قطاع الموارد البشرية</p>
+            <p class="text-[15px] font-bold">الإدارة العامة للقوى البشرية</p>
+            <p class="text-[15px] font-bold">لجنة بناء الامدادات</p>
           </template>
           
           <template v-else>
-            <p class="text-[13.5px]">شرطة م / {{ governorateName }}</p>
-            <p class="text-[13.5px]">إدارة القوى البشرية</p>
+            <p class="text-[15px] font-bold">شرطة م / {{ governorateName }}</p>
+            <p class="text-[15px] font-bold">إدارة القوى البشرية</p>
           </template>
         </div>
         
         <!-- Center: Emblem Image & Bismillah -->
         <div class="text-center w-1/3 flex flex-col justify-center items-center">
-          <img src="/images/bismillah_cropped.png" alt="بسم الله الرحمن الرحيم" class="h-7 w-auto max-w-full object-contain mb-1" />
-          <img src="/images/logo/yemen_logo_clean.png" alt="شعار الجمهورية" class="h-auto max-h-[5.5rem] w-auto max-w-full object-contain" />
+          <img src="/images/bismillah_cropped.png" alt="بسم الله الرحمن الرحيم" class="h-7 w-auto max-w-full object-contain mb-1 scale-[1.15] relative z-20" />
+          <img src="/images/logo/yemen_logo_clean.png" alt="شعار الجمهورية" class="h-auto max-h-[5.5rem] w-auto max-w-full object-contain scale-[1.35] origin-top -translate-y-2 relative z-10" />
         </div>
         
         <!-- Left: Document Info -->
-        <div class="w-1/3 flex justify-end pl-1 pt-1 font-amiri">
-          <div class="space-y-1.5 text-[14px] leading-tight font-bold">
+        <div class="w-1/3 flex justify-end pl-2 pt-1" style="font-family: 'Cairo', sans-serif !important;">
+          <div class="space-y-1 text-[15px] leading-tight font-bold">
             <div class="flex items-center">
-              <span class="w-[5rem] text-right">الـرقـــــــــم/</span>
-              <span class="tracking-widest">.......................</span>
+              <span class="w-[5.5rem] text-right">الـرقـــــــــم/</span>
+              <span class="tracking-widest">........................</span>
             </div>
             
             <div class="flex items-center">
-              <span class="w-[5rem] text-right">التاريــــــــخ/</span>
-              <div class="flex justify-between items-center w-full font-sans font-bold text-[13px] tracking-wider">
+              <span class="w-[5.5rem] text-right">التاريــــــــخ/</span>
+              <div class="flex justify-between items-center w-full font-sans font-bold text-[14px] tracking-wider">
                 <span>{{ new Date().toLocaleDateString('en-GB') }}</span>
                 <span class="font-serif font-normal mr-1">م</span>
               </div>
             </div>
             
             <div class="flex items-center">
-              <span class="w-[5rem] text-right">الــمـوافـــــق/</span>
-              <span class="tracking-widest">.......................</span>
+              <span class="w-[5.5rem] text-right">الــمـوافـــــق/</span>
+              <span class="tracking-widest">........................</span>
             </div>
             
             <div class="flex items-center">
-              <span class="w-[5rem] text-right">الـمـرفـقــــات/</span>
-              <span class="tracking-widest">.......................</span>
+              <span class="w-[5.5rem] text-right">الـمـرفـقــــات/</span>
+              <span class="tracking-widest">........................</span>
             </div>
           </div>
         </div>
@@ -247,42 +247,42 @@
 
         <!-- Signatures & Approvals (Report Format) -->
         <div class="mt-auto pt-1 pb-1">
-          <div class="border-[1.5px] border-gray-900 rounded-lg p-1.5 pb-2 grid grid-cols-3 gap-1 text-[11px] font-bold text-gray-900 text-center relative mx-1">
+          <div class="border-[1.5px] border-gray-900 rounded-lg p-1.5 pb-2 grid grid-cols-3 gap-1 text-[12px] font-bold text-gray-900 text-center relative mx-1" style="font-family: 'Cairo', sans-serif !important;">
             <!-- Frame Title -->
-            <div class="absolute -top-2.5 right-6 bg-white px-2 font-bold text-gray-900 text-[11px]">التوقيعات والاعتمادات</div>
+            <div class="absolute -top-2.5 right-6 bg-white px-2 font-bold text-gray-900 text-[12px]">التوقيعات والاعتمادات</div>
             
             <!-- Right: Preparer -->
             <div class="space-y-1.5 flex flex-col items-start text-right pr-2">
-              <p class="mb-0.5 font-bold text-[11.5px]">إعداد (قسم الخدمات)</p>
+              <p class="mb-0.5 font-bold text-[12px]">إعداد (قسم الخدمات)</p>
               <div class="space-y-0.5 w-full max-w-[170px]">
-                <p class="flex items-center"><span class="w-10 text-right text-[11.5px]">الاسم:</span> <span class="flex-1 text-right">............................</span></p>
-                <p class="flex items-center"><span class="w-10 text-right text-[11.5px]">الرتبة:</span> <span class="flex-1 text-right">............................</span></p>
-                <p class="flex items-center"><span class="w-10 text-right text-[11.5px]">التوقيع:</span> <span class="flex-1 text-right">............................</span></p>
+                <p class="flex items-center"><span class="w-10 text-right text-[12px]">الاسم:</span> <span class="flex-1 text-right">............................</span></p>
+                <p class="flex items-center"><span class="w-10 text-right text-[12px]">الرتبة:</span> <span class="flex-1 text-right">............................</span></p>
+                <p class="flex items-center"><span class="w-10 text-right text-[12px]">التوقيع:</span> <span class="flex-1 text-right">............................</span></p>
               </div>
             </div>
             
             <!-- Center: Reviewer -->
             <div class="space-y-1.5 flex flex-col items-center">
-              <p class="mb-0.5 font-bold text-[11.5px]">مراجعة (مدير إدارة القوى البشرية)</p>
+              <p class="mb-0.5 font-bold text-[12px]">مراجعة (مدير إدارة القوى البشرية)</p>
               <div class="space-y-0.5 w-full max-w-[170px]">
-                <p class="flex items-center"><span class="w-10 text-right text-[11.5px]">الاسم:</span> <span class="flex-1 text-right">............................</span></p>
-                <p class="flex items-center"><span class="w-10 text-right text-[11.5px]">الرتبة:</span> <span class="flex-1 text-right">............................</span></p>
-                <p class="flex items-center"><span class="w-10 text-right text-[11.5px]">التوقيع:</span> <span class="flex-1 text-right">............................</span></p>
+                <p class="flex items-center"><span class="w-10 text-right text-[12px]">الاسم:</span> <span class="flex-1 text-right">............................</span></p>
+                <p class="flex items-center"><span class="w-10 text-right text-[12px]">الرتبة:</span> <span class="flex-1 text-right">............................</span></p>
+                <p class="flex items-center"><span class="w-10 text-right text-[12px]">التوقيع:</span> <span class="flex-1 text-right">............................</span></p>
               </div>
             </div>
             
             <!-- Left: Approver -->
             <div class="space-y-1.5 flex flex-col items-end text-right pl-2">
-              <p class="mb-0.5 font-bold text-[11.5px]">اعتماد (مدير عام شرطة المحافظة/الوحدة)</p>
+              <p class="mb-0.5 font-bold text-[12px]">اعتماد (مدير عام شرطة المحافظة/الوحدة)</p>
               <div class="space-y-0.5 w-full max-w-[170px]">
-                <p class="flex items-center"><span class="w-10 text-right text-[11.5px]">الاسم:</span> <span class="flex-1 text-right">............................</span></p>
-                <p class="flex items-center"><span class="w-10 text-right text-[11.5px]">الرتبة:</span> <span class="flex-1 text-right">............................</span></p>
-                <div class="flex items-center relative"><span class="w-10 text-right z-10 text-[11.5px] mt-0.5">التوقيع:</span> 
+                <p class="flex items-center"><span class="w-10 text-right text-[12px]">الاسم:</span> <span class="flex-1 text-right">............................</span></p>
+                <p class="flex items-center"><span class="w-10 text-right text-[12px]">الرتبة:</span> <span class="flex-1 text-right">............................</span></p>
+                <div class="flex items-center relative"><span class="w-10 text-right z-10 text-[12px] mt-0.5">التوقيع:</span> 
                   <div class="flex-1 text-right relative z-10">
                     <span class="leading-none">............................</span>
                     <!-- Official Seal Area -->
                     <div class="absolute bottom-[-5px] right-2 w-10 h-10 border border-dashed border-gray-400 rounded-full flex items-center justify-center opacity-60 z-0 -rotate-12 pointer-events-none">
-                      <span class="text-gray-400 text-[6.5px] font-black text-center leading-tight">الختم<br>الرسمي</span>
+                      <span class="text-gray-400 text-[6.5px] font-black text-center leading-tight" style="font-family: 'Amiri', serif !important;">الختم<br>الرسمي</span>
                     </div>
                   </div>
                 </div>

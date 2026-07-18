@@ -76,6 +76,7 @@
         <DataTable
           :columns="columns"
           :data="snapshots"
+          row-key="id"
           :search-placeholder="'ابحث عن لقطة بالاسم أو التاريخ...'"
         >
           <template #cell-status="{ row }">

@@ -7,6 +7,7 @@
       :class="[isExpanded || isHovered ? 'lg:ms-[290px]' : 'lg:ms-[90px]']"
     >
       <app-header class="print:hidden" />
+      <app-breadcrumbs />
       <div class="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6 space-y-5 print:p-0 print:m-0 print:space-y-0 print:max-w-none print:w-full">
         <!-- Prototype Notice Banner for Users & Permissions System -->
         <div 
@@ -38,6 +39,7 @@
 <script setup>
 import AppSidebar from './AppSidebar.vue'
 import AppHeader from './AppHeader.vue'
+import AppBreadcrumbs from './AppBreadcrumbs.vue'
 import { useSidebar } from '@/composables/useSidebar'
 import Backdrop from './Backdrop.vue'
 import { useSystemStore } from '@/stores/system'

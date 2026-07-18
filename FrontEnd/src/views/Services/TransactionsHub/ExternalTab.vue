@@ -33,9 +33,27 @@
       search-placeholder="بحث بالاسم أو رقم الطلب..."
       empty-title="لا توجد طلبات خارجية"
       empty-description="لا توجد طلبات خارجية بهذه المعايير."
+      selectable
+      v-model:selectedRowKeys="selectedIds"
       @search="searchText = $event"
       @refresh="$emit('refresh')"
     >
+      <template #toolbar-actions>
+        <div v-if="selectedIds.length > 0" class="flex gap-2">
+          <!-- Bulk Print Corrections -->
+          <button @click="handleBulkPrint"
+            class="bg-brand-600 hover:bg-brand-700 text-white text-[11px] font-bold px-4 py-2 rounded-lg cursor-pointer shadow-sm flex items-center gap-1.5 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            خيارات الطباعة للطلبات المحددة ({{ selectedIds.length }})
+          </button>
+          <!-- Bulk Register Approval -->
+          <button @click="handleBulkRegisterApproval"
+            class="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold px-4 py-2 rounded-lg cursor-pointer shadow-sm flex items-center gap-1.5 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+            رفع الموافقة للطلبات المحددة ({{ selectedIds.length }})
+          </button>
+        </div>
+      </template>
       <template #cell-id="{ row }">
         <RouterLink :to="row.isCorrection ? '#' : `/services/forms/${row.id}`" class="text-brand-600 hover:underline font-mono font-bold">
           #{{ String(row.isCorrection ? row.rawId : row.id).padStart(5, '0') }}
@@ -139,15 +157,20 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import Swal from 'sweetalert2'
 import { useAuthStore } from '@/stores/auth'
 import DataTable from '@/components/tables/DataTable.vue'
+import api from '@/lib/api'
+import { useRouter } from 'vue-router'
 
 const props = defineProps<{ rows: any[]; loading: boolean }>()
-defineEmits<{ (e: 'print', req: any): void; (e: 'register-approval', req: any): void; (e: 'reject', req: any): void; (e: 'refresh'): void }>()
+const emit = defineEmits<{ (e: 'print', req: any): void; (e: 'register-approval', req: any): void; (e: 'bulk-register-approval', req: any[]): void; (e: 'reject', req: any): void; (e: 'refresh'): void }>()
 
+const router = useRouter()
 const authStore = useAuthStore()
 const activeStage = ref('all')
 const searchText = ref('')
+const selectedIds = ref<(string | number)[]>([])
 
 const stageLabels: Record<string, string> = {
   all: 'الكل', in_progress: 'معلق بالوزارة', approved: 'معتمد (تمت الموافقة)',
@@ -219,5 +242,37 @@ function stageDot(s: string) {
     in_progress: 'bg-amber-500', pending: 'bg-blue-500', approved: 'bg-emerald-500', rejected: 'bg-red-500',
   }
   return m[s] || 'bg-gray-400'
+}
+
+// === Bulk Actions ===
+
+function handleBulkPrint() {
+  if (!selectedIds.value.length) return
+  
+  const selectedRows = props.rows.filter(r => selectedIds.value.includes(r.id) && r.isCorrection)
+  if (!selectedRows.length) return
+  
+  const rawIds = selectedRows.map(r => r.rawId).join(',')
+  router.push(`/services/corrections/${rawIds}/print`)
+}
+
+function handleBulkRegisterApproval() {
+  if (!selectedIds.value.length) return
+  
+  const selectedRows = props.rows.filter(r => selectedIds.value.includes(r.id))
+  if (!selectedRows.length) return
+  
+  // التحقق من أن جميع الطلبات جاهزة للاعتماد
+  const unreadyRows = selectedRows.filter(r => !canRegisterApproval(r))
+  if (unreadyRows.length > 0) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'طلبات غير جاهزة',
+      text: `هناك ${unreadyRows.length} طلبات محددة غير جاهزة للاعتماد (إما أنها غير مطبوعة أو تم البت فيها مسبقاً). يرجى تحديد الطلبات الجاهزة فقط.`
+    })
+    return
+  }
+
+  emit('bulk-register-approval', selectedRows)
 }
 </script>

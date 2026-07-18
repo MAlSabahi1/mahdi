@@ -670,6 +670,7 @@ class SuggestedCorrection(TimeStampedModel):
         ('name_correction', _('تصحيح الاسم')),
         ('national_id_correction', _('تصحيح الرقم الوطني')),
         ('military_number_correction', _('تصحيح الرقم العسكري')),
+        ('military_number_swap', _('التبديل المترابط للأرقام العسكرية')),
         ('data_correction', _('تصحيح بيانات أخرى')),
     ]
 
@@ -703,7 +704,14 @@ class SuggestedCorrection(TimeStampedModel):
             'description': _('قرار وزاري رسمي'),
             'note': 'أعلى مستوى حساسية — مرفق إلزامي عند الطلب وعند الموافقة',
             'approval_required': True,
-            'ministry_required': True,
+            'ministry_required': False,
+        },
+        'military_number_swap': {
+            'required': False,
+            'description': _('قرار وزاري رسمي بتبديل الأرقام'),
+            'note': 'يُرفع المرفق الوزاري عبر مركز المعاملات الخارجية بعد الطباعة والموافقة',
+            'approval_required': True,
+            'ministry_required': False,
         },
     }
     

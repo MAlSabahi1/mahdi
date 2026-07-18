@@ -815,24 +815,71 @@ class SuggestedCorrectionViewSet(BaseModelViewSet):
         if correction.status != 'pending':
             return Response({'success': False, 'error': 'الطلب ليس في حالة الانتظار'}, status=status.HTTP_400_BAD_REQUEST)
         
+        # ── فرض طباعة الاستمارة قبل الاعتماد ──
+        if getattr(correction, 'is_printed', None) is False:
+             return Response({'success': False, 'error': 'يجب طباعة الاستمارة أولاً وتوقيعها ورقياً قبل الاعتماد النهائي.'}, status=status.HTTP_400_BAD_REQUEST)
+        
         personnel = correction.personnel
         if personnel:
             from systems.personnel.services import PersonnelService
             from systems.services.attachment_service import AttachmentService
             try:
-                # جمع مرفقات السياق المرتبطة بالطلب
+                # استخراج معرف المستند من الطلب
+                approval_doc_id = request.data.get('approval_document_id')
+                signed_doc_id = request.data.get('signed_document_id')
+                
+                if not approval_doc_id and not signed_doc_id:
+                     return Response({'success': False, 'error': 'يجب إرفاق الاستمارة الموقعة (ورقياً) لاعتماد الطلب نهائياً.'}, status=status.HTTP_400_BAD_REQUEST)
+                
+                doc_ids = []
+                primary_doc = None
+                
+                if approval_doc_id:
+                    from infra.storage.models import Document
+                    doc = Document.objects.filter(pk=approval_doc_id).first()
+                    if doc:
+                        doc_ids.append(approval_doc_id)
+                        primary_doc = doc
+                        
+                if signed_doc_id:
+                    from infra.storage.models import Document
+                    doc = Document.objects.filter(pk=signed_doc_id).first()
+                    if doc:
+                        doc_ids.append(signed_doc_id)
+                        primary_doc = primary_doc or doc
+                        
+                # إضافة المرفقات المؤقتة إن وجدت
                 linked_docs = AttachmentService.get_by_context(
                     'SuggestedCorrection', correction.pk, status='temp'
                 )
-                doc_ids = list(linked_docs.values_list('id', flat=True))
+                temp_doc_ids = list(linked_docs.values_list('id', flat=True))
+                all_doc_ids = doc_ids + [str(d) for d in temp_doc_ids]
+                
+                # ── ربط المرفقات رسمياً بملف الفرد للتوثيق ──
+                if all_doc_ids:
+                    context_type_map = {
+                        'full_name': 'NameCorrection',
+                        'national_id': 'NationalIdUpdate',
+                        'military_number': 'MilitaryNumberUpdate',
+                        'rank': 'RankPromotion',
+                        'current_rank_id': 'RankPromotion',
+                    }
+                    c_type = context_type_map.get(correction.field_name, 'SuggestedCorrection')
+                    AttachmentService.link_to_context(
+                        document_ids=all_doc_ids,
+                        context_type=c_type,
+                        context_id=personnel.military_number,
+                        related_field=correction.field_name,
+                        personnel=personnel,
+                    )
                 
                 if correction.field_name == 'full_name':
                     # ── تصحيح الاسم عبر الخدمة المركزية ──
                     PersonnelService.correct_name(
                         personnel,
                         correction.new_value,
-                        document=correction.supporting_document,
-                        document_ids=doc_ids if doc_ids else None,
+                        document=primary_doc or correction.supporting_document,
+                        document_ids=all_doc_ids if all_doc_ids else None,
                         user=request.user,
                     )
                 elif correction.field_name == 'national_id':
@@ -863,13 +910,41 @@ class SuggestedCorrectionViewSet(BaseModelViewSet):
         correction.status = 'approved'
         correction.reviewed_by = request.user
         correction.reviewed_at = timezone.now()
+        
+        if primary_doc:
+            correction.approval_document = primary_doc
+            
         correction.save()
+        
+        # ربط المستند بسياق الطلب كوثيقة اعتماد
+        if doc_ids:
+            AttachmentService.link_to_context(
+                document_ids=doc_ids,
+                context_type='SuggestedCorrection',
+                context_id=correction.pk,
+                related_field='approval_document',
+                personnel=personnel,
+            )
+            AttachmentService.commit_documents(doc_ids)
         
         return Response({
             'success': True,
             'message': 'تم قبول طلب التصحيح وتحديث السجلات بنجاح',
             'approved_by': request.user.username,
             'requested_by': correction.requested_by.username if correction.requested_by else None,
+        })
+
+    @action(detail=True, methods=['post'], url_path='mark_printed')
+    def mark_printed(self, request, pk=None):
+        """تسجيل طباعة النموذج رقم 23"""
+        correction = self.get_object()
+        # نستخدم QuerySet.update() مباشرةً لتجنب تشغيل full_clean() وقواعد التحقق المرتبطة بالمرفقات
+        SuggestedCorrection.objects.filter(pk=correction.pk).update(is_printed=True)
+        return Response({
+            'success': True,
+            'message': 'تم تسجيل طباعة النموذج بنجاح',
+            'id': correction.id,
+            'is_printed': True
         })
 
     @action(detail=False, methods=['post'], url_path='approve_batch')

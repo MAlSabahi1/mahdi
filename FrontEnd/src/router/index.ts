@@ -183,7 +183,7 @@ const router = createRouter({
     {
       path: '/users/settings',
       name: 'security-settings',
-      component: () => import('../views/Errors/FourZeroFour.vue'),
+      component: () => import('@/views/UserManagement/AccountGovernanceDashboard.vue'),
       meta: {
         title: 'الإعدادات الأمنية للنظام',
         requiresAuth: true,
@@ -461,38 +461,38 @@ const router = createRouter({
     {
       path: "/reports/secretariat/correspondences",
       name: "SecretariatCorrespondencesReport",
-      component: () => import("../views/Errors/FourZeroFour.vue"),
+      component: () => import("@/views/Secretariat/CorrespondenceList.vue"),
       meta: { title: "تقرير المراسلات الواردة والصادرة", requiresAuth: true }
     },
     {
       path: "/reports/secretariat/tasks",
       name: "SecretariatTasksReport",
-      component: () => import("../views/Errors/FourZeroFour.vue"),
+      component: () => import("@/views/Secretariat/TasksBoard.vue"),
       meta: { title: "تقرير إنجاز المهام", requiresAuth: true }
     },
     {
       path: "/reports/secretariat/meetings",
       name: "SecretariatMeetingsReport",
-      component: () => import("../views/Errors/FourZeroFour.vue"),
+      component: () => import("@/views/Secretariat/MeetingMinutes.vue"),
       meta: { title: "تقرير الاجتماعات", requiresAuth: true }
     },
     // Placeholder routes for Administration Reports
     {
       path: "/reports/admin/stats",
       name: "AdminStatsReport",
-      component: () => import("../views/Errors/FourZeroFour.vue"),
+      component: () => import("@/views/SystemAdmin/Dashboard/AnalyticsDashboard.vue"),
       meta: { title: "الإحصائيات العامة للنظام", requiresAuth: true }
     },
     {
       path: "/reports/admin/users-activity",
       name: "AdminUsersActivityReport",
-      component: () => import("../views/Errors/FourZeroFour.vue"),
+      component: () => import("@/views/Audit/AuditLogs.vue"),
       meta: { title: "تقرير نشاط المستخدمين", requiresAuth: true }
     },
     {
       path: "/reports/admin/audit",
       name: "AdminAuditReport",
-      component: () => import("../views/Errors/FourZeroFour.vue"),
+      component: () => import("@/views/Audit/AuditLogs.vue"),
       meta: { title: "سجل التدقيق والمراجعة", requiresAuth: true }
     },
     {
@@ -913,6 +913,7 @@ const router = createRouter({
     },
     // ── Redirects من المسارات القديمة ──
     { path: '/services/inbox', redirect: '/services/transactions?tab=all' },
+    { path: '/services/hub', redirect: '/services/transactions?tab=all' },
     { path: '/services/requests', redirect: '/services/transactions?tab=all' },
     { path: '/services/external-requests', redirect: '/services/transactions?tab=external' },
     { path: '/services/internal-requests', redirect: '/services/transactions?tab=internal' },

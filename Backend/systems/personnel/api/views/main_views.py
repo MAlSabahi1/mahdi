@@ -708,13 +708,13 @@ class SuggestedCorrectionViewSet(BaseModelViewSet):
     def mark_printed(self, request, pk=None):
         """تسجيل طباعة النموذج رقم 23"""
         correction = self.get_object()
-        correction.is_printed = True
-        correction.save(update_fields=['is_printed'])
+        # Use update() to bypass full_clean() which might fail on legacy or incomplete data
+        SuggestedCorrection.objects.filter(pk=correction.pk).update(is_printed=True)
         return Response({
             'success': True,
             'message': 'تم تسجيل طباعة النموذج بنجاح',
             'id': correction.id,
-            'is_printed': correction.is_printed
+            'is_printed': True
         })
 
     @action(detail=False, methods=['post'], url_path='approve_batch')

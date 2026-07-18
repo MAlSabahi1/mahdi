@@ -113,6 +113,9 @@ export const useCorrectionStore = defineStore('correction', () => {
       } else if (data.field === 'military_number_correction') {
         correctionType = 'military_number_correction'
         fieldName = 'military_number'
+      } else if (data.field === 'military_number_swap') {
+        correctionType = 'military_number_swap'
+        fieldName = 'military_number_swap'
       }
 
       const payload = {

@@ -309,11 +309,23 @@ class PersonnelService:
         personnel.full_name = new_name
         personnel.save(update_fields=['full_name', 'updated_at'])
 
-        # تثبيت المرفقات
-        if document_ids:
-            AttachmentService.commit_documents(document_ids)
-        elif document:
-            AttachmentService.commit_documents([document.id])
+        # تثبيت وربط المرفقات بملف الفرد
+        docs_to_commit = document_ids or ([document.id] if document else [])
+        if docs_to_commit:
+            AttachmentService.link_to_context(
+                document_ids=docs_to_commit,
+                context_type='NameCorrection',
+                context_id=personnel.military_number,
+                related_field='full_name',
+                personnel=personnel,
+            )
+            AttachmentService.commit_documents(docs_to_commit)
+
+        # تحديد المرفق للتسجيل في السجل
+        doc_instance = document
+        if not doc_instance and docs_to_commit:
+            from infra.storage.models import Document
+            doc_instance = Document.objects.filter(id=docs_to_commit[0]).first()
 
         # سجل الحدث
         ServiceEventLog.objects.update_or_create(
@@ -325,7 +337,7 @@ class PersonnelService:
                 'security_admin': personnel.security_admin,
                 'old_value': old_name,
                 'new_value': new_name,
-                'order_document': document,
+                'order_document': doc_instance,
                 'created_by': user,
             }
         )

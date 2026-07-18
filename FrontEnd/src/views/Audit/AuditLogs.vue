@@ -157,6 +157,7 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import { useAuditStore } from '@/stores/audit'
@@ -165,7 +166,8 @@ import api from '@/lib/api'
 import Swal from 'sweetalert2'
 
 const auditStore = useAuditStore()
-const activeTab = ref('system')
+const route = useRoute()
+const activeTab = ref(route?.path?.includes('users-activity') ? 'logins' : 'system')
 const showDetails = ref(false)
 const selectedLog = ref(null)
 

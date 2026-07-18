@@ -49,6 +49,7 @@
           <DataTable
             :columns="currentColumns"
             :data="currentData"
+            row-key="id"
             :search-placeholder="'بحث في ' + currentTab.name + '...'"
           >
             <!-- Custom Cell for Military Ranks Icon/Badge -->

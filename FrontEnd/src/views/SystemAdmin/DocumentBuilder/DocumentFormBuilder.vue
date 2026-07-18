@@ -100,35 +100,35 @@
             <li class="flex flex-col gap-1.5">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-gray-700 dark:text-gray-300">الاسم الرباعي</span>
-                <span @click="copyField('{{الاسم_الرباعي}}')" class="cursor-pointer px-2 py-0.5 text-[11px] font-mono bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 transition-colors" title="اضغط للنسخ">{{الاسم_الرباعي}}</span>
+                <span @click="copyField('الاسم_الرباعي')" class="cursor-pointer px-2 py-0.5 text-[11px] font-mono bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 transition-colors" title="اضغط للنسخ" v-text="'{{الاسم_الرباعي}}'"></span>
               </div>
               <span class="text-[10px] text-gray-400 dark:text-gray-500">مثال: أحمد محمد علي صالح</span>
             </li>
             <li class="flex flex-col gap-1.5">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-gray-700 dark:text-gray-300">الرقم العسكري</span>
-                <span @click="copyField('{{الرقم_العسكري}}')" class="cursor-pointer px-2 py-0.5 text-[11px] font-mono bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 transition-colors" title="اضغط للنسخ">{{الرقم_العسكري}}</span>
+                <span @click="copyField('الرقم_العسكري')" class="cursor-pointer px-2 py-0.5 text-[11px] font-mono bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 transition-colors" title="اضغط للنسخ" v-text="'{{الرقم_العسكري}}'"></span>
               </div>
               <span class="text-[10px] text-gray-400 dark:text-gray-500">مثال: 987654321</span>
             </li>
             <li class="flex flex-col gap-1.5">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-gray-700 dark:text-gray-300">الرتبة العسكرية</span>
-                <span @click="copyField('{{الرتبة}}')" class="cursor-pointer px-2 py-0.5 text-[11px] font-mono bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 transition-colors" title="اضغط للنسخ">{{الرتبة}}</span>
+                <span @click="copyField('الرتبة')" class="cursor-pointer px-2 py-0.5 text-[11px] font-mono bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 transition-colors" title="اضغط للنسخ" v-text="'{{الرتبة}}'"></span>
               </div>
               <span class="text-[10px] text-gray-400 dark:text-gray-500">مثال: ملازم أول، جندي، إلخ</span>
             </li>
             <li class="flex flex-col gap-1.5">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-gray-700 dark:text-gray-300">جهة العمل / الوحدة</span>
-                <span @click="copyField('{{الوحدة}}')" class="cursor-pointer px-2 py-0.5 text-[11px] font-mono bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 transition-colors" title="اضغط للنسخ">{{الوحدة}}</span>
+                <span @click="copyField('الوحدة')" class="cursor-pointer px-2 py-0.5 text-[11px] font-mono bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 transition-colors" title="اضغط للنسخ" v-text="'{{الوحدة}}'"></span>
               </div>
               <span class="text-[10px] text-gray-400 dark:text-gray-500">مثال: الإدارة العامة للشؤون الإدارية</span>
             </li>
             <li class="flex flex-col gap-1.5">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-gray-700 dark:text-gray-300">تاريخ اليوم</span>
-                <span @click="copyField('{{تاريخ_اليوم}}')" class="cursor-pointer px-2 py-0.5 text-[11px] font-mono bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 transition-colors" title="اضغط للنسخ">{{تاريخ_اليوم}}</span>
+                <span @click="copyField('تاريخ_اليوم')" class="cursor-pointer px-2 py-0.5 text-[11px] font-mono bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 transition-colors" title="اضغط للنسخ" v-text="'{{تاريخ_اليوم}}'"></span>
               </div>
               <span class="text-[10px] text-gray-400 dark:text-gray-500">تاريخ طباعة الاستمارة الفعلي</span>
             </li>
@@ -208,7 +208,8 @@ const form = ref({
   orientation: 'portrait'
 })
 
-const copyField = (text: string) => {
+const copyField = (fieldName: string) => {
+  const text = `{{${fieldName}}}`
   navigator.clipboard.writeText(text)
   Swal.fire({
     title: 'تم النسخ',

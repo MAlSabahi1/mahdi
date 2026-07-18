@@ -22,8 +22,8 @@
       
       <!-- Center: Emblem Image & Bismillah -->
       <div class="text-center w-1/3 flex flex-col justify-center items-center">
-        <img src="/images/bismillah_cropped.png" alt="بسم الله الرحمن الرحيم" class="h-7 w-auto max-w-full object-contain print:h-7 mb-1" />
-        <img src="/images/logo/yemen_logo_clean.png" alt="شعار الجمهورية" class="h-auto max-h-[5.5rem] w-auto max-w-full object-contain print:max-h-[5.5rem]" />
+        <img src="/images/bismillah_cropped.png" alt="بسم الله الرحمن الرحيم" class="h-7 w-auto max-w-full object-contain print:h-7 mb-1 scale-[1.15] relative z-20" />
+        <img src="/images/logo/yemen_logo_clean.png" alt="شعار الجمهورية" class="h-auto max-h-[5.5rem] w-auto max-w-full object-contain print:max-h-[5.5rem] scale-[1.35] origin-top -translate-y-2 relative z-10" />
       </div>
       
       <!-- Left: Document Info -->

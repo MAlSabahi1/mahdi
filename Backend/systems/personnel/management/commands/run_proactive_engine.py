@@ -8,7 +8,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 
 from core.models.notification import NotificationRecord
-from systems.personnel.services.proactive_engine import run_engine_scan
+from systems.personnel.engines.proactive_engine import run_engine_scan
 
 User = get_user_model()
 

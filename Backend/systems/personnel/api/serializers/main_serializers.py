@@ -257,9 +257,9 @@ class PersonnelDetailSerializer(serializers.ModelSerializer):
             status='committed',
         ).select_related('uploaded_by').order_by('-created_at')[:20]
         
-        form_ids = [d.context_id for d in docs if d.context_type == 'StatusChangeForm' and d.context_id]
-        corr_ids = [d.context_id for d in docs if d.context_type == 'SuggestedCorrection' and d.context_id]
-        rank_ids = [d.context_id for d in docs if d.context_type == 'RankSettlement' and d.context_id]
+        form_ids = [str(d.context_id).replace('#', '') for d in docs if d.context_type == 'StatusChangeForm' and d.context_id]
+        corr_ids = [str(d.context_id).replace('#', '') for d in docs if d.context_type == 'SuggestedCorrection' and d.context_id]
+        rank_ids = [str(d.context_id).replace('#', '') for d in docs if d.context_type == 'RankSettlement' and d.context_id]
 
         forms_dict = {}
         if form_ids:
@@ -283,9 +283,15 @@ class PersonnelDetailSerializer(serializers.ModelSerializer):
                     catalog_map[sc['form_type']] = sc['name_ar']
                     
             for f in forms:
-                ft_display = catalog_map.get(f.form_type) or dict(f.FORM_TYPE_CHOICES).get(f.form_type) or f.form_type
+                actual_form_type = f.form_type
+                if actual_form_type == 'dynamic' and isinstance(f.form_data, dict):
+                    actual_form_type = f.form_data.get('category', 'dynamic')
+                    
+                ft_display = catalog_map.get(actual_form_type) or dict(f.FORM_TYPE_CHOICES).get(actual_form_type) or actual_form_type
                 forms_dict[str(f.id)] = {
                     'title': f"{ft_display}",
+                    'form_type': actual_form_type,
+                    'form_type_display': ft_display,
                     'status': f.get_status_display(),
                     'submitted_by': f.submitted_by.get_full_name() or f.submitted_by.username if f.submitted_by else 'غير معروف',
                     'events': events_by_form.get(f.id, [])
@@ -353,18 +359,25 @@ class PersonnelDetailSerializer(serializers.ModelSerializer):
             context_meta = {}
             context_events = []
             
-            if d.context_type == 'StatusChangeForm' and str(d.context_id) in forms_dict:
-                info = forms_dict[str(d.context_id)]
+            cid = str(d.context_id).replace('#', '')
+            
+            if d.context_type == 'StatusChangeForm' and cid in forms_dict:
+                info = forms_dict[cid]
+                title = info['title']
+                context_meta = {
+                    'status': info['status'], 
+                    'submitted_by': info['submitted_by'],
+                    'category': info.get('form_type'),
+                    'category_display': info.get('form_type_display')
+                }
+                context_events = info['events']
+            elif d.context_type == 'SuggestedCorrection' and cid in corrs_dict:
+                info = corrs_dict[cid]
                 title = info['title']
                 context_meta = {'status': info['status'], 'submitted_by': info['submitted_by']}
                 context_events = info['events']
-            elif d.context_type == 'SuggestedCorrection' and str(d.context_id) in corrs_dict:
-                info = corrs_dict[str(d.context_id)]
-                title = info['title']
-                context_meta = {'status': info['status'], 'submitted_by': info['submitted_by']}
-                context_events = info['events']
-            elif d.context_type == 'RankSettlement' and str(d.context_id) in ranks_dict:
-                info = ranks_dict[str(d.context_id)]
+            elif d.context_type == 'RankSettlement' and cid in ranks_dict:
+                info = ranks_dict[cid]
                 title = info['title']
                 context_meta = {'status': info['status'], 'submitted_by': info['submitted_by']}
                 context_events = info['events']
@@ -660,15 +673,15 @@ class SuggestedCorrectionSerializer(serializers.ModelSerializer):
             'supporting_document',       # وثيقة الطلب (بطاقة / نموذج 23)
             'approval_document',         # مذكرة الوزارة (تُملأ عند الموافقة)
             'approval_document_url',
-            # التواصل الداخلي والبيانات المرنة
             'notes', 'metadata', 'linked_correction',
+            'is_printed',
             # التدقيق (للقراءة فقط)
             'requested_by', 'requested_by_name', 'requested_at',
             'reviewed_by', 'reviewed_by_name', 'reviewed_at',
             'rejection_reason',
         ]
         read_only_fields = [
-            'id', 'status', 'requested_by', 'requested_at',
+            'id', 'status', 'is_printed', 'requested_by', 'requested_at',
             'reviewed_by', 'reviewed_at', 'rejection_reason',
             'approval_document',         # تُملأ فقط عبر approve_batch
         ]

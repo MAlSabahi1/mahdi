@@ -86,6 +86,12 @@
           class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[10px] font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-colors">
           رفض
         </button>
+        <!-- زر الطباعة للطلبات الداخلية التي تتطلب طباعة (مثل التصحيحات) -->
+        <button v-if="row.isCorrection" @click="$emit('print', row)"
+          class="bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 text-[10px] font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-colors shadow-sm flex items-center gap-1">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+          {{ row.is_printed ? 'إعادة طباعة' : 'طباعة' }}
+        </button>
         <RouterLink :to="`/services/forms/${row.id}`"
           class="text-blue-600 hover:text-blue-700 text-[10px] font-bold hover:underline px-1">
           التفاصيل
@@ -109,6 +115,7 @@ defineEmits<{
   (e: 'reject', req: any): void
   (e: 'submit-draft', req: any): void
   (e: 'refresh'): void
+  (e: 'print', req: any): void
 }>()
 
 const authStore = useAuthStore()

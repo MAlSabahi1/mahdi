@@ -1,6 +1,6 @@
   <template>
     <component :is="isEmbedded ? 'div' : AdminLayout">
-      <div :class="isEmbedded ? 'embedded-report-view' : 'standalone-report-page space-y-6 pb-20'">
+      <div :class="isEmbedded ? 'embedded-report-view' : 'standalone-report-page space-y-6 pb-20 print:pb-0 print:space-y-0'">
         <!-- Screen Header -->
         <div v-if="!isEmbedded" class="flex flex-wrap items-center justify-between gap-4 print:hidden">
           <div>
@@ -253,16 +253,13 @@
           }
           
           if (target === '—') {
-            if (item.field_name === 'full_name' || item.correction_type === 'name_correction') target = 'تصحيح الاسم'
-            else if (item.field_name === 'national_id' || item.correction_type === 'national_id_correction') target = 'تصحيح الرقم الوطني'
-            else if (item.field_name === 'military_number' || item.correction_type === 'military_number_correction') target = 'تصحيح الرقم العسكري'
-            else target = item.field_name || item.correction_type || 'تحديث بيانات'
+            target = item.correction_target || item.field_name || item.correction_type || 'تحديث بيانات'
           }
           
           return {
             ...item,
-            full_name: item.new_value || item.correct_name || item.full_name || item.personnel_name || '', // الاسم الصحيح (الجديد المعتمد)
-            wrong_name: item.full_name || item.personnel_name || item.old_value || '', // الاسم الخطأ (القديم)
+            full_name: item.correct_name || item.new_value || item.full_name || '', // الاسم الصحيح (الجديد المعتمد)
+            wrong_name: item.wrong_name || item.old_value || item.full_name || '', // الاسم الخطأ (القديم)
             correction_target: target,
             notes: notes
           }
@@ -302,19 +299,20 @@
   @media print {
     @page standalone-landscape-page {
       size: A4 landscape;
-      margin: 0.5cm !important;
+      margin: 0 !important;
     }
     
     body:has(.standalone-report-page) {
+      page: standalone-landscape-page !important;
       background-color: white !important;
       margin: 0 !important;
       padding: 0 !important;
     }
     
     body:has(.standalone-report-page) .standalone-report-page {
-      page: standalone-landscape-page !important;
       width: 29.7cm !important;
-      height: 21cm !important;
+      height: auto !important;
+      min-height: 21cm !important;
       position: absolute !important;
       left: 0 !important;
       top: 0 !important;

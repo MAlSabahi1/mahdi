@@ -48,6 +48,7 @@
         <DataTable
           :columns="columns"
           :data="complianceData"
+          row-key="id"
           :search-placeholder="'ابحث عن محافظة أو قطاع...'"
         >
           <template #cell-status="{ row }">

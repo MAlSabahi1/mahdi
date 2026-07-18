@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
 
-from systems.personnel.services.proactive_engine import run_engine_scan
+from systems.personnel.engines.proactive_engine import run_engine_scan
 
 
 class EarlyWarningsEngineView(APIView):

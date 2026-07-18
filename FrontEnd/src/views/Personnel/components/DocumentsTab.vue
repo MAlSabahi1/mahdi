@@ -223,11 +223,35 @@ const groupedDocuments = computed(() => {
     } else {
       const key = `${doc.context_type}_${doc.context_id}`
       if (!events[key]) {
+        const meta = doc.context_meta || {}
+        let cTitle = doc.context_title || getContextTitle(doc.context_type)
+        
+        // Force meaningful title for StatusChangeForm
+        if (doc.context_type === 'StatusChangeForm' || cTitle.includes('إثبات حالة')) {
+          if (meta.category && meta.category !== 'dynamic' && meta.category !== 'status_change') {
+            const categoryMap: Record<string, string> = { 
+              escort: 'مرافق / معيات', 
+              martyr: 'شهيد', 
+              death: 'وفاة طبيعية', 
+              missing: 'مفقود', 
+              desertion: 'فرار',
+              retirement_age: 'بلوغ السن القانوني',
+              medical_unfit: 'عدم لياقة صحية',
+              end_of_service: 'إنهاء مدة',
+              retired: 'محال للتقاعد',
+              imprisoned: 'مسجون'
+            }
+            cTitle = `طلب إثبات حالة - ${categoryMap[meta.category.toLowerCase()] || meta.category}`
+          } else {
+             cTitle = 'طلب إجراء تغيير / إثبات حالة'
+          }
+        }
+        
         events[key] = {
-          title: doc.context_title || getContextTitle(doc.context_type),
+          title: cTitle,
           date: doc.created_at, // initial fallback date
           context_id: doc.context_id,
-          meta: doc.context_meta || {},
+          meta: meta,
           events: doc.context_events || [],
           docs: []
         }
@@ -274,7 +298,7 @@ function getDocumentTypeTitle(type: string) {
     'personal_attachment': 'مرفق شخصي',
     'appointment_ruling': 'قرار تعيين',
     'attorney_id': 'هوية الوكيل',
-    'power_of_attorney': 'وكالة قانونية',
+    'power_of_attorney': 'وكالة قانونية / شرعية',
     'heir_ruling': 'حصر إرث / فريضة',
     'certified_id': 'هوية مصدقة',
     'national_id_front': 'بطاقة وطنية - أمامي',
@@ -292,9 +316,16 @@ function getDocumentTypeTitle(type: string) {
     'death_certificate': 'شهادة وفاة',
     'marriage_certificate': 'عقد زواج',
     'family_book': 'دفتر عائلة',
-    'residence_card': 'بطاقة سكن / إقامة'
+    'residence_card': 'بطاقة سكن / إقامة',
+    // New mappings
+    'signed_form': 'الاستمارة الموقعة',
+    'order_copy': 'نسخة التكليف / الأمر',
+    'agent_id': 'هوية الوكيل',
+    'personnel_id': 'هوية الفرد',
+    'prosecution_memo': 'مذكرة النيابة',
+    'ruling_copy': 'نسخة الحكم'
   }
-  return map[type] || type
+  return map[type] || map[type.toLowerCase()] || type
 }
 
 function handleUploadSuccess(newDoc: any) {

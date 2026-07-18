@@ -1047,6 +1047,7 @@ import { useAuthStore } from '@/stores/auth'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import CKEditorComponent from '@/components/common/CKEditorComponent.vue'
 import api from '@/lib/api'
+import Swal from 'sweetalert2'
 
 const router = useRouter()
 const route = useRoute()
@@ -1261,7 +1262,7 @@ async function fetchServiceDataById() {
       serviceImportList.value = item ? [item] : []
     }
   } catch (e) {
-    alert('لم يتم العثور على طلب بهذا الرقم.')
+    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'لم يتم العثور على طلب بهذا الرقم.', showConfirmButton: false, timer: 3000 })
     serviceImportList.value = []
   } finally {
     serviceImportLoading.value = false
@@ -1297,6 +1298,8 @@ function importFromServiceList(item: any) {
       else target = item.field_name || item.correction_type || 'تحديث بيانات'
     }
 
+    form.value.isNameCorrection = (target === 'تصحيح الاسم')
+
     if (!form.value.involvedPersonnel) form.value.involvedPersonnel = []
     
     // Check if already imported
@@ -1322,7 +1325,7 @@ function importFromServiceList(item: any) {
   }
   
   showServiceImportModal.value = false
-  alert('تم استيراد البيانات بنجاح وإضافتها إلى جدول الأفراد المعنيين!')
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم استيراد البيانات بنجاح وإضافتها إلى جدول الأفراد المعنيين!', showConfirmButton: false, timer: 3000 })
 }
 
 let searchTimeout: any = null
@@ -1384,6 +1387,7 @@ const fontOptions = [
 
 const defaultForm = {
   documentType: 'MEMO',
+  isNameCorrection: false,
   referenceNo: '',
   docDate: new Date().toLocaleDateString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('/') + 'م',
   correspondingDate: '',
@@ -1435,9 +1439,9 @@ const defaultForm = {
   body: '<p>في البدء نهديكم أطيب التحيات، راجين لكم التوفيق بمهام عملكم..</p><p>بصدد الموضوع أعلاه... (أكمل النص هنا)</p><p>لذلك لزم توجيهكم... وتقبلوا خالص التحيات.</p>',
   conclusion: '<p>وعليه، يتم اتخاذ الإجراءات اللازمة...</p>',
   signatures: [
-    { title: 'قسم الخدمات', rank: '', name: '', showSeal: false, freeText: '<p class="text-align-center"><span style="font-family:\'Amiri\', serif; font-size: 24px; color: #1a202c;"><strong>مـقــــــدم /</strong></span></p><p class="text-align-center"><span style="font-family:\'Cairo\', sans-serif; font-size: 26px; color: #000000;"><strong>أحـمـد عـلـي الـسـيـد</strong></span></p><p class="text-align-center"><span style="font-family:\'Cairo\', sans-serif; font-size: 18px; color: #4a5568;">مدير قسـم الخدمـات</span></p>' },
-    { title: 'مدير إدارة القوى البشرية', rank: '', name: '', showSeal: false, freeText: '<p class="text-align-center"><span style="font-family:\'Amiri\', serif; font-size: 24px; color: #1a202c;"><strong>عـمـيـــــــد /</strong></span></p><p class="text-align-center"><span style="font-family:\'Cairo\', sans-serif; font-size: 26px; color: #000000;"><strong>عـبـدالله مـحـمـد</strong></span></p><p class="text-align-center"><span style="font-family:\'Cairo\', sans-serif; font-size: 18px; color: #4a5568;">مديـر إدارة القـوى البشـريـة</span></p>' },
-    { title: 'مدير عام شرطة المحافظة', rank: '', name: '', showSeal: true, freeText: '<p class="text-align-center"><span style="font-family:\'Amiri\', serif; font-size: 26px; color: #1a202c;"><strong>لــــــــواء /</strong></span></p><p class="text-align-center"><span style="font-family:\'Cairo\', sans-serif; font-size: 28px; color: #000000;"><strong>يـحـيـى أحـمـد الـيـمـانـي</strong></span></p><p class="text-align-center"><span style="font-family:\'Cairo\', sans-serif; font-size: 20px; color: #4a5568;">مديـر عـام شـرطـة المـحـافـظـة</span></p>' }
+    { title: 'قسم الخدمات', rank: 'مـقــــــدم / .....................', name: 'الاسم / .....................', showSeal: false, freeText: '' },
+    { title: 'مدير إدارة القوى البشرية', rank: 'عـمـيـــــــد / .....................', name: 'الاسم / .....................', showSeal: false, freeText: '' },
+    { title: 'مدير عام شرطة المحافظة', rank: 'لــــــــواء / .....................', name: 'الاسم / .....................', showSeal: true, freeText: '' }
   ],
   signatureSettings: {
     showFrame: true,
@@ -1490,10 +1494,10 @@ const addSignature = () => {
   if (!form.value.signatures) form.value.signatures = []
   form.value.signatures.push({ 
     title: 'جهة جديدة', 
-    rank: '', 
-    name: '', 
+    rank: 'الرتبة / .....................', 
+    name: 'الاسم / .....................', 
     showSeal: false,
-    freeText: '<p class="text-align-center"><span style="font-family:\'Amiri\', serif; font-size: 24px; color: #1a202c;"><strong>عـقـيـــــــد /</strong></span></p><p class="text-align-center"><span style="font-family:\'Cairo\', sans-serif; font-size: 26px; color: #000000;"><strong>الاسـم هـنـا</strong></span></p><p class="text-align-center"><span style="font-family:\'Cairo\', sans-serif; font-size: 18px; color: #4a5568;">الصـفـة هـنـا</span></p>'
+    freeText: ''
   })
 }
 
@@ -1510,8 +1514,18 @@ const removeInvolvedPersonnel = (index: number) => {
   form.value.involvedPersonnel.splice(index, 1)
 }
 
-const resetForm = () => {
-  if(confirm('هل أنت متأكد من مسح جميع الحقول؟')) {
+const resetForm = async () => {
+  const result = await Swal.fire({
+    title: 'تأكيد المسح',
+    text: 'هل أنت متأكد من مسح جميع الحقول؟',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'نعم، امسح',
+    cancelButtonText: 'إلغاء'
+  })
+  if (result.isConfirmed) {
     form.value = JSON.parse(JSON.stringify(defaultForm))
   }
 }
@@ -1538,7 +1552,7 @@ const fetchTemplates = async () => {
 
 const savePreset = async () => {
   if (!newPresetName.value) {
-    alert('يرجى إدخال اسم للقالب أولاً')
+    Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'يرجى إدخال اسم للقالب أولاً', showConfirmButton: false, timer: 3000 })
     return
   }
   try {
@@ -1549,7 +1563,7 @@ const savePreset = async () => {
     })
     await fetchTemplates()
     newPresetName.value = ''
-    alert('تم حفظ القالب بالكامل بنجاح في قاعدة البيانات!')
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم حفظ القالب بالكامل بنجاح في قاعدة البيانات!', showConfirmButton: false, timer: 3000 })
   } catch (error) {
     console.error('Failed to save template:', error)
     // fallback to localStorage
@@ -1562,13 +1576,25 @@ const savePreset = async () => {
     localStorage.setItem('memoTypographyPresets', JSON.stringify(presets))
     savedPresets.value = presets
     newPresetName.value = ''
-    alert('تم حفظ القالب محلياً في المتصفح!')
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم حفظ القالب محلياً في المتصفح!', showConfirmButton: false, timer: 3000 })
   }
 }
 
-const loadPreset = () => {
+const loadPreset = async () => {
   if (selectedPresetIndex.value === '') return
-  if(confirm('هل أنت متأكد من تحميل هذا القالب؟ سيتم استبدال محتوى المذكرة الحالي.')) {
+  
+  const result = await Swal.fire({
+    title: 'تحميل قالب',
+    text: 'هل أنت متأكد من تحميل هذا القالب؟ سيتم استبدال محتوى المذكرة الحالي.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'نعم، قم بالتحميل',
+    cancelButtonText: 'إلغاء'
+  })
+  
+  if (result.isConfirmed) {
     const idx = Number(selectedPresetIndex.value)
     const preset = savedPresets.value[idx]
     if (preset) {
@@ -1585,8 +1611,16 @@ const loadPreset = () => {
   }
 }
 
-const resetTypography = () => {
-  if(confirm('هل أنت متأكد من استعادة التنسيقات الافتراضية؟')) {
+const resetTypography = async () => {
+  const result = await Swal.fire({
+    title: 'استعادة الافتراضيات',
+    text: 'هل أنت متأكد من استعادة التنسيقات الافتراضية؟',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'نعم',
+    cancelButtonText: 'إلغاء'
+  })
+  if (result.isConfirmed) {
     form.value.typography = JSON.parse(JSON.stringify(defaultForm.typography))
   }
 }
@@ -1598,7 +1632,20 @@ const previewMemo = () => {
 
 
 const saveAsNewTemplate = async () => {
-  const name = prompt("أدخل اسماً للقالب الجديد (مثال: قالب تصحيح خاص):")
+  const { value: name } = await Swal.fire({
+    title: 'حفظ كقالب جديد',
+    input: 'text',
+    inputLabel: 'أدخل اسماً للقالب الجديد (مثال: قالب تصحيح خاص):',
+    inputPlaceholder: 'اسم القالب...',
+    showCancelButton: true,
+    confirmButtonText: 'حفظ',
+    cancelButtonText: 'إلغاء',
+    inputValidator: (val) => {
+      if (!val) {
+        return 'يرجى إدخال اسم للقالب'
+      }
+    }
+  })
   if (!name) return
   try {
     const response = await api.post('/secretariat/memo-templates/', {
@@ -1612,7 +1659,7 @@ const saveAsNewTemplate = async () => {
       editingPresetIndex.value = idx
       localStorage.setItem('official_memo_edit_index', idx.toString())
     }
-    alert('تم حفظ القالب بنجاح في قاعدة البيانات!')
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم حفظ القالب بنجاح في قاعدة البيانات!', showConfirmButton: false, timer: 3000 })
   } catch (error) {
     console.error('Failed to save as new template:', error)
     let presets = JSON.parse(localStorage.getItem('memoTypographyPresets') || '[]')
@@ -1624,7 +1671,7 @@ const saveAsNewTemplate = async () => {
     editingPresetIndex.value = presets.length - 1
     localStorage.setItem('official_memo_edit_index', editingPresetIndex.value.toString())
     savedPresets.value = presets
-    alert('تم حفظ القالب محلياً!')
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم حفظ القالب محلياً!', showConfirmButton: false, timer: 3000 })
   }
 }
 
@@ -1644,10 +1691,10 @@ const saveExistingTemplate = async () => {
         content: JSON.parse(JSON.stringify(form.value))
       })
       await fetchTemplates()
-      alert('تم حفظ التعديلات على القالب بنجاح في قاعدة البيانات!')
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم حفظ التعديلات على القالب بنجاح في قاعدة البيانات!', showConfirmButton: false, timer: 3000 })
     } catch (error) {
       console.error('Failed to update template:', error)
-      alert('حدث خطأ أثناء حفظ التعديلات على الخادم.')
+      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'حدث خطأ أثناء حفظ التعديلات على الخادم.', showConfirmButton: false, timer: 3000 })
     }
   } else {
     let presets = JSON.parse(localStorage.getItem('memoTypographyPresets') || '[]')
@@ -1655,14 +1702,24 @@ const saveExistingTemplate = async () => {
       presets[editingPresetIndex.value].fullTemplate = JSON.parse(JSON.stringify(form.value))
       localStorage.setItem('memoTypographyPresets', JSON.stringify(presets))
       savedPresets.value = presets
-      alert('تم حفظ التعديلات محلياً!')
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم حفظ التعديلات محلياً!', showConfirmButton: false, timer: 3000 })
     }
   }
 }
 
 
-const createNewTemplate = () => {
-  if(confirm('هل أنت متأكد من إنشاء قالب جديد؟ سيتم فقدان التعديلات الحالية غير المحفوظة.')) {
+const createNewTemplate = async () => {
+  const result = await Swal.fire({
+    title: 'إنشاء قالب جديد',
+    text: 'هل أنت متأكد من إنشاء قالب جديد؟ سيتم فقدان التعديلات الحالية غير المحفوظة.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'نعم، إنشاء',
+    cancelButtonText: 'إلغاء'
+  })
+  if (result.isConfirmed) {
     localStorage.removeItem('official_memo_draft')
     localStorage.removeItem('official_memo_edit_index')
     editingPresetIndex.value = null

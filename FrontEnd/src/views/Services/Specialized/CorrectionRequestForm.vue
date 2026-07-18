@@ -1271,6 +1271,14 @@ async function submitBulk() {
         let finalField = formData.value.field_name || formData.value.field || type
         let finalCorrectionType = formData.value.correction_type || null
 
+        // Specific handling for Name Corrections
+        if (type === 'name_correction' || type === 'correction') {
+          const targets = formData.value.correction_targets?.length ? formData.value.correction_targets.join('، ') : 'تصحيح الاسم'
+          finalReason = `المطلوب تصحيحه: ${targets}\nالمبررات: ${notes.value}`
+          finalField = 'name_correction'
+          finalCorrectionType = 'name_correction'
+        }
+
         if (type === 'national_id_correction' || type === 'military_number_correction') {
           finalNewValue = formData.value.new_values?.[person.military_number] || ''
           finalReason = formData.value.notes?.[person.military_number] || ''
@@ -1286,8 +1294,8 @@ async function submitBulk() {
             finalNewValue = otherPerson.military_number
           }
           finalReason = formData.value.swap_notes || ''
-          finalField = 'military_number_correction'
-          finalCorrectionType = 'military_number_correction'
+          finalField = 'military_number_swap'
+          finalCorrectionType = 'military_number_swap'
           
           if (!finalNewValue || !finalReason) {
             throw new Error(`Missing required fields for swap`)

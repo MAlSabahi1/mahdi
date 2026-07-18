@@ -1,329 +1,258 @@
 <template>
   <admin-layout>
-    <!-- Header Section -->
     <div class="print:hidden mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <PageBreadcrumb :pageTitle="'تفاصيل المعاملة رقم ' + (form?.id || '')" />
+      <h1 class="text-3xl font-black text-gray-800 tracking-tight flex items-center gap-3">
+        ملف المعاملة 
+        <span class="text-gray-500 font-mono text-2xl">#{{ form?.id || '' }}</span>
+      </h1>
       
-      <!-- Action Buttons -->
+      <!-- Action Buttons - Formal Style -->
       <div v-if="form" class="flex flex-wrap gap-2">
-        <!-- زر الطباعة -->
         <button @click="printForm"
-          class="bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-800 font-bold px-4 py-2 rounded-lg transition-all text-xs shadow-sm flex items-center gap-2">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+          class="bg-white text-gray-800 border border-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 font-bold px-5 py-2 rounded-sm transition-all text-sm shadow-sm flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
           طباعة الاستمارة
         </button>
 
-        <!-- رفع مستند الوزارة (خارجي فقط) -->
         <button v-if="form.is_external && form.is_printed && !form.ministry_approval_doc_id && canApprove"
-          @click="promptMinistryDoc"
-          class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-4 py-2 rounded-lg transition-all text-xs shadow-md shadow-amber-500/20 flex items-center gap-2">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          @click="() => promptMinistryDoc()"
+          class="bg-gray-800 hover:bg-black text-white font-bold px-5 py-2 rounded-sm transition-all text-sm shadow-sm flex items-center gap-2">
           رفع مستند الوزارة
         </button>
 
-        <!-- رفض -->
         <button v-if="canApprove" @click="rejectForm"
-          class="bg-white text-red-600 hover:bg-red-50 border border-red-200 dark:bg-gray-900 dark:border-red-900/50 dark:hover:bg-red-950/30 font-bold px-4 py-2 rounded-lg transition-all text-xs shadow-sm">
+          class="bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 font-bold px-5 py-2 rounded-sm transition-all text-sm shadow-sm flex items-center gap-2">
           رفض
         </button>
 
-        <!-- إرجاع للتعديل -->
         <button v-if="canApprove" @click="returnFormModal"
-          class="bg-white text-amber-600 hover:bg-amber-50 border border-amber-200 dark:bg-gray-900 dark:border-amber-900/50 dark:hover:bg-amber-950/30 font-bold px-4 py-2 rounded-lg transition-all text-xs shadow-sm flex items-center gap-2">
+          class="bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 font-bold px-5 py-2 rounded-sm transition-all text-sm shadow-sm flex items-center gap-2">
           إرجاع للتعديل
         </button>
 
-        <!-- اعتماد - يُعطَّل للخارجي إذا لم تكتمل الشروط -->
         <button v-if="canApprove"
           @click="approveForm()"
           :disabled="form.is_external && (!form.is_printed || !form.ministry_approval_doc_id)"
-          :title="form.is_external && !form.is_printed ? 'يجب طباعة الاستمارة أولاً' : form.is_external && !form.ministry_approval_doc_id ? 'يجب رفع مستند الوزارة أولاً' : ''"
-          class="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold px-6 py-2 rounded-lg transition-all shadow-md shadow-emerald-500/20 text-xs flex items-center gap-2">
+          class="bg-emerald-700 hover:bg-emerald-800 disabled:bg-gray-400 text-white font-bold px-8 py-2 rounded-sm transition-all shadow-sm text-sm flex items-center gap-2">
           اعتماد الطلب
         </button>
 
-        <!-- تقديم المسودة -->
         <button v-if="form && form.status === 'draft'" @click="submitDraft"
-          class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded-lg transition-all shadow-md shadow-blue-500/20 text-xs flex items-center gap-2">
+          class="bg-blue-700 hover:bg-blue-800 text-white font-bold px-8 py-2 rounded-sm transition-all shadow-sm text-sm flex items-center gap-2">
           تقديم الطلب النهائي
         </button>
       </div>
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="flex flex-col justify-center items-center py-32 print:hidden">
-      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-600 mb-4"></div>
-      <p class="text-gray-500 text-sm font-medium">جاري تحميل تفاصيل المعاملة...</p>
+    <div v-if="loading" class="flex justify-center py-20 print:hidden">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-800"></div>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error || !form" class="bg-red-50 border border-red-100 text-red-600 p-8 rounded-2xl text-center font-bold print:hidden shadow-sm">
-      <svg class="w-12 h-12 mx-auto text-red-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+    <div v-else-if="error || !form" class="bg-red-50 border border-red-200 text-red-700 p-6 text-center font-bold print:hidden">
       {{ error || 'لم يتم العثور على تفاصيل هذه المعاملة.' }}
-      <div class="mt-6">
-        <RouterLink to="/services/transactions" class="text-brand-600 hover:text-brand-700 underline text-sm transition-colors">العودة لمركز المعاملات</RouterLink>
-      </div>
     </div>
 
-    <!-- Main Content -->
+    <!-- Main Content: Formal Layout -->
     <div v-else class="space-y-6 text-start" dir="rtl">
       
-      <!-- Official Document Header -->
-      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden print:border-none print:shadow-none print:bg-transparent">
-        <div class="border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 px-6 py-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div class="flex items-center gap-4">
-            <div class="h-12 w-12 bg-brand-50 dark:bg-brand-900/30 rounded-lg flex items-center justify-center border border-brand-100 dark:border-brand-800">
-              <svg class="w-6 h-6 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            </div>
-            <div>
-              <h1 class="text-xl font-black text-gray-900 dark:text-white leading-tight">
-                {{ (form.form_type_display || form.form_type || '').replace('returned_to_service', 'عائد للخدمة') }}
-              </h1>
-              <div class="flex items-center gap-3 mt-1.5 text-xs text-gray-500 font-medium">
-                <span class="flex items-center gap-1 font-mono text-gray-700 dark:text-gray-300">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/></svg>
-                  TX-{{ form.id.toString().padStart(6, '0') }}
-                </span>
-                <span class="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700"></span>
-                <span class="flex items-center gap-1 font-mono">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                  {{ new Date(form.submitted_at || form.created_at).toLocaleString('en-GB') }}
-                </span>
-              </div>
-            </div>
-          </div>
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 print:block print:w-full">
+        <!-- Main Document Area (3/4 width) -->
+        <div class="lg:col-span-3 space-y-6 print:w-full print:block">
           
-          <div class="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 shadow-sm">
-            <span :class="getStatusDot(form.status)" class="h-2 w-2 rounded-full ml-2"></span>
-            <span :class="getStatusTextColor(form.status)" class="text-xs font-bold">{{ getStatusLabel(form.status, form.current_step_name) }}</span>
-          </div>
-        </div>
-
-        <!-- Workflow Progress Bar -->
-        <div class="px-6 py-5 bg-white dark:bg-gray-900 print:hidden border-b border-gray-100 dark:border-gray-800">
-          <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-3">مسار سير العمل</p>
-          <WorkflowProgressBar
-            :steps="form.all_steps || []"
-            :current-step-index="form.current_step_index ?? -1"
-            :status="form.status"
-            :is-external="!!form.is_external"
-            :is-printed="!!form.is_printed"
-            :has-ministry-doc="!!form.ministry_approval_doc_id"
-            :rejection-reason="form.rejection_reason"
-          />
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 print:block print:w-full">
-        <!-- Main Content Column -->
-        <div class="lg:col-span-2 space-y-6 print:w-full print:block">
-          
-          <!-- Personnel Details Box -->
-          <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm">
-            <div class="flex justify-between items-center mb-5 pb-3 border-b border-gray-100 dark:border-gray-800">
-              <h2 class="text-sm font-black text-gray-900 dark:text-white flex items-center gap-2">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                بيانات مقدم الطلب
-              </h2>
-              <RouterLink v-if="form.personnel?.military_number || form.personnel_military_number"
-                :to="`/personnel/${form.personnel?.military_number || form.personnel_military_number}`"
-                class="text-[11px] font-bold text-brand-600 bg-brand-50 hover:bg-brand-100 dark:bg-brand-900/20 dark:hover:bg-brand-900/40 px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5">
-                عرض الملف الكامل
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-              </RouterLink>
-            </div>
-            
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-8">
-              <div class="flex flex-col sm:col-span-2 md:col-span-1">
-                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">الاسم الرباعي</span>
-                <span class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ form.personnel?.full_name || form.personnel_name || '—' }}</span>
+          <!-- Structured Document Container -->
+          <div class="bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 shadow-sm print:border-none print:shadow-none p-8">
+            <!-- Document Header -->
+            <div class="border-b-2 border-gray-800 dark:border-gray-600 pb-4 mb-6 flex justify-between items-end">
+              <div>
+                <h2 class="text-2xl font-black text-gray-900 dark:text-white uppercase mb-1">
+                  {{ (form.form_type_display || form.form_type || '').replace('returned_to_service', 'عائد للخدمة') }}
+                </h2>
+                <p class="text-sm font-bold text-gray-500">
+                  تاريخ الإنشاء: {{ new Date(form.submitted_at || form.created_at).toLocaleString('en-GB') }}
+                </p>
               </div>
-              <div class="flex flex-col">
-                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">الرقم العسكري</span>
-                <span class="text-sm font-bold font-mono text-gray-900 dark:text-gray-100">{{ form.personnel?.military_number || form.personnel_military_number || '—' }}</span>
-              </div>
-              <div class="flex flex-col">
-                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">الرتبة الحالية</span>
-                <span class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ form.personnel?.rank || form.personnel_rank || form.personnel?.rank_name || form.personnel?.current_rank?.name || '—' }}</span>
-              </div>
-              <div class="flex flex-col">
-                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">المؤهل العلمي</span>
-                <span class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ form.personnel?.qualification_name || form.personnel?.qualification_detail?.name || '—' }}</span>
-              </div>
-              <div class="flex flex-col">
-                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">حالة النفقات</span>
-                <span class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ form.personnel?.expense_status_display || '—' }}</span>
-              </div>
-              <div class="flex flex-col">
-                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">تاريخ النفاذ</span>
-                <span class="text-sm font-bold font-mono text-gray-900 dark:text-gray-100">{{ form.effective_date ? new Date(form.effective_date).toLocaleDateString('en-GB') : '—' }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Official Form Data -->
-          <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm">
-            <div class="mb-5 pb-3 border-b border-gray-100 dark:border-gray-800">
-              <h2 class="text-sm font-black text-gray-900 dark:text-white flex items-center gap-2">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                تفاصيل الاستمارة
-              </h2>
-            </div>
-            
-            <div v-if="form.form_data && Object.keys(form.form_data).length > 0" class="overflow-hidden rounded-lg border border-gray-100 dark:border-gray-800">
-              <table class="min-w-full text-right text-sm">
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-                  <tr v-for="(value, key, index) in filteredFormData" :key="key" 
-                      :class="index % 2 === 0 ? 'bg-gray-50/50 dark:bg-gray-900/30' : 'bg-white dark:bg-gray-900'">
-                    <td class="w-1/3 px-4 py-3 text-[11px] font-bold text-gray-500 align-top">
-                      {{ translateField(key) }}
-                    </td>
-                    <td class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-gray-100">
-                      {{ value }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <div v-if="Object.keys(filteredFormData).length === 0" class="p-6 text-center text-sm text-gray-500 bg-gray-50 dark:bg-gray-800/30">
-                جميع الحقول فارغة في هذه الاستمارة.
-              </div>
-            </div>
-            <div v-else class="text-sm text-gray-500 bg-gray-50 dark:bg-gray-800/30 p-6 rounded-lg text-center border border-gray-100 dark:border-gray-800">
-              لا توجد حقول إضافية في هذه الاستمارة.
-            </div>
-            
-            <!-- Notes & Rejection Alert -->
-            <div v-if="form.notes || form.rejection_reason" class="mt-6 space-y-3">
-              <div v-if="form.notes" class="p-4 bg-blue-50/50 dark:bg-blue-900/10 text-blue-900 dark:text-blue-100 rounded-lg text-sm border-l-4 border-blue-500">
-                <p class="text-[10px] font-black uppercase tracking-wider mb-1 text-blue-600 dark:text-blue-400">ملاحظات الطلب الأساسية</p>
-                <p class="font-medium">{{ form.notes }}</p>
-              </div>
-              <div v-if="form.rejection_reason" class="p-4 bg-red-50/50 dark:bg-red-900/10 text-red-900 dark:text-red-100 rounded-lg text-sm border-l-4 border-red-500">
-                <p class="text-[10px] font-black uppercase tracking-wider mb-1 text-red-600 dark:text-red-400">سبب الرفض / الإرجاع</p>
-                <p class="font-bold">{{ form.rejection_reason }}</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Attachments -->
-          <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm">
-            <div class="mb-5 pb-3 border-b border-gray-100 dark:border-gray-800">
-              <h2 class="text-sm font-black text-gray-900 dark:text-white flex items-center gap-2">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
-                الوثائق المرفقة
-              </h2>
-            </div>
-            
-            <div v-if="form.attachments && form.attachments.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div v-for="att in form.attachments" :key="att.id" class="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-700/50 rounded-lg bg-gray-50/50 dark:bg-gray-800/20 hover:bg-white dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-colors group">
-                <div class="flex items-center gap-3">
-                  <div class="p-2 bg-gray-100 dark:bg-gray-700 text-gray-500 rounded-md group-hover:bg-brand-50 group-hover:text-brand-600 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path v-if="att.file?.endsWith('.pdf')" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                      <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p class="text-xs font-bold text-gray-900 dark:text-white">{{ translateField(att.document_type || 'مستند مرفق') }}</p>
-                    <p class="text-[8px] text-gray-500 mt-0.5">TX-{{ String(form?.id ?? 0).padStart(6, '0') }}</p>
-                  </div>
+              <div class="text-left">
+                <div class="inline-block border-2 border-gray-800 dark:border-gray-600 px-4 py-2 font-bold text-sm bg-gray-50 dark:bg-gray-800">
+                  الحالة: <span :class="getStatusTextColor(form.status)">{{ getStatusLabel(form.status, form.current_step_name) }}</span>
                 </div>
-                <a :href="att.file" target="_blank" class="text-[10px] font-bold text-gray-600 hover:text-brand-600 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded hover:border-brand-300 dark:hover:border-brand-700 transition-all shadow-sm">
-                  عرض
-                </a>
               </div>
             </div>
-            <div v-else class="text-center py-8 text-sm text-gray-500 bg-gray-50 dark:bg-gray-800/30 rounded-lg border border-dashed border-gray-200 dark:border-gray-700">
-              لا توجد مرفقات مرتبطة بهذه المعاملة.
-            </div>
-          </div>
 
-          <ReportFooter />
+            <!-- Personnel Details -->
+            <div class="mb-8">
+              <h3 class="text-lg font-black bg-gray-100 dark:bg-gray-800 border-y border-gray-300 dark:border-gray-600 px-4 py-2 mb-4">أولاً: بيانات مقدم الطلب</h3>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-px bg-gray-300 dark:bg-gray-600 border border-gray-300 dark:border-gray-600">
+                <div v-for="(detail, index) in personnelDetails" :key="index" class="bg-white dark:bg-gray-900 p-3">
+                  <span class="block text-xs font-bold text-gray-500 mb-1">{{ detail.label }}</span>
+                  <span class="block text-sm font-black text-gray-900 dark:text-gray-100" :class="{'font-mono': detail.isMono}">{{ detail.value || '—' }}</span>
+                </div>
+              </div>
+              <div class="mt-2 text-left print:hidden">
+                <RouterLink v-if="form.personnel?.military_number || form.personnel_military_number"
+                  :to="`/personnel/${form.personnel?.military_number || form.personnel_military_number}`"
+                  class="text-xs font-bold text-blue-700 hover:underline">
+                  >> عرض الملف العسكري الشامل
+                </RouterLink>
+              </div>
+            </div>
+
+            <!-- Form Specific Details (The real info) -->
+            <div class="mb-8">
+              <h3 class="text-lg font-black bg-gray-100 dark:bg-gray-800 border-y border-gray-300 dark:border-gray-600 px-4 py-2 mb-4">ثانياً: البيانات المدخلة في الاستمارة</h3>
+              
+              <!-- Use actual form_data, unfiltered except for truly empty object -->
+              <div v-if="form.form_data && Object.keys(form.form_data).length > 0" class="border border-gray-300 dark:border-gray-600">
+                <table class="w-full text-right text-sm">
+                  <tbody class="divide-y divide-gray-300 dark:divide-gray-600">
+                    <tr v-for="(value, key) in form.form_data" :key="String(key)" 
+                        class="bg-white hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800/50 transition-colors border-b border-gray-200 dark:border-gray-700">
+                      <td class="w-1/3 px-4 py-3 text-xs font-bold text-gray-700 dark:text-gray-300 border-l border-gray-300 dark:border-gray-600 align-top bg-gray-100 dark:bg-gray-800 w-48">
+                        {{ translateField(String(key)) }}
+                      </td>
+                      <td class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-gray-100">
+                        {{ formatFieldValue(String(key), value) }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div v-else class="text-sm font-bold text-gray-500 bg-gray-50 p-6 text-center border border-gray-300">
+                لا توجد بيانات إضافية مدخلة في هذه الاستمارة.
+              </div>
+            </div>
+
+            <!-- Notes & Rejections -->
+            <div v-if="form.notes || form.rejection_reason" class="mb-8">
+              <h3 class="text-lg font-black bg-gray-100 dark:bg-gray-800 border-y border-gray-300 dark:border-gray-600 px-4 py-2 mb-4">ثالثاً: الملاحظات والقرارات</h3>
+              <div class="space-y-4">
+                <div v-if="form.notes" class="border-2 border-blue-200 bg-blue-50 p-4">
+                  <p class="text-xs font-black uppercase text-blue-800 mb-1">ملاحظات الطلب الأساسية:</p>
+                  <p class="font-bold text-sm text-gray-900">{{ form.notes }}</p>
+                </div>
+                <div v-if="form.rejection_reason" class="border-2 border-red-200 bg-red-50 p-4">
+                  <p class="text-xs font-black uppercase text-red-800 mb-1">سبب الرفض / الإرجاع:</p>
+                  <p class="font-bold text-sm text-gray-900">{{ form.rejection_reason }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Attachments Summary -->
+            <div class="mb-8 print:hidden">
+              <h3 class="text-lg font-black bg-gray-100 dark:bg-gray-800 border-y border-gray-300 dark:border-gray-600 px-4 py-2 mb-4">رابعاً: الوثائق والمرفقات</h3>
+              <div v-if="form.attachments && form.attachments.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div v-for="att in form.attachments" :key="att.id" class="flex items-center justify-between p-3 border border-gray-300 bg-gray-50 hover:bg-gray-100">
+                  <div class="flex items-center gap-3">
+                    <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                    <div>
+                      <p class="text-sm font-bold text-gray-900">{{ translateField(att.document_type || 'مستند مرفق') }}</p>
+                    </div>
+                  </div>
+                  <a :href="att.file" target="_blank" class="text-xs font-bold text-gray-700 bg-white border border-gray-300 px-3 py-1.5 hover:bg-gray-200">
+                    استعراض الملف
+                  </a>
+                </div>
+              </div>
+              <div v-else class="text-sm font-bold text-gray-500 border border-gray-300 p-4 text-center bg-gray-50">
+                لا توجد مرفقات.
+              </div>
+            </div>
+
+            <ReportFooter />
+          </div>
         </div>
 
-        <!-- Sidebar Column -->
+        <!-- Sidebar Area (1/4 width) -->
         <div class="space-y-6 print:hidden">
           
-          <!-- Event History Timeline -->
-          <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm">
-            <h2 class="text-sm font-black text-gray-900 dark:text-white mb-5 pb-3 border-b border-gray-100 dark:border-gray-800">
-              سجل الحركات والأحداث
-            </h2>
-            
+          <!-- Workflow Progress -->
+          <div class="bg-white border border-gray-300 shadow-sm p-5">
+            <h3 class="text-sm font-black border-b-2 border-gray-800 pb-2 mb-4">مسار سير العمل</h3>
+            <WorkflowProgressBar
+              :steps="form.all_steps || []"
+              :current-step-index="form.current_step_index ?? -1"
+              :status="form.status"
+              :is-external="!!form.is_external"
+              :is-printed="!!form.is_printed"
+              :has-ministry-doc="!!form.ministry_approval_doc_id"
+              :rejection-reason="form.rejection_reason"
+            />
+          </div>
+
+          <!-- History Timeline -->
+          <div class="bg-white border border-gray-300 shadow-sm p-5">
+            <h3 class="text-sm font-black border-b-2 border-gray-800 pb-2 mb-4">سجل الحركات</h3>
             <div class="relative pl-2 pr-4 space-y-6">
-              <!-- Vertical Line -->
-              <div class="absolute right-[11px] top-2 bottom-2 w-px bg-gray-200 dark:bg-gray-700"></div>
-
+              <div class="absolute right-[11px] top-2 bottom-2 w-px bg-gray-200"></div>
               <div v-for="event in timeline" :key="event.id" class="relative flex items-start gap-4 pr-5 text-right">
-                <span :class="[
-                  event.action === 'created' || event.action === 'submitted' ? 'bg-blue-500 ring-4 ring-blue-50 dark:ring-blue-900/20' :
-                  event.action === 'approved' || event.action === 'checklist_checked' ? 'bg-emerald-500 ring-4 ring-emerald-50 dark:ring-emerald-900/20' :
-                  event.action === 'rejected' ? 'bg-red-500 ring-4 ring-red-50 dark:ring-red-900/20' :
-                  event.action === 'returned' ? 'bg-amber-500 ring-4 ring-amber-50 dark:ring-amber-900/20' : 'bg-gray-400 ring-4 ring-gray-50 dark:ring-gray-800'
-                ]" class="absolute right-[-4px] top-1.5 h-3 w-3 rounded-full z-10"></span>
-                
+                <span class="absolute right-[-4px] top-1.5 h-3 w-3 rounded-full border-2 border-white z-10"
+                      :class="{
+                        'bg-emerald-500': event.action === 'approved', 
+                        'bg-blue-500': event.action === 'submitted', 
+                        'bg-red-500': event.action === 'rejected', 
+                        'bg-amber-500': event.action === 'returned', 
+                        'bg-gray-400': !['approved', 'submitted', 'rejected', 'returned'].includes(event.action)
+                      }"></span>
                 <div class="w-full">
-                  <div class="flex justify-between items-start mb-0.5">
-                    <p class="text-xs font-bold text-gray-900 dark:text-gray-100">{{ event.action_display || event.action }}</p>
-                    <span class="text-[9px] font-mono text-gray-400">{{ new Date(event.created_at).toLocaleDateString('en-GB') }}</span>
-                  </div>
-                  <p class="text-[10px] text-gray-500 mb-1.5">بواسطة: {{ event.performed_by_name || 'النظام التلقائي' }}</p>
-                  
-                  <div v-if="event.notes" class="text-[10px] text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700 leading-relaxed">
-                    {{ event.notes }}
+                  <p class="text-xs font-black text-gray-900" :class="{
+                    'text-emerald-700': event.action === 'approved', 
+                    'text-blue-700': event.action === 'submitted',
+                    'text-red-700': event.action === 'rejected',
+                    'text-amber-700': event.action === 'returned'
+                  }">{{ event.action_display || event.action }}</p>
+                  <p class="text-[10px] text-gray-500 mb-1.5 font-mono">{{ new Date(event.created_at).toLocaleString('en-GB') }} | <span class="font-bold font-sans text-gray-700">{{ event.performed_by_name || 'النظام التلقائي' }}</span></p>
+                  <div v-if="event.notes" class="text-[11px] font-bold text-gray-800 bg-gray-50 p-2.5 border-r-2 mt-1 leading-relaxed"
+                       :class="{
+                         'border-emerald-300': event.action === 'approved',
+                         'border-blue-300': event.action === 'submitted',
+                         'border-red-300': event.action === 'rejected',
+                         'border-amber-300': event.action === 'returned',
+                         'border-gray-300': !['approved', 'submitted', 'rejected', 'returned'].includes(event.action)
+                       }">
+                    {{ formatEventNote(event.notes) }}
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Internal Chat / Notes -->
-          <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm flex flex-col h-[400px]">
-            <h2 class="text-sm font-black text-gray-900 dark:text-white mb-4 pb-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
-              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-              المراسلات الداخلية
-            </h2>
-            
-            <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 mb-4">
-              <div v-if="notes.length === 0" class="flex flex-col items-center justify-center h-full text-gray-400">
-                <svg class="w-8 h-8 mb-2 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                <span class="text-[10px]">لا توجد مراسلات أو ملاحظات حالياً</span>
-              </div>
-              <div v-for="note in notes" :key="note.id" class="bg-brand-50/50 dark:bg-brand-900/10 p-3 rounded-lg rounded-tr-none border border-brand-100/50 dark:border-brand-800/30">
-                <div class="flex justify-between items-start mb-1.5">
-                  <span class="text-[10px] font-black text-brand-700 dark:text-brand-400">{{ note.created_by_name }}</span>
-                  <span class="text-[9px] text-gray-400 font-mono">{{ new Date(note.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) }}</span>
-                </div>
-                <p class="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">{{ note.content }}</p>
-              </div>
-            </div>
-            
-            <div class="relative">
-              <input v-model="newNote" type="text" placeholder="اكتب رسالة للفريق هنا..." class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg pl-12 pr-4 py-2.5 text-xs focus:ring-1 focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow" @keyup.enter="submitNote" />
-              <button @click="submitNote" :disabled="!newNote.trim()" class="absolute left-1.5 top-1.5 bottom-1.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 disabled:hover:bg-brand-600 text-white px-3 rounded text-[10px] font-bold transition-colors cursor-pointer">
-                إرسال
-              </button>
-            </div>
-          </div>
-          
-          <!-- Checklist Section -->
-          <div v-if="checklist.length > 0" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm">
-            <h2 class="text-sm font-black text-gray-900 dark:text-white mb-4 pb-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
-              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-              متطلبات المرحلة الحالية
-            </h2>
+          <!-- Requirements Checklist -->
+          <div v-if="checklist.length > 0" class="bg-white border border-gray-300 shadow-sm p-5">
+            <h3 class="text-sm font-black border-b-2 border-gray-800 pb-2 mb-4">متطلبات المرحلة</h3>
             <div class="space-y-2">
-              <label v-for="item in checklist" :key="item.id" class="flex items-start gap-3 p-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors border border-transparent hover:border-gray-100 dark:hover:border-gray-700 group">
-                <div class="pt-0.5">
-                  <input type="checkbox" :checked="item.is_checked" @change="toggleChecklist(item)" class="w-4 h-4 text-brand-600 rounded border-gray-300 focus:ring-brand-500 cursor-pointer" />
-                </div>
-                <span class="text-xs font-medium text-gray-700 dark:text-gray-300 select-none leading-tight" :class="{ 'line-through text-gray-400 dark:text-gray-500': item.is_checked }">
-                  {{ item.title }}
-                  <span v-if="item.is_required" class="text-red-500 mr-1 text-[10px]">*</span>
+              <label v-for="item in checklist" :key="item.id" class="flex items-start gap-3 p-2 bg-gray-50 border border-gray-200 cursor-pointer hover:bg-gray-100">
+                <input type="checkbox" :checked="item.is_checked" @change="toggleChecklist(item)" class="mt-1 border-gray-400 text-gray-800 focus:ring-gray-800" />
+                <span class="text-xs font-bold text-gray-800" :class="{ 'line-through text-gray-400': item.is_checked }">
+                  {{ item.title }} <span v-if="item.is_required" class="text-red-600">*</span>
                 </span>
               </label>
             </div>
           </div>
+
+          <!-- Internal Chat -->
+          <div class="bg-white border border-gray-300 shadow-sm flex flex-col h-[400px]">
+            <div class="p-4 border-b border-gray-200">
+              <h3 class="text-sm font-black">المراسلات الداخلية</h3>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+              <div v-if="notes.length === 0" class="text-center text-xs text-gray-500 mt-10">
+                لا توجد مراسلات.
+              </div>
+              <div v-for="note in notes" :key="note.id" class="bg-white p-3 border border-gray-200 shadow-sm">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-[10px] font-bold text-gray-800">{{ note.created_by_name }}</span>
+                  <span class="text-[9px] text-gray-500 font-mono">{{ new Date(note.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) }}</span>
+                </div>
+                <p class="text-xs text-gray-900">{{ note.content }}</p>
+              </div>
+            </div>
+            <div class="p-3 border-t border-gray-200 bg-white flex gap-2">
+              <input v-model="newNote" type="text" placeholder="اكتب ملاحظة..." class="flex-1 border border-gray-300 px-2 py-1.5 text-xs focus:ring-gray-800 focus:border-gray-800" @keyup.enter="submitNote" />
+              <button @click="submitNote" :disabled="!newNote.trim()" class="bg-gray-800 text-white px-3 py-1.5 text-xs font-bold disabled:opacity-50">إرسال</button>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -409,12 +338,69 @@ const fieldTranslations: Record<string, string> = {
   national_id_front: 'صورة الهوية الوطنية (وجه)',
   power_of_attorney: 'وكالة شرعية',
   heir_ruling: 'انحصار ورثة',
-  death_certificate: 'شهادة وفاة'
+  death_certificate: 'شهادة وفاة',
+  // New translations added for missing form data
+  'end date': 'تاريخ الانتهاء',
+  end_date: 'تاريخ الانتهاء',
+  'start date': 'تاريخ البدء',
+  start_date: 'تاريخ البدء',
+  'order source': 'جهة التكليف',
+  order_source: 'جهة التكليف',
+  'dignitary name': 'اسم الشخصية',
+  dignitary_name: 'اسم الشخصية',
+  'dignitary position': 'منصب الشخصية',
+  dignitary_position: 'منصب الشخصية',
+  'certified id': 'هوية معتمدة',
+  certified_id: 'هوية معتمدة'
 }
 
 function translateField(key: string) {
   const normalizedKey = String(key).toLowerCase()
   return fieldTranslations[normalizedKey] || String(key).replace(/_/g, ' ')
+}
+
+function formatFieldValue(key: string, value: any) {
+  if (value === null || value === '' || value === undefined || value === '-') return '—'
+  // Format standard date strings (YYYY-MM-DD)
+  if (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return new Date(value).toLocaleDateString('en-GB')
+  }
+  return value
+}
+
+const personnelDetails = computed(() => {
+  if (!form.value) return []
+  const p = form.value.personnel || {}
+  
+  const details = [
+    { label: 'الاسم الرباعي', value: p.full_name || form.value.personnel_name },
+    { label: 'الرقم العسكري', value: p.military_number || form.value.personnel_military_number, isMono: true },
+    { label: 'الرتبة الحالية', value: p.rank || form.value.personnel_rank || p.rank_name || p.current_rank?.name },
+  ]
+  
+  const qual = p.qualification_name || p.qualification_detail?.name
+  if (qual && qual !== '—') details.push({ label: 'المؤهل العلمي', value: qual })
+  
+  if (p.expense_status_display && p.expense_status_display !== '—') {
+    details.push({ label: 'حالة النفقات', value: p.expense_status_display })
+  }
+  
+  if (form.value.effective_date) {
+    details.push({ label: 'تاريخ النفاذ', value: new Date(form.value.effective_date).toLocaleDateString('en-GB'), isMono: true })
+  }
+  
+  return details
+})
+
+function formatEventNote(note: string) {
+  if (!note) return ''
+  let cleaned = note
+  // Clean up repetitive backend strings
+  cleaned = cleaned.replace(/^[✓✅]\s*اعتماد(?: نهائي)?\s*(?:—\s*)?بواسطة:\s*[\w\d]+\s*(?:—|\.|-)?\s*/gi, '')
+  cleaned = cleaned.replace(/^✓\s*اعتماد بواسطة:\s*[\w\d]+\s*—\s*/gi, '')
+  cleaned = cleaned.replace(/^تمت طباعة الاستمارة بواسطة\s*[\w\d]+/gi, 'تمت طباعة الاستمارة بنجاح')
+  cleaned = cleaned.replace(/^تم تقديم الطلب — /gi, 'تم تقديم الطلب: ')
+  return cleaned
 }
 
 onMounted(async () => {
@@ -543,7 +529,11 @@ async function approveForm(ministryDocId?: number) {
         let errorMsg = err.response?.data?.error || 'حدث خطأ أثناء اعتماد المعاملة'
         
         if (errorMsg.includes('يجب إرفاق مستند موافقة الوزارة') || errorMsg.includes('مستند موافقة')) {
-          return promptMinistryDoc()
+          return promptMinistryDoc('ministry_document_id', 'تسجيل موافقة الوزارة', 'يجب إرفاق ملف القرار/المذكرة الوزارية.', 'ministry_approval')
+        }
+        
+        if (errorMsg.includes('يجب إرفاق الاستمارة الموقعة')) {
+          return promptMinistryDoc('signed_document_id', 'إرفاق الاستمارة الموقعة', 'يجب إرفاق الاستمارة الموقعة ورقياً من المدير العام.', 'signed_form')
         }
 
         if (err.response?.data && typeof err.response.data === 'object' && !err.response.data.error) {
@@ -555,17 +545,55 @@ async function approveForm(ministryDocId?: number) {
   })
 }
 
-async function promptMinistryDoc() {
+async function promptMinistryDoc(payloadKey = 'ministry_document_id', title = 'تسجيل موافقة الوزارة', subtitle = 'يجب إرفاق ملف القرار/المذكرة الوزارية.', docType = 'ministry_approval') {
   const result = await Swal.fire({
-    title: 'تسجيل موافقة الوزارة',
-    html: `<div class="text-right" dir="rtl"><p class="text-xs text-gray-600 mb-3">يجب إرفاق ملف القرار/المذكرة الوزارية.</p><input type="file" id="ministry-doc" class="block w-full text-xs" accept=".pdf,.png,.jpg,.jpeg"></div>`,
+    title: title,
+    html: `<div class="text-right" dir="rtl">
+             <div id="swal-upload-wrapper" class="p-4 border border-dashed rounded-xl transition-colors border-gray-300 dark:border-gray-700 text-right">
+               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                 <div>
+                   <p class="font-bold text-sm flex items-center gap-2 text-gray-900 dark:text-white">
+                     المستند المرفق <span class="text-red-500">*</span>
+                     <span id="swal-upload-badge" class="hidden text-emerald-600 text-[10px] bg-emerald-100 dark:bg-emerald-900/50 px-2 py-0.5 rounded font-bold border border-emerald-200 dark:border-emerald-800">✓ تم الرفع</span>
+                   </p>
+                   <p class="text-xs text-gray-400 mt-1">صيغ مدعومة: PDF, JPG, PNG (الحد الأقصى 5MB)</p>
+                   <p id="swal-file-name" class="hidden text-xs text-emerald-600 mt-1.5 font-mono bg-white dark:bg-gray-900 inline-block px-2 py-1 rounded border border-emerald-100 dark:border-emerald-900/30"></p>
+                 </div>
+                 <div class="flex items-center gap-3 self-end sm:self-auto">
+                   <label id="swal-upload-btn" for="ministry-doc" class="cursor-pointer bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold px-4 py-2.5 rounded-lg transition-colors shadow-sm">
+                     اختيار ملف
+                   </label>
+                   <input id="ministry-doc" type="file" class="hidden" accept=".pdf,.jpg,.jpeg,.png" onchange="
+                     const w = document.getElementById('swal-upload-wrapper');
+                     const b = document.getElementById('swal-upload-badge');
+                     const n = document.getElementById('swal-file-name');
+                     const btn = document.getElementById('swal-upload-btn');
+                     if(this.files && this.files[0]) {
+                       w.classList.remove('border-gray-300', 'dark:border-gray-700');
+                       w.classList.add('border-emerald-400', 'bg-emerald-50/50', 'dark:bg-emerald-950/20');
+                       b.style.display = 'inline-block';
+                       n.style.display = 'inline-block';
+                       n.innerText = this.files[0].name;
+                       btn.innerText = 'تغيير الملف';
+                     } else {
+                       w.classList.add('border-gray-300', 'dark:border-gray-700');
+                       w.classList.remove('border-emerald-400', 'bg-emerald-50/50', 'dark:bg-emerald-950/20');
+                       b.style.display = 'none';
+                       n.style.display = 'none';
+                       btn.innerText = 'اختيار ملف';
+                     }
+                   ">
+                 </div>
+               </div>
+             </div>
+           </div>`,
     icon: 'info', showCancelButton: true, confirmButtonText: 'رفع واعتماد', cancelButtonText: 'إلغاء', confirmButtonColor: '#10b981', showLoaderOnConfirm: true,
     preConfirm: async () => {
       const fileInput = document.getElementById('ministry-doc') as HTMLInputElement
       if (!fileInput?.files?.length) { Swal.showValidationMessage('يجب اختيار ملف'); return false }
       const fd = new FormData()
       fd.append('file', fileInput.files[0])
-      fd.append('document_type', 'ministry_approval')
+      fd.append('document_type', docType)
       try {
         const uploadRes = await api.post('/storage/upload/', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
         const docId = uploadRes.data?.data?.id || uploadRes.data?.id
@@ -579,7 +607,19 @@ async function promptMinistryDoc() {
   })
   
   if (result.isConfirmed && result.value) {
-     approveForm(result.value)
+     if (payloadKey === 'ministry_document_id') {
+         approveForm(result.value)
+     } else {
+         // بالنسبة للمستند الداخلي
+         try {
+             await servicesStore.approveForm(form.value.id, { [payloadKey]: result.value })
+             Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم الاعتماد بنجاح', showConfirmButton: false, timer: 2000 })
+             fetchFormDetails()
+         } catch (err: any) {
+             const errorMsg = err.response?.data?.error || 'حدث خطأ أثناء الاعتماد'
+             Swal.fire({ icon: 'error', title: 'خطأ', text: errorMsg })
+         }
+     }
   }
 }
 

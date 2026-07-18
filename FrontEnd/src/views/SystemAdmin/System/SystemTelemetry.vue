@@ -116,6 +116,7 @@
             <DataTable
               :columns="jobColumns"
               :data="backgroundJobs"
+              row-key="id"
               :search-placeholder="'ابحث عن مهمة...'"
             >
               <template #cell-status="{ row }">

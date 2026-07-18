@@ -196,7 +196,7 @@ async function handleExport() {
   
   isExporting.value = true
   try {
-    await servicesStore.exportRejections(filters.value.central_department, filters.value.service_month)
+    await servicesStore.exportRejections(String(filters.value.central_department), filters.value.service_month)
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم تصدير التقرير بنجاح', showConfirmButton: false, timer: 3000 })
   } catch (err: any) {
     Swal.fire('خطأ', 'فشل تصدير التقرير', 'error')

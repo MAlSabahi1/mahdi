@@ -570,6 +570,26 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
                     next_step_name = ordered_steps[1].stage.name_ar
                 # else: خطوة واحدة فقط → اعتماد نهائي
 
+            is_final = next_step_id is None
+
+            # ── فرض رفع المرفق الموقع للطلبات الداخلية النهائية ──
+            if is_final and catalog and getattr(catalog, 'approval_type', '') != 'external':
+                if not form.is_printed:
+                    return Response({'success': False, 'error': 'يجب طباعة الاستمارة أولاً وتوقيعها ورقياً قبل الاعتماد النهائي.'}, status=400)
+                
+                signed_doc_id = request.data.get('signed_document_id')
+                if not signed_doc_id:
+                     return Response({'success': False, 'error': 'يجب إرفاق الاستمارة الموقعة (ورقياً) لاعتماد الطلب نهائياً.'}, status=400)
+                
+                from infra.storage.models import Document
+                doc = Document.objects.filter(id=signed_doc_id).first()
+                if doc:
+                    form.attachments.add(doc)
+                    doc.context_type = 'StatusChangeForm'
+                    doc.context_id = str(form.id)
+                    doc.personnel_id = form.personnel_id
+                    doc.save(update_fields=['context_type', 'context_id', 'personnel_id'])
+
             uc = ApproveStatusFormUseCase(
                 self.repo,
                 self.execution_engine,
@@ -585,8 +605,6 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
                 execution_config=catalog.execution_config if catalog else {},
             )
             uc.execute(cmd)
-
-            is_final = next_step_id is None
 
             # ── تحديث current_step في النموذج ──
             StatusChangeForm.objects.filter(id=form.id).update(

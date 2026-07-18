@@ -48,7 +48,7 @@
           <!-- Memo Body Content with standard official margins -->
           <div class="px-10 mt-0 flex-1 flex flex-col">
           <!-- Type-Specific Dynamic Tables (If needed) -->
-          <div v-if="memo.includeTable !== false && memo.involvedPersonnel && memo.involvedPersonnel.length > 0 && ['ATTENTION_NOTICE', 'WORK_COMMENCEMENT', 'PERSONNEL_MEMO', 'CORRECTION'].includes(memo.documentType)" class="mb-8 print:mb-10 overflow-hidden rounded-xl border border-gray-400 shadow-sm print:shadow-none print:border-gray-800">
+          <div v-if="memo.includeTable !== false && memo.involvedPersonnel && memo.involvedPersonnel.length > 0 && ['ATTENTION_NOTICE', 'WORK_COMMENCEMENT', 'PERSONNEL_MEMO', 'CORRECTION'].includes(memo.documentType)" class="mb-8 print:mb-10 overflow-hidden rounded-xl border border-gray-400 shadow-sm print:shadow-none print:border-gray-800 -mx-8 print:-mx-8">
               <table class="w-full text-center border-collapse text-[1.1rem]" v-if="memo.documentType === 'ATTENTION_NOTICE'">
                 <thead>
                   <tr class="bg-gray-100 print:bg-gray-100 font-bold text-gray-800">
@@ -120,7 +120,7 @@
                     <td class="border border-gray-400 py-0.5 px-1 whitespace-nowrap">{{ person.rank }}</td>
                     <td class="border border-gray-400 py-0.5 px-1 font-mono tracking-wider whitespace-nowrap">{{ person.militaryId }}</td>
                     <td class="border border-gray-400 py-0.5 px-1 text-center font-bold text-[0.8rem] print:text-[0.75rem] leading-tight">{{ person.correctName }}</td>
-                    <td class="border border-gray-400 py-0.5 px-1 text-center line-through text-gray-500 text-[0.8rem] print:text-[0.75rem] leading-tight">{{ person.wrongName || person.name }}</td>
+                    <td class="border border-gray-400 py-0.5 px-1 text-center text-gray-800 text-[0.8rem] print:text-[0.75rem] leading-tight">{{ person.wrongName || person.name }}</td>
                     <td class="border border-gray-400 py-0.5 px-1 text-gray-700 text-[0.75rem] print:text-[0.7rem] leading-tight">{{ person.correctionTarget }}</td>
                     <td class="border border-gray-400 py-0.5 px-1 text-[0.75rem] print:text-[0.7rem] leading-tight">{{ person.notes || person.secondaryNotes }}</td>
                   </tr>
@@ -227,7 +227,7 @@
         </div> <!-- Close Memo Page (a4-page) -->
 
         <!-- Document 2: Model 23 Matching List / Correction List (Landscape) -->
-        <div v-if="memo.documentType === 'CORRECTION'" class="a4-page landscape-section bg-white mx-auto shadow-2xl relative overflow-hidden flex flex-col print-page-break p-8">
+        <div v-if="memo.documentType === 'CORRECTION' && memo.isNameCorrection" class="a4-page landscape-section bg-white mx-auto shadow-2xl relative overflow-hidden flex flex-col print-page-break p-8">
           <AuditMovementReports reportIdProp="23" :isEmbedded="true" :monthProp="memoMonth" />
         </div>
 
@@ -598,8 +598,6 @@ onMounted(() => {
     height: 29.7cm !important;
     max-height: 29.7cm !important;
     overflow: hidden !important;
-    page-break-after: always !important;
-    break-after: page !important;
     box-sizing: border-box !important;
     margin: 0 auto !important;
     padding: 0 !important;
@@ -611,8 +609,6 @@ onMounted(() => {
     height: 21cm !important;
     max-height: 21cm !important;
     overflow: hidden !important;
-    page-break-after: always !important;
-    break-after: page !important;
     box-sizing: border-box !important;
     margin: 0 auto !important;
     padding: 0.5cm !important;
@@ -620,8 +616,8 @@ onMounted(() => {
   }
 
   .print-page-break {
-    page-break-after: always !important;
-    break-after: page !important;
+    page-break-before: always !important;
+    break-before: page !important;
   }
   
   /* Ensure the form page containers act perfectly like an A4 page */

@@ -37,6 +37,7 @@
         v-else
         :columns="columns"
         :data="templates"
+        row-key="id"
         :search-placeholder="'ابحث عن استمارة بالاسم، الرمز، أو التصنيف...'"
       >
         <template #cell-name="{ row }">

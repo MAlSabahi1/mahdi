@@ -200,6 +200,15 @@
 
             <!-- Column Headers Row -->
             <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 print:border-black print:border-2">
+              <!-- Select All Checkbox -->
+              <th v-if="selectable" class="border-e border-gray-200 dark:border-gray-700 px-4 py-3 text-center w-12 print:hidden">
+                <input type="checkbox"
+                  class="w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500 cursor-pointer"
+                  :checked="data.length > 0 && selectedRowKeys.length === data.length"
+                  :indeterminate="selectedRowKeys.length > 0 && selectedRowKeys.length < data.length"
+                  @change="toggleAll" />
+              </th>
+
               <template v-for="col in columns" :key="col.key">
                 <th
                   v-if="isColVisible(col.key)"
@@ -226,7 +235,17 @@
               v-for="(row, index) in data"
               :key="row[rowKey]"
               class="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group print:border-black print:border"
+              :class="{'bg-brand-50/30 dark:bg-brand-900/10': isSelected(row[rowKey])}"
             >
+              <!-- Select Checkbox -->
+              <td v-if="selectable" class="border-e border-gray-200 dark:border-gray-700 px-4 py-4 text-center w-12 print:hidden">
+                <input type="checkbox"
+                  class="w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500 cursor-pointer"
+                  :value="row[rowKey]"
+                  :checked="isSelected(row[rowKey])"
+                  @change="toggleSelection(row[rowKey])" />
+              </td>
+
               <!-- Data Columns -->
               <template v-for="col in columns" :key="col.key">
                 <td
@@ -304,10 +323,12 @@ const props = withDefaults(defineProps<{
   actionsWidth?: string
   hasFilters?: boolean
   activeFilterCount?: number
-  searchPlaceholder?: string
+  searchPlaceholder: string
   loadingText?: string
   emptyTitle?: string
   emptyDescription?: string
+  selectable?: boolean
+  selectedRowKeys?: (string | number)[]
 }>(), {
   loading: false,
   error: null,
@@ -323,6 +344,8 @@ const props = withDefaults(defineProps<{
   loadingText: 'جاري التحميل...',
   emptyTitle: 'لا توجد بيانات',
   emptyDescription: 'لم يتم العثور على نتائج مطابقة.',
+  selectable: false,
+  selectedRowKeys: () => [],
 })
 
 // ── Events ─────────────────────────────────────────────────
@@ -332,6 +355,7 @@ const emit = defineEmits<{
   (e: 'export'): void
   (e: 'change-page', page: number): void
   (e: 'change-page-size', size: number): void
+  (e: 'update:selectedRowKeys', keys: (string | number)[]): void
 }>()
 
 // ── State ──────────────────────────────────────────────────
@@ -362,6 +386,29 @@ function isColVisible(key: string): boolean {
 
 function visibleColsInGroup(keys: string[]): number {
   return keys.filter(k => isColVisible(k)).length
+}
+
+// ── Selection ──────────────────────────────────────────────
+function isSelected(key: string | number): boolean {
+  return props.selectedRowKeys.includes(key)
+}
+
+function toggleSelection(key: string | number) {
+  const keys = [...props.selectedRowKeys]
+  const idx = keys.indexOf(key)
+  if (idx > -1) keys.splice(idx, 1)
+  else keys.push(key)
+  emit('update:selectedRowKeys', keys)
+}
+
+function toggleAll(e: Event) {
+  const checked = (e.target as HTMLInputElement).checked
+  if (checked) {
+    const allKeys = props.data.map(row => row[props.rowKey])
+    emit('update:selectedRowKeys', allKeys)
+  } else {
+    emit('update:selectedRowKeys', [])
+  }
 }
 
 // ── Search ─────────────────────────────────────────────────
