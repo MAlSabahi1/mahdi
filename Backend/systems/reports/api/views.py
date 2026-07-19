@@ -344,15 +344,17 @@ class ExportRequestViewSet(viewsets.ModelViewSet):
 class MonthlyServicesReportView(APIView):
     """
     تقرير: تصدير الخدمات والكشوفات الشهرية
-    يعرض الإجراءات (StatusChangeForm) خلال شهر وسنة محددين.
+    يدعم وضعين:
+    - roster_mode=monthly_changes (افتراضي): يعرض فقط من لديهم إجراءات معتمدة هذا الشهر
+    - roster_mode=all: يعرض كل الأفراد المسجلين مع بيانات إجراءاتهم إن وُجدت
     """
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         month = request.query_params.get('month')
         year = request.query_params.get('year')
-        status_param = request.query_params.get('status', 'all')
-        
+        roster_mode = request.query_params.get('roster_mode', 'monthly_changes')  # 'all' | 'monthly_changes'
+
         # Advanced filters on personnel
         rank_id = request.query_params.get('rank')
         category_id = request.query_params.get('category')
@@ -362,111 +364,296 @@ class MonthlyServicesReportView(APIView):
         district_police_id = request.query_params.get('district_police')
         position_id = request.query_params.get('position')
         qualification_id = request.query_params.get('qualification')
-        force_class = request.query_params.get('force_classification')  # active / inactive
+        force_class = request.query_params.get('force_classification')
         military_number_search = request.query_params.get('military_number')
         name_search = request.query_params.get('name')
-        
+
         from systems.services.models import StatusChangeForm, ServiceCatalog
-        
-        qs = StatusChangeForm.objects.select_related(
-            'personnel', 'personnel__current_rank', 'submitted_by',
-            'personnel__qualification', 'personnel__security_admin',
-            'personnel__central_department', 'personnel__branch',
-            'personnel__district_police', 'personnel__position',
-            'personnel__job_title', 'personnel__category',
-            'personnel__current_status'
-        )
-        
-        if year:
-            qs = qs.filter(created_at__year=year)
-        if month:
-            qs = qs.filter(created_at__month=month)
-            
-        if status_param != 'all':
-            qs = qs.filter(status=status_param)
-        
-        # Advanced personnel filters
-        if rank_id:
-            qs = qs.filter(personnel__current_rank_id=rank_id)
-        if category_id:
-            qs = qs.filter(personnel__category_id=category_id)
-        if security_admin_id:
-            qs = qs.filter(personnel__security_admin_id=security_admin_id)
-        if central_department_id:
-            qs = qs.filter(personnel__central_department_id=central_department_id)
-        if branch_id:
-            qs = qs.filter(personnel__branch_id=branch_id)
-        if district_police_id:
-            qs = qs.filter(personnel__district_police_id=district_police_id)
-        if position_id:
-            qs = qs.filter(personnel__position_id=position_id)
-        if qualification_id:
-            qs = qs.filter(personnel__qualification_id=qualification_id)
-        if force_class == 'active':
-            qs = qs.filter(personnel__current_status__classification__startswith='active')
-        elif force_class == 'inactive':
-            qs = qs.exclude(personnel__current_status__classification__startswith='active')
-        if military_number_search:
-            qs = qs.filter(personnel__military_number__icontains=military_number_search)
-        if name_search:
-            qs = qs.filter(personnel__full_name__icontains=name_search)
-            
-        # Scope by user permissions
-        from infra.authorization.services.permission_service import PermissionService
-        try:
-            qs = PermissionService.get_scoped_queryset(request.user, qs, 'services.view.*')
-        except Exception:
-            pass
+        from systems.personnel.models import PersonnelMaster
 
         catalog_map = {}
         for sc in ServiceCatalog.objects.values('code', 'form_type', 'name_ar'):
             catalog_map[sc['code']] = sc['name_ar']
             if sc['form_type']:
                 catalog_map[sc['form_type']] = sc['name_ar']
+
+        # Determine roster type string
+        import datetime
+        ARABIC_MONTHS = {
+            1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل', 5: 'مايو', 6: 'يونيو',
+            7: 'يوليو', 8: 'أغسطس', 9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
+        }
+        current_date = datetime.date.today()
+        
+        # Parse multiple months/years
+        month_list = []
+        if month:
+            month_list = [int(m.strip()) for m in month.split(',') if m.strip().isdigit()]
+        if not month_list:
+            month_list = [current_date.month]
+            
+        year_list = []
+        if year:
+            year_list = [int(y.strip()) for y in year.split(',') if y.strip().isdigit()]
+        if not year_list:
+            year_list = [current_date.year]
+
+        month_names_ar = ' و '.join([ARABIC_MONTHS.get(m, str(m)) for m in month_list])
+        years_str = ' و '.join(map(str, year_list))
+        roster_type_val = f"{month_names_ar} {years_str}"
+
+        # ─── Helper: Build personnel filters ────────────────────────────────
+        def apply_personnel_filters(qs, prefix=''):
+            if rank_id:
+                rank_id_list = [int(rid.strip()) for rid in rank_id.split(',') if rid.strip().isdigit()]
+                if rank_id_list:
+                    qs = qs.filter(**{f'{prefix}current_rank_id__in': rank_id_list})
+            if category_id:
+                category_id_list = [int(cid.strip()) for cid in category_id.split(',') if cid.strip().isdigit()]
+                if category_id_list:
+                    qs = qs.filter(**{f'{prefix}category_id__in': category_id_list})
+            if security_admin_id:
+                admin_id_list = [int(x.strip()) for x in security_admin_id.split(',') if x.strip().isdigit()]
+                if admin_id_list:
+                    qs = qs.filter(**{f'{prefix}security_admin_id__in': admin_id_list})
+            if central_department_id:
+                dept_id_list = [int(x.strip()) for x in central_department_id.split(',') if x.strip().isdigit()]
+                if dept_id_list:
+                    qs = qs.filter(**{f'{prefix}central_department_id__in': dept_id_list})
+            if branch_id:
+                branch_id_list = [int(x.strip()) for x in branch_id.split(',') if x.strip().isdigit()]
+                if branch_id_list:
+                    qs = qs.filter(**{f'{prefix}branch_id__in': branch_id_list})
+            if district_police_id:
+                dist_police_list = [int(x.strip()) for x in district_police_id.split(',') if x.strip().isdigit()]
+                if dist_police_list:
+                    qs = qs.filter(**{f'{prefix}district_police_id__in': dist_police_list})
+            if position_id:
+                position_id_list = [int(x.strip()) for x in position_id.split(',') if x.strip().isdigit()]
+                if position_id_list:
+                    qs = qs.filter(**{f'{prefix}position_id__in': position_id_list})
+            if qualification_id:
+                qual_id_list = [int(x.strip()) for x in qualification_id.split(',') if x.strip().isdigit()]
+                if qual_id_list:
+                    qs = qs.filter(**{f'{prefix}qualification_id__in': qual_id_list})
+            
+            # Status Filters
+            status_classification = request.query_params.get('status_classification')
+            if status_classification:
+                classification_list = [sc.strip() for sc in status_classification.split(',') if sc.strip()]
+                if classification_list:
+                    qs = qs.filter(**{f'{prefix}current_status__classification__in': classification_list})
                 
-        data = []
-        for index, form in enumerate(qs.order_by('-created_at'), 1):
-            p = form.personnel
-            if not p:
-                continue
+            status_id = request.query_params.get('status_id')
+            if status_id:
+                status_id_list = [sid.strip() for sid in status_id.split(',') if sid.strip()]
+                if status_id_list:
+                    qs = qs.filter(**{f'{prefix}current_status_id__in': status_id_list})
             
-            ft_display = catalog_map.get(form.form_type) or dict(form.FORM_TYPE_CHOICES).get(form.form_type) or form.form_type
+            # New Filters: Birth & Residence Geography
+            birth_gov = request.query_params.get('birth_governorate')
+            if birth_gov:
+                birth_gov_list = [int(x.strip()) for x in birth_gov.split(',') if x.strip().isdigit()]
+                if birth_gov_list:
+                    qs = qs.filter(**{f'{prefix}birth_governorate_id__in': birth_gov_list})
+            birth_district = request.query_params.get('birth_district')
+            if birth_district:
+                birth_dist_list = [int(x.strip()) for x in birth_district.split(',') if x.strip().isdigit()]
+                if birth_dist_list:
+                    qs = qs.filter(**{f'{prefix}birth_district_id__in': birth_dist_list})
+            birth_sub_district = request.query_params.get('birth_sub_district')
+            if birth_sub_district:
+                birth_sub_dist_list = [int(x.strip()) for x in birth_sub_district.split(',') if x.strip().isdigit()]
+                if birth_sub_dist_list:
+                    qs = qs.filter(**{f'{prefix}birth_sub_district_id__in': birth_sub_dist_list})
+            birth_village = request.query_params.get('birth_village')
+            if birth_village:
+                birth_vill_list = [int(x.strip()) for x in birth_village.split(',') if x.strip().isdigit()]
+                if birth_vill_list:
+                    qs = qs.filter(**{f'{prefix}birth_village_id__in': birth_vill_list})
             
-            unit = 'غير محدد'
-            if p.central_department:
-                unit = p.central_department.name
-            elif p.branch:
-                unit = p.branch.name
-            elif p.district_police:
-                unit = p.district_police.name
-            elif p.security_admin:
-                unit = p.security_admin.name
+            residence_gov = request.query_params.get('residence_governorate')
+            if residence_gov:
+                residence_gov_list = [int(x.strip()) for x in residence_gov.split(',') if x.strip().isdigit()]
+                if residence_gov_list:
+                    qs = qs.filter(**{f'{prefix}residence_governorate_id__in': residence_gov_list})
+            residence_district = request.query_params.get('residence_district')
+            if residence_district:
+                residence_dist_list = [int(x.strip()) for x in residence_district.split(',') if x.strip().isdigit()]
+                if residence_dist_list:
+                    qs = qs.filter(**{f'{prefix}residence_district_id__in': residence_dist_list})
+            residence_sub_district = request.query_params.get('residence_sub_district')
+            if residence_sub_district:
+                residence_sub_dist_list = [int(x.strip()) for x in residence_sub_district.split(',') if x.strip().isdigit()]
+                if residence_sub_dist_list:
+                    qs = qs.filter(**{f'{prefix}residence_sub_district_id__in': residence_sub_dist_list})
+            residence_village = request.query_params.get('residence_village')
+            if residence_village:
+                residence_vill_list = [int(x.strip()) for x in residence_village.split(',') if x.strip().isdigit()]
+                if residence_vill_list:
+                    qs = qs.filter(**{f'{prefix}residence_village_id__in': residence_vill_list})
             
-            data.append({
+            if force_class:
+                force_class_list = [int(fc.strip()) for fc in force_class.split(',') if fc.strip().isdigit()]
+                if force_class_list:
+                    qs = qs.filter(**{f'{prefix}force_classification_id__in': force_class_list})
+            if military_number_search:
+                qs = qs.filter(**{f'{prefix}military_number__icontains': military_number_search})
+            if name_search:
+                qs = qs.filter(**{f'{prefix}full_name__icontains': name_search})
+            return qs
+
+        # ─── Helper: build a row dict from a personnel object ────────────────
+        def build_row(index, p, variables_str=''):
+            try:
+                status_display = p.current_status.get_classification_display() if p.current_status else '-'
+            except Exception:
+                status_display = '-'
+            try:
+                status_type = p.current_status.name if p.current_status else '-'
+            except Exception:
+                status_type = '-'
+            try:
+                force_cls = p.force_classification.name if p.force_classification else '-'
+            except Exception:
+                force_cls = '-'
+            try:
+                expense = p.get_expense_status_display() if p.expense_status else '-'
+            except Exception:
+                expense = '-'
+            
+            # منع ظهور الحالات التي ليس لها تصنيف بشكل فارغ، نضع '-'
+            if not status_display or status_display.strip() == '':
+                status_display = '-'
+            
+            return {
                 'index': index,
-                'rank': p.current_rank.name if p.current_rank else 'بدون رتبة',
-                'military_number': p.military_number,
-                'national_id': p.national_id or 'غير مدخل',
-                'full_name': p.full_name,
-                'unit': p.security_admin.name if p.security_admin else 'غير مدخل',
-                'directorate': p.central_department.name if p.central_department else 'غير مدخل',
-                'department': p.district_police.name if p.district_police else 'غير مدخل',
-                'affiliated_unit': p.branch.name if p.branch else 'غير مدخل',
-                'position': p.position.name if p.position else 'غير مدخل',
-                'job_title': p.job_title.name if p.job_title else 'غير مدخل',
-                'category': p.category.name if p.category else 'غير مدخل',
-                'status': p.current_status.name if p.current_status else 'غير مدخل',
-                'status_type': ft_display,
-                'force_classification': 'قوة عاملة' if p.current_status and 'active' in p.current_status.classification else 'قوة غير عاملة',
-                'qualification': p.qualification.name if p.qualification else 'غير مدخل',
-                'phone': p.phone_number or 'غير مدخل',
-                'old_military_number': p.old_military_number or 'غير مدخل',
-                'expense_status': dict(p.EXPENSE_STATUS_CHOICES).get(p.expense_status, 'غير مدخل') if hasattr(p, 'EXPENSE_STATUS_CHOICES') else 'غير مدخل',
-                'appointment_info': p.appointment_info or 'غير مدخل',
+                'officer_number': '',
+                'rank': p.current_rank.name if p.current_rank else '-',
+                'military_number': p.military_number or '',
+                'national_id': p.national_id or '-',
+                'full_name': p.full_name or '',
+                'service_roster_type': roster_type_val,
+                'unit': p.security_admin.name if p.security_admin else '-',
+                'directorate': p.central_department.name if p.central_department else '-',
+                'affiliated_unit': p.branch.name if p.branch else '-',
+                'position': p.position.name if p.position else '-',
+                'job_title': p.job_title.name if p.job_title else '-',
+                'category': p.category.name if p.category else '-',
+                'status': status_display,
+                'status_type': status_type,
+                'force_classification': force_cls,
+                'qualification': p.qualification.name if p.qualification else '-',
+                'phone': p.phone_number or '-',
+                'expense_status': expense,
+                'monthly_variables': variables_str,
+                'notes': p.notes or '',
+                'appointment_info': p.appointment_info or '',
                 'quality': f"{p.data_quality_score}%",
-                'join_date': str(p.join_date) if p.join_date else 'غير مدخل',
-            })
-            
-        return Response({
-            'data': data
-        })
+                'join_date': str(p.join_date) if p.join_date else '-',
+                'birth_governorate': p.birth_governorate.name_ar if getattr(p, 'birth_governorate', None) else '-',
+                'birth_district': p.birth_district.name_ar if getattr(p, 'birth_district', None) else '-',
+                'birth_sub_district': p.birth_sub_district.name_ar if getattr(p, 'birth_sub_district', None) else '-',
+                'birth_village': p.birth_village.name_ar if getattr(p, 'birth_village', None) else '-',
+                'residence_governorate': p.residence_governorate.name_ar if getattr(p, 'residence_governorate', None) else '-',
+                'residence_district': p.residence_district.name_ar if getattr(p, 'residence_district', None) else '-',
+                'residence_sub_district': p.residence_sub_district.name_ar if getattr(p, 'residence_sub_district', None) else '-',
+                'residence_village': p.residence_village.name_ar if getattr(p, 'residence_village', None) else '-',
+            }
+
+        data = []
+
+        if roster_mode == 'all':
+            # ═══ وضع الكشف الشامل: كل الأفراد المسجلين ═══════════════════════
+            p_qs = PersonnelMaster.objects.select_related(
+                'current_rank', 'qualification', 'security_admin',
+                'central_department', 'branch', 'district_police',
+                'position', 'job_title', 'category', 'current_status',
+                'force_classification', 'birth_governorate', 'birth_district', 'birth_sub_district', 'birth_village',
+                'residence_governorate', 'residence_district', 'residence_sub_district', 'residence_village'
+            )
+            p_qs = apply_personnel_filters(p_qs, prefix='')
+
+            # جلب إجراءات الشهر لتعبئة عمود المتغيرات
+            forms_qs = StatusChangeForm.objects.filter(status='approved')
+            if year_list:
+                forms_qs = forms_qs.filter(created_at__year__in=year_list)
+            if month_list:
+                forms_qs = forms_qs.filter(created_at__month__in=month_list)
+
+            personnel_latest_form = {}
+            for f in forms_qs.order_by('created_at'):
+                personnel_latest_form[f.personnel_id] = f
+
+            try:
+                from infra.authorization.services.permission_service import PermissionService
+                p_qs = PermissionService.get_scoped_queryset(request.user, p_qs, 'personnel.view.*')
+            except Exception:
+                pass
+
+            for index, p in enumerate(p_qs.order_by('current_rank__order', 'full_name'), 1):
+                variables_str = ''
+                latest = personnel_latest_form.get(p.pk)
+                if latest:
+                    try:
+                        ft_display = catalog_map.get(latest.form_type) or dict(latest.FORM_TYPE_CHOICES).get(latest.form_type) or latest.form_type
+                        variables_str = ft_display
+                        if latest.notes and latest.notes.strip() not in ['-', '']:
+                            variables_str += f" - {latest.notes.strip()}"
+                    except Exception:
+                        variables_str = str(latest.form_type)
+                data.append(build_row(index, p, variables_str))
+
+        else:
+            # ═══ وضع تغييرات الشهر فقط ══════════════════════════
+            qs = StatusChangeForm.objects.select_related(
+                'personnel', 'personnel__current_rank', 'submitted_by',
+                'personnel__qualification', 'personnel__security_admin',
+                'personnel__central_department', 'personnel__branch',
+                'personnel__district_police', 'personnel__position',
+                'personnel__job_title', 'personnel__category',
+                'personnel__current_status', 'personnel__force_classification',
+                'personnel__birth_governorate', 'personnel__birth_district', 'personnel__birth_sub_district', 'personnel__birth_village',
+                'personnel__residence_governorate', 'personnel__residence_district', 'personnel__residence_sub_district', 'personnel__residence_village'
+            )
+
+            if year_list:
+                qs = qs.filter(created_at__year__in=year_list)
+            if month_list:
+                qs = qs.filter(created_at__month__in=month_list)
+
+            qs = qs.filter(status='approved')
+            qs = apply_personnel_filters(qs, prefix='personnel__')
+
+            try:
+                from infra.authorization.services.permission_service import PermissionService
+                qs = PermissionService.get_scoped_queryset(request.user, qs, 'services.view.*')
+            except Exception:
+                pass
+
+            personnel_forms = {}
+            for form in qs.order_by('created_at'):
+                pid = form.personnel_id
+                if not pid:
+                    continue
+                if pid not in personnel_forms:
+                    personnel_forms[pid] = {'personnel': form.personnel, 'forms': []}
+                personnel_forms[pid]['forms'].append(form)
+
+            for index, (pid, p_data) in enumerate(personnel_forms.items(), 1):
+                p = p_data['personnel']
+                forms = p_data['forms']
+
+                latest_form = forms[-1]
+                try:
+                    latest_ft_display = catalog_map.get(latest_form.form_type) or dict(latest_form.FORM_TYPE_CHOICES).get(latest_form.form_type) or latest_form.form_type
+                    variables_str = latest_ft_display
+                    if latest_form.notes and latest_form.notes.strip() not in ['-', '']:
+                        variables_str += f" - {latest_form.notes.strip()}"
+                except Exception:
+                    variables_str = str(latest_form.form_type)
+
+                data.append(build_row(index, p, variables_str))
+
+        return Response({'data': data})
+

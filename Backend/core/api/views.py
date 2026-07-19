@@ -74,8 +74,17 @@ class GeoGovernorateViewSet(DictionaryViewSetMixin, BaseModelViewSet):
 class GeoDistrictViewSet(DictionaryViewSetMixin, BaseModelViewSet):
     queryset = GeoDistrict.objects.select_related('governorate').all()
     serializer_class = GeoDistrictSerializer
-    filterset_fields = ['governorate', 'is_active']
+    filterset_fields = ['is_active']
     search_fields = ['name_ar', 'name_en']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        gov_ids = self.request.query_params.get('governorate')
+        if gov_ids:
+            gov_list = [int(x.strip()) for x in gov_ids.split(',') if x.strip().isdigit()]
+            if gov_list:
+                qs = qs.filter(governorate_id__in=gov_list)
+        return qs
 
 
 @extend_schema_view(
@@ -84,8 +93,17 @@ class GeoDistrictViewSet(DictionaryViewSetMixin, BaseModelViewSet):
 class GeoSubDistrictViewSet(DictionaryViewSetMixin, BaseModelViewSet):
     queryset = GeoSubDistrict.objects.select_related('district__governorate').all()
     serializer_class = GeoSubDistrictSerializer
-    filterset_fields = ['district']
+    filterset_fields = ['is_active']
     search_fields = ['name_ar', 'name_en']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        dist_ids = self.request.query_params.get('district')
+        if dist_ids:
+            dist_list = [int(x.strip()) for x in dist_ids.split(',') if x.strip().isdigit()]
+            if dist_list:
+                qs = qs.filter(district_id__in=dist_list)
+        return qs
 
 
 @extend_schema_view(
@@ -94,8 +112,17 @@ class GeoSubDistrictViewSet(DictionaryViewSetMixin, BaseModelViewSet):
 class GeoVillageViewSet(DictionaryViewSetMixin, BaseModelViewSet):
     queryset = GeoVillage.objects.select_related('sub_district__district').all()
     serializer_class = GeoVillageSerializer
-    filterset_fields = ['sub_district']
+    filterset_fields = ['is_active']
     search_fields = ['name_ar', 'name_en']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        sub_dist_ids = self.request.query_params.get('sub_district')
+        if sub_dist_ids:
+            sub_dist_list = [int(x.strip()) for x in sub_dist_ids.split(',') if x.strip().isdigit()]
+            if sub_dist_list:
+                qs = qs.filter(sub_district_id__in=sub_dist_list)
+        return qs
 
 
 # ============================================================================
@@ -135,12 +162,17 @@ class SecurityAdministrationViewSet(DictionaryViewSetMixin, BaseModelViewSet):
 class CentralDepartmentViewSet(DictionaryViewSetMixin, BaseModelViewSet):
     queryset = CentralDepartment.objects.select_related('security_admin').all()
     serializer_class = CentralDepartmentSerializer
-    filterset_fields = ['security_admin', 'is_active']
+    filterset_fields = ['is_active']
     search_fields = ['name', 'code']
     ordering = ['security_admin', 'order', 'name']
 
     def get_queryset(self):
         qs = super().get_queryset()
+        admin_ids_param = self.request.query_params.get('security_admin')
+        if admin_ids_param:
+            admin_list = [int(x.strip()) for x in admin_ids_param.split(',') if x.strip().isdigit()]
+            if admin_list:
+                qs = qs.filter(security_admin_id__in=admin_list)
         if hasattr(self.request.user, 'profile'):
             admin_ids = self.request.user.profile.get_accessible_security_admin_ids()
             if admin_ids is not None:
@@ -155,12 +187,17 @@ class CentralDepartmentViewSet(DictionaryViewSetMixin, BaseModelViewSet):
 class BranchViewSet(DictionaryViewSetMixin, BaseModelViewSet):
     queryset = Branch.objects.select_related('security_admin').all()
     serializer_class = BranchSerializer
-    filterset_fields = ['security_admin', 'is_active']
+    filterset_fields = ['is_active']
     search_fields = ['name', 'code']
     ordering = ['security_admin', 'order', 'name']
 
     def get_queryset(self):
         qs = super().get_queryset()
+        admin_ids_param = self.request.query_params.get('security_admin')
+        if admin_ids_param:
+            admin_list = [int(x.strip()) for x in admin_ids_param.split(',') if x.strip().isdigit()]
+            if admin_list:
+                qs = qs.filter(security_admin_id__in=admin_list)
         if hasattr(self.request.user, 'profile'):
             admin_ids = self.request.user.profile.get_accessible_security_admin_ids()
             if admin_ids is not None:
@@ -175,12 +212,17 @@ class BranchViewSet(DictionaryViewSetMixin, BaseModelViewSet):
 class DistrictPoliceViewSet(DictionaryViewSetMixin, BaseModelViewSet):
     queryset = DistrictPolice.objects.select_related('security_admin', 'geo_district').all()
     serializer_class = DistrictPoliceSerializer
-    filterset_fields = ['security_admin', 'is_active']
+    filterset_fields = ['is_active']
     search_fields = ['name', 'code']
     ordering = ['security_admin', 'order', 'name']
 
     def get_queryset(self):
         qs = super().get_queryset()
+        admin_ids_param = self.request.query_params.get('security_admin')
+        if admin_ids_param:
+            admin_list = [int(x.strip()) for x in admin_ids_param.split(',') if x.strip().isdigit()]
+            if admin_list:
+                qs = qs.filter(security_admin_id__in=admin_list)
         if hasattr(self.request.user, 'profile'):
             admin_ids = self.request.user.profile.get_accessible_security_admin_ids()
             if admin_ids is not None:

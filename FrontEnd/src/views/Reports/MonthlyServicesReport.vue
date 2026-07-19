@@ -187,8 +187,30 @@
         </div>
 
         <div class="space-y-6">
+          <!-- ══ Roster Mode Toggle ══ -->
+          <div class="flex items-center gap-3 p-4 rounded-xl border-2 border-brand-200 bg-brand-50 dark:bg-brand-900/20 dark:border-brand-800">
+            <svg class="h-5 w-5 text-brand-600 dark:text-brand-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h8M4 18h8" />
+            </svg>
+            <span class="text-sm font-bold text-brand-800 dark:text-brand-200 shrink-0">نوع الكشف:</span>
+            <div class="flex items-center gap-2 flex-wrap">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" v-model="rosterMode" value="all" class="accent-brand-600" />
+                <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">📋 كشف شامل لكل الأفراد</span>
+              </label>
+              <span class="text-gray-300 dark:text-gray-600">|</span>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" v-model="rosterMode" value="monthly_changes" class="accent-brand-600" />
+                <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">📝 تغييرات وإجراءات الشهر فقط</span>
+              </label>
+            </div>
+            <span class="text-xs text-brand-600 dark:text-brand-400 bg-brand-100 dark:bg-brand-900/40 px-2 py-0.5 rounded-full font-medium shrink-0">
+              {{ rosterMode === 'all' ? 'يعرض كل الأفراد المسجلين' : 'يعرض من لديهم إجراء معتمد هذا الشهر' }}
+            </span>
+          </div>
+
           <!-- Main Filters Group -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
             <div>
               <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الشهر</label>
               <div class="relative z-20 bg-transparent">
@@ -213,84 +235,147 @@
                 </span>
               </div>
             </div>
-            <div>
-              <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">حالة الطلب</label>
-              <div class="relative z-20 bg-transparent">
-                <select v-model="selectedStatus" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
-                  <option value="all">الكل</option>
-                  <option value="draft">مسودة</option>
-                  <option value="pending">قيد المراجعة</option>
-                  <option value="approved">معتمد نهائياً</option>
-                  <option value="rejected">مرفوض</option>
-                  <option value="committed">منفذ في النظام</option>
-                </select>
-                <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
-                  <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                </span>
-              </div>
-            </div>
+
             <div>
               <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الرتبة</label>
-              <div class="relative z-20 bg-transparent">
-                <select v-model="filterRank" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
-                  <option value="">جميع الرتب</option>
-                  <option v-for="r in coreStore.ranks" :key="r.id" :value="r.id">{{ r.name }}</option>
-                </select>
-                <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
-                  <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                </span>
-              </div>
+              <MultiSelect
+                    v-model="filterRank"
+                    :options="coreStore.ranks"
+                    valueKey="id"
+                    labelKey="name"
+                    placeholder="كل الرتب"
+                  />
             </div>
             <div>
               <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الفئة</label>
+              <MultiSelect
+                    v-model="filterCategory"
+                    :options="coreStore.categories"
+                    valueKey="id"
+                    labelKey="name"
+                    placeholder="كل الفئات"
+                  />
+            </div>
+
+            <div>
+              <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الحالة</label>
               <div class="relative z-20 bg-transparent">
-                <select v-model="filterCategory" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
-                  <option value="">جميع الفئات</option>
-                  <option v-for="c in coreStore.jobCategories" :key="c.id" :value="c.id">{{ c.name }}</option>
+                <select v-model="filterStatusClassification" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
+                  <option value="">جميع الحالات</option>
+                  <option value="active_full">قوة عاملة فعلية</option>
+                  <option value="active_part">قوة عاملة غير فعلية</option>
+                  <option value="inactive_temp">قوة غير عاملة مؤقتاً</option>
+                  <option value="inactive_perm">قوة غير عاملة نهائياً</option>
                 </select>
                 <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
                   <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
                 </span>
+              </div>
+            </div>
+
+            <!-- Custom Multi-Select Dropdown for Status Types -->
+            <div class="relative">
+              <!-- Backdrop to close dropdown -->
+              <div v-if="showStatusDropdown" @click="showStatusDropdown = false" class="fixed inset-0 z-40"></div>
+              
+              <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">نوع الحالة</label>
+              <button 
+                type="button"
+                @click="showStatusDropdown = !showStatusDropdown"
+                :disabled="!filterStatusClassification"
+                class="relative z-10 flex h-11 w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span class="truncate">
+                  {{ !filterStatusClassification ? 'اختر الحالة أولاً...' : (filterStatusIds.length === 0 ? 'جميع الأنواع' : `محدد (${filterStatusIds.length})`) }}
+                </span>
+                <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 20 20" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" />
+                </svg>
+              </button>
+              
+              <!-- Dropdown Menu -->
+              <div v-if="showStatusDropdown" class="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                <div class="space-y-1">
+                  <!-- Select All -->
+                  <label class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <input type="checkbox" :checked="filterStatusIds.length === filteredStatuses.length && filteredStatuses.length > 0" @change="toggleAllStatuses" class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
+                    <span class="text-sm font-bold text-gray-900 dark:text-gray-100">تحديد الكل</span>
+                  </label>
+                  <div class="h-px bg-gray-100 dark:bg-gray-700 my-1"></div>
+                  <!-- Individual Items -->
+                  <label v-for="s in filteredStatuses" :key="s.id" class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <input type="checkbox" :value="s.id" v-model="filterStatusIds" class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ s.name }}</span>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Advanced Filters (collapsible) -->
-          <transition enter-active-class="transition-all duration-300 ease-out" enter-from-class="max-h-0 opacity-0" enter-to-class="max-h-[1000px] opacity-100" leave-active-class="transition-all duration-200 ease-in" leave-from-class="max-h-[1000px] opacity-100" leave-to-class="max-h-0 opacity-0">
+          <transition enter-active-class="transition-all duration-300 ease-out" enter-from-class="max-h-0 opacity-0" enter-to-class="max-h-[1500px] opacity-100" leave-active-class="transition-all duration-200 ease-in" leave-from-class="max-h-[1500px] opacity-100" leave-to-class="max-h-0 opacity-0">
             <div v-if="showAdvancedFilters" class="overflow-hidden">
               <div class="h-px bg-gray-100 dark:bg-gray-800 my-6"></div>
-              <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4">بيانات جهة العمل والمناصب</h4>
+              
+              <!-- المجموعة الأولى: بيانات جهة العمل والمناصب -->
+              <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 text-brand-600 flex items-center gap-2">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                بيانات جهة العمل والمناصب
+              </h4>
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">إدارة الأمن (الوحدة الرئيسية)</label>
-                  <div class="relative z-20 bg-transparent">
-                    <select v-model="filterSecurityAdmin" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
-                      <option value="">الكل</option>
-                      <option v-for="sa in availableSecurityAdmins" :key="sa.id" :value="sa.id">{{ sa.name }}</option>
-                    </select>
-                    <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
-                      <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                    </span>
-                  </div>
+                  <MultiSelect
+                    v-model="filterSecurityAdmin"
+                    :options="availableSecurityAdmins"
+                    valueKey="id"
+                    labelKey="name"
+                    placeholder="كل الوحدات"
+                  />
                 </div>
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الإدارة المركزية (المديرية/السرية)</label>
-                  <div class="relative z-20 bg-transparent">
-                    <select v-model="filterCentralDept" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
-                      <option value="">الكل</option>
-                      <option v-for="d in coreStore.centralDepartments" :key="d.id" :value="d.id">{{ d.name }}</option>
-                    </select>
-                    <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
-                      <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                    </span>
-                  </div>
+                  <MultiSelect
+                    v-model="filterCentralDept"
+                    :options="availableCentralDepts"
+                    valueKey="id"
+                    labelKey="name"
+                    placeholder="كل الإدارات المركزية"
+                  />
                 </div>
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الفرع (الوحدة التابعة)</label>
+                  <MultiSelect
+                    v-model="filterBranch"
+                    :options="availableBranches"
+                    valueKey="id"
+                    labelKey="name"
+                    placeholder="كل الفروع"
+                  />
+                </div>
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">مركز الشرطة</label>
+                  <MultiSelect
+                    v-model="filterDistrict"
+                    :options="coreStore.districtPolices"
+                    valueKey="id"
+                    labelKey="name"
+                    placeholder="كل المديريات"
+                  />
+                </div>
+              </div>
+              
+              <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 mt-6 text-brand-600 flex items-center gap-2">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                محل الميلاد
+              </h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">المحافظة</label>
                   <div class="relative z-20 bg-transparent">
-                    <select v-model="filterBranch" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
-                      <option value="">الكل</option>
-                      <option v-for="b in coreStore.branches" :key="b.id" :value="b.id">{{ b.name }}</option>
+                    <select v-model="filterBirthGov" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
+                      <option value="">اختر...</option>
+                      <option v-for="g in coreStore.governorates" :key="g.id" :value="g.id">{{ g.name }}</option>
                     </select>
                     <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
                       <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -298,11 +383,35 @@
                   </div>
                 </div>
                 <div>
-                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">مركز الشرطة</label>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">المديرية</label>
                   <div class="relative z-20 bg-transparent">
-                    <select v-model="filterDistrict" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
-                      <option value="">الكل</option>
-                      <option v-for="dp in coreStore.districtPolices" :key="dp.id" :value="dp.id">{{ dp.name }}</option>
+                    <select v-model="filterBirthDist" :disabled="!filterBirthGov" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 disabled:opacity-50 disabled:cursor-not-allowed">
+                      <option value="">اختر...</option>
+                      <option v-for="d in birthDistricts" :key="d.id" :value="d.id">{{ d.name_ar }}</option>
+                    </select>
+                    <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
+                      <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">العزلة</label>
+                  <div class="relative z-20 bg-transparent">
+                    <select v-model="filterBirthSubDist" :disabled="!filterBirthDist" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 disabled:opacity-50 disabled:cursor-not-allowed">
+                      <option value="">اختر...</option>
+                      <option v-for="sd in birthSubDistricts" :key="sd.id" :value="sd.id">{{ sd.name_ar }}</option>
+                    </select>
+                    <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
+                      <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">القرية</label>
+                  <div class="relative z-20 bg-transparent">
+                    <select v-model="filterBirthVillage" :disabled="!filterBirthSubDist" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 disabled:opacity-50 disabled:cursor-not-allowed">
+                      <option value="">اختر...</option>
+                      <option v-for="v in birthVillages" :key="v.id" :value="v.id">{{ v.name_ar }}</option>
                     </select>
                     <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
                       <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -311,14 +420,17 @@
                 </div>
               </div>
 
-              <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4">التفاصيل الفردية</h4>
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+              <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 mt-6 text-brand-600 flex items-center gap-2">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                محل الإقامة الحالي
+              </h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                 <div>
-                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">المنصب</label>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">المحافظة</label>
                   <div class="relative z-20 bg-transparent">
-                    <select v-model="filterPosition" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
-                      <option value="">الكل</option>
-                      <option v-for="p in coreStore.positions" :key="p.id" :value="p.id">{{ p.name }}</option>
+                    <select v-model="filterResidenceGov" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
+                      <option value="">اختر...</option>
+                      <option v-for="g in coreStore.governorates" :key="g.id" :value="g.id">{{ g.name }}</option>
                     </select>
                     <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
                       <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -326,30 +438,86 @@
                   </div>
                 </div>
                 <div>
-                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">المؤهل</label>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">المديرية</label>
                   <div class="relative z-20 bg-transparent">
-                    <select v-model="filterQualification" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
-                      <option value="">الكل</option>
-                      <option v-for="q in coreStore.qualifications" :key="q.id" :value="q.id">{{ q.name }}</option>
+                    <select v-model="filterResDist" :disabled="!filterResidenceGov" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 disabled:opacity-50 disabled:cursor-not-allowed">
+                      <option value="">اختر...</option>
+                      <option v-for="d in resDistricts" :key="d.id" :value="d.id">{{ d.name_ar }}</option>
                     </select>
                     <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
                       <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
                     </span>
                   </div>
+                </div>
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">العزلة</label>
+                  <div class="relative z-20 bg-transparent">
+                    <select v-model="filterResSubDist" :disabled="!filterResDist" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 disabled:opacity-50 disabled:cursor-not-allowed">
+                      <option value="">اختر...</option>
+                      <option v-for="sd in resSubDistricts" :key="sd.id" :value="sd.id">{{ sd.name_ar }}</option>
+                    </select>
+                    <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
+                      <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">القرية</label>
+                  <div class="relative z-20 bg-transparent">
+                    <select v-model="filterResVillage" :disabled="!filterResSubDist" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 disabled:opacity-50 disabled:cursor-not-allowed">
+                      <option value="">اختر...</option>
+                      <option v-for="v in resVillages" :key="v.id" :value="v.id">{{ v.name_ar }}</option>
+                    </select>
+                    <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
+                      <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 mt-6 text-brand-600 flex items-center gap-2">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                البيانات المهنية الإضافية
+              </h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">المؤهل</label>
+                  <MultiSelect
+                    v-model="filterQualification"
+                    :options="coreStore.qualifications"
+                    valueKey="id"
+                    labelKey="name"
+                    placeholder="كل المؤهلات"
+                  />
+                </div>
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">المنصب</label>
+                  <MultiSelect
+                    v-model="filterPosition"
+                    :options="coreStore.positions"
+                    valueKey="id"
+                    labelKey="name"
+                    placeholder="كل المناصب"
+                  />
                 </div>
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">تصنيف القوة</label>
-                  <div class="relative z-20 bg-transparent">
-                    <select v-model="filterForceClass" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
-                      <option value="">الكل</option>
-                      <option value="active">قوة عاملة</option>
-                      <option value="inactive">قوة غير عاملة</option>
-                    </select>
-                    <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
-                      <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                    </span>
-                  </div>
+                  <MultiSelect
+                    v-model="filterForceClass"
+                    :options="coreStore.forceClassifications"
+                    valueKey="id"
+                    labelKey="name"
+                    placeholder="كل التصنيفات"
+                  />
                 </div>
+              </div>
+
+              <!-- المجموعة الثالثة: البحث -->
+              <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 mt-6 text-brand-600 flex items-center gap-2">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                بحث دقيق بالهوية
+              </h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-2">
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">البحث بالرقم العسكري</label>
                   <input v-model="filterMilitaryNumber" type="text" placeholder="الرقم العسكري..." class="block w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-900 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-brand-500">
@@ -414,18 +582,19 @@
       </div>
 
       <!-- Unified DataTable Component -->
-      <div class="printable-area print:border-2 print:border-black print:p-1 print:m-0 print:w-full print:shadow-none print:bg-transparent">
+      <div class="printable-area w-full">
         
         <!-- Official Print Header (Hidden in Screen, Visible in Print) -->
         <div class="hidden print:block mb-2 w-full">
           <report-header 
-            :title="`الكشف الشهري للخدمات والإجراءات - شهر ${selectedMonth || '-'} / ${selectedYear || '-'}`" 
-            :subtitle="`البيانات المستخرجة للإجراءات وتعديلات الحالة - حالة الطلبات: ${getStatusLabel(selectedStatus)}`" 
+            title="الكشف الشهري للخدمات والإجراءات" 
+            :selectedMonth="officialExportMonth"
             reportType="report_4"
           />
         </div>
 
         <DataTable
+          class="print-no-outer-border print:min-h-0 print:mb-0"
           :columns="activePrintColumns"
           :data="filteredData"
           rowKey="index"
@@ -453,10 +622,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import api from '@/lib/api'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import DataTable from '@/components/tables/DataTable.vue'
+import MultiSelect from '@/components/common/MultiSelect.vue'
 import ReportHeader from '@/components/reports/ReportHeader.vue'
 import ReportFooter from '@/components/reports/ReportFooter.vue'
 import { exportToCSV } from "@/utils/export"
@@ -488,64 +658,209 @@ const availableSecurityAdmins = computed(() => {
   return coreStore.securityAdmins
 })
 
+const filteredStatuses = computed(() => {
+  if (filterStatusClassification.value) {
+    return coreStore.statuses.filter((s: any) => s.classification === filterStatusClassification.value)
+  }
+  return []
+})
+
 const currentYear = new Date().getFullYear()
 const availableYears = [currentYear, currentYear - 1, currentYear - 2, currentYear - 3]
 
 const selectedMonth = ref<number | ''>(new Date().getMonth() + 1)
 const selectedYear = ref<number | ''>(currentYear)
-const selectedStatus = ref('all')
 const searchQuery = ref('')
 const loading = ref(false)
 const reportData = ref<any[]>([])
 
+// Roster Mode: 'all' = كل الأفراد, 'monthly_changes' = تغييرات الشهر فقط
+const rosterMode = ref<'all' | 'monthly_changes'>('all')
+
+// إعادة جلب البيانات تلقائياً عند تغيير نوع الكشف
+watch(rosterMode, () => {
+  fetchData()
+})
+
 // Advanced filter state
 const showAdvancedFilters = ref(false)
-const filterRank = ref<number | ''>('')
-const filterCategory = ref<number | ''>('')
-const filterSecurityAdmin = ref<number | ''>('')
-const filterCentralDept = ref<number | ''>('')
-const filterBranch = ref<number | ''>('')
-const filterDistrict = ref<number | ''>('')
-const filterPosition = ref<number | ''>('')
-const filterQualification = ref<number | ''>('')
-const filterForceClass = ref('')
+const filterRank = ref<number[]>([])
+const filterCategory = ref<number[]>([])
+const filterStatusClassification = ref('')
+const filterStatusIds = ref<number[]>([])
+const showStatusDropdown = ref(false)
+
+const toggleAllStatuses = (e: Event) => {
+  const checked = (e.target as HTMLInputElement).checked
+  if (checked) {
+    filterStatusIds.value = filteredStatuses.value.map((s: any) => s.id)
+  } else {
+    filterStatusIds.value = []
+  }
+}
+const filterSecurityAdmin = ref<number[]>([])
+const filterCentralDept = ref<number[]>([])
+const filterBranch = ref<number[]>([])
+const filterDistrict = ref<number[]>([])
+const filterPosition = ref<number[]>([])
+const filterQualification = ref<number[]>([])
+const filterForceClass = ref<number[]>([])
 const filterMilitaryNumber = ref('')
 const filterName = ref('')
+const filterBirthGov = ref<number | ''>('')
+const filterResidenceGov = ref<number | ''>('')
+
+const filterBirthDist = ref<number | ''>('')
+const filterBirthSubDist = ref<number | ''>('')
+const filterBirthVillage = ref<number | ''>('')
+const filterResDist = ref<number | ''>('')
+const filterResSubDist = ref<number | ''>('')
+const filterResVillage = ref<number | ''>('')
+
+const birthDistricts = ref<any[]>([])
+const birthSubDistricts = ref<any[]>([])
+const birthVillages = ref<any[]>([])
+
+const resDistricts = ref<any[]>([])
+const resSubDistricts = ref<any[]>([])
+const resVillages = ref<any[]>([])
+
+// Status Watcher
+watch(filterStatusClassification, () => {
+  filterStatusIds.value = []
+  showStatusDropdown.value = false
+})
+
+// Birth Watchers
+watch(filterBirthGov, async (newVal) => {
+  filterBirthDist.value = ''
+  filterBirthSubDist.value = ''
+  filterBirthVillage.value = ''
+  birthDistricts.value = []
+  birthSubDistricts.value = []
+  birthVillages.value = []
+  if (newVal) {
+    try {
+      const res = await api.get(`/dictionaries/geo/districts/?governorate=${newVal}`)
+      birthDistricts.value = res.data.results || res.data
+    } catch(e) { console.error(e) }
+  }
+})
+watch(filterBirthDist, async (newVal) => {
+  filterBirthSubDist.value = ''
+  filterBirthVillage.value = ''
+  birthSubDistricts.value = []
+  birthVillages.value = []
+  if (newVal) {
+    try {
+      const res = await api.get(`/dictionaries/geo/sub-districts/?district=${newVal}`)
+      birthSubDistricts.value = res.data.results || res.data
+    } catch(e) { console.error(e) }
+  }
+})
+watch(filterBirthSubDist, async (newVal) => {
+  filterBirthVillage.value = ''
+  birthVillages.value = []
+  if (newVal) {
+    try {
+      const res = await api.get(`/dictionaries/geo/villages/?sub_district=${newVal}`)
+      birthVillages.value = res.data.results || res.data
+    } catch(e) { console.error(e) }
+  }
+})
+
+// Residence Watchers
+watch(filterResidenceGov, async (newVal) => {
+  filterResDist.value = ''
+  filterResSubDist.value = ''
+  filterResVillage.value = ''
+  resDistricts.value = []
+  resSubDistricts.value = []
+  resVillages.value = []
+  if (newVal) {
+    try {
+      const res = await api.get(`/dictionaries/geo/districts/?governorate=${newVal}`)
+      resDistricts.value = res.data.results || res.data
+    } catch(e) { console.error(e) }
+  }
+})
+watch(filterResDist, async (newVal) => {
+  filterResSubDist.value = ''
+  filterResVillage.value = ''
+  resSubDistricts.value = []
+  resVillages.value = []
+  if (newVal) {
+    try {
+      const res = await api.get(`/dictionaries/geo/sub-districts/?district=${newVal}`)
+      resSubDistricts.value = res.data.results || res.data
+    } catch(e) { console.error(e) }
+  }
+})
+watch(filterResSubDist, async (newVal) => {
+  filterResVillage.value = ''
+  resVillages.value = []
+  if (newVal) {
+    try {
+      const res = await api.get(`/dictionaries/geo/villages/?sub_district=${newVal}`)
+      resVillages.value = res.data.results || res.data
+    } catch(e) { console.error(e) }
+  }
+})
 
 const activeAdvancedFilterCount = computed(() => {
   let count = 0
   if (selectedMonth.value) count++
   if (selectedYear.value) count++
-  if (selectedStatus.value !== 'all') count++
-  if (filterRank.value) count++
-  if (filterCategory.value) count++
-  if (filterSecurityAdmin.value) count++
-  if (filterCentralDept.value) count++
-  if (filterBranch.value) count++
-  if (filterDistrict.value) count++
-  if (filterPosition.value) count++
-  if (filterQualification.value) count++
-  if (filterForceClass.value) count++
+  if (filterRank.value.length > 0) count++
+  if (filterCategory.value.length > 0) count++
+  if (filterSecurityAdmin.value.length > 0) count++
+  if (filterCentralDept.value.length > 0) count++
+  if (filterBranch.value.length > 0) count++
+  if (filterDistrict.value.length > 0) count++
+  if (filterPosition.value.length > 0) count++
+  if (filterQualification.value.length > 0) count++
+  if (filterForceClass.value.length > 0) count++
   if (filterMilitaryNumber.value) count++
   if (filterName.value) count++
+  if (filterBirthGov.value) count++
+  if (filterBirthDist.value) count++
+  if (filterBirthSubDist.value) count++
+  if (filterBirthVillage.value) count++
+  if (filterResidenceGov.value) count++
+  if (filterResDist.value) count++
+  if (filterResSubDist.value) count++
+  if (filterResVillage.value) count++
+  if (filterStatusClassification.value) count++
+  if (filterStatusIds.value.length > 0) count++
   return count
 })
 
 const resetAllFilters = () => {
   selectedMonth.value = ''
   selectedYear.value = ''
-  selectedStatus.value = 'all'
-  filterRank.value = ''
-  filterCategory.value = ''
-  filterSecurityAdmin.value = ''
-  filterCentralDept.value = ''
-  filterBranch.value = ''
-  filterDistrict.value = ''
-  filterPosition.value = ''
-  filterQualification.value = ''
-  filterForceClass.value = ''
+  filterRank.value = []
+  filterCategory.value = []
+  filterSecurityAdmin.value = []
+  filterCentralDept.value = []
+  filterBranch.value = []
+  filterDistrict.value = []
+  filterPosition.value = []
+  filterQualification.value = []
+  filterForceClass.value = []
   filterMilitaryNumber.value = ''
   filterName.value = ''
+  filterBirthGov.value = ''
+  filterBirthDist.value = ''
+  filterBirthSubDist.value = ''
+  filterBirthVillage.value = ''
+  filterResidenceGov.value = ''
+  filterResDist.value = ''
+  filterResSubDist.value = ''
+  filterResVillage.value = ''
+  filterStatusClassification.value = ''
+  filterStatusIds.value = []
+  showStatusDropdown.value = false
+  rosterMode.value = 'monthly_changes'
   fetchData()
 }
 
@@ -556,31 +871,41 @@ const officialExportMonth = ref(currentMonthStr)
 
 const allColumns = [
   { key: 'index', label: 'م', printWidth: '2%' },
+  { key: 'officer_number', label: 'رقم الضابط', printWidth: '5%' },
   { key: 'rank', label: 'الرتبة', printWidth: '4%' },
   { key: 'military_number', label: 'الرقم العسكري', printWidth: '5%' },
   { key: 'national_id', label: 'الرقم الوطني', printWidth: '5%' },
-  { key: 'full_name', label: 'الاسم الرباعي واللقب', printWidth: '12%' },
+  { key: 'full_name', label: 'الاسم', printWidth: '12%', tdClass: 'print-name-col' },
+  { key: 'service_roster_type', label: 'نوع كشف الخدمات', printWidth: '5%' },
   { key: 'unit', label: 'الوحدة', printWidth: '5%' },
-  { key: 'directorate', label: 'السرية / الإدارة / المديرية', printWidth: '6%' },
-  { key: 'department', label: 'القسم_فرع السرية', printWidth: '5%' },
-  { key: 'affiliated_unit', label: 'الوحدة التابعة', printWidth: '5%' },
+  { key: 'directorate', label: 'الإدارة / السرية', printWidth: '6%' },
+  { key: 'affiliated_unit', label: 'القسم / فرع السرية', printWidth: '5%' },
   { key: 'position', label: 'المنصب', printWidth: '5%' },
-  { key: 'job_title', label: 'المسمى الوظيفي', printWidth: '5%' },
+  { key: 'job_title', label: 'نوع العمل', printWidth: '5%' },
   { key: 'category', label: 'الفئة', printWidth: '4%' },
   { key: 'status', label: 'الحالة', printWidth: '4%' },
   { key: 'status_type', label: 'نوع الحالة', printWidth: '5%' },
   { key: 'force_classification', label: 'تصنيف القوة', printWidth: '5%' },
   { key: 'qualification', label: 'المؤهل', printWidth: '4%' },
-  { key: 'phone', label: 'رقم الهاتف', printWidth: '5%' },
-  { key: 'old_military_number', label: 'الرقم العسكري السابق', printWidth: '5%' },
+  { key: 'phone', label: 'رقم التليفون', printWidth: '5%' },
   { key: 'expense_status', label: 'حالة النفقات', printWidth: '4%' },
+  { key: 'monthly_variables', label: 'متغيرات الشهر', printWidth: '6%' },
+  { key: 'notes', label: 'ملاحظات', printWidth: '6%' },
   { key: 'appointment_info', label: 'معلومات التعيين', printWidth: '6%' },
   { key: 'quality', label: 'الجودة', printWidth: '3%' },
-  { key: 'join_date', label: 'تاريخ التجنيد', printWidth: '5%' }
+  { key: 'join_date', label: 'تاريخ التجنيد', printWidth: '5%' },
+  { key: 'birth_governorate', label: 'محافظة الميلاد', printWidth: '5%' },
+  { key: 'birth_district', label: 'مديرية الميلاد', printWidth: '5%' },
+  { key: 'birth_sub_district', label: 'عزلة الميلاد', printWidth: '5%' },
+  { key: 'birth_village', label: 'قرية الميلاد', printWidth: '5%' },
+  { key: 'residence_governorate', label: 'محافظة الإقامة', printWidth: '5%' },
+  { key: 'residence_district', label: 'مديرية الإقامة', printWidth: '5%' },
+  { key: 'residence_sub_district', label: 'عزلة الإقامة', printWidth: '5%' },
+  { key: 'residence_village', label: 'قرية الإقامة', printWidth: '5%' }
 ]
 
 // Print column selection state
-const printSelectedKeys = ref<string[]>(allColumns.map(c => c.key))
+const printSelectedKeys = ref<string[]>(allColumns.slice(0, 21).map(c => c.key))
 
 const activePrintColumns = computed(() => 
   allColumns.filter(c => printSelectedKeys.value.includes(c.key))
@@ -591,18 +916,6 @@ const selectAllPrintCols = () => {
 }
 const deselectAllPrintCols = () => {
   printSelectedKeys.value = []
-}
-
-const getStatusLabel = (val: string) => {
-  const map: Record<string, string> = {
-    'all': 'الكل',
-    'draft': 'مسودة',
-    'pending': 'قيد المراجعة',
-    'approved': 'معتمد نهائياً',
-    'rejected': 'مرفوض',
-    'committed': 'منفذ في النظام'
-  }
-  return map[val] || val
 }
 
 const filteredData = computed(() => {
@@ -621,20 +934,32 @@ const fetchData = async () => {
     const params: any = {}
     if (selectedMonth.value) params.month = selectedMonth.value
     if (selectedYear.value) params.year = selectedYear.value
-    if (selectedStatus.value !== 'all') params.status = selectedStatus.value
     
     // Advanced filters
-    if (filterRank.value) params.rank = filterRank.value
-    if (filterCategory.value) params.category = filterCategory.value
-    if (filterSecurityAdmin.value) params.security_admin = filterSecurityAdmin.value
-    if (filterCentralDept.value) params.central_department = filterCentralDept.value
-    if (filterBranch.value) params.branch = filterBranch.value
-    if (filterDistrict.value) params.district_police = filterDistrict.value
-    if (filterPosition.value) params.position = filterPosition.value
-    if (filterQualification.value) params.qualification = filterQualification.value
-    if (filterForceClass.value) params.force_classification = filterForceClass.value
+    if (filterRank.value.length > 0) params.rank = filterRank.value.join(',')
+    if (filterCategory.value.length > 0) params.category = filterCategory.value.join(',')
+    if (filterSecurityAdmin.value.length > 0) params.security_admin = filterSecurityAdmin.value.join(',')
+    if (filterCentralDept.value.length > 0) params.central_department = filterCentralDept.value.join(',')
+    if (filterBranch.value.length > 0) params.branch = filterBranch.value.join(',')
+    if (filterDistrict.value.length > 0) params.district_police = filterDistrict.value.join(',')
+    if (filterPosition.value.length > 0) params.position = filterPosition.value.join(',')
+    if (filterQualification.value.length > 0) params.qualification = filterQualification.value.join(',')
+    if (filterForceClass.value.length > 0) params.force_classification = filterForceClass.value.join(',')
     if (filterMilitaryNumber.value) params.military_number = filterMilitaryNumber.value
     if (filterName.value) params.name = filterName.value
+    if (filterBirthGov.value) params.birth_governorate = filterBirthGov.value
+    if (filterBirthDist.value) params.birth_district = filterBirthDist.value
+    if (filterBirthSubDist.value) params.birth_sub_district = filterBirthSubDist.value
+    if (filterBirthVillage.value) params.birth_village = filterBirthVillage.value
+    
+    if (filterResidenceGov.value) params.residence_governorate = filterResidenceGov.value
+    if (filterResDist.value) params.residence_district = filterResDist.value
+    if (filterResSubDist.value) params.residence_sub_district = filterResSubDist.value
+    if (filterResVillage.value) params.residence_village = filterResVillage.value
+    
+    params.roster_mode = rosterMode.value  // 'all' | 'monthly_changes'
+    if (filterStatusClassification.value) params.status_classification = filterStatusClassification.value
+    if (filterStatusIds.value.length > 0) params.status_id = filterStatusIds.value.join(',')
 
     const res = await api.get('/reports/detailed-reports/monthly-services/', { params })
     // Format date in client
@@ -683,141 +1008,172 @@ onMounted(() => {
 })
 </script>
 
-<style>
-@media print {
-  /* ═══ Page setup: zero browser margins, full landscape ═══ */
-  @page {
-    size: A4 landscape;
-    margin: 0 !important;
-  }
-
-  /* ═══ Global resets ═══ */
-  * {
-    box-shadow: none !important;
-  }
-  body > *:not(#app) { display: none !important; }
-  html, body, #app {
-    width: 100% !important;
-    height: auto !important;
-    min-height: auto !important;
-    overflow: visible !important;
-    position: static !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  /* ═══ Kill ALL layout wrappers padding/margin ═══ */
-  .admin-layout-content,
-  [class*="admin-layout"],
-  main,
-  .flex-1,
-  .p-4,
-  .md\:p-6,
-  .space-y-5,
-  .space-y-6 {
-    padding: 0 !important;
-    margin: 0 !important;
-    max-width: none !important;
-    width: 100% !important;
-    height: auto !important;
-    min-height: auto !important;
-    overflow: visible !important;
-    position: static !important;
-  }
-
-  .print\:hidden {
-    display: none !important;
-  }
-
-  /* ═══ Printable area: minimal padding ═══ */
+<style scoped>
+/* ═══ Screen View Styling (Clean layout) ═══ */
+@media screen {
   .printable-area {
-    display: block !important;
-    width: 100% !important;
+    width: 100%;
+    overflow-x: auto;
+  }
+  :deep(.printable-area table th) {
+    background-color: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 10px 8px !important;
+  }
+  :deep(.printable-area table th div) {
+    justify-content: center !important;
+    width: 100%;
+  }
+  :deep(.printable-area table th p) {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #334155 !important;
+    text-align: center !important;
     margin: 0 !important;
-    padding: 2mm !important;
-    border: 2px solid #000 !important;
-    border-radius: 0 !important;
-    background: #fff !important;
+    width: 100%;
   }
-
-  /* ═══ Table: fill entire width, fixed layout ═══ */
-  .printable-area table {
-    width: 100% !important;
-    table-layout: fixed !important;
-    border-collapse: collapse !important;
-    border: 2px solid #000 !important;
-    font-size: 6px !important;
-    line-height: 1.2 !important;
+  :deep(.printable-area table td p) {
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: #475569 !important;
+    text-align: center !important;
+    margin: 0 !important;
   }
-
-  /* ═══ All cells: tight padding, word-wrap ═══ */
-  .printable-area th,
-  .printable-area td {
-    border: 1px solid #000 !important;
-    color: #000 !important;
-    padding: 1px 2px !important;
+  :deep(.printable-area table td) {
+    border: 1px solid #e2e8f0 !important;
+    padding: 8px 6px !important;
     text-align: center !important;
     vertical-align: middle !important;
-    word-wrap: break-word !important;
-    overflow-wrap: break-word !important;
-    white-space: normal !important;
-    overflow: visible !important;
-    max-width: none !important;
-    font-size: 6px !important;
-    line-height: 1.2 !important;
   }
+}
 
-  .printable-area th {
-    background-color: #e5e7eb !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    font-weight: bold !important;
-    font-size: 6.5px !important;
-  }
-
-  /* ═══ Override inner <p> tags ═══ */
-  .printable-area td p,
-  .printable-area th p {
-    font-size: 6px !important;
-    line-height: 1.2 !important;
+/* ═══ Print View Styling (Professional formatting) ═══ */
+@media print {
+  @page {
+    size: A4 landscape !important;
     margin: 0 !important;
-    padding: 0 !important;
-    white-space: normal !important;
-    word-wrap: break-word !important;
-    overflow-wrap: break-word !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .printable-area, .printable-area * {
+    visibility: visible;
+  }
+  
+  /* Remove ANY borders/boxes around the main container or header */
+  .printable-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0 !important;
+    padding: 3mm !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  
+  /* Remove DataTable's outer border ONLY in this report for print */
+  :deep(.print-no-outer-border) {
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Perfect Print Grid for Table ONLY */
+  :deep(table) {
+    width: max-content !important; /* Let the table be as wide as the text needs */
+    min-width: 100% !important; /* But at least fill the page if there are few columns */
     max-width: none !important;
+    table-layout: auto !important; /* Allow columns to naturally size based on content */
+    border-collapse: collapse !important;
+    border: 1px solid black !important;
+    margin-top: 10px !important;
   }
-
-  /* ═══ Remove minWidth from th in print ═══ */
-  .printable-area th[style] {
-    min-width: 0 !important;
+  
+  :deep(th), :deep(td) {
+    padding: 3px 2px !important;
+    border: 1px solid black !important;
+    color: black !important;
+    text-align: center !important;
+    vertical-align: middle !important;
   }
-
-  /* ═══ Table scroll container: no overflow clip ═══ */
-  .printable-area .max-w-full,
-  .printable-area .overflow-x-auto,
-  .printable-area [class*="overflow"] {
-    overflow: visible !important;
-    max-width: none !important;
+  
+  :deep(th) {
+    background-color: #f3f4f6 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    font-weight: 700 !important;
+    font-size: 7px !important;
   }
-
-  /* ═══ Actions column: hide in print ═══ */
-  .printable-area th:last-child,
-  .printable-area td:last-child {
-    /* only if actions column exists */
+  
+  :deep(td) {
+    font-size: 6.5px !important;
+    font-weight: 500 !important;
+    overflow: hidden !important;
+    padding: 3px 2px !important;
   }
-
-  /* ═══ Sort icons: hide ═══ */
-  .printable-area th svg {
+  
+  :deep(tr) {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  
+  :deep(thead) {
+    display: table-header-group !important;
+  }
+  
+  :deep(tfoot) {
+    display: table-row-group !important;
+  }
+  
+  /* Inner P tags styling to inherit perfect sizing and remove thickness */
+  :deep(th div) {
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100%;
+    display: flex !important;
+  }
+  :deep(th svg) {
     display: none !important;
   }
-
-  /* ═══ Print header/footer spacing ═══ */
-  .printable-area .hidden.print\:block {
-    display: block !important;
-    margin-bottom: 2mm !important;
+  :deep(th p) {
+    font-size: 7px !important;
+    font-weight: 700 !important;
+    color: black !important;
+    text-align: center !important;
+    margin: 0 !important;
+    width: 100%;
+    white-space: normal !important;
+    line-height: 1.2 !important;
   }
+  
+  :deep(td p) {
+    font-size: 6.5px !important;
+    font-weight: 500 !important;
+    color: black !important;
+    text-align: center !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: clip !important; /* Ellipsis causes RTL bleeding in Webkit print */
+    line-height: 1.2 !important;
+  }
+
+  :deep(td.print-name-col p) {
+    font-weight: 800 !important; /* Extra bold for name only */
+    font-size: 7px !important;
+  }
+
+  /* Override Tailwind border classes inside print to guarantee thin 1px lines */
+  :deep(.border-t) { border-top-width: 1px !important; border-color: black !important; }
+  :deep(.border-b) { border-bottom-width: 1px !important; border-color: black !important; }
+  :deep(.border-e) { border-inline-end-width: 1px !important; border-color: black !important; }
+  :deep(.border-s) { border-inline-start-width: 1px !important; border-color: black !important; }
+  :deep(.border), :deep(.border-2), :deep(.print\:border-2) {
+    border-width: 1px !important;
+    border-color: black !important;
+  }
+  :deep(.border-gray-200), :deep(.border-gray-300) { border-color: black !important; }
 }
 </style>
