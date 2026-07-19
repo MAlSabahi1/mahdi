@@ -124,7 +124,14 @@
                   <td class="font-bold font-sans tracking-widest text-[15px]">{{ form?.personnel?.military_number || '—' }}</td>
                   <td class="font-bold">{{ form?.personnel?.full_name || '—' }}</td>
                   <td class="font-bold">{{ form?.personnel?.security_admin_name || form?.personnel?.security_admin || form?.personnel?.central_department_name || form?.personnel?.central_department || '—' }}</td>
-                  <td class="font-bold">{{ form?.personnel?.central_department_name || form?.personnel?.branch_name || form?.personnel?.division_name || form?.personnel?.unit_name || '—' }}</td>
+                  <td class="font-bold">
+                    <template v-if="form?.form_type === 'martyr'">
+                      {{ form?.category || form?.data?.case_type || 'شهيد' }}
+                    </template>
+                    <template v-else>
+                      {{ form?.personnel?.central_department_name || form?.personnel?.branch_name || form?.personnel?.division_name || form?.personnel?.unit_name || '—' }}
+                    </template>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -219,9 +226,9 @@
         </div>
 
         <!-- Letter Body Section -->
-        <div class="letter-body mt-4 px-3 text-justify flex-grow">
+        <div class="letter-body mt-2 px-3 text-justify flex-grow">
           <!-- Addressee -->
-          <div class="flex justify-between items-end mb-5">
+          <div class="flex justify-between items-end mb-3">
             <h2 class="text-[20px] font-black text-black tracking-wide" style="font-family: 'Cairo', sans-serif;">
               الأخ / مدير عــــــام القوى البشريـــــة
             </h2>
@@ -237,10 +244,10 @@
             </span>
           </div>
           
-          <p v-for="(paragraph, index) in letterText" :key="index" class="font-normal text-[16px] mb-3 leading-[1.8] text-justify text-black whitespace-pre-wrap" style="font-family: 'Cairo', sans-serif;">
+          <p v-for="(paragraph, index) in letterText" :key="index" class="font-normal text-[15px] mb-1.5 leading-[1.5] text-justify text-black whitespace-pre-wrap" style="font-family: 'Cairo', sans-serif;">
             {{ paragraph }}
           </p>
-          <p class="text-center text-[15px] font-bold text-black mb-1 mt-3" style="font-family: 'Samt7017', 'Aref Ruqaa', serif;">
+          <p class="text-center text-[14px] font-bold text-black mb-0 mt-2" style="font-family: 'Samt7017', 'Aref Ruqaa', serif;">
             وتقبلــــوا خالــــص تحياتنــــا ،،،
           </p>
         </div>
@@ -723,6 +730,114 @@ function getFieldWidth(key: string, totalFields: number, fields: FormField[]) {
 }
 
 const allAttachments = computed(() => {
+  const ft = props.form?.form_type
+  
+  // خريطة المرفقات الثابتة للطباعة بحسب نوع الاستمارة (حتى لو لم تُرفع بعد)
+  // تم أخذ الترتيب والمسميات بشكل مباشر من FormRegistry في الدليل الإرشادي (Backend)
+  const FIXED_ATTACHMENTS: Record<string, any[]> = {
+    retirement_age: [
+      { key: 'personal_request', label: 'الطلب الشخصي' },
+      { key: 'national_id_front', label: 'صورة البطاقة العسكرية والشخصية' }
+    ],
+    death: [
+      { key: 'death_certificate', label: 'شهادة الوفاة' },
+      { key: 'heir_ruling', label: 'حكم انحصار الورثة' },
+      { key: 'power_of_attorney', label: 'وكالة شرعية' },
+      { key: 'national_id_front', label: 'صورة البطاقة الشخصية/العسكرية' },
+      { key: 'attorney_id', label: 'صورة بطاقة الوكيل' },
+      { key: 'appointment_ruling', label: 'حكم التنصيب' }
+    ],
+    missing: [
+      { key: 'status_change_order', label: 'بلاغ الفقدان' },
+      { key: 'heir_ruling', label: 'حكم انحصار الورثة' },
+      { key: 'power_of_attorney', label: 'الوكالة الشرعية' },
+      { key: 'national_id_front', label: 'صورة البطاقة الشخصية/العسكرية' },
+      { key: 'attorney_id', label: 'صورة بطاقة الوكيل' },
+      { key: 'newspaper_notice', label: 'إعلان الجريدة' },
+      { key: 'court_ruling', label: 'حكم شرعي بالفقدان' }
+    ],
+    medical_unfit: [
+      { key: 'medical_report', label: 'القرار الطبي الأصل (اللجنة الطبية)' },
+      { key: 'national_id_front', label: 'صورة البطاقة الشخصية/العسكرية' },
+      { key: 'photo', label: 'صورة حديثة للمريض' },
+      { key: 'power_of_attorney', label: 'وكالة شرعية' },
+      { key: 'attorney_id', label: 'صورة بطاقة الوكيل' }
+    ],
+    end_of_service: [
+      { key: 'personal_request', label: 'الطلب الشخصي من الفرد' },
+      { key: 'national_id_front', label: 'صورة البطاقة العسكرية والشخصية' }
+    ],
+    retired: [
+      { key: 'status_change_order', label: 'أمر الإحالة على التقاعد' },
+      { key: 'personal_request', label: 'الطلب الشخصي' },
+      { key: 'national_id_front', label: 'صورة البطاقة الشخصية/العسكرية' }
+    ],
+    service_extension: [
+      { key: 'extension_order', label: 'قرار تمديد الخدمة (وزاري/رئاسي)' },
+      { key: 'personal_request', label: 'مذكرة الرفع بالاحتياج' }
+    ],
+    return_to_service: [
+      { key: 'return_decision', label: 'قرار/أمر الإعادة للخدمة' },
+      { key: 'personal_request', label: 'طلب العودة (إن وجد)' }
+    ],
+    imprisoned: [
+      { key: 'court_ruling', label: 'نسخة من الحكم' },
+      { key: 'memo', label: 'مذكرة توضح بأن الفرد لازال في السجن من النيابة' },
+      { key: 'national_id_front', label: 'صورة البطاقة الشخصية/العسكرية' },
+      { key: 'power_of_attorney', label: 'وكالة شرعية' },
+      { key: 'attorney_id', label: 'صورة البطاقة الشخصية للوكيل' }
+    ],
+    escort: [
+      { key: 'assignment_order', label: 'نسخة من أمر التكليف بالمرافقة' },
+      { key: 'national_id_front', label: 'صورة البطاقة العسكرية والشخصية' }
+    ],
+    martyr: [
+      { key: 'death_certificate', label: 'شهادة الوفاة' },
+      { key: 'heir_ruling', label: 'حكم انحصار الورثة' },
+      { key: 'power_of_attorney', label: 'الوكالة الشرعية' },
+      { key: 'national_id_front', label: 'صورة البطاقة الشخصية/العسكرية' },
+      { key: 'attorney_id', label: 'صورة بطاقة الوكيل' },
+      { key: 'appointment_ruling', label: 'حكم التنصيب' },
+      { key: 'operations_report', label: 'بلاغ العمليات' },
+      { key: 'assignment_order', label: 'أمر التكليف بالمهمة' }
+    ],
+    study_leave: [
+      { key: 'study_order', label: 'نسخة من أمر التفرغ الدراسي' },
+      { key: 'national_id_front', label: 'صورة البطاقة العسكرية والشخصية' }
+    ],
+    seconded: [
+      { key: 'secondment_order', label: 'نسخة من أمر الانتداب' },
+      { key: 'national_id_front', label: 'صورة البطاقة العسكرية والشخصية' }
+    ],
+    rank_demotion: [
+      { key: 'demotion_decision', label: 'نسخة من قرار التنزيل' },
+      { key: 'national_id_front', label: 'صورة البطاقة العسكرية والشخصية' }
+    ],
+    rank_promotion: [
+      { key: 'promotion_decision', label: 'نسخة من قرار الترقية' },
+      { key: 'national_id_front', label: 'صورة البطاقة العسكرية والشخصية' }
+    ],
+    personnel_to_officer: [
+      { key: 'university_degree', label: 'صورة المؤهل الجامعي مصدقة' },
+      { key: 'settlement_decision', label: 'نسخة من قرار التسوية' },
+      { key: 'national_id_front', label: 'صورة البطاقة العسكرية والشخصية' }
+    ]
+  }
+
+  // إذا كان لها خريطة ثابتة، نستخدمها ونتأكد من علامة الصح للمرفوع منها فعلياً
+  if (ft && FIXED_ATTACHMENTS[ft]) {
+    // Only count as uploaded if it actually has a file or a valid database ID
+    const uploadedDocs = (props.form?.attachments || [])
+      .filter((a:any) => a.file || (a.id && String(a.id).length > 0))
+      .map((a:any) => a.document_type || a.key)
+      
+    return FIXED_ATTACHMENTS[ft].map(att => ({
+      ...att,
+      id: uploadedDocs.includes(att.key) ? att.key : null // To show '✔' if uploaded
+    }))
+  }
+
+  // Fallback للفورمات القديمة
   if (props.form?.attachments && props.form.attachments.length > 0) return props.form.attachments;
   if (props.form?.required_attachments && props.form.required_attachments.length > 0) return props.form.required_attachments;
   

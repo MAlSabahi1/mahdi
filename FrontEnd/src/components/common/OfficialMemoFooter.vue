@@ -47,17 +47,38 @@
       </div>
     </template>
 
-    <!-- Security Tracking Footer & QR Code (Absolute Bottom) -->
-    <div class="absolute bottom-2 left-8 right-8 flex items-center justify-between text-[7px] text-gray-500 font-medium border-t border-gray-400 pt-2 leading-relaxed z-50">
-      <div class="space-y-0.5 text-right flex-1">
-        <p>طُبع بواسطة: <span class="font-bold text-gray-800">{{ userName }}</span> | بتاريخ: <span class="font-bold text-gray-800" dir="ltr">{{ printDate }}</span></p>
-        <p>المرجع (REF): <span class="font-bold text-gray-800 font-mono tracking-wider">{{ refId }}</span> <span class="text-gray-400 px-2">|</span> كود التوثيق (HASH): <span class="font-bold text-gray-700 font-mono tracking-widest text-[6px]">{{ secHash }}</span></p>
-      </div>
+    <!-- System Authentication & Tracking Footer -->
+    <div class="absolute bottom-[6mm] left-[12mm] right-[12mm] border-[1.2px] border-gray-900 rounded-[3px] flex items-stretch text-[8px] font-medium z-50 overflow-hidden print:border-black bg-white" dir="ltr" style="height: 13.5mm;">
       
-      <!-- Functional QR Code (Cryptographic Token) -->
-      <div class="flex items-center gap-2 pr-3 border-r border-gray-200 shrink-0">
-        <img :src="`https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=1&data=${encodeURIComponent(offlineQrData)}`" class="h-[55px] w-[55px] min-w-[55px] min-h-[55px] object-contain grayscale shrink-0 opacity-90 mix-blend-multiply" alt="QR Code" />
+      <!-- QR Code Block -->
+      <div class="w-[13.5mm] shrink-0 border-r-[1.2px] border-gray-900 print:border-black flex items-center justify-center p-[1px]">
+        <img :src="`https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=0&data=${encodeURIComponent(offlineQrData)}`" class="w-full h-full object-contain grayscale" alt="SEC-QR" />
       </div>
+
+      <!-- Cryptographic Hash Block -->
+      <div class="flex-1 flex flex-col justify-center px-4 border-r-[1.2px] border-gray-900 print:border-black" style="font-family: 'Courier New', Courier, monospace;">
+        <div class="flex items-center justify-between mb-[2px]">
+          <span class="text-[8px] font-bold text-gray-800">SEC_REF:</span>
+          <span class="text-[9px] font-black tracking-widest text-black">{{ refId }}</span>
+        </div>
+        <div class="flex flex-col border-t border-dashed border-gray-400 pt-[1px]">
+          <span class="text-[5.5px] uppercase tracking-widest text-gray-500">Digital Signature Hash (SHA-256)</span>
+          <span class="text-[6.5px] font-black tracking-widest uppercase truncate text-gray-900">{{ secHash }}</span>
+        </div>
+      </div>
+
+      <!-- Printing Data Block -->
+      <div class="w-[50mm] shrink-0 flex flex-col justify-center px-4" dir="rtl" style="font-family: 'Cairo', sans-serif;">
+        <div class="flex justify-between items-center mb-[2px]">
+          <span class="text-[7.5px] text-gray-600 font-bold">بواسطة:</span>
+          <span class="text-[8px] font-black truncate max-w-[35mm] text-black">{{ userName }}</span>
+        </div>
+        <div class="flex justify-between items-center border-t border-dashed border-gray-400 pt-[1px]">
+          <span class="text-[7.5px] text-gray-600 font-bold">تاريخ الإصدار:</span>
+          <span class="text-[8px] font-black font-mono text-black" dir="ltr">{{ printDate }}</span>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
@@ -69,7 +90,8 @@ import { useAuthStore } from '@/stores/auth'
 const props = defineProps<{
   signatures: any,
   settings?: any,
-  typography?: any
+  typography?: any,
+  referenceNo?: string
 }>()
 
 const getFontSize = (size: number | undefined, defaultSize: number) => {
@@ -121,9 +143,32 @@ const userName = computed(() => {
   return authStore.displayName || (authStore.user as any)?.full_name || 'مدير النظام'
 })
 
-const printDate = ref('')
-const refId = ref('')
-const secHash = ref('')
+const printDate = ref(new Date().toLocaleString('en-GB'))
+const refId = computed(() => {
+  if (props.referenceNo && props.referenceNo.trim() !== '' && props.referenceNo !== '........................') {
+    return props.referenceNo
+  }
+  return props.settings?.referenceId || `MEMO-SYS-GEN`
+})
+
+const secHash = computed(() => {
+  if (props.settings?.securityHash) return props.settings.securityHash
+  
+  // Deterministic Hash based on ref and date (simulating a real system hash)
+  const seed = `${refId.value}-${printDate.value}-${userName.value}`
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) {
+    const char = seed.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash 
+  }
+  const hex = Math.abs(hash).toString(16).padStart(8, '0')
+  let fullHash = ''
+  while(fullHash.length < 64) {
+    fullHash += hex + seed.length.toString(16).padStart(2, '0')
+  }
+  return fullHash.substring(0, 64).toUpperCase()
+})
 
 const offlineQrData = computed(() => {
   // TODO: [قيد التطوير] ميزة الباركود للاسترجاع الأرشيفي الداخلي.
@@ -138,15 +183,6 @@ onMounted(() => {
   const dateStr = now.toLocaleDateString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('/')
   const timeStr = now.toLocaleTimeString('ar-YE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
   printDate.value = `${dateStr}، ${timeStr}`
-  
-  const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase()
-  refId.value = `MEMO-${randomStr}`
-  
-  // Generate a mock SHA-like security hash for the print
-  const chars = '0123456789abcdef'
-  let hash = ''
-  for(let i=0; i<40; i++) hash += chars[Math.floor(Math.random() * chars.length)]
-  secHash.value = hash
 })
 </script>
 

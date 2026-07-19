@@ -1418,9 +1418,32 @@ async function savePrerequisites() {
 }
 
 // --- 5. Attachments Builder ---
-function openAttachmentsModal(svc: any) {
+async function openAttachmentsModal(svc: any) {
   activeService.value = { ...svc }
-  attachments.value = Array.isArray(svc.attachments_schema) ? [...svc.attachments_schema] : []
+  attachments.value = Array.isArray(svc.attachments_schema) && svc.attachments_schema.length > 0 
+    ? [...svc.attachments_schema] 
+    : []
+  
+  if (attachments.value.length === 0 && svc.form_type) {
+    loading.value = true
+    try {
+      const res = await api.get(`/service-cycle/forms/schema/?type=${svc.form_type}`)
+      const schema = res.data?.data
+      if (schema && schema.attachments) {
+        attachments.value = schema.attachments.map((a:any) => ({
+          key: a.doc_type || a.key,
+          label: a.label,
+          required: a.required !== false, // default true
+          description: a.description || ''
+        }))
+      }
+    } catch (err) {
+      console.error('Failed to load attachments schema', err)
+    } finally {
+      loading.value = false
+    }
+  }
+  
   modals.value.attachments = true
 }
 

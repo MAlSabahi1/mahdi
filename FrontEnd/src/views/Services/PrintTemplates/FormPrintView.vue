@@ -60,7 +60,7 @@
 
       <!-- المرفقات -->
       <template v-if="printWithAttachments && form.attachments && form.attachments.length > 0">
-        <div v-for="(att, aIdx) in form.attachments" :key="'att-'+aIdx" class="max-w-[21cm] min-h-[29.7cm] mx-auto my-6 print:my-0 bg-white shadow-xl print:shadow-none relative overflow-hidden flex flex-col justify-center items-center print-page-break p-8">
+        <div v-for="(att, aIdx) in form.attachments" :key="'att-'+aIdx" class="max-w-[21cm] min-h-[29.7cm] mx-auto my-6 print:my-0 bg-white shadow-xl print:shadow-none relative flex flex-col print-page-break px-8 py-10">
           <!-- Header for attachment context -->
           <div class="w-full flex justify-between items-center mb-4 pb-2 border-b border-gray-300 font-cairo text-sm text-gray-700">
             <div>
@@ -74,8 +74,10 @@
           </div>
           
           <template v-if="!resolveAttachmentUrl(att).toLowerCase().endsWith('.pdf')">
-            <img v-show="!att._imageError" :src="resolveAttachmentUrl(att)" @error="att._imageError = resolveAttachmentUrl(att)" class="max-w-full max-h-[90%] object-contain rounded-lg shadow-sm" alt="مرفق" />
-            <div v-if="att._imageError" class="text-center p-8 bg-red-50 border-2 border-red-200 border-dashed rounded-xl w-full max-w-2xl mt-4">
+            <div class="flex-1 w-full flex items-center justify-center min-h-0 py-2">
+              <img v-show="!att._imageError" :src="resolveAttachmentUrl(att)" @error="att._imageError = resolveAttachmentUrl(att)" class="max-w-full max-h-full object-contain rounded-lg shadow-sm" alt="مرفق" />
+            </div>
+            <div v-if="att._imageError" class="text-center p-8 bg-red-50 border-2 border-red-200 border-dashed rounded-xl w-full max-w-2xl mx-auto mt-4">
               <p class="font-bold text-red-700 text-lg mb-2">فشل تحميل الصورة</p>
               <p class="text-gray-700 text-sm dir-ltr font-mono bg-white p-2 border rounded shadow-inner break-all">{{ att._imageError }}</p>
             </div>

@@ -629,7 +629,7 @@
             <div class="grid grid-cols-2 gap-3 mb-4">
               <div class="col-span-2 sm:col-span-1">
                 <label class="block text-sm font-semibold mb-1 text-gray-700 dark:text-gray-300">نوع الخط</label>
-                <select v-model="form.typography.greeting.family" class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm h-10">
+                <select v-model="form.typography.greeting.family" disabled class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-sm h-10 opacity-70 cursor-not-allowed" title="الخط الرسمي ثابت ولا يمكن تغييره">
                   <option v-for="font in fontOptions" :key="font.value" :value="font.value">{{ font.label }}</option>
                 </select>
               </div>
@@ -651,7 +651,7 @@
             </div>
             <div class="mt-auto bg-white dark:bg-gray-800 p-3 rounded border border-dashed border-gray-300 flex items-center justify-center overflow-hidden text-center" dir="rtl">
                <span class="text-gray-900 dark:text-gray-100" :class="[form.typography.greeting.weight, { 'underline underline-offset-4': form.typography.greeting.underline }]" :style="{ fontSize: form.typography.greeting.size + 'rem', fontFamily: form.typography.greeting.family }">
-                 تحية طيبة وبعد ،،،
+                 تحيـــــة طيبـــــة وبعـــــد ،،،
                </span>
             </div>
           </div>
@@ -1321,7 +1321,6 @@ function importFromServiceList(item: any) {
 
     form.value.visibleColumns.correctName = true
     form.value.visibleColumns.correctionTarget = true
-    form.value.referenceNo = 'CORR-' + String(item.id).padStart(5, '0')
   }
   
   showServiceImportModal.value = false
@@ -1367,6 +1366,7 @@ const selectPersonFromDb = (dbPerson: any) => {
 }
 const fontOptions = [
   { value: "'Cairo', sans-serif", label: "Cairo (حديث - مفضل)" },
+  { value: "'Samt7017', 'Aref Ruqaa', serif", label: "Samt (استمارات حكومية)" },
   { value: "'Traditional Arabic', serif", label: "Traditional Arabic (رسمي جداً)" },
   { value: "'Simplified Arabic', sans-serif", label: "Simplified Arabic" },
   { value: "'Sakkal Majalla', serif", label: "Sakkal Majalla (رسمي للتقارير)" },
@@ -1389,7 +1389,7 @@ const defaultForm = {
   documentType: 'MEMO',
   isNameCorrection: false,
   referenceNo: '',
-  docDate: new Date().toLocaleDateString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('/') + 'م',
+  docDate: '',
   correspondingDate: '',
   attachments: '',
   bilingual: false,
@@ -1425,7 +1425,7 @@ const defaultForm = {
   },
   typography: {
     addressee: { family: "'Cairo', sans-serif", size: 1.3, weight: 'font-bold', underline: false },
-    greeting: { family: "'Aref Ruqaa', 'Amiri', 'Traditional Arabic', serif", size: 1.6, weight: 'font-bold', underline: false },
+    greeting: { family: "'Samt7017', 'Aref Ruqaa', serif", size: 1.2, weight: 'font-black', underline: false },
     subject: { family: "'Cairo', sans-serif", size: 1.4, weight: 'font-black', underline: true },
     body: { family: "'Cairo', sans-serif", size: 1.1, weight: 'font-normal', underline: false },
     conclusionSeparator: { family: "'Cairo', sans-serif", size: 1.4, weight: 'font-black', underline: false },
@@ -1863,3 +1863,12 @@ onMounted(async () => {
   loadCoreRefsAndPopulate()
 })
 </script>
+
+<style scoped>
+@font-face {
+  font-family: 'Samt7017';
+  src: url('/fonts/samt7017.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+</style>

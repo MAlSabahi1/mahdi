@@ -204,7 +204,7 @@ function loadTemplates() {
           visibleColumns: { militaryId: true, rank: true, name: true, correctName: true, correctionTarget: true },
           typography: {
             addressee: { family: "'Cairo', sans-serif", size: 1.3, weight: 'font-bold', underline: false },
-            greeting: { family: "'Cairo', sans-serif", size: 1.6, weight: 'font-bold', underline: false },
+            greeting: { family: "'Samt7017', 'Aref Ruqaa', serif", size: 1.2, weight: 'font-black', underline: false },
             subject: { family: "'Cairo', sans-serif", size: 1.4, weight: 'font-black', underline: true },
             body: { family: "'Cairo', sans-serif", size: 1.1, weight: 'font-normal', underline: false },
             conclusionSeparator: { family: "'Cairo', sans-serif", size: 1.4, weight: 'font-black', underline: false },
@@ -234,7 +234,7 @@ function loadTemplates() {
           visibleColumns: { militaryId: true, rank: true, name: true },
           typography: {
             addressee: { family: "'Cairo', sans-serif", size: 1.3, weight: 'font-bold', underline: false },
-            greeting: { family: "'Cairo', sans-serif", size: 1.6, weight: 'font-bold', underline: false },
+            greeting: { family: "'Samt7017', 'Aref Ruqaa', serif", size: 1.2, weight: 'font-black', underline: false },
             subject: { family: "'Cairo', sans-serif", size: 1.4, weight: 'font-black', underline: true },
             body: { family: "'Cairo', sans-serif", size: 1.1, weight: 'font-normal', underline: false },
             conclusionSeparator: { family: "'Cairo', sans-serif", size: 1.4, weight: 'font-black', underline: false },
@@ -264,7 +264,7 @@ function loadTemplates() {
           visibleColumns: { militaryId: true, rank: true, name: true, workplace: true },
           typography: {
             addressee: { family: "'Cairo', sans-serif", size: 1.3, weight: 'font-bold', underline: false },
-            greeting: { family: "'Cairo', sans-serif", size: 1.6, weight: 'font-bold', underline: false },
+            greeting: { family: "'Samt7017', 'Aref Ruqaa', serif", size: 1.2, weight: 'font-black', underline: false },
             subject: { family: "'Cairo', sans-serif", size: 1.4, weight: 'font-black', underline: true },
             body: { family: "'Cairo', sans-serif", size: 1.1, weight: 'font-normal', underline: false },
             conclusionSeparator: { family: "'Cairo', sans-serif", size: 1.4, weight: 'font-black', underline: false },
@@ -295,7 +295,7 @@ function loadTemplates() {
           visibleColumns: {},
           typography: {
             addressee: { family: "'Cairo', sans-serif", size: 1.3, weight: 'font-bold', underline: false },
-            greeting: { family: "'Cairo', sans-serif", size: 1.6, weight: 'font-bold', underline: false },
+            greeting: { family: "'Samt7017', 'Aref Ruqaa', serif", size: 1.2, weight: 'font-black', underline: false },
             subject: { family: "'Cairo', sans-serif", size: 1.4, weight: 'font-black', underline: true },
             body: { family: "'Cairo', sans-serif", size: 1.1, weight: 'font-normal', underline: false },
             conclusionSeparator: { family: "'Cairo', sans-serif", size: 1.4, weight: 'font-black', underline: false },

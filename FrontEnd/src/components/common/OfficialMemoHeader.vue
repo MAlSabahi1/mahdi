@@ -25,20 +25,20 @@
         <!-- Document Info Box (Below Arabic Side - ONLY if bilingual) -->
         <div v-if="bilingual" class="text-[12pt] font-bold mt-4 font-sans space-y-1.5">
           <div class="flex items-center">
-            <span class="w-[5.5rem] text-right">الرقـــــــــــــم/</span>
-            <span :class="{'tracking-widest': String(referenceNo).includes('...')}" class="text-blue-900">{{ referenceNo }}</span>
+            <span class="w-[6rem] text-right whitespace-nowrap">الرقـــــــم/</span>
+            <span :class="{'tracking-widest': String(referenceNo).includes('...')}" class="text-blue-900 mr-1">{{ referenceNo }}</span>
           </div>
           <div class="flex items-center">
-            <span class="w-[5.5rem] text-right">التاريــــــــــــخ/</span>
-            <span :class="{'tracking-widest': String(docDate).includes('...')}" class="text-blue-900">{{ docDate }}</span>
+            <span class="w-[6rem] text-right whitespace-nowrap">التاريـــــــخ/</span>
+            <span :class="{'tracking-widest': String(docDate).includes('...')}" class="text-blue-900 mr-1">{{ docDate }}</span>
           </div>
           <div class="flex items-center">
-            <span class="w-[5.5rem] text-right">الموافـــــــــــق/</span>
-            <span :class="{'tracking-widest': String(correspondingDate).includes('...')}" class="text-blue-900">{{ correspondingDate }}</span>
+            <span class="w-[6rem] text-right whitespace-nowrap">الموافـــــــق/</span>
+            <span :class="{'tracking-widest': String(correspondingDate).includes('...')}" class="text-blue-900 mr-1">{{ correspondingDate }}</span>
           </div>
           <div class="flex items-center">
-            <span class="w-[5.5rem] text-right">المرفقـــــــــات/</span>
-            <span :class="{'tracking-widest': String(attachments).includes('...')}" class="text-blue-900">{{ attachments }}</span>
+            <span class="w-[6rem] text-right whitespace-nowrap">المرفقـــــات/</span>
+            <span :class="{'tracking-widest': String(attachments).includes('...')}" class="text-blue-900 mr-1">{{ attachments }}</span>
           </div>
         </div>
       </div>
@@ -61,30 +61,29 @@
       <div v-else class="flex justify-end pt-2 pl-2 text-[12pt] font-bold font-sans" dir="rtl">
         <div class="space-y-1.5 leading-tight">
           <div class="flex items-center">
-            <span class="w-[5.5rem] text-right">الرقـــــــــــــم/</span>
-            <span :class="{'tracking-widest': String(referenceNo).includes('...')}" class="text-blue-900">{{ referenceNo }}</span>
+            <span class="w-[6rem] text-right whitespace-nowrap">الرقـــــــم/</span>
+            <span :class="{'tracking-widest': String(referenceNo).includes('...')}" class="text-blue-900 mr-1">{{ referenceNo }}</span>
           </div>
           <div class="flex items-center">
-            <span class="w-[5.5rem] text-right">التاريــــــــــــخ/</span>
-            <span :class="{'tracking-widest': String(docDate).includes('...')}" class="text-blue-900">{{ docDate }}</span>
+            <span class="w-[6rem] text-right whitespace-nowrap">التاريـــــــخ/</span>
+            <span :class="{'tracking-widest': String(docDate).includes('...')}" class="text-blue-900 mr-1">{{ docDate }}</span>
           </div>
           <div class="flex items-center">
-            <span class="w-[5.5rem] text-right">الموافـــــــــــق/</span>
-            <span :class="{'tracking-widest': String(correspondingDate).includes('...')}" class="text-blue-900">{{ correspondingDate }}</span>
+            <span class="w-[6rem] text-right whitespace-nowrap">الموافـــــــق/</span>
+            <span :class="{'tracking-widest': String(correspondingDate).includes('...')}" class="text-blue-900 mr-1">{{ correspondingDate }}</span>
           </div>
           <div class="flex items-center">
-            <span class="w-[5.5rem] text-right">المرفقـــــــــات/</span>
-            <span :class="{'tracking-widest': String(attachments).includes('...')}" class="text-blue-900">{{ attachments }}</span>
+            <span class="w-[6rem] text-right whitespace-nowrap">المرفقـــــات/</span>
+            <span :class="{'tracking-widest': String(attachments).includes('...')}" class="text-blue-900 mr-1">{{ attachments }}</span>
           </div>
         </div>
       </div>
 
     </div>
 
-    <!-- Thick Separator Line -->
+    <!-- Thin Separator Line -->
     <div class="px-2 -mt-4 relative z-10">
-      <div class="w-full border-b-[3px] border-black mb-[2px]"></div>
-      <div class="w-full border-b-[1.5px] border-black mb-1"></div>
+      <div class="w-full border-b-[1px] border-gray-800 mb-1"></div>
       
       <!-- Security / Intelligence Badge (Breaks the lines) -->
       <div v-if="securityLevel && securityLevel !== 'NORMAL'" class="absolute top-[-9px] left-0 w-full flex justify-center pointer-events-none print:top-[-9px]">
