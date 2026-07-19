@@ -362,6 +362,8 @@ class MonthlyServicesReportView(APIView):
         central_department_id = request.query_params.get('central_department')
         branch_id = request.query_params.get('branch')
         district_police_id = request.query_params.get('district_police')
+        division_id = request.query_params.get('division')
+        unit_id = request.query_params.get('unit')
         position_id = request.query_params.get('position')
         qualification_id = request.query_params.get('qualification')
         force_class = request.query_params.get('force_classification')

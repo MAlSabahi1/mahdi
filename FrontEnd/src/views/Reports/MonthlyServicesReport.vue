@@ -238,77 +238,35 @@
 
             <div>
               <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الرتبة</label>
-              <MultiSelect
-                    v-model="filterRank"
-                    :options="coreStore.ranks"
-                    valueKey="id"
-                    labelKey="name"
-                    placeholder="كل الرتب"
-                  />
+                  <MultiSelect v-model="filterRank" :options="coreStore.ranks" valueKey="id" labelKey="name" placeholder="جميع الرتب" />
             </div>
             <div>
               <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الفئة</label>
-              <MultiSelect
-                    v-model="filterCategory"
-                    :options="coreStore.categories"
-                    valueKey="id"
-                    labelKey="name"
-                    placeholder="كل الفئات"
-                  />
+                  <MultiSelect v-model="filterCategory" :options="coreStore.jobCategories" valueKey="id" labelKey="name" placeholder="جميع الفئات" />
             </div>
 
             <div>
-              <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الحالة</label>
-              <div class="relative z-20 bg-transparent">
-                <select v-model="filterStatusClassification" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
-                  <option value="">جميع الحالات</option>
-                  <option value="active_full">قوة عاملة فعلية</option>
-                  <option value="active_part">قوة عاملة غير فعلية</option>
-                  <option value="inactive_temp">قوة غير عاملة مؤقتاً</option>
-                  <option value="inactive_perm">قوة غير عاملة نهائياً</option>
-                </select>
-                <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
-                  <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                </span>
-              </div>
+              <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">التصنيف العام للحالة</label>
+              <MultiSelect 
+                v-model="filterStatusClassification" 
+                :options="[{id: 'active_full', name: 'قوة عاملة فعلية'}, {id: 'active_part', name: 'قوة عاملة غير فعلية'}, {id: 'inactive_temp', name: 'قوة غير عاملة مؤقتاً'}, {id: 'inactive_perm', name: 'قوة غير عاملة نهائياً'}]" 
+                valueKey="id" 
+                labelKey="name" 
+                placeholder="جميع الحالات" 
+              />
             </div>
 
-            <!-- Custom Multi-Select Dropdown for Status Types -->
-            <div class="relative">
-              <!-- Backdrop to close dropdown -->
-              <div v-if="showStatusDropdown" @click="showStatusDropdown = false" class="fixed inset-0 z-40"></div>
-              
-              <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">نوع الحالة</label>
-              <button 
-                type="button"
-                @click="showStatusDropdown = !showStatusDropdown"
-                :disabled="!filterStatusClassification"
-                class="relative z-10 flex h-11 w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span class="truncate">
-                  {{ !filterStatusClassification ? 'اختر الحالة أولاً...' : (filterStatusIds.length === 0 ? 'جميع الأنواع' : `محدد (${filterStatusIds.length})`) }}
-                </span>
-                <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 20 20" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" />
-                </svg>
-              </button>
-              
-              <!-- Dropdown Menu -->
-              <div v-if="showStatusDropdown" class="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                <div class="space-y-1">
-                  <!-- Select All -->
-                  <label class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <input type="checkbox" :checked="filterStatusIds.length === filteredStatuses.length && filteredStatuses.length > 0" @change="toggleAllStatuses" class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
-                    <span class="text-sm font-bold text-gray-900 dark:text-gray-100">تحديد الكل</span>
-                  </label>
-                  <div class="h-px bg-gray-100 dark:bg-gray-700 my-1"></div>
-                  <!-- Individual Items -->
-                  <label v-for="s in filteredStatuses" :key="s.id" class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <input type="checkbox" :value="s.id" v-model="filterStatusIds" class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ s.name }}</span>
-                  </label>
-                </div>
-              </div>
+            <div>
+              <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">نوع الحالة المخصص</label>
+              <MultiSelect 
+                v-model="filterStatusIds" 
+                :options="filteredStatuses" 
+                valueKey="id" 
+                labelKey="name" 
+                placeholder="جميع الأنواع" 
+                :disabled="filterStatusClassification.length === 0" 
+                disabledPlaceholder="اختر التصنيف أولاً..." 
+              />
             </div>
           </div>
 
@@ -323,44 +281,50 @@
                 بيانات جهة العمل والمناصب
               </h4>
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                <div>
-                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">إدارة الأمن (الوحدة الرئيسية)</label>
-                  <MultiSelect
-                    v-model="filterSecurityAdmin"
-                    :options="availableSecurityAdmins"
-                    valueKey="id"
-                    labelKey="name"
-                    placeholder="كل الوحدات"
+                <div class="lg:col-span-2">
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الإدارة الأمنية (المحافظات)</label>
+                  <MultiSelect 
+                    v-model="filterSecurityAdmin" 
+                    :options="availableSecurityAdmins" 
+                    valueKey="id" 
+                    labelKey="name" 
+                    placeholder="كل الإدارات الأمنية" 
+                  />
+                </div>
+                <div class="lg:col-span-2">
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">جهة العمل التابعة (إدارة مركزية / فرع / مديرية)</label>
+                  <MultiSelect 
+                    v-model="filterWorkplaces" 
+                    :options="groupedWorkplaces" 
+                    valueKey="value" 
+                    labelKey="label" 
+                    placeholder="كل الجهات" 
+                    :disabled="filterSecurityAdmin.length === 0"
+                    disabledPlaceholder="اختر الإدارة الأمنية أولاً..."
                   />
                 </div>
                 <div>
-                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الإدارة المركزية (المديرية/السرية)</label>
-                  <MultiSelect
-                    v-model="filterCentralDept"
-                    :options="availableCentralDepts"
-                    valueKey="id"
-                    labelKey="name"
-                    placeholder="كل الإدارات المركزية"
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">القسم</label>
+                  <MultiSelect 
+                    v-model="filterDivision" 
+                    :options="availableDivisions" 
+                    valueKey="id" 
+                    labelKey="name" 
+                    placeholder="كل الأقسام" 
+                    :disabled="filterWorkplaces.length > 0 && availableDivisions.length === 0"
+                    disabledPlaceholder="لا توجد أقسام تابعة" 
                   />
                 </div>
                 <div>
-                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الفرع (الوحدة التابعة)</label>
-                  <MultiSelect
-                    v-model="filterBranch"
-                    :options="availableBranches"
-                    valueKey="id"
-                    labelKey="name"
-                    placeholder="كل الفروع"
-                  />
-                </div>
-                <div>
-                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">مركز الشرطة</label>
-                  <MultiSelect
-                    v-model="filterDistrict"
-                    :options="coreStore.districtPolices"
-                    valueKey="id"
-                    labelKey="name"
-                    placeholder="كل المديريات"
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">الوحدة</label>
+                  <MultiSelect 
+                    v-model="filterUnit" 
+                    :options="availableUnits" 
+                    valueKey="id" 
+                    labelKey="name" 
+                    placeholder="كل الوحدات" 
+                    :disabled="filterDivision.length > 0 && availableUnits.length === 0"
+                    disabledPlaceholder="لا توجد وحدات تابعة" 
                   />
                 </div>
               </div>
@@ -386,7 +350,7 @@
                   <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">المديرية</label>
                   <div class="relative z-20 bg-transparent">
                     <select v-model="filterBirthDist" :disabled="!filterBirthGov" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 disabled:opacity-50 disabled:cursor-not-allowed">
-                      <option value="">اختر...</option>
+                      <option value="">{{ !filterBirthGov ? 'اختر المحافظة أولاً...' : 'الكل' }}</option>
                       <option v-for="d in birthDistricts" :key="d.id" :value="d.id">{{ d.name_ar }}</option>
                     </select>
                     <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
@@ -398,7 +362,7 @@
                   <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">العزلة</label>
                   <div class="relative z-20 bg-transparent">
                     <select v-model="filterBirthSubDist" :disabled="!filterBirthDist" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 disabled:opacity-50 disabled:cursor-not-allowed">
-                      <option value="">اختر...</option>
+                      <option value="">{{ !filterBirthDist ? 'اختر المديرية أولاً...' : 'الكل' }}</option>
                       <option v-for="sd in birthSubDistricts" :key="sd.id" :value="sd.id">{{ sd.name_ar }}</option>
                     </select>
                     <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
@@ -410,7 +374,7 @@
                   <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">القرية</label>
                   <div class="relative z-20 bg-transparent">
                     <select v-model="filterBirthVillage" :disabled="!filterBirthSubDist" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 disabled:opacity-50 disabled:cursor-not-allowed">
-                      <option value="">اختر...</option>
+                      <option value="">{{ !filterBirthSubDist ? 'اختر العزلة أولاً...' : 'الكل' }}</option>
                       <option v-for="v in birthVillages" :key="v.id" :value="v.id">{{ v.name_ar }}</option>
                     </select>
                     <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
@@ -427,21 +391,13 @@
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">المحافظة</label>
-                  <div class="relative z-20 bg-transparent">
-                    <select v-model="filterResidenceGov" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
-                      <option value="">اختر...</option>
-                      <option v-for="g in coreStore.governorates" :key="g.id" :value="g.id">{{ g.name }}</option>
-                    </select>
-                    <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
-                      <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                    </span>
-                  </div>
+                  <MultiSelect v-model="filterResidenceGov" :options="coreStore.governorates" valueKey="id" labelKey="name" placeholder="كل المحافظات" />
                 </div>
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">المديرية</label>
                   <div class="relative z-20 bg-transparent">
                     <select v-model="filterResDist" :disabled="!filterResidenceGov" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 disabled:opacity-50 disabled:cursor-not-allowed">
-                      <option value="">اختر...</option>
+                      <option value="">{{ filterResidenceGov.length === 0 ? 'اختر المحافظة أولاً...' : 'الكل' }}</option>
                       <option v-for="d in resDistricts" :key="d.id" :value="d.id">{{ d.name_ar }}</option>
                     </select>
                     <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
@@ -453,7 +409,7 @@
                   <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">العزلة</label>
                   <div class="relative z-20 bg-transparent">
                     <select v-model="filterResSubDist" :disabled="!filterResDist" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 disabled:opacity-50 disabled:cursor-not-allowed">
-                      <option value="">اختر...</option>
+                      <option value="">{{ !filterResDist ? 'اختر المديرية أولاً...' : 'الكل' }}</option>
                       <option v-for="sd in resSubDistricts" :key="sd.id" :value="sd.id">{{ sd.name_ar }}</option>
                     </select>
                     <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
@@ -465,7 +421,7 @@
                   <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">القرية</label>
                   <div class="relative z-20 bg-transparent">
                     <select v-model="filterResVillage" :disabled="!filterResSubDist" class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 ltr:pr-11 rtl:pl-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 disabled:opacity-50 disabled:cursor-not-allowed">
-                      <option value="">اختر...</option>
+                      <option value="">{{ !filterResSubDist ? 'اختر العزلة أولاً...' : 'الكل' }}</option>
                       <option v-for="v in resVillages" :key="v.id" :value="v.id">{{ v.name_ar }}</option>
                     </select>
                     <span class="absolute z-30 text-gray-700 -translate-y-1/2 pointer-events-none ltr:right-4 rtl:left-4 top-1/2 dark:text-gray-400">
@@ -482,33 +438,15 @@
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">المؤهل</label>
-                  <MultiSelect
-                    v-model="filterQualification"
-                    :options="coreStore.qualifications"
-                    valueKey="id"
-                    labelKey="name"
-                    placeholder="كل المؤهلات"
-                  />
+                  <MultiSelect v-model="filterQualification" :options="coreStore.qualifications" valueKey="id" labelKey="name" placeholder="كل المؤهلات" />
                 </div>
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">المنصب</label>
-                  <MultiSelect
-                    v-model="filterPosition"
-                    :options="coreStore.positions"
-                    valueKey="id"
-                    labelKey="name"
-                    placeholder="كل المناصب"
-                  />
+                  <MultiSelect v-model="filterPosition" :options="coreStore.positions" valueKey="id" labelKey="name" placeholder="كل المناصب" />
                 </div>
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">تصنيف القوة</label>
-                  <MultiSelect
-                    v-model="filterForceClass"
-                    :options="coreStore.forceClassifications"
-                    valueKey="id"
-                    labelKey="name"
-                    placeholder="كل التصنيفات"
-                  />
+                  <MultiSelect v-model="filterForceClass" :options="coreStore.forceTypes" valueKey="id" labelKey="name" placeholder="كل التصنيفات" />
                 </div>
               </div>
 
@@ -659,8 +597,8 @@ const availableSecurityAdmins = computed(() => {
 })
 
 const filteredStatuses = computed(() => {
-  if (filterStatusClassification.value) {
-    return coreStore.statuses.filter((s: any) => s.classification === filterStatusClassification.value)
+  if (filterStatusClassification.value.length > 0) {
+    return coreStore.statuses.filter((s: any) => filterStatusClassification.value.includes(s.classification))
   }
   return []
 })
@@ -686,29 +624,106 @@ watch(rosterMode, () => {
 const showAdvancedFilters = ref(false)
 const filterRank = ref<number[]>([])
 const filterCategory = ref<number[]>([])
-const filterStatusClassification = ref('')
+const filterStatusClassification = ref<string[]>([])
 const filterStatusIds = ref<number[]>([])
-const showStatusDropdown = ref(false)
 
-const toggleAllStatuses = (e: Event) => {
-  const checked = (e.target as HTMLInputElement).checked
-  if (checked) {
-    filterStatusIds.value = filteredStatuses.value.map((s: any) => s.id)
-  } else {
-    filterStatusIds.value = []
-  }
-}
+
 const filterSecurityAdmin = ref<number[]>([])
-const filterCentralDept = ref<number[]>([])
-const filterBranch = ref<number[]>([])
-const filterDistrict = ref<number[]>([])
+
+watch(filterSecurityAdmin, () => {
+  // Only keep workplaces that are still valid under the new security admin selection
+  const validVals = groupedWorkplaces.value.flatMap((g: any) => g.options.map((o: any) => o.value))
+  filterWorkplaces.value = filterWorkplaces.value.filter(val => validVals.includes(val))
+})
+
+const filterWorkplaces = ref<string[]>([])
+const filterDivision = ref<number[]>([])
+const filterUnit = ref<number[]>([])
+
+const availableDivisions = computed(() => {
+  if (filterWorkplaces.value.length === 0) return coreStore.divisions
+  
+  const centrals = filterWorkplaces.value.filter(v => v.startsWith('central_')).map(v => parseInt(v.replace('central_', ''), 10))
+  const branches = filterWorkplaces.value.filter(v => v.startsWith('branch_')).map(v => parseInt(v.replace('branch_', ''), 10))
+  const districts = filterWorkplaces.value.filter(v => v.startsWith('district_')).map(v => parseInt(v.replace('district_', ''), 10))
+  
+  return coreStore.divisions.filter((div: any) => {
+    if (div.central_department && centrals.includes(div.central_department)) return true
+    if (div.branch && branches.includes(div.branch)) return true
+    if (div.district_police && districts.includes(div.district_police)) return true
+    return false
+  })
+})
+
+const availableUnits = computed(() => {
+  if (filterDivision.value.length === 0) return coreStore.units
+  return coreStore.units.filter((u: any) => filterDivision.value.includes(u.division))
+})
+
+watch(filterWorkplaces, () => {
+  const validDivIds = availableDivisions.value.map((d: any) => d.id)
+  filterDivision.value = filterDivision.value.filter(id => validDivIds.includes(id))
+})
+
+watch(filterDivision, () => {
+  const validUnitIds = availableUnits.value.map((u: any) => u.id)
+  filterUnit.value = filterUnit.value.filter(id => validUnitIds.includes(id))
+})
+
+
+
+
+watch(filterSecurityAdmin, () => {
+  const validVals = groupedWorkplaces.value.flatMap(g => g.options.map((o: any) => o.value))
+  filterWorkplaces.value = filterWorkplaces.value.filter(val => validVals.includes(val))
+})
+
+const groupedWorkplaces = computed(() => {
+  const groups: any[] = []
+  
+  let centrals = coreStore.centralDepartments
+  let branches = coreStore.branches
+  let districts = coreStore.districtPolices
+
+  // Filter based on selected Security Admins
+  if (filterSecurityAdmin.value.length > 0) {
+    centrals = centrals.filter((d: any) => filterSecurityAdmin.value.includes(d.security_admin))
+    branches = branches.filter((b: any) => filterSecurityAdmin.value.includes(b.security_admin))
+    districts = districts.filter((d: any) => filterSecurityAdmin.value.includes(d.security_admin))
+  } else {
+    // If no security admin is selected, do we show empty or all? The user says "لا تظهر الا ما يخص المحافظة".
+    // Let's return empty groups to force selection first.
+    return []
+  }
+
+  if (centrals.length) {
+    groups.push({
+      label: 'الإدارات المركزية / السرايا',
+      options: centrals.map((d: any) => ({ value: `central_${d.id}`, label: d.name }))
+    })
+  }
+  if (branches.length) {
+    groups.push({
+      label: 'الفروع',
+      options: branches.map((b: any) => ({ value: `branch_${b.id}`, label: b.name }))
+    })
+  }
+  if (districts.length) {
+    groups.push({
+      label: 'مراكز الشرطة / المديريات',
+      options: districts.map((d: any) => ({ value: `district_${d.id}`, label: d.name_ar || d.name }))
+    })
+  }
+  return groups
+})
+
 const filterPosition = ref<number[]>([])
 const filterQualification = ref<number[]>([])
 const filterForceClass = ref<number[]>([])
 const filterMilitaryNumber = ref('')
 const filterName = ref('')
 const filterBirthGov = ref<number | ''>('')
-const filterResidenceGov = ref<number | ''>('')
+const filterResidenceGov = ref<number[]>([])
 
 const filterBirthDist = ref<number | ''>('')
 const filterBirthSubDist = ref<number | ''>('')
@@ -728,7 +743,7 @@ const resVillages = ref<any[]>([])
 // Status Watcher
 watch(filterStatusClassification, () => {
   filterStatusIds.value = []
-  showStatusDropdown.value = false
+  
 })
 
 // Birth Watchers
@@ -814,9 +829,9 @@ const activeAdvancedFilterCount = computed(() => {
   if (filterRank.value.length > 0) count++
   if (filterCategory.value.length > 0) count++
   if (filterSecurityAdmin.value.length > 0) count++
-  if (filterCentralDept.value.length > 0) count++
-  if (filterBranch.value.length > 0) count++
-  if (filterDistrict.value.length > 0) count++
+  if (filterWorkplaces.value.length > 0) count++
+  if (filterDivision.value.length > 0) count++
+  if (filterUnit.value.length > 0) count++
   if (filterPosition.value.length > 0) count++
   if (filterQualification.value.length > 0) count++
   if (filterForceClass.value.length > 0) count++
@@ -826,11 +841,11 @@ const activeAdvancedFilterCount = computed(() => {
   if (filterBirthDist.value) count++
   if (filterBirthSubDist.value) count++
   if (filterBirthVillage.value) count++
-  if (filterResidenceGov.value) count++
+  if (filterResidenceGov.value.length > 0) count++
   if (filterResDist.value) count++
   if (filterResSubDist.value) count++
   if (filterResVillage.value) count++
-  if (filterStatusClassification.value) count++
+  if (filterStatusClassification.value.length > 0) count++
   if (filterStatusIds.value.length > 0) count++
   return count
 })
@@ -841,9 +856,9 @@ const resetAllFilters = () => {
   filterRank.value = []
   filterCategory.value = []
   filterSecurityAdmin.value = []
-  filterCentralDept.value = []
-  filterBranch.value = []
-  filterDistrict.value = []
+  filterWorkplaces.value = []
+  filterDivision.value = []
+  filterUnit.value = []
   filterPosition.value = []
   filterQualification.value = []
   filterForceClass.value = []
@@ -853,13 +868,13 @@ const resetAllFilters = () => {
   filterBirthDist.value = ''
   filterBirthSubDist.value = ''
   filterBirthVillage.value = ''
-  filterResidenceGov.value = ''
+  filterResidenceGov.value = []
   filterResDist.value = ''
   filterResSubDist.value = ''
   filterResVillage.value = ''
-  filterStatusClassification.value = ''
+  filterStatusClassification.value = []
   filterStatusIds.value = []
-  showStatusDropdown.value = false
+  
   rosterMode.value = 'monthly_changes'
   fetchData()
 }
@@ -938,10 +953,20 @@ const fetchData = async () => {
     // Advanced filters
     if (filterRank.value.length > 0) params.rank = filterRank.value.join(',')
     if (filterCategory.value.length > 0) params.category = filterCategory.value.join(',')
+    
     if (filterSecurityAdmin.value.length > 0) params.security_admin = filterSecurityAdmin.value.join(',')
-    if (filterCentralDept.value.length > 0) params.central_department = filterCentralDept.value.join(',')
-    if (filterBranch.value.length > 0) params.branch = filterBranch.value.join(',')
-    if (filterDistrict.value.length > 0) params.district_police = filterDistrict.value.join(',')
+    
+    const centrals = filterWorkplaces.value.filter(v => v.startsWith('central_')).map(v => v.replace('central_', ''))
+    if (centrals.length > 0) params.central_department = centrals.join(',')
+    
+    const branches = filterWorkplaces.value.filter(v => v.startsWith('branch_')).map(v => v.replace('branch_', ''))
+    if (branches.length > 0) params.branch = branches.join(',')
+    
+    const districts = filterWorkplaces.value.filter(v => v.startsWith('district_')).map(v => v.replace('district_', ''))
+    if (districts.length > 0) params.district_police = districts.join(',')
+
+    if (filterDivision.value.length > 0) params.division = filterDivision.value.join(',')
+    if (filterUnit.value.length > 0) params.unit = filterUnit.value.join(',')
     if (filterPosition.value.length > 0) params.position = filterPosition.value.join(',')
     if (filterQualification.value.length > 0) params.qualification = filterQualification.value.join(',')
     if (filterForceClass.value.length > 0) params.force_classification = filterForceClass.value.join(',')
@@ -952,13 +977,13 @@ const fetchData = async () => {
     if (filterBirthSubDist.value) params.birth_sub_district = filterBirthSubDist.value
     if (filterBirthVillage.value) params.birth_village = filterBirthVillage.value
     
-    if (filterResidenceGov.value) params.residence_governorate = filterResidenceGov.value
+    if (filterResidenceGov.value.length > 0) params.residence_governorate = filterResidenceGov.value.join(',')
     if (filterResDist.value) params.residence_district = filterResDist.value
     if (filterResSubDist.value) params.residence_sub_district = filterResSubDist.value
     if (filterResVillage.value) params.residence_village = filterResVillage.value
     
     params.roster_mode = rosterMode.value  // 'all' | 'monthly_changes'
-    if (filterStatusClassification.value) params.status_classification = filterStatusClassification.value
+    if (filterStatusClassification.value.length > 0) params.status_classification = filterStatusClassification.value.join(',')
     if (filterStatusIds.value.length > 0) params.status_id = filterStatusIds.value.join(',')
 
     const res = await api.get('/reports/detailed-reports/monthly-services/', { params })
