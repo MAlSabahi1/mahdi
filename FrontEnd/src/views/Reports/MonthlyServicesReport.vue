@@ -496,6 +496,11 @@
             <p class="text-xs text-gray-500 mt-1">تحديد الحقول التي ستظهر في كشف التصدير الرسمي ({{ printSelectedKeys.length }} من أصل {{ allColumns.length }})</p>
           </div>
           <div class="flex items-center gap-2 shrink-0">
+            <button @click="exportExcelData" :disabled="reportData.length === 0" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold transition-all shadow-theme-sm disabled:opacity-50 disabled:cursor-not-allowed">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
+              تصدير مخصص (Excel)
+            </button>
+            <div class="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1"></div>
             <button @click="selectAllPrintCols" class="text-xs px-4 py-1.5 rounded-lg bg-brand-50 border border-brand-200 text-brand-700 hover:bg-brand-100 dark:bg-brand-900/30 dark:border-brand-800 dark:text-brand-300 dark:hover:bg-brand-900/50 font-bold transition-all shadow-theme-xs">تحديد الكل</button>
             <button @click="deselectAllPrintCols" class="text-xs px-4 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 font-bold transition-all shadow-theme-xs">إلغاء الكل</button>
           </div>
@@ -545,7 +550,7 @@
           emptyDescription="لا توجد إجراءات أو خدمات تطابق معايير البحث المحددة."
           @search="(q) => searchQuery = q"
           @refresh="fetchData"
-          @export="exportExcel"
+          @export="exportExcelData"
         />
 
         <!-- Official Print Footer -->
@@ -567,7 +572,7 @@ import DataTable from '@/components/tables/DataTable.vue'
 import MultiSelect from '@/components/common/MultiSelect.vue'
 import ReportHeader from '@/components/reports/ReportHeader.vue'
 import ReportFooter from '@/components/reports/ReportFooter.vue'
-import { exportToCSV } from "@/utils/export"
+import { exportToExcel, exportToCSV } from "@/utils/export"
 import { useServicesStore } from '@/stores/services'
 import { useCoreStore } from '@/stores/core'
 import { useAuthStore } from '@/stores/auth'
@@ -999,8 +1004,35 @@ const fetchData = async () => {
   }
 }
 
-const exportExcel = () => {
-  exportToCSV(activePrintColumns.value, filteredData.value, 'MonthlyServicesReport_Export.csv')
+const exportExcelData = async () => {
+  const monthText = selectedMonth.value && selectedYear.value 
+    ? `${selectedMonth.value}-${selectedYear.value}`
+    : `${new Date().getMonth() + 1}-${new Date().getFullYear()}`; // Fallback to current month if not filtered
+  const title = `الكشف الشهري لمتغيرات الخدمات لشهر ${monthText}`;
+
+  const result = await Swal.fire({
+    title: 'تنسيق التصدير',
+    text: 'اختر شكل عرض الأعمدة في ملف الإكسل',
+    icon: 'question',
+    showCancelButton: true,
+    showCloseButton: true,
+    confirmButtonText: 'مضغوط (مُحكم ومناسب للطباعة)',
+    cancelButtonText: 'واسع (كبير ومريح للنظر)',
+    confirmButtonColor: '#0ea5e9',
+    cancelButtonColor: '#64748b',
+    reverseButtons: true
+  });
+
+  let isCompact = true;
+  if (result.isConfirmed) {
+    isCompact = true;
+  } else if (result.dismiss === 'cancel') {
+    isCompact = false;
+  } else {
+    return; // User closed the dialog
+  }
+
+  exportToExcel(activePrintColumns.value, filteredData.value, 'MonthlyServicesReport_Export.xlsx', title, isCompact)
 }
 
 const handleOfficialExport = async () => {

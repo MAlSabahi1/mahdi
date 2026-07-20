@@ -167,6 +167,13 @@
                                 {{ col.label }}
                               </option>
                             </select>
+                            
+                            <div v-if="columnMapping[header] === '__monthly_variable__'" class="mt-2 animate-in fade-in duration-200">
+                              <label class="block text-[10px] text-gray-500 dark:text-gray-400 mb-1">شهر الاستحقاق (إلزامي):</label>
+                              <input type="month" v-model="monthlyVariablesMeta[header]" 
+                                class="block w-full rounded-lg border border-blue-200 dark:border-blue-900/50 bg-white dark:bg-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-xs p-2 font-bold text-blue-700 dark:text-blue-400"
+                                placeholder="الشهر (مثال: 2024-05)" />
+                            </div>
                           </div>
                         </div>
                       </th>
@@ -224,7 +231,7 @@
         <div v-if="currentStep === 3" class="space-y-6">
           
           <!-- Summary Cards Banner (Premium Redesign) -->
-          <div class="grid gap-4 sm:grid-cols-4">
+          <div class="grid gap-4 sm:grid-cols-5">
             <!-- Total Rows -->
             <div class="relative overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/40 to-indigo-50/10 p-5 shadow-sm dark:border-blue-900/40 dark:from-blue-950/25 dark:to-indigo-950/5 group hover:shadow-md transition-all duration-300">
               <div class="flex items-center justify-between">
@@ -271,6 +278,18 @@
               </div>
               <h3 class="text-3xl font-extrabold text-amber-600 dark:text-amber-400 mt-3 leading-none">{{ validationResult.error_count }}</h3>
               <p class="text-[10px] text-amber-600/80 dark:text-amber-500 mt-2">حقول غير متطابقة أو قيم غير معرّفة</p>
+            </div>
+
+            <!-- Created Correction Requests -->
+            <div class="relative overflow-hidden rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50/40 to-violet-50/10 p-5 shadow-sm dark:border-purple-900/40 dark:from-purple-950/20 dark:to-violet-950/5 group hover:shadow-md transition-all duration-300">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-purple-600 dark:text-purple-400 tracking-wide uppercase">طلبات التصحيح</span>
+                <div class="p-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform duration-300">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                </div>
+              </div>
+              <h3 class="text-3xl font-extrabold text-purple-600 dark:text-purple-400 mt-3 leading-none">{{ createdCorrectionsCount }}</h3>
+              <p class="text-[10px] text-purple-600/80 dark:text-purple-500 mt-2">طلب تصحيح تم إنشاؤه في هذه الجلسة</p>
             </div>
           </div>
 
@@ -323,12 +342,22 @@
             <!-- Right Side: Action Operations -->
             <div class="flex items-center flex-wrap gap-2 shrink-0">
               <button 
-                @click="createBulkCorrectionRequest"
-                class="border border-purple-200 text-purple-700 hover:bg-purple-50/50 dark:border-purple-800/60 dark:text-purple-400 dark:hover:bg-purple-950/20 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-sm"
-                title="إنشاء طلب تصحيح أسماء للوزارة"
+                v-if="selectedRows.length > 0"
+                @click="openMultiCorrectionModal"
+                class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-md animate-pulse-subtle"
+                title="إنشاء طلبات تصحيح مخصصة للأفراد المحددين"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                رفع طلب تصحيح للوزارة
+                إنشاء طلبات تصحيح للمحددين ({{ selectedRows.length }})
+              </button>
+
+              <button 
+                @click="createBulkCorrectionRequest"
+                class="border border-purple-200 text-purple-700 hover:bg-purple-50/50 dark:border-purple-800/60 dark:text-purple-400 dark:hover:bg-purple-950/20 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-sm"
+                title="إنشاء طلب تصحيح للأسماء غير المتطابقة"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                رفع تصحيح الأسماء التلقائي
               </button>
 
               <button 
@@ -384,6 +413,15 @@
               <table class="w-full text-right border-collapse min-w-[2100px]">
                 <thead class="bg-gray-50/80 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-20 backdrop-blur-md">
                   <tr>
+                    <!-- Selection Header -->
+                    <th class="p-4 text-center font-bold text-xs w-12 border-l border-b border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-800/30">
+                      <input 
+                        type="checkbox" 
+                        class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
+                        :checked="isAllSelected"
+                        @change="toggleAllRows"
+                      />
+                    </th>
                     <!-- Row number header -->
                     <th class="p-4 text-center font-bold text-xs w-16 border-l border-b border-gray-200 dark:border-gray-800 text-gray-500">رقم الصف</th>
                     
@@ -649,8 +687,20 @@
                     v-for="row in paginatedRows" 
                     :key="row.rowIdx"
                     class="hover:bg-gray-50/50 dark:hover:bg-gray-800/10 transition-colors duration-150"
-                    :class="[row.err ? 'bg-red-50/5 dark:bg-red-950/2' : '']"
+                    :class="[
+                      row.err && row.err.errors.some((e: any) => e.type === 'already_exists') ? 'bg-emerald-50/50 dark:bg-emerald-900/20' : (row.err ? 'bg-red-50/5 dark:bg-red-950/2' : ''),
+                      selectedRows.includes(row.rowIdx) ? 'bg-blue-50/30 dark:bg-blue-900/10' : ''
+                    ]"
                   >
+                    <!-- Selection Cell -->
+                    <td class="p-3 text-center border-l border-b border-gray-200 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/10 shrink-0">
+                      <input 
+                        type="checkbox" 
+                        class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
+                        :value="row.rowIdx"
+                        v-model="selectedRows"
+                      />
+                    </td>
                     <!-- Row Number cell -->
                     <td class="p-3 text-center border-l border-b border-gray-200 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/10 font-mono text-xs font-bold shrink-0">
                       <span :class="[row.err ? 'text-red-500' : 'text-gray-500 dark:text-gray-400']">
@@ -663,7 +713,7 @@
                       v-for="col in errorColumns" 
                       :key="col"
                       class="p-2 border-l border-b border-gray-200 dark:border-gray-800 align-top transition-colors duration-150"
-                      :class="[getCellError(row, col) ? 'bg-red-50/15 dark:bg-red-950/5' : '']"
+                      :class="[getCellError(row, col)?.type === 'already_exists' ? 'bg-emerald-50/30 dark:bg-emerald-950/20' : (getCellError(row, col) ? 'bg-red-50/15 dark:bg-red-950/5' : '')]"
                     >
                       <div class="relative min-w-[190px]">
                         <!-- Render dynamic Select dropdowns based on field type -->
@@ -672,7 +722,7 @@
                           v-model="row.rowData[col]"
                           @change="handleCellChange(row.rowIdx, col, row.rowData[col])"
                           class="w-full text-xs p-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-950 dark:text-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer hover:border-gray-300 dark:hover:border-gray-700 focus:border-blue-500 focus:bg-white dark:focus:bg-gray-950"
-                          :class="[getCellError(row, col) ? 'border-red-300 dark:border-red-900/60 bg-red-50/20 dark:bg-red-950/10 text-red-950 dark:text-red-200' : '']"
+                          :class="[getCellError(row, col)?.type === 'already_exists' ? 'border-emerald-300 dark:border-emerald-800/60 bg-emerald-50/20 dark:bg-emerald-950/10 text-emerald-900 dark:text-emerald-200' : (getCellError(row, col) ? 'border-red-300 dark:border-red-900/60 bg-red-50/20 dark:bg-red-950/10 text-red-950 dark:text-red-200' : '')]"
                         >
                           <option value="">-- اختر القيمة --</option>
                           <option 
@@ -710,12 +760,12 @@
 
                         <!-- Render dynamic Date picker -->
                         <input 
-                          v-else-if="isDateColumn(col)"
+                          v-else-if="isDateColumn(col) && isValidDateFormat(row.rowData[col])"
                           type="date"
                           v-model="row.rowData[col]"
                           @change="handleCellChange(row.rowIdx, col, row.rowData[col])"
                           class="w-full text-xs p-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-950 dark:text-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 hover:border-gray-300 dark:hover:border-gray-700 focus:border-blue-500"
-                          :class="[getCellError(row, col) ? 'border-red-300 dark:border-red-900/60 bg-red-50/20 dark:bg-red-950/10 text-red-950 dark:text-red-200' : '']"
+                          :class="[getCellError(row, col)?.type === 'already_exists' ? 'border-emerald-300 dark:border-emerald-800/60 bg-emerald-50/20 dark:bg-emerald-950/10 text-emerald-900 dark:text-emerald-200' : (getCellError(row, col) ? 'border-red-300 dark:border-red-900/60 bg-red-50/20 dark:bg-red-950/10 text-red-950 dark:text-red-200' : '')]"
                         />
 
                         <!-- Fallback normal text input -->
@@ -725,13 +775,19 @@
                           v-model="row.rowData[col]"
                           @blur="handleCellChange(row.rowIdx, col, row.rowData[col])"
                           class="w-full text-xs p-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-950 dark:text-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 hover:border-gray-300 dark:hover:border-gray-700 focus:border-blue-500"
-                          :class="[getCellError(row, col) ? 'border-red-300 dark:border-red-900/60 bg-red-50/20 dark:bg-red-950/10 text-red-950 dark:text-red-200 font-semibold' : '']"
+                          :class="[getCellError(row, col)?.type === 'already_exists' ? 'border-emerald-300 dark:border-emerald-800/60 bg-emerald-50/20 dark:bg-emerald-950/10 text-emerald-900 dark:text-emerald-200 font-semibold' : (getCellError(row, col) ? 'border-red-300 dark:border-red-900/60 bg-red-50/20 dark:bg-red-950/10 text-red-950 dark:text-red-200 font-semibold' : '')]"
                         />
 
                         <!-- Error alert badge & quick-fix recommendations -->
-                        <div v-if="getCellError(row, col)" class="mt-1.5 p-2 rounded-xl bg-red-50/80 dark:bg-red-950/20 border border-red-100/50 dark:border-red-950/40 flex flex-col gap-1.5 shadow-sm">
-                          <span class="text-[10px] font-bold text-red-600 dark:text-red-400 flex items-start gap-1 leading-normal">
-                            <AlertTriangle class="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                        <div v-if="getCellError(row, col)" 
+                             class="mt-1.5 p-2 rounded-xl border flex flex-col gap-1.5 shadow-sm"
+                             :class="[getCellError(row, col).type === 'already_exists' ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-200/60 dark:border-emerald-900/40' : 'bg-red-50/80 dark:bg-red-950/20 border-red-100/50 dark:border-red-950/40']"
+                        >
+                          <span class="text-[10px] font-bold flex items-start gap-1 leading-normal"
+                                :class="[getCellError(row, col).type === 'already_exists' ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-600 dark:text-red-400']"
+                          >
+                            <svg v-if="getCellError(row, col).type === 'already_exists'" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <AlertTriangle v-else class="w-3.5 h-3.5 shrink-0 mt-0.5" />
                             {{ getCellError(row, col).message }}
                           </span>
                           
@@ -750,6 +806,21 @@
                               تجاهل
                             </button>
                           </div>
+                        </div>
+
+                        <!-- Per-row name correction request button -->
+                        <div 
+                          v-if="col === 'تصحيح الاسم من واقع البطاقة' && row.rowData[col] && row.rowData['الاسم'] && String(row.rowData[col]).trim() !== String(row.rowData['الاسم']).trim()"
+                          class="mt-1.5"
+                        >
+                          <button
+                            @click="requestSingleCorrection(row)"
+                            :disabled="correctionSubmitting"
+                            class="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold px-2.5 py-1.5 rounded-xl border border-purple-200 text-purple-700 hover:bg-purple-50 dark:border-purple-800/60 dark:text-purple-400 dark:hover:bg-purple-950/20 transition-all disabled:opacity-50"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                            طلب تصحيح فردي
+                          </button>
                         </div>
                       </div>
                     </td>
@@ -815,6 +886,7 @@
                 </button>
               </div>
             </div>
+            </div>
           </div>
         </div>
 
@@ -853,7 +925,6 @@
           </button>
         </div>
       </div>
-    </div>
 
     <!-- BULK EDIT MODAL -->
     <div v-if="bulkEditColumn" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
@@ -944,6 +1015,109 @@
         </div>
       </div>
     </div>
+
+    <!-- Multi Correction Modal -->
+    <div v-if="multiCorrectionModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in" dir="rtl">
+      <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-gray-200 dark:border-gray-800">
+        <!-- Modal Header -->
+        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+              طلبات التصحيح المخصصة ({{ selectedRows.length }} فرد)
+            </h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">تحديد طلبات التصحيح المتعددة مع كتابة المبررات لكل فرد.</p>
+          </div>
+          <button @click="multiCorrectionModalOpen = false" class="text-gray-400 hover:text-red-500 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 overflow-y-auto flex-1 custom-scrollbar space-y-4">
+          <div 
+            v-for="idx in selectedRows" 
+            :key="idx"
+            class="bg-gray-50 dark:bg-gray-800/30 border border-gray-200 dark:border-gray-700 rounded-xl p-4 flex flex-col gap-4"
+          >
+            <!-- Row Header Info -->
+            <div class="flex items-center justify-between">
+              <div class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                <span class="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-lg font-mono">{{ allRowsData[idx]['الرقم العسكري'] }}</span>
+                {{ allRowsData[idx]['الاسم'] }}
+              </div>
+              <div class="text-xs text-gray-500 font-semibold bg-white dark:bg-gray-900 px-3 py-1 rounded-full border border-gray-200 dark:border-gray-800">
+                {{ allRowsData[idx]['الرتبة'] || 'بدون رتبة' }}
+              </div>
+            </div>
+
+            <!-- Correction Fields -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Type -->
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-gray-700 dark:text-gray-300">المراد تصحيحه</label>
+                <select 
+                  v-model="allRowsData[idx].__custom_correction.correction_type"
+                  @change="handleCorrectionTypeChange(idx)"
+                  class="w-full text-sm p-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                >
+                  <option v-for="type in correctionTypes" :key="type.id" :value="type.id">{{ type.name }}</option>
+                </select>
+              </div>
+              
+              <!-- Notes -->
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-gray-700 dark:text-gray-300">الملاحظات والمبررات</label>
+                <input 
+                  type="text" 
+                  v-model="allRowsData[idx].__custom_correction.notes"
+                  placeholder="سبب التصحيح (اختياري)"
+                  class="w-full text-sm p-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                />
+              </div>
+
+              <!-- Old Value (Readonly) -->
+              <div class="space-y-1.5 opacity-70">
+                <label class="text-xs font-bold text-gray-700 dark:text-gray-300">البيانات الخاطئة الحالية</label>
+                <input 
+                  type="text" 
+                  disabled
+                  :value="allRowsData[idx].__custom_correction.old_value"
+                  class="w-full text-sm p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-500"
+                />
+              </div>
+
+              <!-- New Value -->
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-purple-700 dark:text-purple-400">القيمة الصحيحة المطلوبة *</label>
+                <input 
+                  type="text" 
+                  v-model="allRowsData[idx].__custom_correction.new_value"
+                  placeholder="أدخل القيمة الصحيحة هنا"
+                  class="w-full text-sm p-2.5 rounded-xl border-2 border-purple-200 dark:border-purple-900/50 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 font-bold text-gray-900 dark:text-white"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 flex justify-end gap-3">
+          <button @click="multiCorrectionModalOpen = false" class="px-6 py-2.5 text-sm font-bold text-gray-600 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
+            إلغاء
+          </button>
+          <button 
+            @click="commitMultiCorrection" 
+            :disabled="correctionSubmitting"
+            class="px-8 py-2.5 text-sm font-bold text-white bg-purple-600 border border-transparent rounded-xl hover:bg-purple-700 shadow-md shadow-purple-500/20 transition-all flex items-center gap-2 disabled:opacity-50"
+          >
+            <Loader2 v-if="correctionSubmitting" class="w-4 h-4 animate-spin" />
+            <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+            اعتماد وتأسيس ({{ selectedRows.length }}) أفراد
+          </button>
+        </div>
+      </div>
+    </div>
   </AdminLayout>
 </template>
 
@@ -961,6 +1135,7 @@ import {
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 
+import api from '@/lib/api'
 import { fetchAllConstants } from '@/services/constantsApi'
 import type { ConstantsState, ConstantOption } from '@/services/constantsApi'
 import { 
@@ -981,6 +1156,7 @@ const previewData = ref<PreviewSeedResponse>({ headers: [], rows: [] })
 
 // Step 2 Mapping Data
 const columnMapping = ref<Record<string, string>>({})
+const monthlyVariablesMeta = ref<Record<string, string>>({})
 
 const SYSTEM_COLUMNS = [
   { id: '', label: '-- تجاهل هذا العمود --' },
@@ -1050,6 +1226,10 @@ const successStats = ref<CommitSeedResponse>({
   name_corrections: 0,
   monthly_vars: 0
 })
+
+// Correction Tracking
+const createdCorrectionsCount = ref(0)
+const correctionSubmitting = ref(false)
 
 const closePopoverHandler = () => {
   openFilterCol.value = null
@@ -1158,7 +1338,28 @@ function autoMapColumns() {
       else if (cleanHeader.includes('حاله') || cleanHeader.includes('حالة')) autoMapping[header] = 'الحالة'
       else if (cleanHeader.includes('رقم عسكري')) autoMapping[header] = 'الرقم العسكري'
       else if (cleanHeader.includes('وحده') || cleanHeader.includes('اداره')) autoMapping[header] = 'الوحدة'
-      else if (cleanHeader.includes('متغير')) autoMapping[header] = '__monthly_variable__'
+      else if (
+        cleanHeader.includes('متغير') || 
+        /\d{4}[-/]\d{1,2}/.test(header) || 
+        /\d{1,2}[-/]\d{4}/.test(header) ||
+        /(يناير|فبراير|مارس|ابريل|إبريل|مايو|يونيو|يوليو|اغسطس|أغسطس|سبتمبر|اكتوبر|أكتوبر|نوفمبر|ديسمبر)/.test(cleanHeader) ||
+        /(حافز|سلف|راتب|خصم|مكاف|جزاء|متاخر)/.test(cleanHeader)
+      ) {
+        autoMapping[header] = '__monthly_variable__'
+        const matchRegex = header.match(/\d{4}[-/]\d{1,2}/) || header.match(/\d{1,2}[-/]\d{4}/)
+        if (matchRegex) {
+          // Normalize to YYYY-MM
+          let dateStr = matchRegex[0].replace('/', '-')
+          if (dateStr.match(/^\d{1,2}-\d{4}$/)) {
+            const parts = dateStr.split('-')
+            dateStr = `${parts[1]}-${parts[0].padStart(2, '0')}`
+          } else {
+            const parts = dateStr.split('-')
+            dateStr = `${parts[0]}-${parts[1].padStart(2, '0')}`
+          }
+          monthlyVariablesMeta.value[header] = dateStr
+        }
+      }
       else autoMapping[header] = ''
     }
   })
@@ -1178,7 +1379,9 @@ async function validateFileContent() {
     const val = columnMapping.value[k]
     if (val) {
       if (val === '__monthly_variable__') {
-        cleanMapping[k] = k.startsWith('متغير') ? k : `متغير ${k}`
+        const monthVal = monthlyVariablesMeta.value[k] || '0000-00'
+        // Ensure uniqueness and that python regex \d{4}-\d{2} finds the month
+        cleanMapping[k] = `متغير ${monthVal} | ${k}`
       } else {
         cleanMapping[k] = val
       }
@@ -1431,48 +1634,372 @@ async function revalidateEdits() {
   }
 }
 
-// Create Bulk Correction Request for current mismatches
-function createBulkCorrectionRequest() {
-  const mismatchCount = filteredRows.value.filter(row => 
+// Create Bulk Correction Request for current mismatches (and Import them!)
+async function createBulkCorrectionRequest() {
+  const mismatchRows = filteredRows.value.filter(row => 
     row.rowData['تصحيح الاسم من واقع البطاقة'] && 
     row.rowData['الاسم'] && 
-    row.rowData['تصحيح الاسم من واقع البطاقة'] !== row.rowData['الاسم']
-  ).length;
+    String(row.rowData['تصحيح الاسم من واقع البطاقة']).trim() !== String(row.rowData['الاسم']).trim()
+  );
 
-  if (mismatchCount === 0) {
+  const validMismatchRows = mismatchRows.filter(row => !row.err || row.err.errors.length === 0);
+
+  if (validMismatchRows.length === 0) {
     Swal.fire({
       icon: 'info',
-      title: 'لا يوجد أسماء مختلفة',
-      text: 'لا توجد سجلات معروضة حالياً تحتوي على اختلاف بين الاسم وتصحيح الاسم من واقع البطاقة.'
+      title: 'لا يوجد أفراد جاهزين',
+      text: mismatchRows.length > 0 
+        ? 'الأفراد الذين لديهم اختلاف في الاسم لديهم أخطاء أخرى في بياناتهم. يجب إصلاحها أولاً قبل الإدخال والطلب.'
+        : 'لا توجد سجلات معروضة حالياً تحتوي على اختلاف بين الاسم الأصلي وتصحيح الاسم.'
     });
     return;
   }
 
-  Swal.fire({
-    title: 'إنشاء طلب تصحيح للوزارة',
-    text: `هل تريد إنشاء طلب تصحيح أسماء جماعي لـ (${mismatchCount}) أفراد معروضين حالياً ولديهم أسماء غير متطابقة؟ سيتم إدراجهم في سجل المعاملات وإرسالهم للوزارة للموافقة.`,
-    icon: 'question',
+  // Build preview table HTML
+  const maxPreview = 50
+  const previewRows = validMismatchRows.slice(0, maxPreview)
+  let tableHtml = `
+    <div style="direction:rtl; text-align:right; max-height:400px; overflow-y:auto; margin-top:12px;">
+      <div style="margin-bottom:10px; font-size:13px; color:#6b7280;">سيتم إدخال <b style="color:#7c3aed;">${validMismatchRows.length}</b> فرد للنظام وإنشاء طلبات تصحيح بأسمائهم تلقائياً</div>
+      <table style="width:100%; border-collapse:collapse; font-size:11px;">
+        <thead>
+          <tr style="background:#f3f0ff; border-bottom:2px solid #ddd6fe;">
+            <th style="padding:8px 6px; border:1px solid #e5e7eb; white-space:nowrap;">م</th>
+            <th style="padding:8px 6px; border:1px solid #e5e7eb;">الرتبة</th>
+            <th style="padding:8px 6px; border:1px solid #e5e7eb;">الرقم العسكري</th>
+            <th style="padding:8px 6px; border:1px solid #e5e7eb; color:#dc2626;">الاسم الخطأ</th>
+            <th style="padding:8px 6px; border:1px solid #e5e7eb; color:#059669;">الاسم الصحيح</th>
+          </tr>
+        </thead>
+        <tbody>
+  `
+
+  previewRows.forEach((row, i) => {
+    const bgColor = i % 2 === 0 ? '#ffffff' : '#faf5ff'
+    tableHtml += `
+      <tr style="background:${bgColor};">
+        <td style="padding:6px; border:1px solid #e5e7eb; text-align:center; font-weight:bold; color:#6b7280;">${i + 1}</td>
+        <td style="padding:6px; border:1px solid #e5e7eb;">${row.rowData['الرتبة'] || '-'}</td>
+        <td style="padding:6px; border:1px solid #e5e7eb; font-family:monospace; font-weight:bold;">${row.rowData['الرقم العسكري'] || '-'}</td>
+        <td style="padding:6px; border:1px solid #e5e7eb; color:#dc2626; text-decoration:line-through;">${row.rowData['الاسم'] || '-'}</td>
+        <td style="padding:6px; border:1px solid #e5e7eb; color:#059669; font-weight:bold;">${row.rowData['تصحيح الاسم من واقع البطاقة'] || '-'}</td>
+      </tr>
+    `
+  })
+
+  tableHtml += '</tbody></table>'
+  if (validMismatchRows.length > maxPreview) {
+    tableHtml += `<div style="margin-top:8px; font-size:11px; color:#9ca3af; text-align:center;">... و ${validMismatchRows.length - maxPreview} سجل آخر</div>`
+  }
+
+  tableHtml += `
+      <div style="margin-top:14px; padding:10px; background:#eff6ff; border-radius:10px; border:1px solid #dbeafe; font-size:11px; color:#1d4ed8;">
+        <b>ⓘ كيف تعمل هذه الميزة؟</b><br/>
+        سيتم إدخال هؤلاء الأفراد لقاعدة البيانات لتكون ملفاتهم متاحة في النظام.<br/>
+        وبنفس اللحظة سيقوم النظام تلقائياً بإنشاء طلبات تصحيح لأسماء كل فرد لتعرض في لوحة التصحيحات ونموذج 23.
+      </div>
+    </div>
+  `
+
+  const result = await Swal.fire({
+    title: 'تأسيس وإنشاء طلبات التصحيح',
+    html: tableHtml,
+    icon: undefined,
+    width: '750px',
     showCancelButton: true,
-    confirmButtonText: 'نعم، إنشاء الطلب الآن',
-    cancelButtonText: 'إلغاء'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      // Mocked Backend Request For Walkthrough execution (to be connected to actual endpoint later)
-      Swal.fire({
-        title: 'جاري إنشاء الطلب...',
-        allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading() }
-      });
-      
-      setTimeout(() => {
-        Swal.fire({
-          icon: 'success',
-          title: 'تم إنشاء الطلب بنجاح',
-          text: `تم تحويل ${mismatchCount} سجل إلى قائمة طلبات التصحيح المعلقة لانتظار رد الوزارة.`
-        });
-      }, 1500);
+    confirmButtonText: '✓ اعتماد السجلات وإنشاء الطلبات',
+    cancelButtonText: 'إلغاء',
+    confirmButtonColor: '#7c3aed',
+    customClass: {
+      popup: 'text-right',
+      confirmButton: 'px-6 py-2.5 rounded-xl font-bold',
+      cancelButton: 'px-6 py-2.5 rounded-xl font-bold'
     }
-  });
+  })
+
+  if (!result.isConfirmed) return
+
+  Swal.fire({
+    title: 'جاري الإدخال والإنشاء...',
+    html: '<div style="font-size:13px; color:#6b7280;">يرجى الانتظار بينما يقوم النظام بإدخال الأفراد وتوليد الطلبات...</div>',
+    allowOutsideClick: false,
+    didOpen: () => { Swal.showLoading() }
+  })
+
+  try {
+    const rowsToCommit = validMismatchRows.map(r => r.rowData)
+    const res = await commitInitialSeedJson(rowsToCommit)
+
+    if (res.success && res.data) {
+      const createdCount = res.data.created || 0
+      const correctionsCount = res.data.name_corrections || 0
+      createdCorrectionsCount.value += correctionsCount
+
+      // Remove imported rows from local data
+      const importedMils = rowsToCommit.map(r => r['الرقم العسكري'])
+      allRowsData.value = allRowsData.value.filter((r: any) => !importedMils.includes(r['الرقم العسكري']))
+
+      // Update validation results count
+      if (validationResult.value) {
+        validationResult.value.total_rows -= createdCount
+        validationResult.value.valid_rows -= createdCount
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: 'تم الإنجاز بنجاح',
+        html: `
+          <div style="direction:rtl; text-align:right; font-size:13px;">
+            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #e5e7eb;">
+              <span style="color:#6b7280;">أفراد تم إدخالهم للنظام:</span>
+              <span style="font-weight:bold; color:#059669;">${createdCount}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #e5e7eb;">
+              <span style="color:#6b7280;">طلبات تصحيح أُنشئت:</span>
+              <span style="font-weight:bold; color:#7c3aed;">${correctionsCount}</span>
+            </div>
+            <div style="margin-top:12px; padding:8px; background:#f0fdf4; border-radius:8px; font-size:11px; color:#059669;">
+              تم سحب هذه السجلات من القائمة. الأفراد الآن في النظام وتصحيحاتهم جاهزة.
+            </div>
+          </div>
+        `,
+        confirmButtonText: 'حسناً',
+        confirmButtonColor: '#7c3aed'
+      })
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'فشل الإنشاء',
+        text: res.message || 'حدث خطأ أثناء إدخال البيانات للسيرفر.'
+      })
+    }
+  } catch (err: any) {
+    console.error('Bulk correction error:', err)
+    Swal.fire({
+      icon: 'error',
+      title: 'فشل العملية',
+      text: err.response?.data?.error || err.message || 'حدث خطأ غير متوقع أثناء الاتصال.'
+    })
+  }
+}
+
+// Multi-Correction Logic
+const selectedRows = ref<number[]>([])
+
+const multiCorrectionModalOpen = ref(false)
+const correctionTypes = [
+  { id: 'first_name', name: 'الاسم الأول' },
+  { id: 'second_name', name: 'الاسم الثاني' },
+  { id: 'third_name', name: 'الاسم الثالث' },
+  { id: 'fourth_name', name: 'الاسم الرابع' },
+  { id: 'last_name', name: 'اللقب' },
+]
+
+const toggleAllRows = (e: Event) => {
+  const isChecked = (e.target as HTMLInputElement).checked
+  if (isChecked) {
+    selectedRows.value = paginatedRows.value.map((r: any) => r.rowIdx)
+  } else {
+    selectedRows.value = []
+  }
+}
+
+const isAllSelected = computed(() => {
+  return paginatedRows.value.length > 0 && selectedRows.value.length === paginatedRows.value.length
+})
+
+const openMultiCorrectionModal = () => {
+  if (selectedRows.value.length === 0) return
+
+  selectedRows.value.forEach(idx => {
+    const row = allRowsData.value[idx]
+    if (!row.__custom_correction) {
+      row.__custom_correction = {
+        correction_type: 'name_correction',
+        notes: '',
+        old_value: row['الاسم'] || '',
+        new_value: row['تصحيح الاسم من واقع البطاقة'] || ''
+      }
+    }
+  })
+  
+  multiCorrectionModalOpen.value = true
+}
+
+const handleCorrectionTypeChange = (idx: number) => {
+  const row = allRowsData.value[idx]
+  const type = row.__custom_correction.correction_type
+  if (type === 'name_correction') {
+    row.__custom_correction.old_value = row['الاسم'] || ''
+    row.__custom_correction.new_value = row['تصحيح الاسم من واقع البطاقة'] || ''
+  } else if (type === 'military_number_correction') {
+    row.__custom_correction.old_value = row['الرقم العسكري القديم'] || row['الرقم العسكري'] || ''
+    row.__custom_correction.new_value = row['الرقم العسكري الصحيح'] || ''
+  } else if (type === 'rank_correction') {
+    row.__custom_correction.old_value = row['الرتبة'] || ''
+    row.__custom_correction.new_value = ''
+  } else if (type === 'national_id_correction') {
+    row.__custom_correction.old_value = row['الرقم الوطني'] || ''
+    row.__custom_correction.new_value = ''
+  }
+}
+
+const commitMultiCorrection = async () => {
+  // Validate that all selected rows have complete fields for their correction
+  const invalidRows = selectedRows.value.filter(idx => {
+    const c = allRowsData.value[idx].__custom_correction
+    return !c.new_value || String(c.new_value).trim() === ''
+  })
+  
+  if (invalidRows.length > 0) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'بيانات غير مكتملة',
+      text: 'الرجاء إدخال "القيمة الصحيحة" لجميع الأفراد المحددين.'
+    })
+    return
+  }
+
+  // Check if any row has generic errors (red rows)
+  const rowsWithErrors = selectedRows.value.filter(idx => {
+    const errObj = validationResult.value?.errors?.find((e: any) => e.row - 2 === idx)
+    return errObj && errObj.errors.length > 0
+  })
+
+  if (rowsWithErrors.length > 0) {
+    Swal.fire({
+      icon: 'error',
+      title: 'أخطاء في البيانات',
+      text: 'بعض الأفراد المحددين لديهم أخطاء أخرى (يظهرون باللون الأحمر). يرجى إصلاحها أولاً قبل إدخالهم وتأسيسهم.'
+    })
+    return
+  }
+
+  correctionSubmitting.value = true
+  try {
+    const dataToSend = selectedRows.value.map(idx => allRowsData.value[idx])
+    const res = await commitInitialSeedJson(dataToSend)
+
+    if (res.success && res.data) {
+      createdCorrectionsCount.value += res.data.name_corrections || selectedRows.value.length
+      
+      // Remove successful rows from UI
+      const militaryNumbersToRemove = dataToSend.map(r => r['الرقم العسكري'])
+      allRowsData.value = allRowsData.value.filter((r: any) => !militaryNumbersToRemove.includes(r['الرقم العسكري']))
+      
+      // Clear selection
+      selectedRows.value = []
+      multiCorrectionModalOpen.value = false
+
+      if (validationResult.value) {
+        validationResult.value.total_rows -= dataToSend.length
+        validationResult.value.valid_rows -= dataToSend.length
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: 'اكتمل بنجاح',
+        text: `تم اعتماد الأفراد وتوليد طلبات التصحيح لعدد ${dataToSend.length} أفراد بنجاح.`,
+        confirmButtonColor: '#7c3aed'
+      })
+    } else {
+      Swal.fire({
+        icon: 'warning',
+        title: 'فشل العملية جزئياً',
+        text: res.message || 'حدث خطأ غير متوقع'
+      })
+    }
+  } catch (err: any) {
+    Swal.fire({
+      icon: 'error',
+      title: 'خطأ',
+      text: err.response?.data?.error || err.message || 'حدث خطأ أثناء الاتصال'
+    })
+  } finally {
+    correctionSubmitting.value = false
+  }
+}
+
+// Request single correction for a specific row
+async function requestSingleCorrection(row: any) {
+  if (row.err && row.err.errors.length > 0) {
+    Swal.fire({
+      icon: 'error',
+      title: 'بيانات الفرد غير جاهزة',
+      text: 'لا يمكن إدخال هذا الفرد لطلب التصحيح لأنه يحتوي على أخطاء أخرى (كما يظهر باللون الأحمر). يرجى إصلاحها أولاً.'
+    });
+    return;
+  }
+
+  const militaryNumber = row.rowData['الرقم العسكري']
+  const oldName = row.rowData['الاسم']
+  const newName = row.rowData['تصحيح الاسم من واقع البطاقة']
+  const rank = row.rowData['الرتبة'] || ''
+
+  if (!militaryNumber || !newName || !oldName) return
+
+  const result = await Swal.fire({
+    title: 'تأسيس فرد وطلب تصحيحه',
+    html: `
+      <div style="direction:rtl; text-align:right; font-size:13px;">
+        <div style="padding:12px; background:#faf5ff; border-radius:12px; border:1px solid #e9d5ff; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; padding:4px 0;"><span style="color:#6b7280;">الرتبة:</span><span style="font-weight:bold;">${rank}</span></div>
+          <div style="display:flex; justify-content:space-between; padding:4px 0;"><span style="color:#6b7280;">الرقم العسكري:</span><span style="font-weight:bold; font-family:monospace;">${militaryNumber}</span></div>
+          <div style="display:flex; justify-content:space-between; padding:4px 0;"><span style="color:#6b7280;">الاسم الخطأ:</span><span style="font-weight:bold; color:#dc2626; text-decoration:line-through;">${oldName}</span></div>
+          <div style="display:flex; justify-content:space-between; padding:4px 0;"><span style="color:#6b7280;">الاسم الصحيح:</span><span style="font-weight:bold; color:#059669;">${newName}</span></div>
+        </div>
+        <div style="font-size:11px; color:#7c3aed;">
+          بمجرد النقر، سيتم إدخال هذا الفرد فعلياً إلى النظام، وسيتم إنشاء طلب التصحيح لاسمه تلقائياً ليكون متاحاً في نماذج التصحيح الرسمية.
+        </div>
+      </div>
+    `,
+    icon: undefined,
+    showCancelButton: true,
+    confirmButtonText: '✓ اعتماد الفرد وطلب التصحيح',
+    cancelButtonText: 'إلغاء',
+    confirmButtonColor: '#7c3aed'
+  })
+
+  if (!result.isConfirmed) return
+
+  correctionSubmitting.value = true
+  try {
+    const res = await commitInitialSeedJson([row.rowData])
+
+    if (res.success && res.data) {
+      createdCorrectionsCount.value += res.data.name_corrections || 1
+      
+      // Remove from table locally
+      allRowsData.value = allRowsData.value.filter((r: any) => r['الرقم العسكري'] !== militaryNumber)
+      
+      // Update stats
+      if (validationResult.value) {
+        validationResult.value.total_rows -= 1
+        validationResult.value.valid_rows -= 1
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: 'اكتمل بنجاح',
+        html: `<div style="direction:rtl; font-size:13px;">تم اعتماد الفرد <b>${newName}</b> وتم توليد طلب تصحيح الاسم بنجاح. لقد أُزيل من القائمة الحالية.</div>`,
+        confirmButtonColor: '#7c3aed'
+      })
+    } else {
+      Swal.fire({
+        icon: 'warning',
+        title: 'لم يتم الإدخال',
+        text: res.message || 'حدث خطأ. تأكد من أن بيانات الفرد كاملة وصحيحة 100%.'
+      })
+    }
+  } catch (err: any) {
+    Swal.fire({
+      icon: 'error',
+      title: 'خطأ',
+      text: err.response?.data?.error || err.message || 'حدث خطأ أثناء معالجة الطلب.'
+    })
+  } finally {
+    correctionSubmitting.value = false
+  }
 }
 
 // Final Save
@@ -1502,6 +2029,11 @@ async function commitSeeding() {
 // ----------------------------------------------------
 function isDateColumn(col: string) {
   return col.includes('تاريخ')
+}
+
+function isValidDateFormat(val: any) {
+  if (!val) return true // Empty is fine for date picker
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(val))
 }
 
 function hasDropdownOptions(col: string) {
@@ -1540,12 +2072,15 @@ function getDropdownOptions(col: string, rowData: any | null): ConstantOption[] 
     return list
   }
   
+  const normalizeAr = (t: string) => t ? t.replace(/ال/g, '').replace(/\s+/g, '') : ''
+
   if (col === 'المنصب') {
     let list = constants.value.positions || []
     if (rowData && rowData['الفئة']) {
+      const categoryNorm = normalizeAr(rowData['الفئة'])
       list = list.filter((p: any) => {
         if (!p.allowed_categories || p.allowed_categories.length === 0) return true
-        return p.allowed_categories.includes(rowData['الفئة'])
+        return p.allowed_categories.map(normalizeAr).includes(categoryNorm)
       })
     }
     return list
@@ -1574,7 +2109,8 @@ function getDropdownOptions(col: string, rowData: any | null): ConstantOption[] 
   if (col === 'نوع العمل') {
     let list = constants.value.jobTitles || []
     if (rowData && rowData['الفئة']) {
-      list = list.filter((jt: any) => jt.category_name === rowData['الفئة'])
+      const categoryNorm = normalizeAr(rowData['الفئة'])
+      list = list.filter((jt: any) => normalizeAr(jt.category_name) === categoryNorm)
     }
     return list
   }

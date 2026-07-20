@@ -373,18 +373,13 @@ class PersonnelService:
         """
         from infra.storage.models import Document
 
-        # ═══ 1. التحقق الإلزامي من المرفقات ═══
-        if not document_ids:
-            raise ValidationError(
-                _('يجب إرفاق ملف داعم لتصحيح الأسماء (صورة البطاقة أو نموذج 23). '
-                  'المرجع: الدليل الإرشادي البند 8.')
-            )
-
-        docs = list(Document.objects.filter(id__in=document_ids))
-        if len(docs) != len(document_ids):
-            raise ValidationError(_('بعض المرفقات غير موجودة في قاعدة البيانات.'))
-
-        primary_doc = docs[0]
+        # ═══ 1. التحقق من المرفقات (اختيارية لطلبات التأسيس الأولي) ═══
+        primary_doc = None
+        if document_ids:
+            docs = list(Document.objects.filter(id__in=document_ids))
+            if len(docs) != len(document_ids):
+                raise ValidationError(_('بعض المرفقات غير موجودة في قاعدة البيانات.'))
+            primary_doc = docs[0]
 
         # TODO: Generate PDF Form 23 here
         # form23_doc = Form23Generator.generate(corrections_data, requested_by=user)
@@ -396,7 +391,7 @@ class PersonnelService:
 
         for item in corrections_data:
             mil = str(item.get('military_number', '')).strip()
-            new_name = item.get('new_name', '').strip()
+            new_name = (item.get('new_name') or item.get('new_value', '')).strip()
 
             if not mil or not new_name:
                 errors.append({'military_number': mil, 'error': 'بيانات ناقصة (الرقم العسكري أو الاسم)'})
@@ -438,6 +433,7 @@ class PersonnelService:
                 status='pending',
                 supporting_document=primary_doc,
                 requested_by=user,
+                notes=item.get('notes', ''),
             )
             # full_clean() يُطبّق قواعد النموذج (DOCUMENT_REQUIREMENTS، تجميد المعتمدة...)
             correction.full_clean()

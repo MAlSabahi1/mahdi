@@ -972,6 +972,27 @@ watch(() => props.initialData, (newVal) => {
   }
 }, { immediate: true })
 
+watch(() => coreStore.jobTitles, (newVal) => {
+  if (form.job_title && !jobSearchQuery.value) {
+    const jobObj = newVal.find((j: any) => j.id === form.job_title)
+    if (jobObj) {
+      jobSearchQuery.value = jobObj.name
+    }
+  }
+}, { immediate: true })
+
+watch(groupedDepartments, (newVal) => {
+  if (selectedDepartment.value && !deptSearchQuery.value) {
+    for (const g of newVal) {
+      const match = g.options.find(o => o.value === selectedDepartment.value)
+      if (match) {
+        deptSearchQuery.value = match.label
+        break
+      }
+    }
+  }
+}, { immediate: true })
+
 // Real-time Date Validation
 watch([() => form.id_issue_date, () => form.birth_date], ([idDate, birthDate]) => {
   if (idDate) {
@@ -1002,10 +1023,15 @@ function selectDepartment(opt: {value: string, label: string}) {
   showDeptDropdown.value = false
 }
 
-watch(selectedDepartment, (val) => {
+watch(selectedDepartment, (val, oldVal) => {
   form.central_department = null
   form.branch = null
   form.district_police = null
+  
+  if (oldVal !== undefined) {
+    form.division = null
+    form.unit = null
+  }
   
   if (val) {
     const [type, idStr] = val.split('_')
@@ -1013,6 +1039,12 @@ watch(selectedDepartment, (val) => {
     if (type === 'central') form.central_department = id
     else if (type === 'branch') form.branch = id
     else if (type === 'district') form.district_police = id
+  }
+})
+
+watch(() => form.division, (val, oldVal) => {
+  if (oldVal !== undefined) {
+    form.unit = null
   }
 })
 
@@ -1188,7 +1220,7 @@ function selectJobTitle(opt: {value: number, label: string}) {
 
 const filteredDivisions = computed(() => {
   if (!form.central_department && !form.branch && !form.district_police) {
-    return coreStore.divisions
+    return [] // Must select administration first
   }
   return coreStore.divisions.filter((d: any) => 
     (form.central_department && d.central_department === form.central_department) ||
@@ -1198,7 +1230,7 @@ const filteredDivisions = computed(() => {
 })
 
 const filteredUnits = computed(() => {
-  if (!form.division) return coreStore.units
+  if (!form.division) return [] // Must select division first
   return coreStore.units.filter((u: any) => u.division === form.division)
 })
 

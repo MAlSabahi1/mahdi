@@ -537,8 +537,8 @@ class MonthlyServicesReportView(APIView):
                 'full_name': p.full_name or '',
                 'service_roster_type': roster_type_val,
                 'unit': p.security_admin.name if p.security_admin else '-',
-                'directorate': p.central_department.name if p.central_department else '-',
-                'affiliated_unit': p.branch.name if p.branch else '-',
+                'directorate': p.central_department.name if p.central_department else (p.branch.name if p.branch else (p.district_police.name if p.district_police else '-')),
+                'affiliated_unit': p.division.name if getattr(p, 'division', None) else (p.unit.name if getattr(p, 'unit', None) else '-'),
                 'position': p.position.name if p.position else '-',
                 'job_title': p.job_title.name if p.job_title else '-',
                 'category': p.category.name if p.category else '-',
@@ -569,7 +569,7 @@ class MonthlyServicesReportView(APIView):
             # ═══ وضع الكشف الشامل: كل الأفراد المسجلين ═══════════════════════
             p_qs = PersonnelMaster.objects.select_related(
                 'current_rank', 'qualification', 'security_admin',
-                'central_department', 'branch', 'district_police',
+                'central_department', 'branch', 'district_police', 'division', 'unit',
                 'position', 'job_title', 'category', 'current_status',
                 'force_classification', 'birth_governorate', 'birth_district', 'birth_sub_district', 'birth_village',
                 'residence_governorate', 'residence_district', 'residence_sub_district', 'residence_village'
@@ -612,7 +612,7 @@ class MonthlyServicesReportView(APIView):
                 'personnel', 'personnel__current_rank', 'submitted_by',
                 'personnel__qualification', 'personnel__security_admin',
                 'personnel__central_department', 'personnel__branch',
-                'personnel__district_police', 'personnel__position',
+                'personnel__district_police', 'personnel__division', 'personnel__unit', 'personnel__position',
                 'personnel__job_title', 'personnel__category',
                 'personnel__current_status', 'personnel__force_classification',
                 'personnel__birth_governorate', 'personnel__birth_district', 'personnel__birth_sub_district', 'personnel__birth_village',

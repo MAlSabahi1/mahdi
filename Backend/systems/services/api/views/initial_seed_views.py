@@ -164,7 +164,7 @@ class InitialSeedViewSet(viewsets.ViewSet):
                 }, status=status.HTTP_400_BAD_REQUEST)
                 
             # الاعتماد والحفظ
-            stats = service.commit_file(file_content, batch_id, column_mapping=mapping)
+            stats = service.commit_file(file_content, batch_id, column_mapping=mapping, user=request.user)
             
             AuditLog.objects.create(
                 user=request.user,
@@ -255,7 +255,7 @@ class InitialSeedViewSet(viewsets.ViewSet):
                     "data": report
                 }, status=status.HTTP_400_BAD_REQUEST)
                 
-            stats = service.commit_data(rows_data, batch_id)
+            stats = service.commit_data(rows_data, batch_id, user=request.user)
             
             AuditLog.objects.create(
                 user=request.user,

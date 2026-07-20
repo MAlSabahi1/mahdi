@@ -854,14 +854,10 @@ class SuggestedCorrection(TimeStampedModel):
                 _('لا يمكن إنشاء طلب تصحيح لفرد محذوف من النظام.')
             )
 
-        # ── 2. فحص المرفق الإلزامي ──
-        req = self.DOCUMENT_REQUIREMENTS.get(self.correction_type, {})
-        if req.get('required') and not self.supporting_document_id:
-            raise ValidationError({
-                'supporting_document': _(
-                    'هذا النوع من التصحيح يتطلب مرفقاً داعماً: %(desc)s'
-                ) % {'desc': req.get('description', '')}
-            })
+        # ── 2. فحص المرفق ──
+        # ملاحظة: المرفق إلزامي فقط للطلبات اليدوية من دليل الخدمات.
+        # طلبات التأسيس الأولي تُنشأ بدون مرفقات ثم تُرفق الوثائق لاحقاً عند اعتماد الوزارة.
+        # التحقق الصارم يتم في Service Layer (submit_name_corrections_batch / CorrectionRequestForm).
 
         # ── 3. تجميد السجلات المكتملة ──
         if self.pk:  # تعديل سجل موجود

@@ -8,36 +8,45 @@
         <h3 class="text-base font-bold text-gray-900 dark:text-white">سجل المتغيرات الشهرية</h3>
       </div>
       
-      <div v-if="person.monthly_variables && person.monthly_variables.length > 0" class="overflow-x-auto">
-        <table class="w-full text-start text-sm text-gray-600 dark:text-gray-400">
-          <thead class="bg-gray-50 dark:bg-gray-800/50 text-xs uppercase font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
-            <tr>
-              <th scope="col" class="px-6 py-4">الشهر (الاستحقاق)</th>
-              <th scope="col" class="px-6 py-4">نوع المتغير</th>
-              <th scope="col" class="px-6 py-4">القيمة / الملاحظة</th>
-              <th scope="col" class="px-6 py-4">المصدر</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-            <tr v-for="variable in person.monthly_variables" :key="variable.id" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
-              <td class="px-6 py-4 font-bold text-gray-900 dark:text-white whitespace-nowrap">
-                {{ variable.month }}
-              </td>
-              <td class="px-6 py-4 font-medium text-gray-700 dark:text-gray-300">
-                {{ variable.variable_type_name || 'متغير وارد من كشف' }}
-              </td>
-              <td class="px-6 py-4">
-                <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-400 border border-brand-100 dark:border-brand-900/50">
-                  {{ variable.variable_value }}
-                </span>
-                <p v-if="variable.notes" class="mt-1 text-xs text-gray-500">{{ variable.notes }}</p>
-              </td>
-              <td class="px-6 py-4 text-xs text-gray-500 dark:text-gray-400">
-                {{ variable.source_display || variable.source_column }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div v-if="person.monthly_variables && person.monthly_variables.length > 0" class="p-6 space-y-6">
+        <div v-for="group in groupedVariables" :key="group.month" class="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm">
+          <div class="px-5 py-3 bg-gray-50/80 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+            <h4 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <svg class="h-5 w-5 text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              شهر الاستحقاق: {{ group.month }}
+            </h4>
+            <span class="text-xs font-medium px-2.5 py-1 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400">
+              {{ group.variables.length }} متغيرات
+            </span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-start text-sm text-gray-600 dark:text-gray-400">
+              <thead class="bg-white dark:bg-gray-900 text-xs uppercase font-bold text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-800">
+                <tr>
+                  <th scope="col" class="px-5 py-3">نوع المتغير</th>
+                  <th scope="col" class="px-5 py-3">القيمة / الملاحظة</th>
+                  <th scope="col" class="px-5 py-3">المصدر</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                <tr v-for="variable in group.variables" :key="variable.id" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                  <td class="px-5 py-3 font-medium text-gray-700 dark:text-gray-300">
+                    {{ variable.variable_type_name || 'متغير وارد من كشف' }}
+                  </td>
+                  <td class="px-5 py-3">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-400 border border-brand-100 dark:border-brand-900/50">
+                      {{ variable.variable_value }}
+                    </span>
+                    <p v-if="variable.notes" class="mt-1 text-[11px] text-gray-500">{{ variable.notes }}</p>
+                  </td>
+                  <td class="px-5 py-3 text-xs text-gray-500 dark:text-gray-400">
+                    {{ variable.source_display || variable.source_column }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
       <div v-else class="text-center py-16">
         <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 dark:bg-gray-800 mb-4 text-gray-400">
@@ -51,7 +60,28 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
+import { computed } from 'vue'
+
+const props = defineProps<{
   person: any
 }>()
+
+const groupedVariables = computed(() => {
+  if (!props.person?.monthly_variables) return []
+  
+  const groups: Record<string, any[]> = {}
+  
+  props.person.monthly_variables.forEach((v: any) => {
+    const m = v.month || 'غير محدد'
+    if (!groups[m]) groups[m] = []
+    groups[m].push(v)
+  })
+  
+  const sortedKeys = Object.keys(groups).sort((a, b) => b.localeCompare(a))
+  
+  return sortedKeys.map(key => ({
+    month: key,
+    variables: groups[key]
+  }))
+})
 </script>

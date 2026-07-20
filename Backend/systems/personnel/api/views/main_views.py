@@ -845,20 +845,22 @@ class SuggestedCorrectionViewSet(BaseModelViewSet):
         
         corrections_data = request.data.get('corrections', [])
         document_ids = request.data.get('document_ids', [])
+        source = request.data.get('source', 'manual')  # 'initial_seed' أو 'manual'
         if not corrections_data:
             return Response(
                 {'success': False, 'error': 'لم يتم إرسال أي بيانات تصحيح'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if not document_ids:
+        # المرفقات إلزامية فقط للطلبات اليدوية، واختيارية لطلبات التأسيس الأولي
+        if not document_ids and source != 'initial_seed':
             return Response(
                 {'success': False, 'error': 'يجب إرفاق مستند داعم (document_ids) لتصحيح الأسماء'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         result = PersonnelService.submit_name_corrections_batch(
-            corrections_data, document_ids=document_ids, user=request.user,
+            corrections_data, document_ids=document_ids or [], user=request.user,
         )
         
         return Response({

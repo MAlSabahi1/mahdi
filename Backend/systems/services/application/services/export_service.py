@@ -279,53 +279,75 @@ class ExcelExportService:
     # ──────────────────────────────────────────────────────────
 
     def _build_formats(self, workbook) -> Dict:
-        """تعريف الفورمات بشكل صريح مع حدود وألوان احترافية جداً للأنظمة الكبرى."""
+        """تعريف الفورمات ليكون مطابقاً تماماً لجداول الاستمارات الحكومية المطبوعة."""
         font = 'Cairo'
         return {
+            'grand_header': workbook.add_format({
+                'bold': True, 'align': 'center', 'valign': 'vcenter', 
+                'font_name': font, 'font_size': 14,
+                'font_color': '#000000',
+                'border': 0, 
+            }),
+            'report_title': workbook.add_format({
+                'bold': True, 'align': 'center', 'valign': 'vcenter', 
+                'font_name': font, 'font_size': 16,
+                'font_color': '#000000',
+                'top': 2, 'bottom': 2, 'border_color': '#000000' # خطوط سميكة للعنوان
+            }),
             'header': workbook.add_format({
                 'bold': True, 'align': 'center', 'valign': 'vcenter', 
-                'font_name': font, 'font_size': 12,
-                'bg_color': '#002060', 'font_color': '#FFFFFF', # كحلي للأعمدة المقفلة
-                'border': 1, 'border_color': '#808080',
+                'font_name': font, 'font_size': 12, 'text_wrap': True,
+                'bg_color': '#EAEAEA', 'font_color': '#000000', # خلفية رمادية فاتحة كاستمارات الطباعة
+                'border': 1, 'border_color': '#000000', # حدود سوداء واضحة
             }),
             'editable_header': workbook.add_format({
                 'bold': True, 'align': 'center', 'valign': 'vcenter', 
-                'font_name': font, 'font_size': 12,
-                'bg_color': '#0F9D58', 'font_color': '#FFFFFF', # أخضر للأعمدة القابلة للتعديل
-                'border': 1, 'border_color': '#808080',
+                'font_name': font, 'font_size': 12, 'text_wrap': True,
+                'bg_color': '#EAEAEA', 'font_color': '#000000',
+                'border': 1, 'border_color': '#000000',
             }),
             'protected': workbook.add_format({
                 'locked': True, 'align': 'center', 'valign': 'vcenter', 
-                'font_size': 11, 'font_name': font,
-                'border': 1, 'border_color': '#A6A6A6',
+                'font_size': 11, 'font_name': font, 'bold': True, 'text_wrap': True,
+                'font_color': '#000000',
+                'border': 1, 'border_color': '#000000',
+            }),
+            'protected_alt': workbook.add_format({
+                'locked': True, 'align': 'center', 'valign': 'vcenter', 
+                'font_size': 11, 'font_name': font, 'bold': True, 'text_wrap': True,
+                'font_color': '#000000', 'bg_color': '#F9F9F9',
+                'border': 1, 'border_color': '#000000',
             }),
             'editable': workbook.add_format({
                 'locked': False, 'align': 'center', 'valign': 'vcenter', 
-                'font_size': 11, 'font_name': font,
-                'bg_color': '#F2F9FF', # لون أزرق جليدي فاتح جداً لتمييز حقول الإدخال بشكل فخم
-                'border': 1, 'border_color': '#A6A6A6',
+                'font_size': 11, 'font_name': font, 'bold': True, 'text_wrap': True,
+                'font_color': '#000000',
+                'border': 1, 'border_color': '#000000',
+            }),
+            'editable_alt': workbook.add_format({
+                'locked': False, 'align': 'center', 'valign': 'vcenter', 
+                'font_size': 11, 'font_name': font, 'bold': True, 'text_wrap': True,
+                'font_color': '#000000', 'bg_color': '#F9F9F9',
+                'border': 1, 'border_color': '#000000',
             }),
             'notes_editable': workbook.add_format({
                 'locked': False, 'align': 'right', 'valign': 'vcenter', 
-                'font_size': 11, 'text_wrap': True, 'font_name': font,
-                'bg_color': '#F2F9FF', 'indent': 1,
-                'border': 1, 'border_color': '#A6A6A6',
+                'font_size': 11, 'text_wrap': True, 'font_name': font, 'bold': True,
+                'font_color': '#000000', 'indent': 1,
+                'border': 1, 'border_color': '#000000',
+            }),
+            'notes_editable_alt': workbook.add_format({
+                'locked': False, 'align': 'right', 'valign': 'vcenter', 
+                'font_size': 11, 'text_wrap': True, 'font_name': font, 'bold': True,
+                'font_color': '#000000', 'indent': 1, 'bg_color': '#F9F9F9',
+                'border': 1, 'border_color': '#000000',
             }),
             'hidden': workbook.add_format({'locked': True, 'hidden': True}),
-            'meta': workbook.add_format({
-                'locked': True, 'align': 'right', 'valign': 'vcenter', 
-                'font_size': 10, 'italic': True, 'font_name': font,
-            }),
-            'warning': workbook.add_format({
-                'locked': True, 'bg_color': '#17375E', 'font_color': '#FFFFFF',
-                'align': 'center', 'valign': 'vcenter', 'font_size': 14, 'bold': True, 
-                'font_name': font,
-            }),
             'inactive_perm': workbook.add_format({
                 'locked': True, 'align': 'center', 'valign': 'vcenter', 
-                'font_size': 11, 'font_name': font,
+                'font_size': 11, 'font_name': font, 'bold': True, 'text_wrap': True,
                 'bg_color': '#E8E8E8', 'font_color': '#555555',
-                'border': 1, 'border_color': '#A6A6A6',
+                'border': 1, 'border_color': '#000000',
             }),
         }
 
@@ -341,47 +363,65 @@ class ExcelExportService:
         """كتابة ورقة عمل واحدة بالكامل."""
         all_cols = self.protected_columns + self.editable_columns + ['__UUID__']
         all_statuses = list(self._status_cascade.keys())  # 4 تصنيفات
+        col_count = len(all_cols) - 1
 
         worksheet.right_to_left()  # تفعيل اتجاه من اليمين لليسار بشكل صريح
         worksheet.hide_gridlines(2)  # إخفاء خطوط الشبكة الافتراضية لشكل أنظف
 
-        # ── صف المعلومات الأولى (تحذير + بيانات التصدير) ──
+        # ── الترويسة الوزارية الفخمة ──
+        # تقسيم متساوٍ تماماً للأعمدة العلوية لتجنب أي فراغات
+        part = col_count // 3
+        worksheet.merge_range(0, 0, 0, part, 'الجمهورية اليمنية', fmts['grand_header'])
+        worksheet.merge_range(0, part + 1, 0, (part * 2) + 1, 'وزارة الداخلية', fmts['grand_header'])
+        
+        from datetime import datetime
+        worksheet.merge_range(0, (part * 2) + 2, 0, col_count, f"تاريخ الإصدار: {datetime.now().strftime('%Y-%m-%d')}", fmts['grand_header'])
+        worksheet.set_row(0, 25)
+
+        # ── مسافة ──
+        worksheet.set_row(1, 10)
+
+        # ── عنوان التقرير الرئيسي ──
         dept_id = self.central_department.id if self.central_department else (self.security_admin.id if self.security_admin else '0')
-        worksheet.merge_range(
-            0, 0, 0, len(all_cols) - 1,
-            f'تفاصيل التقرير: {self.entity_name}   |   '
-            f'شهر الخدمة: {self.service_month}   |   '
-            f'إجمالي الأفراد: {len(persons)}',
-            fmts['warning'],
-        )
-        worksheet.set_row(0, 40)
+        title_str = f"كشف الخدمات والإجراءات ({sheet_title}) | الجهة: {self.entity_name} | شهر الخدمة: {self.service_month}"
+        worksheet.merge_range(2, 0, 2, col_count, title_str, fmts['report_title'])
+        worksheet.set_row(2, 35)
+
+        # ── مسافة ──
+        worksheet.set_row(3, 10)
 
         # ── صف العناوين ──
         for col_idx, header in enumerate(all_cols):
             fmt = fmts['editable_header'] if header in self.editable_columns else fmts['header']
-            worksheet.write(1, col_idx, header, fmt)
-        worksheet.set_row(1, 30)
+            worksheet.write(4, col_idx, header, fmt)
+        worksheet.set_row(4, 35)
 
-        # ── ضبط عرض الأعمدة ──
+        # ── ضبط عرض الأعمدة للطباعة المريحة ──
         col_widths = {
-            'الرقم العسكري': 20, 'الاسم الكامل': 45, 'الرتبة': 18,
-            'الرقم الوطني': 25, 'الحالة': 35,
-            'نوع الحالة': 35,
-            'المتغير الشهري': 45, 'ملاحظات': 60,
+            'الرقم العسكري': 16, 'الاسم الكامل': 32, 'الرتبة': 15,
+            'الرقم الوطني': 20, 'الحالة': 25,
+            'نوع الحالة': 28,
+            'المتغير الشهري': 30, 'ملاحظات': 40,
         }
         for col_idx, header in enumerate(all_cols):
             if header == '__UUID__':
                 worksheet.set_column(col_idx, col_idx, 0, None, {'hidden': 1})
             else:
-                width = col_widths.get(header, 25)
+                width = col_widths.get(header, 20)
                 worksheet.set_column(col_idx, col_idx, width)
 
-        # ── تجميد الصفوف العلوية (التحذير + العناوين) ──
-        worksheet.freeze_panes(2, 0)
+        # ── إعداد الورقة للطباعة (مهم جداً) ──
+        worksheet.set_landscape()       # طباعة بالعرض
+        worksheet.set_paper(9)          # مقاس A4
+        worksheet.fit_to_pages(1, 0)    # احتواء في صفحة واحدة عرضاً
+        worksheet.set_margins(left=0.2, right=0.2, top=0.5, bottom=0.5)
+
+        # ── تجميد الصفوف العلوية ──
+        worksheet.freeze_panes(5, 0)
 
         # ── كتابة بيانات الأفراد ──
         for row_offset, person in enumerate(persons):
-            row = row_offset + 2  # الصف الأول للبيانات = 2
+            row = row_offset + 5  # الصف الأول للبيانات = 5 بسبب الترويسات الجديدة
             worksheet.set_row(row, 28)  # مساحة مريحة وفخمة للعين
 
             # خريطة افتراضية للحقول الأساسية إذا لم يتم استخدام raw_columns
@@ -394,6 +434,7 @@ class ExcelExportService:
             })
             
             is_permanently_inactive = person.get('classification', '') == 'inactive_perm'
+            is_even = row_offset % 2 == 0
 
             for col_idx, header in enumerate(all_cols):
                 is_protected = (header in self.protected_columns) or is_permanently_inactive
@@ -401,7 +442,10 @@ class ExcelExportService:
                 if is_permanently_inactive:
                     cell_fmt = fmts['inactive_perm']
                 else:
-                    cell_fmt = fmts['protected'] if is_protected else fmts['editable']
+                    if is_protected:
+                        cell_fmt = fmts['protected_alt'] if is_even else fmts['protected']
+                    else:
+                        cell_fmt = fmts['editable_alt'] if is_even else fmts['editable']
                 
                 if header == '__UUID__':
                     worksheet.write(row, col_idx, person.get('row_uuid', ''), fmts['hidden'])
@@ -409,10 +453,10 @@ class ExcelExportService:
                 elif header == 'الاسم الكامل':
                     name_fmt = workbook.add_format({
                         'locked': is_protected, 'align': 'right', 'valign': 'vcenter', 
-                        'font_size': 11, 'font_name': 'Cairo', 
-                        'border': 1, 'border_color': '#A6A6A6', 'indent': 1,
-                        'bg_color': '#E8E8E8' if is_permanently_inactive else None,
-                        'font_color': '#555555' if is_permanently_inactive else None,
+                        'font_size': 11, 'font_name': 'Cairo', 'bold': True,
+                        'border': 1, 'border_color': '#000000', 'indent': 1,
+                        'bg_color': '#E8E8E8' if is_permanently_inactive else ('#F9F9F9' if is_even else '#FFFFFF'),
+                        'font_color': '#555555' if is_permanently_inactive else '#000000',
                     })
                     worksheet.write(row, col_idx, row_data_map.get(header, ''), name_fmt)
                     

@@ -295,7 +295,17 @@ class StrictInitialImportService:
     def _clean(self, val) -> str:
         if val is None:
             return ""
+        
+        # If it's a float like 1234567.0 from excel
+        if isinstance(val, float) and val.is_integer():
+            val = int(val)
+            
         val_str = str(val).strip()
+        
+        # Or if it's a string "1234567.0"
+        if val_str.endswith('.0'):
+            val_str = val_str[:-2]
+            
         # تحويل الأرقام المشرقية (العربية) إلى أرقام إنجليزية لضمان صحة البيانات في كل الأعمدة (هواتف، أرقام عسكرية...)
         arabic_digits = "٠١٢٣٤٥٦٧٨٩"
         english_digits = "0123456789"
@@ -539,6 +549,18 @@ class StrictInitialImportService:
             if not mil_num:
                 row_errors.append({"field": "الرقم العسكري", "message": "الرقم العسكري (أو القديم/الصحيح) مطلوب"})
 
+            # جلب الأرقام العسكرية والوطنية الموجودة مسبقاً في النظام لمنع تكرار الإدخال
+            existing_military_numbers = getattr(self, '_existing_military_numbers', None)
+            existing_national_ids = getattr(self, '_existing_national_ids', None)
+            
+            if existing_military_numbers is None:
+                from systems.personnel.models import PersonnelMaster
+                existing_military_numbers = set(PersonnelMaster.objects.exclude(military_number__isnull=True).values_list('military_number', flat=True))
+                self._existing_military_numbers = existing_military_numbers
+                
+                existing_national_ids = set(PersonnelMaster.objects.exclude(national_id__isnull=True).values_list('national_id', flat=True))
+                self._existing_national_ids = existing_national_ids
+
             # فحص كل حقل موجود على حدة لضمان صحة الطول ومنع التكرار الشامل في الملف
             for col_key, col_val in [('الرقم العسكري الصحيح', mil_correct), ('الرقم العسكري', mil_normal), ('الرقم العسكري القديم', mil_old)]:
                 if col_val:
@@ -549,6 +571,8 @@ class StrictInitialImportService:
                         # لا نعتبره تكراراً إذا كان في نفس الصف (مثلاً الرقم العسكري يساوي الرقم الصحيح)
                         if dup_idx != idx:
                             row_errors.append({"field": col_key, "message": f"{col_key} ({col_val}) مكرر مع '{dup_col}' في الصف رقم ({dup_idx}) في هذا الملف"})
+                    elif col_val in existing_military_numbers:
+                        row_errors.append({"field": col_key, "message": f"الفرد مسجل مسبقاً في النظام بهذا الرقم ({col_val}). يجب الدخول لملفه لطلب التصحيح وليس من التأسيس.", "type": "already_exists"})
                     else:
                         file_military_numbers[col_val] = (idx, col_key)
 
@@ -584,11 +608,14 @@ class StrictInitialImportService:
             # 3. الرقم الوطني، الهاتف، وتواريخ الميلاد والالتحاق
             nat_id = self._clean(row_dict.get(col_national, ''))
             if nat_id:
-                from core.validators import validate_national_id
-                try:
-                    validate_national_id(nat_id)
-                except ValidationError as e:
-                    row_errors.append({"field": col_national, "message": format_validation_error(e)})
+                if nat_id in existing_national_ids:
+                    row_errors.append({"field": col_national, "message": f"الرقم الوطني ({nat_id}) مسجل مسبقاً في النظام. يرجى المراجعة، قد يكون الفرد مسجلاً.", "type": "already_exists"})
+                else:
+                    from core.validators import validate_national_id
+                    try:
+                        validate_national_id(nat_id)
+                    except ValidationError as e:
+                        row_errors.append({"field": col_national, "message": format_validation_error(e)})
 
             col_phone = 'رقم التليفون' if 'رقم التليفون' in headers else ''
             phone = self._clean(row_dict.get(col_phone, ''))
@@ -806,24 +833,23 @@ class StrictInitialImportService:
             div_str = self._clean(row_dict.get(col_div, ''))
             div_obj = None
             if div_str:
-                if div_str not in self.divisions:
+                if not dept_obj:
+                    row_errors.append({
+                        "field": col_div,
+                        "message": f"لا يمكن إضافة القسم ({div_str}) بدون تحديد جهة العمل الرئيسية (الإدارة/الفرع/المديرية)."
+                    })
+                elif div_str not in self.divisions:
                     row_errors.append({"field": col_div, "message": f"القسم/فرع السرية غير معروف نهائياً في النظام: ({div_str})"})
                 else:
                     divs = self.divisions[div_str]
                     # Find the specific division that belongs to the selected dept_obj
-                    if dept_obj:
-                        div_obj = next((d for d in divs if (d.central_department_id == dept_obj.id or d.branch_id == dept_obj.id or d.district_police_id == dept_obj.id)), divs[0])
-                    else:
-                        div_obj = divs[0]
-            
-            # فحص ارتباط القسم بجهة العمل
-            if dept_obj and div_obj:
-                parent_id = div_obj.central_department_id or div_obj.branch_id or div_obj.district_police_id
-                if parent_id != dept_obj.id:
-                    row_errors.append({
-                        "field": col_div, 
-                        "message": f"القسم ({div_str}) لا يتبع لجهة العمل ({dept_str})."
-                    })
+                    div_obj = next((d for d in divs if (d.central_department_id == dept_obj.id or d.branch_id == dept_obj.id or d.district_police_id == dept_obj.id)), None)
+                    
+                    if not div_obj:
+                        row_errors.append({
+                            "field": col_div, 
+                            "message": f"القسم ({div_str}) لا يتبع لجهة العمل ({dept_str})."
+                        })
 
             # فحص حالة النفقات
             expense_status = self._clean(row_dict.get('حالة النفقات', ''))
@@ -876,15 +902,15 @@ class StrictInitialImportService:
         }
 
     @transaction.atomic
-    def commit_file(self, file_content: bytes, batch_id: str = None, column_mapping: Dict[str, str] = None) -> Dict[str, Any]:
+    def commit_file(self, file_content: bytes, batch_id: str = None, column_mapping: Dict[str, str] = None, user=None) -> Dict[str, Any]:
         """
         الاعتماد النهائي من الإكسل مباشرة (يقرأ الملف ويحيله إلى commit_data).
         """
         rows_data = self.parse_file_to_dicts(file_content, column_mapping)
-        return self.commit_data(rows_data, batch_id)
+        return self.commit_data(rows_data, batch_id, user=user)
 
     @transaction.atomic
-    def commit_data(self, rows_data: List[Dict[str, Any]], batch_id: str = None) -> Dict[str, Any]:
+    def commit_data(self, rows_data: List[Dict[str, Any]], batch_id: str = None, user=None) -> Dict[str, Any]:
         """
         الاعتماد النهائي وحفظ البيانات من قائمة JSON (يجب أن يتم استدعاؤه فقط إذا تم تجاوز Validation بـ 0 أخطاء).
         """
@@ -926,8 +952,8 @@ class StrictInitialImportService:
             raw_rank = self._clean(row_dict.get('الرتبة', ''))
             rank = self.ranks.get(RANK_MAP.get(raw_rank, raw_rank))
             
-            raw_status = self._clean(row_dict.get('الحالة', '') or row_dict.get('نوع الحالة', ''))
-            status_obj = self.statuses.get(STATUS_MAP.get(raw_status, raw_status))
+            raw_status_type = self._clean(row_dict.get('نوع الحالة', '') or row_dict.get('الحالة', ''))
+            status_obj = self.statuses.get(STATUS_MAP.get(raw_status_type, raw_status_type))
             
             raw_force = self._clean(row_dict.get('تصنيف القوة', ''))
             force = self.force_types.get(FORCE_TYPE_MAP.get(raw_force, raw_force))
@@ -954,12 +980,31 @@ class StrictInitialImportService:
             
             sec_admin = self.security_admins.get(raw_unit)
             
-            c_dept = self.central_depts.get(self._clean(row_dict.get('الإدارة_السرية', '')))
-            
+            dept_str = self._clean(row_dict.get('الإدارة_السرية', ''))
+            c_dept, branch, dist_p = None, None, None
+            dept_obj = None
+            if dept_str:
+                if dept_str in self.central_depts:
+                    depts = self.central_depts[dept_str]
+                    dept_obj = next((d for d in depts if sec_admin and d.security_admin_id == sec_admin.id), depts[0])
+                    c_dept = dept_obj
+                elif dept_str in self.branches:
+                    depts = self.branches[dept_str]
+                    dept_obj = next((d for d in depts if sec_admin and d.security_admin_id == sec_admin.id), depts[0])
+                    branch = dept_obj
+                elif dept_str in self.district_police:
+                    depts = self.district_police[dept_str]
+                    dept_obj = next((d for d in depts if sec_admin and d.security_admin_id == sec_admin.id), depts[0])
+                    dist_p = dept_obj
+
             div_str = self._clean(row_dict.get('القسم_فرع السرية', ''))
-            branch = self.branches.get(div_str)
-            dist_p = None if branch else self.district_police.get(div_str)
-            div = None if (branch or dist_p) else self.divisions.get(div_str)
+            div = None
+            if div_str and div_str in self.divisions:
+                divs = self.divisions[div_str]
+                if dept_obj:
+                    div = next((d for d in divs if (d.central_department_id == dept_obj.id or d.branch_id == dept_obj.id or d.district_police_id == dept_obj.id)), divs[0])
+                else:
+                    div = divs[0]
             
             birth_date = self._parse_date(row_dict.get('تاريخ الميلاد'))
             join_date = self._parse_date(row_dict.get('تاريخ الألتحاق'))
@@ -1007,8 +1052,37 @@ class StrictInitialImportService:
             )
             stats['created'] += 1
 
-            # مقترح تصحيح الاسم
-            if col_name_correction in headers:
+            # مقترح تصحيح (مخصص من الواجهة أو تلقائي للاسم)
+            custom_corr = row_dict.get('__custom_correction')
+            
+            if custom_corr:
+                # إنشاء طلب تصحيح مخصص بناءً على اختيارات المستخدم في النافذة المنبثقة
+                corr_type_frontend = custom_corr.get('correction_type', 'first_name')
+                notes = custom_corr.get('notes', '')
+                old_val = custom_corr.get('old_value', '')
+                new_val = custom_corr.get('new_value', '')
+                
+                # استنتاج الحقل بناءً على نوع التصحيح المختار من الواجهة (الاسم الأول، الثاني، الخ)
+                # نوع التصحيح الأساسي في قاعدة البيانات لجميع حالات الأسماء هو name_correction
+                corr_type = 'name_correction'
+                field_name = corr_type_frontend
+                
+                SuggestedCorrection.objects.create(
+                    personnel=person,
+                    security_admin=person.security_admin,
+                    correction_type=corr_type,
+                    field_name=field_name,
+                    old_value=old_val,
+                    new_value=new_val,
+                    notes=notes,
+                    status='pending',
+                    requested_at=timezone.now(),
+                    requested_by=user,
+                )
+                stats['name_corrections'] += 1
+                
+            elif col_name_correction in headers:
+                # حالة احتياطية: التوليد التلقائي لتصحيح الاسم (كما كان سابقاً)
                 corr_name = self._clean(row_dict.get(col_name_correction, ''))
                 if corr_name and corr_name != full_name:
                     SuggestedCorrection.objects.create(
@@ -1020,6 +1094,7 @@ class StrictInitialImportService:
                         new_value=corr_name,
                         status='pending',
                         requested_at=timezone.now(),
+                        requested_by=user,
                     )
                     stats['name_corrections'] += 1
 
@@ -1027,11 +1102,16 @@ class StrictInitialImportService:
             for m_col in monthly_cols:
                 val = self._clean(row_dict.get(m_col, ''))
                 if val:
+                    # استخراج الشهر بصيغة YYYY-MM من اسم العمود (مثل "متغير 2024-05")
+                    match = re.search(r'\d{4}-\d{2}', m_col)
+                    month_str = match.group(0) if match else "0000-00"
+                    
                     HistoricalMonthlyVariables.objects.create(
                         personnel=person,
-                        month=m_col,
+                        month=month_str,
                         variable_value=val,
-                        source_column=m_col
+                        source_column=m_col,
+                        source='excel_import'
                     )
                     stats['monthly_vars'] += 1
                     
