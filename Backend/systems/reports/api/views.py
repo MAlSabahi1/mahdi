@@ -439,6 +439,28 @@ class MonthlyServicesReportView(APIView):
                 if qual_id_list:
                     qs = qs.filter(**{f'{prefix}qualification_id__in': qual_id_list})
             
+            
+            # Age and Service Duration Filters
+            def get_past_date(years_to_subtract):
+                try:
+                    return current_date.replace(year=current_date.year - years_to_subtract)
+                except ValueError:
+                    return current_date.replace(year=current_date.year - years_to_subtract, day=28)
+
+            age_min = request.query_params.get('age_min')
+            if age_min and age_min.isdigit():
+                qs = qs.filter(**{f'{prefix}birth_date__lte': get_past_date(int(age_min))})
+            age_max = request.query_params.get('age_max')
+            if age_max and age_max.isdigit():
+                qs = qs.filter(**{f'{prefix}birth_date__gt': get_past_date(int(age_max) + 1)})
+                
+            service_min = request.query_params.get('service_min')
+            if service_min and service_min.isdigit():
+                qs = qs.filter(**{f'{prefix}join_date__lte': get_past_date(int(service_min))})
+            service_max = request.query_params.get('service_max')
+            if service_max and service_max.isdigit():
+                qs = qs.filter(**{f'{prefix}join_date__gt': get_past_date(int(service_max) + 1)})
+
             # Status Filters
             status_classification = request.query_params.get('status_classification')
             if status_classification:

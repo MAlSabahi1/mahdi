@@ -144,7 +144,10 @@ import Swal from 'sweetalert2'
 import { AlertOctagon, AlertTriangle, Clock, CheckCircle2, ShieldAlert, FileEdit, FileText } from 'lucide-vue-next'
 import api from '@/lib/api'
 
+import { useRouter } from 'vue-router'
+
 const { t } = useI18n()
+const router = useRouter()
 const activeTab = ref('alerts')
 
 const alerts = ref<any[]>([])
@@ -193,7 +196,7 @@ onMounted(() => {
   fetchAlerts()
 })
 
-const handleAction = (action: string, id: number) => {
+const handleAction = (action: string, id: number | string) => {
   let title = ''
   let text = ''
   let confirmColor = ''
@@ -211,7 +214,7 @@ const handleAction = (action: string, id: number) => {
     icon = 'warning'
   } else if (action === 'investigate') {
     title = 'مراجعة السجل'
-    text = 'سيتم توجيهك إلى شاشة الفرد لإكمال البيانات الناقصة.'
+    text = 'سيتم توجيهك إلى شاشة الفرد لإكمال البيانات الناقصة. هل تود الانتقال الآن؟'
     confirmColor = '#3b82f6'
     icon = 'info'
   } else if (action === 'dismiss') {
@@ -232,6 +235,11 @@ const handleAction = (action: string, id: number) => {
     cancelButtonText: 'إلغاء'
   }).then((result) => {
     if (result.isConfirmed) {
+      if (action === 'investigate') {
+        router.push(`/personnel/${id}`)
+        return
+      }
+
       if (activeTab.value === 'alerts') {
         alerts.value = alerts.value.filter(a => a.id !== id)
       } else {

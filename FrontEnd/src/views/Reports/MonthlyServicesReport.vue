@@ -275,7 +275,41 @@
             <div v-if="showAdvancedFilters" class="overflow-hidden">
               <div class="h-px bg-gray-100 dark:bg-gray-800 my-6"></div>
               
-              <!-- المجموعة الأولى: بيانات جهة العمل والمناصب -->
+              <!-- المجموعة الجديدة: العمر ومدة الخدمة والوصول السريع -->
+              <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 text-brand-600 flex items-center gap-2">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                بيانات العمر ومدة الخدمة (التقاعد)
+              </h4>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700/50">
+                  <label class="mb-3 block text-sm font-bold text-gray-700 dark:text-gray-300">نطاق العمر (سنة)</label>
+                  <div class="flex items-center gap-2">
+                    <input type="number" v-model="filterAgeMin" placeholder="من (مثال: 60)" class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white" />
+                    <span class="text-gray-400">-</span>
+                    <input type="number" v-model="filterAgeMax" placeholder="إلى" class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white" />
+                  </div>
+                </div>
+                
+                <div class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700/50">
+                  <label class="mb-3 block text-sm font-bold text-gray-700 dark:text-gray-300">مدة الخدمة (سنة)</label>
+                  <div class="flex items-center gap-2">
+                    <input type="number" v-model="filterServiceMin" placeholder="من (مثال: 35)" class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white" />
+                    <span class="text-gray-400">-</span>
+                    <input type="number" v-model="filterServiceMax" placeholder="إلى" class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white" />
+                  </div>
+                </div>
+              </div>
+              
+              <div class="flex flex-wrap items-center gap-2 mb-8">
+                <span class="text-sm font-bold text-gray-500 ml-2">فلاتر سريعة للتقاعد:</span>
+                <button @click="applyQuickFilter('elderly_officers')" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 dark:bg-orange-900/30 dark:border-orange-800 dark:text-orange-300 transition-colors">كبار السن (ضباط)</button>
+                <button @click="applyQuickFilter('elderly_personnel')" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100 dark:bg-yellow-900/30 dark:border-yellow-800 dark:text-yellow-300 transition-colors">كبار السن (أفراد)</button>
+                <button @click="applyQuickFilter('completed_service')" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 dark:bg-red-900/30 dark:border-red-800 dark:text-red-300 transition-colors">أنهى مدة الخدمة القانونية</button>
+              </div>
+
+              <div class="h-px bg-gray-100 dark:bg-gray-800 my-6"></div>
+              
+              <!-- المجموعة الثانية: بيانات جهة العمل والمناصب -->
               <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 text-brand-600 flex items-center gap-2">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                 بيانات جهة العمل والمناصب
@@ -311,8 +345,8 @@
                     valueKey="id" 
                     labelKey="name" 
                     placeholder="كل الأقسام" 
-                    :disabled="filterWorkplaces.length > 0 && availableDivisions.length === 0"
-                    disabledPlaceholder="لا توجد أقسام تابعة" 
+                    :disabled="filterWorkplaces.length === 0"
+                    disabledPlaceholder="اختر جهة العمل أولاً..." 
                   />
                 </div>
                 <div>
@@ -323,8 +357,8 @@
                     valueKey="id" 
                     labelKey="name" 
                     placeholder="كل الوحدات" 
-                    :disabled="filterDivision.length > 0 && availableUnits.length === 0"
-                    disabledPlaceholder="لا توجد وحدات تابعة" 
+                    :disabled="filterDivision.length === 0"
+                    disabledPlaceholder="اختر القسم أولاً..." 
                   />
                 </div>
               </div>
@@ -646,7 +680,7 @@ const filterDivision = ref<number[]>([])
 const filterUnit = ref<number[]>([])
 
 const availableDivisions = computed(() => {
-  if (filterWorkplaces.value.length === 0) return coreStore.divisions
+  if (filterWorkplaces.value.length === 0) return [] // Require workplace selection first
   
   const centrals = filterWorkplaces.value.filter(v => v.startsWith('central_')).map(v => parseInt(v.replace('central_', ''), 10))
   const branches = filterWorkplaces.value.filter(v => v.startsWith('branch_')).map(v => parseInt(v.replace('branch_', ''), 10))
@@ -661,7 +695,7 @@ const availableDivisions = computed(() => {
 })
 
 const availableUnits = computed(() => {
-  if (filterDivision.value.length === 0) return coreStore.units
+  if (filterDivision.value.length === 0) return [] // Require division selection first
   return coreStore.units.filter((u: any) => filterDivision.value.includes(u.division))
 })
 
@@ -727,6 +761,11 @@ const filterQualification = ref<number[]>([])
 const filterForceClass = ref<number[]>([])
 const filterMilitaryNumber = ref('')
 const filterName = ref('')
+const filterAgeMin = ref<number | ''>('')
+const filterAgeMax = ref<number | ''>('')
+const filterServiceMin = ref<number | ''>('')
+const filterServiceMax = ref<number | ''>('')
+
 const filterBirthGov = ref<number | ''>('')
 const filterResidenceGov = ref<number[]>([])
 
@@ -852,8 +891,55 @@ const activeAdvancedFilterCount = computed(() => {
   if (filterResVillage.value) count++
   if (filterStatusClassification.value.length > 0) count++
   if (filterStatusIds.value.length > 0) count++
+  if (filterAgeMin.value || filterAgeMax.value) count++
+  if (filterServiceMin.value || filterServiceMax.value) count++
   return count
 })
+
+const applyQuickFilter = (type: string) => {
+  // Reset fields manually (without triggering fetchData yet)
+  selectedMonth.value = ''
+  selectedYear.value = ''
+  filterRank.value = []
+  filterCategory.value = []
+  filterSecurityAdmin.value = []
+  filterWorkplaces.value = []
+  filterDivision.value = []
+  filterUnit.value = []
+  filterPosition.value = []
+  filterQualification.value = []
+  filterForceClass.value = []
+  filterMilitaryNumber.value = ''
+  filterName.value = ''
+  filterBirthGov.value = ''
+  filterBirthDist.value = ''
+  filterBirthSubDist.value = ''
+  filterBirthVillage.value = ''
+  filterResidenceGov.value = []
+  filterResDist.value = ''
+  filterResSubDist.value = ''
+  filterResVillage.value = ''
+  filterStatusClassification.value = []
+  filterStatusIds.value = []
+  filterAgeMin.value = ''
+  filterAgeMax.value = ''
+  filterServiceMin.value = ''
+  filterServiceMax.value = ''
+
+  if (type === 'elderly_officers') {
+    filterAgeMin.value = parseInt(systemSettings.value.retirement_age_officers) || 50
+    const officerRanks = coreStore.ranks.filter(r => r.is_officer).map(r => r.id)
+    filterRank.value = officerRanks
+  } else if (type === 'elderly_personnel') {
+    filterAgeMin.value = parseInt(systemSettings.value.retirement_age_general) || 50
+    const nonOfficerRanks = coreStore.ranks.filter(r => !r.is_officer).map(r => r.id)
+    filterRank.value = nonOfficerRanks
+  } else if (type === 'completed_service') {
+    filterServiceMin.value = parseInt(systemSettings.value.min_service_years) || 35
+  }
+
+  fetchData()
+}
 
 const resetAllFilters = () => {
   selectedMonth.value = ''
@@ -879,6 +965,10 @@ const resetAllFilters = () => {
   filterResVillage.value = ''
   filterStatusClassification.value = []
   filterStatusIds.value = []
+  filterAgeMin.value = ''
+  filterAgeMax.value = ''
+  filterServiceMin.value = ''
+  filterServiceMax.value = ''
   
   rosterMode.value = 'monthly_changes'
   fetchData()
@@ -991,6 +1081,11 @@ const fetchData = async () => {
     if (filterStatusClassification.value.length > 0) params.status_classification = filterStatusClassification.value.join(',')
     if (filterStatusIds.value.length > 0) params.status_id = filterStatusIds.value.join(',')
 
+    if (filterAgeMin.value) params.age_min = filterAgeMin.value
+    if (filterAgeMax.value) params.age_max = filterAgeMax.value
+    if (filterServiceMin.value) params.service_min = filterServiceMin.value
+    if (filterServiceMax.value) params.service_max = filterServiceMax.value
+
     const res = await api.get('/reports/detailed-reports/monthly-services/', { params })
     // Format date in client
     reportData.value = (res.data.data || []).map((item: any) => ({
@@ -1059,8 +1154,23 @@ const handlePdfExport = async (type: string) => {
   }
 }
 
+const systemSettings = ref<any>({})
+
+const fetchSystemSettings = async () => {
+  try {
+    const res = await api.get('/dictionaries/system-settings/')
+    const data = res.data.results ?? res.data
+    data.forEach((s: any) => {
+      systemSettings.value[s.key] = s.value
+    })
+  } catch(e) {
+    console.error('Failed to load system settings', e)
+  }
+}
+
 onMounted(() => {
   coreStore.fetchAllReferences()
+  fetchSystemSettings()
   fetchData()
 })
 </script>

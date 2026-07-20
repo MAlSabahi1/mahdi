@@ -93,7 +93,6 @@ class GeoDistrictViewSet(DictionaryViewSetMixin, BaseModelViewSet):
 class GeoSubDistrictViewSet(DictionaryViewSetMixin, BaseModelViewSet):
     queryset = GeoSubDistrict.objects.select_related('district__governorate').all()
     serializer_class = GeoSubDistrictSerializer
-    filterset_fields = ['is_active']
     search_fields = ['name_ar', 'name_en']
 
     def get_queryset(self):
@@ -112,7 +111,6 @@ class GeoSubDistrictViewSet(DictionaryViewSetMixin, BaseModelViewSet):
 class GeoVillageViewSet(DictionaryViewSetMixin, BaseModelViewSet):
     queryset = GeoVillage.objects.select_related('sub_district__district').all()
     serializer_class = GeoVillageSerializer
-    filterset_fields = ['is_active']
     search_fields = ['name_ar', 'name_en']
 
     def get_queryset(self):

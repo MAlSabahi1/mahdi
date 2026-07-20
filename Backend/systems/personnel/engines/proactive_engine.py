@@ -96,8 +96,8 @@ def run_engine_scan():
 
     personnel = PersonnelMaster.objects.select_related(
         'current_status', 'current_rank', 'security_admin', 'branch', 'unit'
-    ).filter(
-        current_status__name__in=ALL_TRACKED_STATUSES
+    ).exclude(
+        current_status__classification='inactive_perm'
     )
 
     warnings = []
