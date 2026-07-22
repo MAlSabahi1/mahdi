@@ -197,9 +197,9 @@ _FORMS = {
         description='الدليل: ص 37 — نموذج 13 — شرط 20 سنة خدمة',
         fields=(
             FormField('category', 'الفئة', 'text', required=True, disabled=True, default='إنهاء مدة'),
-            FormField('birth_date', 'تاريخ الميلاد', 'date'),
-            FormField('join_date', 'تاريخ الالتحاق بالخدمة', 'date'),
-            FormField('age', 'العمر', 'number'),
+            FormField('birth_date', 'تاريخ الميلاد', 'date', required=True),
+            FormField('join_date', 'تاريخ الالتحاق بالخدمة', 'date', required=True),
+            FormField('age', 'العمر', 'number', disabled=True),
             FormField('gender', 'الجنس', 'select', options=('ذكر', 'أنثى'), default='ذكر'),
         ),
         attachments=(
@@ -287,20 +287,28 @@ _FORMS = {
         fields=(
             FormField('category', 'الفئة', 'text', required=True, disabled=True, default='سجناء'),
             FormField('case_type', 'نوع القضية', 'text'),
+            FormField('verdict_type', 'نوع الحكم', 'select', required=False, options=[
+                {'value': 'سجن لمدة', 'label': 'سجن لمدة'},
+                {'value': 'إعدام', 'label': 'إعدام'},
+                {'value': 'حبس احتياطي', 'label': 'حبس احتياطي'},
+                {'value': 'أخرى', 'label': 'أخرى (تكتب في الملاحظات)'},
+            ]),
             FormField('ruling_date', 'تاريخ الحكم', 'date', required=False),
-            FormField('ruling_duration', 'مدة الحكم', 'text', required=False),
+            FormField('ruling_duration', 'مدة الحكم', 'date_range', required=False),
+            FormField('duration_from', 'تاريخ بداية الحكم', 'hidden', required=False),
+            FormField('duration_to', 'تاريخ نهاية الحكم', 'hidden', required=False),
             FormField('arrest_date', 'تاريخ التوقيف', 'date'),
             FormField('arrest_authority', 'جهة التوقيف', 'text'),
             FormField('notes', 'ملاحظات', 'textarea', required=False),
         ),
         attachments=(
             AttachmentSpec('court_ruling', 'نسخة من الحكم', required=False),
-            AttachmentSpec('memo', 'مذكرة توضح بأن الفرد لازال في السجن من النيابة'),
-            AttachmentSpec('national_id_front', 'صورة البطاقة الشخصية/العسكرية'),
-            AttachmentSpec('power_of_attorney', 'وكالة شرعية'),
-            AttachmentSpec('attorney_id', 'صورة البطاقة الشخصية للوكيل'),
+            AttachmentSpec('memo', 'مذكرة توضح بأن الفرد لازال في السجن من النيابة', required=False),
+            AttachmentSpec('national_id_front', 'صورة البطاقة الشخصية/العسكرية', required=True),
+            AttachmentSpec('power_of_attorney', 'وكالة شرعية', required=False),
+            AttachmentSpec('attorney_id', 'صورة البطاقة الشخصية للوكيل', required=False),
         ),
-        min_documents=4,
+        min_documents=1,
     ),
 
     # ── استمارة 8: مرافق / معيات ──
@@ -311,12 +319,17 @@ _FORMS = {
         description='الدليل: ص 41 — نموذج 6',
         fields=(
             FormField('category', 'الفئة', 'text', required=True, disabled=True, default='المعيات'),
-            FormField('dignitary_name', 'اسم الشخصية', 'text'),
-            FormField('dignitary_position', 'منصب الشخصية', 'text'),
-            FormField('order_source', 'مصدر الأمر', 'text',
-                      help_text='وزير الداخلية / نائب الوزير / الوكيل / المدير العام'),
-            FormField('start_date', 'تاريخ البدء', 'date'),
-            FormField('end_date', 'تاريخ الانتهاء', 'date'),
+            FormField('dignitary_name', 'اسم الشخصية', 'text', required=True, help_text='اسم طالب التفريغ للمرافقة بمعيته'),
+            FormField('dignitary_position', 'منصب الشخصية', 'text', required=True, help_text='العمل الذي يقوم به طالب التفريغ'),
+            FormField('order_source', 'مصدر الأمر', 'select', required=True,
+                      options=[
+                          {'value': 'وزير الداخلية', 'label': 'وزير الداخلية'},
+                          {'value': 'نائب الوزير', 'label': 'نائب الوزير'},
+                          {'value': 'الوكيل لقطاع الموارد', 'label': 'الوكيل لقطاع الموارد'},
+                          {'value': 'مدير شرطة المحافظة', 'label': 'مدير شرطة المحافظة'}
+                      ]),
+            FormField('start_date', 'تاريخ البدء', 'date', required=True),
+            FormField('end_date', 'تاريخ الانتهاء', 'date', required=True),
         ),
         attachments=(
             AttachmentSpec('assignment_order', 'نسخة من أمر التكليف بالمرافقة'),
@@ -365,7 +378,7 @@ _FORMS = {
                       options=('دبلوم', 'بكالوريوس', 'ماجستير', 'دكتوراه', 'دورة تخصصية')),
             FormField('institution', 'مكان الدراسة', 'text'),
             FormField('order_source', 'مصدر الأمر / رقم قرار الإيفاد', 'text'),
-            FormField('duration', 'مدة الدراسة (رقم)', 'number'),
+            FormField('duration', 'مدة الدراسة (تلقائي)', 'text', disabled=True),
             FormField('start_date', 'تاريخ البدء', 'date'),
             FormField('end_date', 'تاريخ الانتهاء', 'date'),
         ),
@@ -384,7 +397,7 @@ _FORMS = {
         description='الدليل: ص 42 — نموذج 7',
         fields=(
             FormField('category', 'الفئة', 'text', required=True, disabled=True, default='المنتدبين'),
-            FormField('destination', 'جهة الانتداب', 'text'),
+            FormField('secondment_place', 'جهة الانتداب', 'text'),
             FormField('reason', 'سبب الانتداب', 'textarea'),
             FormField('order_source', 'مصدر الأمر', 'text'),
             FormField('start_date', 'تاريخ البدء', 'date'),
@@ -562,8 +575,8 @@ class FormRegistry:
     
     @staticmethod
     def attachment_labels(form_type: str) -> list:
-        """تسميات المرفقات (لعرضها في الفرونت)"""
-        return [a.label for a in FormRegistry.attachments(form_type)]
+        """تسميات المرفقات (لعرضها في الفرونت) — يُرجع قائمة من القواميس تحتوي key و label"""
+        return [{'key': a.doc_type, 'label': a.label} for a in FormRegistry.attachments(form_type)]
     
     @staticmethod
     def validate(form_type: str, form_data: dict) -> tuple:

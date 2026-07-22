@@ -239,7 +239,10 @@ const groupedDocuments = computed(() => {
               medical_unfit: 'عدم لياقة صحية',
               end_of_service: 'إنهاء مدة',
               retired: 'محال للتقاعد',
-              imprisoned: 'مسجون'
+              imprisoned: 'مسجون',
+              study_leave: 'تفريغ دراسي',
+              seconded: 'انتداب',
+              returned_to_service: 'عائد للخدمة'
             }
             cTitle = `طلب إثبات حالة - ${categoryMap[meta.category.toLowerCase()] || meta.category}`
           } else {

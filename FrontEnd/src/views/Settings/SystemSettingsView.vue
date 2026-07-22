@@ -66,10 +66,27 @@
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">سيتم إضافتها من الـ Backend عند الحاجة.</p>
           </div>
 
-          <!-- Settings Cards -->
-          <div v-else class="space-y-3">
+          <!-- Sub-tabs Header -->
+          <div v-if="Object.keys(groupedSettings).length > 1" class="flex flex-wrap gap-2 mb-6 border-b border-gray-200 dark:border-gray-800 pb-4">
+            <button
+              v-for="(_, groupName) in groupedSettings"
+              :key="groupName"
+              @click="activeSubTab = groupName"
+              :class="[
+                'px-4 py-2 rounded-lg text-sm font-bold transition-all',
+                activeSubTab === groupName
+                  ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400 border border-brand-200 dark:border-brand-800/50 shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 border border-transparent'
+              ]"
+            >
+              {{ groupName }}
+            </button>
+          </div>
+
+          <!-- Settings Cards for Active Sub-tab -->
+          <div v-if="groupedSettings[activeSubTab]" class="space-y-3">
             <div
-              v-for="setting in filteredSettings"
+              v-for="setting in groupedSettings[activeSubTab]"
               :key="setting.id"
               class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-theme-xs hover:border-brand-200 dark:hover:border-brand-700 transition-colors"
             >
@@ -132,9 +149,6 @@
                 <!-- Key Badge -->
                 <div class="shrink-0 text-right">
                   <code class="inline-block text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-1 rounded-md font-mono">{{ setting.key }}</code>
-                  <div class="mt-1.5 text-[10px] text-gray-400 dark:text-gray-500 text-center">
-                    {{ setting.category_display }}
-                  </div>
                 </div>
               </div>
             </div>
@@ -147,11 +161,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import api from '@/lib/api'
 
 const activeTab = ref('retirement')
+const activeSubTab = ref('')
 const loading = ref(false)
 const saving = ref<number | null>(null)
 const savedId = ref<number | null>(null)
@@ -189,13 +204,55 @@ const filteredSettings = computed(() =>
   allSettings.value.filter(s => s.category === activeTab.value)
 )
 
+const groupedSettings = computed(() => {
+  const groups: Record<string, any[]> = {}
+  filteredSettings.value.forEach(s => {
+    let g = 'إعدادات عامة'
+    const k = s.key.toLowerCase()
+    
+    // Services grouping
+    if (k.startsWith('study_leave')) g = 'سياسات التفريغ الدراسي'
+    else if (k.includes('attachment')) g = 'إعدادات المرفقات والملفات'
+    else if (k.includes('form') || k.includes('submission')) g = 'إعدادات سير عمل الاستمارات'
+    
+    // System / Holidays / Retirement grouping
+    else if (k.includes('leave') || k.includes('absence')) g = 'سياسات الإجازات والغياب'
+    else if (k.includes('retirement') || k.includes('pension')) g = 'سياسات التقاعد'
+    else if (k.includes('warning') || k.includes('alert')) g = 'إعدادات التنبيهات والإشعارات'
+    else if (k.includes('print')) g = 'إعدادات الطباعة والتقارير'
+    else if (k.includes('session') || k.includes('audit')) g = 'إعدادات الحماية والتدقيق'
+
+    if (!groups[g]) groups[g] = []
+    groups[g].push(s)
+  })
+  
+  // Sort groups: Put "إعدادات عامة" at the end if it exists
+  const sortedGroups: Record<string, any[]> = {}
+  Object.keys(groups).sort((a, b) => {
+    if (a === 'إعدادات عامة') return 1;
+    if (b === 'إعدادات عامة') return -1;
+    return a.localeCompare(b);
+  }).forEach(key => {
+    sortedGroups[key] = groups[key];
+  });
+  
+  return sortedGroups
+})
+
+watch(groupedSettings, (newGroups) => {
+  const keys = Object.keys(newGroups)
+  if (keys.length > 0 && !keys.includes(activeSubTab.value)) {
+    activeSubTab.value = keys[0]
+  }
+}, { immediate: true })
+
 const getCount = (tabId: string) =>
   allSettings.value.filter(s => s.category === tabId).length
 
 const fetchSettings = async () => {
   loading.value = true
   try {
-    const res = await api.get('/dictionaries/system-settings/')
+    const res = await api.get('/dictionaries/system-settings/?limit=1000')
     const data = res.data.results ?? res.data
     allSettings.value = data.map((s: any) => ({
       ...s,

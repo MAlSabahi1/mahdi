@@ -115,15 +115,15 @@ class TempInactiveReportsView(BaseDetailedReportView):
         qs = self.get_queryset().filter(current_status__classification='inactive_temp')
 
         # Map report_id to the specific status name (these should match DB status names)
-        # Assuming DB has statuses like 'مريض', 'مسجون', 'مرافق', etc.
+        # Assuming DB has statuses like 'أمراض ومصابين', 'سجناء', 'مفرغين للمرافقة', etc.
         status_map = {
-            'report_5': 'الأمراض',        # الأمراض والمصابين
-            'report_6': 'المرافقة',     # المفرغين للمرافقة
-            'report_7': 'المنتدبين',    # المنتدبين لدى جهات
-            'report_8': 'للدراسة',      # المفرغين للدراسة
-            'report_9': 'السجناء',       # السجناء
-            'report_10': 'الإجازات',    # الإجازات
-            'report_11': 'المفقودين',   # المفقودين
+            'report_5': 'أمراض',        # أمراض ومصابين
+            'report_6': 'مرافقة',       # مفرغين للمرافقة
+            'report_7': 'منتدبين',      # منتدبين لدى جهات
+            'report_8': 'دراسة',        # مفرغين للدراسة
+            'report_9': 'سجناء',        # سجناء
+            'report_10': 'إجازات',      # إجازات
+            'report_11': 'مفقودين',     # مفقودين
         }
 
         target_status = status_map.get(report_id)
@@ -173,46 +173,35 @@ class TempInactiveReportsView(BaseDetailedReportView):
                 row["entry_date"] = temp_details.get("entry_date", "غير مدخل")
                 row["medical_report"] = temp_details.get("medical_report", "غير مدخل")
             elif report_id == 'report_6':
-                row["order_source"] = temp_details.get("escort_source", temp_details.get("order_source", "غير مدخل"))
-                row["escort_name"] = temp_details.get("escort_name", "غير مدخل")
-                row["escort_position"] = temp_details.get("escort_position", temp_details.get("dignitary_position", "غير مدخل"))
-                row["duration_from"] = temp_details.get("duration_from", temp_details.get("start_date", "غير مدخل"))
-                row["duration_to"] = temp_details.get("duration_to", temp_details.get("end_date", "غير مدخل"))
+                row["order_source"] = temp_details.get("order_source", temp_details.get("escort_source", "غير مدخل"))
+                row["dignitary_name"] = temp_details.get("dignitary_name", temp_details.get("escort_name", "غير مدخل"))
+                row["dignitary_position"] = temp_details.get("dignitary_position", temp_details.get("escort_position", "غير مدخل"))
+                row["start_date"] = temp_details.get("start_date", temp_details.get("duration_from", "غير مدخل"))
+                row["end_date"] = temp_details.get("end_date", temp_details.get("duration_to", "غير مدخل"))
             elif report_id == 'report_7':
                 row["order_source"] = temp_details.get("order_source", "غير مدخل")
-                # مفاتيح بديلة: destination أو delegate_to أو delegate_destination
-                row["delegate_to"] = temp_details.get("delegate_to",
-                    temp_details.get("destination",
-                    temp_details.get("delegate_destination", "غير مدخل")))
-                # مفاتيح بديلة: reason أو delegate_purpose أو purpose
-                row["delegate_purpose"] = temp_details.get("delegate_purpose",
-                    temp_details.get("reason",
-                    temp_details.get("purpose", "غير مدخل")))
-                # مفاتيح بديلة: start_date أو duration_from أو date_from
-                row["duration_from"] = temp_details.get("duration_from",
-                    temp_details.get("start_date",
-                    temp_details.get("date_from", "غير مدخل")))
-                # مفاتيح بديلة: end_date أو duration_to أو date_to
-                row["duration_to"] = temp_details.get("duration_to",
-                    temp_details.get("end_date",
-                    temp_details.get("date_to", "غير مدخل")))
+                row["secondment_place"] = temp_details.get("secondment_place", temp_details.get("delegate_to", temp_details.get("destination", "غير مدخل")))
+                row["reason"] = temp_details.get("reason", temp_details.get("delegate_purpose", temp_details.get("purpose", "غير مدخل")))
+                row["start_date"] = temp_details.get("start_date", temp_details.get("duration_from", temp_details.get("date_from", "غير مدخل")))
+                row["end_date"] = temp_details.get("end_date", temp_details.get("duration_to", temp_details.get("date_to", "غير مدخل")))
             elif report_id == 'report_8':
                 row["study_type"] = temp_details.get("study_type", "غير مدخل")
-                row["study_location"] = temp_details.get("study_location", temp_details.get("institution", "غير مدخل"))
-                row["order_number"] = temp_details.get("order_number", temp_details.get("order_source", "غير مدخل"))
-                row["duration_from"] = temp_details.get("duration_from", temp_details.get("start_date", "غير مدخل"))
-                row["duration_to"] = temp_details.get("duration_to", temp_details.get("end_date", "غير مدخل"))
+                row["institution"] = temp_details.get("institution", temp_details.get("study_location", "غير مدخل"))
+                row["order_source"] = temp_details.get("order_source", temp_details.get("order_number", "غير مدخل"))
+                row["start_date"] = temp_details.get("start_date", temp_details.get("duration_from", "غير مدخل"))
+                row["end_date"] = temp_details.get("end_date", temp_details.get("duration_to", "غير مدخل"))
             elif report_id == 'report_9':
                 row["case_type"] = temp_details.get("case_type", "غير مدخل")
                 row["arrest_date"] = temp_details.get("arrest_date", "غير مدخل")
-                row["verdict_type"] = temp_details.get("ruling_type", temp_details.get("verdict_type", temp_details.get("sentence_duration", "غير مدخل")))
-                row["duration_from"] = temp_details.get("sentence_start_date", temp_details.get("duration_from", temp_details.get("start_date", "غير مدخل")))
-                row["duration_to"] = temp_details.get("sentence_end_date", temp_details.get("duration_to", temp_details.get("end_date", "غير مدخل")))
+                row["verdict_type"] = temp_details.get("verdict_type", temp_details.get("ruling_type", temp_details.get("sentence_duration", "غير مدخل")))
+                row["ruling_date"] = temp_details.get("ruling_date", "غير مدخل")
+                row["duration_from"] = temp_details.get("duration_from", temp_details.get("sentence_start_date", temp_details.get("start_date", "غير مدخل")))
+                row["duration_to"] = temp_details.get("duration_to", temp_details.get("sentence_end_date", temp_details.get("end_date", "غير مدخل")))
             elif report_id == 'report_10':
-                row["vacation_type"] = temp_details.get("vacation_type", "غير مدخل")
+                row["leave_type"] = temp_details.get("leave_type", temp_details.get("vacation_type", "غير مدخل"))
                 row["order_source"] = temp_details.get("order_source", "غير مدخل")
-                row["duration_from"] = temp_details.get("duration_from", temp_details.get("start_date", "غير مدخل"))
-                row["duration_to"] = temp_details.get("duration_to", temp_details.get("end_date", "غير مدخل"))
+                row["start_date"] = temp_details.get("start_date", temp_details.get("duration_from", "غير مدخل"))
+                row["end_date"] = temp_details.get("end_date", temp_details.get("duration_to", "غير مدخل"))
             elif report_id == 'report_11':
                 row["missing_date"] = temp_details.get("missing_date", "غير مدخل")
                 

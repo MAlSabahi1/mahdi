@@ -247,6 +247,54 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
             return Response({'success': False, 'error': 'الفرد غير موجود'},
                             status=status.HTTP_404_NOT_FOUND)
 
+        # ══════════════════════════════════════════════════════════════════════
+        # محرك قواعد الخدمات الجديد (Service Rules Engine)
+        # يُشغَّل أولاً لاستمارة الشهيد قبل أي تحقق آخر.
+        # لإضافة خدمات أخرى: سجّلها في service_rules/__init__.py
+        # ══════════════════════════════════════════════════════════════════════
+        SERVICE_RULES_MAP = {
+            'martyr': 'MARTYR_FORM',
+            'seconded': 'SECONDED_FORM',
+        }
+        if form_type in SERVICE_RULES_MAP:
+            import systems.services.service_rules  # تأكد من تحميل التسجيل
+            from systems.services.service_rules.core import ServiceRulesDispatcher
+
+            # استخراج أكواد المرفقات المرفوعة من document_ids
+            uploaded_att_codes = []
+            raw_doc_ids = d.get('document_ids', [])
+            if raw_doc_ids:
+                from infra.storage.models import Document as Doc
+                uploaded_att_codes = list(
+                    Doc.objects.filter(id__in=raw_doc_ids)
+                    .values_list('document_type', flat=True)
+                )
+
+            # Fetch disabled rules from catalog
+            from systems.services.models import ServiceCatalog
+            try:
+                service = ServiceCatalog.objects.get(form_type=form_type)
+                disabled_rules = service.disabled_engine_rules or []
+            except ServiceCatalog.DoesNotExist:
+                disabled_rules = []
+
+            print('DEBUG UPLOADED ATT CODES:', uploaded_att_codes)
+            rules_ctx = ServiceRulesDispatcher.validate(
+                personnel=personnel,
+                service_code=SERVICE_RULES_MAP[form_type],
+                form_data=d.get('form_data', {}),
+                uploaded_attachments=uploaded_att_codes,
+                disabled_rules=disabled_rules,
+            )
+
+            if rules_ctx.has_blocking_errors():
+                return Response({
+                    'success': False,
+                    'error': 'تعذّر تقديم الطلب — يرجى مراجعة الأخطاء التالية:',
+                    'validation_errors': rules_ctx.to_response_dict()['errors'],
+                    'warnings': rules_ctx.to_response_dict()['warnings'],
+                }, status=status.HTTP_400_BAD_REQUEST)
+
         # ── Business Logic Validation ──
         if form_type == 'return_to_service':
             status_name = personnel.current_status.name if personnel.current_status else ''
@@ -312,10 +360,33 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
         if to_status_obj and personnel.current_status_id == to_status_obj.id:
             return Response({'success': False, 'error': f'الفرد لديه هذه الحالة ({to_status_obj.name}) مسبقاً في النظام'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # 3. التحقق إذا كان الفرد شهيد أو متوفى (لا يقبل أي معاملات باستثناء العودة للخدمة)
-        if personnel.current_status and any(word in personnel.current_status.name for word in ['شهيد', 'متوفى']):
-            if form_type not in ['returned_to_service', 'correction']:
-                return Response({'success': False, 'error': f'لا يمكن إنشاء هذه المعاملة لأن الفرد مسجل كـ ({personnel.current_status.name}) في النظام.'}, status=status.HTTP_400_BAD_REQUEST)
+        # 3. التحقق من الحالة النهائية (inactive_perm) — لا تقبل أي خدمة مطلقاً
+        # الشهيد والمتوفى لا يعودان للخدمة بأي شكل ولا لأي سبب.
+        # الاستثناء الوحيد: تصحيح بيانات الأرشيف (ARCHIVE_EDIT) فقط.
+        if personnel.current_status and personnel.current_status.is_permanent_deactivation:
+            # الاستثناء الوحيد: تصحيح بيانات أرشيفية فقط
+            ARCHIVE_EXEMPT_TYPES = {'correction', 'ARCHIVE_EDIT'}
+            if form_type not in ARCHIVE_EXEMPT_TYPES:
+                ps_name = personnel.current_status.name
+                ctx_msg = ''
+                if 'شهيد' in ps_name:
+                    ctx_msg = (
+                        f'الفرد مسجّل في النظام كـ“شهيد” — وهذه حالة خروج نهائي غير قابلة للعودة، '
+                        'ولا يمكن إصدار أي أوامر أو استمارات له بعد تسجيل استشهاده.')
+                elif 'متوفى' in ps_name or 'وفاة' in ps_name:
+                    ctx_msg = (
+                        f'الفرد مسجّل في النظام كـ“{ps_name}” — وهذه حالة خروج نهائي، '
+                        'ولا يمكن تقديم أي طلبات له.')
+                else:
+                    ctx_msg = (
+                        f'الفرد حالته “{ps_name}” وهي خروج نهائي، '
+                        'ولا يمكن إصدار أي معاملات جديدة له.')
+                return Response({
+                    'success': False,
+                    'error': f'إجراء غير مسموح — الفرد: {personnel.full_name} ({personnel.military_number})',
+                    'detail': ctx_msg,
+                    'status_name': ps_name,
+                }, status=status.HTTP_403_FORBIDDEN)
 
         # 4. تحققات إدارية صارمة (Business Rules Validations)
         from datetime import date
@@ -337,24 +408,25 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
             if age < 50:
                 return Response({'success': False, 'error': f'التحقق الإداري فشل: لا يمكن تقديم استمارة "بلوغ السن القانوني". السن القانوني للتقاعد هو 50 عاماً كحد أدنى. (عمر المذكور حالياً هو {age} سنة فقط).'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # تحققات منع تواريخ مستقبلية
-        if form_type in ['death', 'martyr']:
-            death_date_str = form_data.get('death_date') or form_data.get('martyrdom_date')
+        # تحققات منع تواريخ مستقبلية (للأنواع غير المسجلة في محرك القواعد)
+        # استمارة الشهيد (martyr) يعالجها محرك القواعد أعلاه بشكل أدق.
+        if form_type == 'death':
+            death_date_str = form_data.get('death_date')
             if death_date_str:
-                from datetime import datetime
+                from datetime import datetime as dt_cls
                 try:
-                    d_date = datetime.strptime(death_date_str, '%Y-%m-%d').date()
+                    d_date = dt_cls.strptime(death_date_str, '%Y-%m-%d').date()
                     if d_date > today:
-                        return Response({'success': False, 'error': 'التحقق الإداري فشل: لا يمكن أن يكون تاريخ الوفاة/الاستشهاد في المستقبل.'}, status=status.HTTP_400_BAD_REQUEST)
+                        return Response({'success': False, 'error': 'التحقق الإداري فشل: لا يمكن أن يكون تاريخ الوفاة في المستقبل.'}, status=status.HTTP_400_BAD_REQUEST)
                 except ValueError:
                     pass
 
         if form_type == 'missing':
             missing_date_str = form_data.get('missing_date')
             if missing_date_str:
-                from datetime import datetime
+                from datetime import datetime as dt_cls
                 try:
-                    m_date = datetime.strptime(missing_date_str, '%Y-%m-%d').date()
+                    m_date = dt_cls.strptime(missing_date_str, '%Y-%m-%d').date()
                     if m_date > today:
                         return Response({'success': False, 'error': 'التحقق الإداري فشل: لا يمكن أن يكون تاريخ الفقدان في المستقبل.'}, status=status.HTTP_400_BAD_REQUEST)
                 except ValueError:
@@ -516,12 +588,18 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
             if not catalog:
                 return Response({'success': False, 'error': 'لم يتم العثور على الخدمة في الدليل. لا يمكن الاعتماد.'}, status=400)
 
-            # ── حماية الشهيد/المتوفى من أي اعتماد نهائي غير منطقي ──
+            # التحقق من الحالة النهائية — لا تقبل أي اعتماد مطلقاً
             if form.personnel and form.personnel.current_status:
-                ps_name = form.personnel.current_status.name
-                if any(w in ps_name for w in ['شهيد', 'متوفى']):
-                    if form.form_type not in ['returned_to_service', 'correction']:
-                        return Response({'success': False, 'error': f'الفرد مسجّل كـ ({ps_name}). لا يمكن اعتماد هذه المعاملة.'}, status=400)
+                ps = form.personnel.current_status
+                if ps.is_permanent_deactivation:
+                    ARCHIVE_EXEMPT = {'correction', 'ARCHIVE_EDIT'}
+                    if form.form_type not in ARCHIVE_EXEMPT:
+                        ps_name = ps.name
+                        return Response({
+                            'success': False,
+                            'error': f'رفض الاعتماد — الفرد مسجّل كـ“{ps_name}” وهي حالة خروج نهائي.',
+                            'detail': 'لا يمكن اعتماد أي معاملة لفرد في حالة خروج نهائي (شهيد، متوفى، متقاعد، مفصول). الاستثناء الوحيد: تصحيح بيانات الأرشيف.',
+                        }, status=400)
 
             # ── التحقق من الخدمات الخارجية (external) ──
             if catalog and getattr(catalog, 'approval_type', '') == 'external':
@@ -574,9 +652,6 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
 
             # ── فرض رفع المرفق الموقع للطلبات الداخلية النهائية ──
             if is_final and catalog and getattr(catalog, 'approval_type', '') != 'external':
-                if not form.is_printed:
-                    return Response({'success': False, 'error': 'يجب طباعة الاستمارة أولاً وتوقيعها ورقياً قبل الاعتماد النهائي.'}, status=400)
-                
                 signed_doc_id = request.data.get('signed_document_id')
                 if not signed_doc_id:
                      return Response({'success': False, 'error': 'يجب إرفاق الاستمارة الموقعة (ورقياً) لاعتماد الطلب نهائياً.'}, status=400)
@@ -615,13 +690,34 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
             approver_name = request.user.get_full_name() or request.user.username
 
             if is_final:
+                # ══════════════════════════════════════════════════════════
+                # محرك المشغلات التلقائية (Post-Approval Triggers)
+                # يُشغَّل عند الاعتماد النهائي فقط — يعتمد على form_type
+                # ══════════════════════════════════════════════════════════
+                triggers_result = {}
+                if form.form_type == 'martyr':
+                    try:
+                        from systems.services.service_rules.triggers.martyr import run_all_martyr_triggers
+                        triggers_result = run_all_martyr_triggers(form=form, approved_by=request.user)
+                    except Exception as trigger_exc:
+                        # نسجّل الخطأ لكن لا نوقف الاعتماد (الاستمارة معتمدة بالفعل)
+                        import logging
+                        logging.getLogger('services.triggers').error(
+                            'Martyr triggers failed for form %s: %s', form.id, trigger_exc
+                        )
+                        triggers_result = {'errors': [str(trigger_exc)]}
+
                 FormEventLog.objects.create(
                     form=form,
                     action='approved',
                     from_status='in_progress',
                     to_status='approved',
                     performed_by=request.user,
-                    notes=f'✅ اعتماد نهائي — بواسطة: {approver_name}. المرحلة: {current_step_name}. تم تحديث حالة الفرد في السجل.'
+                    notes=(
+                        f'✅ اعتماد نهائي — بواسطة: {approver_name}. المرحلة: {current_step_name}. '
+                        f'تم تحديث حالة الفرد في السجل. '
+                        + (f'إلغاء تلقائي: {triggers_result.get("pending_services_cancelled", 0)} طلب معلق.' if triggers_result else '')
+                    )
                 )
             else:
                 FormEventLog.objects.create(
@@ -732,7 +828,7 @@ class StatusChangeFormViewSet(viewsets.ModelViewSet):
         ).first()
         
         if pending:
-            return Response({'has_pending': True, 'pending_id': pending.id, 'form_type': pending.form_type_display or pending.form_type})
+            return Response({'has_pending': True, 'pending_id': pending.id, 'form_type': pending.get_form_type_display() or pending.form_type})
         return Response({'has_pending': False})
     @action(detail=False, methods=['get'])
     def export(self, request):

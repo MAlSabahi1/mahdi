@@ -273,9 +273,17 @@ async function handleSubmitDraft(tx: any) {
 async function handleApprove(tx: any) {
   const result = await Swal.fire({ title: 'اعتماد المعاملة؟', text: `الموافقة على المعاملة في مرحلة (${tx.current_step_name || 'الاعتماد'}).`, icon: 'success', showCancelButton: true, confirmButtonText: 'نعم، اعتماد', cancelButtonText: 'إلغاء', confirmButtonColor: '#10b981' })
   if (result.isConfirmed) {
-    await servicesStore.approveForm(tx.id)
-    fetchAll()
-    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم اعتماد المعاملة', showConfirmButton: false, timer: 2000 })
+    try {
+      await servicesStore.approveForm(tx.id)
+      fetchAll()
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم اعتماد المعاملة', showConfirmButton: false, timer: 2000 })
+    } catch (e: any) {
+      const errorMsg = e?.response?.data?.error || 'حدث خطأ'
+      if (errorMsg.includes('يجب إرفاق الاستمارة الموقعة')) {
+        return promptSignedDocInternal(tx)
+      }
+      Swal.fire({ icon: 'error', title: 'خطأ', text: errorMsg })
+    }
   }
 }
 

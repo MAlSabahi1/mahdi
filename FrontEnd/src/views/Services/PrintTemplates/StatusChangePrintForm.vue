@@ -217,7 +217,9 @@
               <tr v-for="(att, idx) in allAttachments" :key="idx">
                 <td class="font-bold font-sans text-[14px]">{{ Number(idx) + 1 }}</td>
                 <td class="font-bold text-[14px] text-right px-4">{{ translateAttachment(att) }}</td>
-                <td class="font-sans font-bold text-lg leading-none">{{ (att.id || att.file) ? '✔' : '' }}</td>
+                <td class="font-sans font-bold text-lg leading-none">
+                  <span v-if="att.id || att.file" style="color: #16a34a !important;">✔</span>
+                </td>
                 <td></td>
               </tr>
             </tbody>
@@ -417,6 +419,7 @@ const fieldTranslations: Record<string, string> = {
   death_place: 'مكان الوفاة',
   death_reason: 'سبب الوفاة',
   case_type: 'نوع الحالة',
+  verdict_type: 'نوع الحكم',
   ruling_date: 'تاريخ الحكم',
   ruling_duration: 'مدة الحكم',
   arrest_date: 'تاريخ التوقيف',
@@ -551,7 +554,7 @@ const dynamicSpecificFields = computed<FormField[]>(() => {
   const ORDER_MAP: Record<string, string[]> = {
     death: ['case_type', 'death_date', 'occurrence_context', 'death_location'],
     martyr: ['martyrdom_date', 'occurrence_context', 'martyrdom_location'],
-    imprisoned: ['case_type', 'ruling_date', 'ruling_duration', 'arrest_date', 'arrest_authority'],
+    imprisoned: ['case_type', 'verdict_type', 'ruling_date', 'ruling_duration', 'arrest_date', 'arrest_authority'],
     seconded: ['secondment_place', 'reason', 'order_source', 'start_date', 'end_date'],
     escort: ['dignitary_name', 'dignitary_position', 'order_source', 'start_date', 'end_date'],
     study_leave: ['study_type', 'institution', 'order_source', 'duration', 'start_date', 'end_date'],
@@ -570,6 +573,39 @@ const dynamicSpecificFields = computed<FormField[]>(() => {
     if (EXCLUDED_FROM_STATUS_KEYS.has(key)) continue
     
     let finalValue = fd[key]
+    
+    // --- Special computed values ---
+    if (key === 'ruling_duration' && ft === 'imprisoned') {
+      if (fd.duration_from && fd.duration_to) {
+        const d1 = new Date(fd.duration_from);
+        const d2 = new Date(fd.duration_to);
+        if (!isNaN(d1.getTime()) && !isNaN(d2.getTime())) {
+          let yDiff = d2.getFullYear() - d1.getFullYear();
+          let mDiff = d2.getMonth() - d1.getMonth();
+          let dDiff = d2.getDate() - d1.getDate();
+
+          if (dDiff < 0) {
+            mDiff--;
+            const prevMonth = new Date(d2.getFullYear(), d2.getMonth(), 0);
+            dDiff += prevMonth.getDate();
+          }
+          if (mDiff < 0) {
+            yDiff--;
+            mDiff += 12;
+          }
+
+          let parts = [];
+          if (yDiff > 0) parts.push(`${yDiff} سنة`);
+          if (mDiff > 0) parts.push(`${mDiff} شهر`);
+          if (dDiff > 0) parts.push(`${dDiff} يوم`);
+
+          finalValue = parts.length > 0 ? parts.join(' و ') : 'أقل من يوم';
+        }
+      } else if (fd.duration_from) {
+        finalValue = `من: ${formatDate(fd.duration_from)}`;
+      }
+    }
+
     if ((finalValue === undefined || finalValue === null || finalValue === '') && key === 'birth_date') finalValue = p.birth_date
     if ((finalValue === undefined || finalValue === null || finalValue === '') && key === 'join_date') finalValue = p.join_date
 
@@ -757,15 +793,15 @@ const allAttachments = computed(() => {
       { key: 'court_ruling', label: 'حكم شرعي بالفقدان' }
     ],
     medical_unfit: [
-      { key: 'medical_report', label: 'القرار الطبي الأصل (اللجنة الطبية)' },
-      { key: 'national_id_front', label: 'صورة البطاقة الشخصية/العسكرية' },
-      { key: 'photo', label: 'صورة حديثة للمريض' },
-      { key: 'power_of_attorney', label: 'وكالة شرعية' },
-      { key: 'attorney_id', label: 'صورة بطاقة الوكيل' }
+      { key: 'medical_report', aliases: ['original_medical_decision', 'medical_report_original', 'medical_board_report'], label: 'القرار الطبي الأصل (اللجنة الطبية)' },
+      { key: 'national_id_front', aliases: ['personnel_id', 'certified_id', 'national_id', 'national_id_copy', 'id_card', 'military_id_front', 'national_id_back'], label: 'صورة البطاقة الشخصية/العسكرية' },
+      { key: 'photo', aliases: ['recent_photo', 'patient_photo', 'personal_photo'], label: 'صورة حديثة للمريض' },
+      { key: 'power_of_attorney', aliases: ['legal_power_of_attorney', 'legal_agency'], label: 'وكالة شرعية' },
+      { key: 'attorney_id', aliases: ['agent_id', 'agent_id_copy'], label: 'صورة بطاقة الوكيل' }
     ],
     end_of_service: [
-      { key: 'personal_request', label: 'الطلب الشخصي من الفرد' },
-      { key: 'national_id_front', label: 'صورة البطاقة العسكرية والشخصية' }
+      { key: 'personal_request', aliases: ['personal_request_copy', 'request_letter'], label: 'الطلب الشخصي من الفرد' },
+      { key: 'national_id_front', aliases: ['certified_id', 'national_id', 'national_id_copy', 'id_card', 'military_id_front', 'national_id_back'], label: 'صورة البطاقة العسكرية والشخصية' }
     ],
     retired: [
       { key: 'status_change_order', label: 'أمر الإحالة على التقاعد' },
@@ -793,21 +829,21 @@ const allAttachments = computed(() => {
     ],
     martyr: [
       { key: 'death_certificate', label: 'شهادة الوفاة' },
-      { key: 'heir_ruling', label: 'حكم انحصار الورثة' },
-      { key: 'power_of_attorney', label: 'الوكالة الشرعية' },
-      { key: 'national_id_front', label: 'صورة البطاقة الشخصية/العسكرية' },
-      { key: 'attorney_id', label: 'صورة بطاقة الوكيل' },
-      { key: 'appointment_ruling', label: 'حكم التنصيب' },
+      { key: 'heirs_certificate', label: 'حكم انحصار الورثة' },
+      { key: 'legal_power_of_attorney', label: 'الوكالة الشرعية' },
+      { key: 'deceased_id', label: 'صورة البطاقة الشخصية/العسكرية' },
+      { key: 'agent_id', label: 'صورة بطاقة الوكيل' },
+      { key: 'guardianship_ruling', label: 'حكم التنصيب' },
       { key: 'operations_report', label: 'بلاغ العمليات' },
-      { key: 'assignment_order', label: 'أمر التكليف بالمهمة' }
+      { key: 'mission_order', label: 'أمر التكليف بالمهمة' }
     ],
     study_leave: [
       { key: 'study_order', label: 'نسخة من أمر التفرغ الدراسي' },
       { key: 'national_id_front', label: 'صورة البطاقة العسكرية والشخصية' }
     ],
     seconded: [
-      { key: 'secondment_order', label: 'نسخة من أمر الانتداب' },
-      { key: 'national_id_front', label: 'صورة البطاقة العسكرية والشخصية' }
+      { key: 'secondment_order', aliases: ['secondment_order_copy'], label: 'نسخة من أمر الانتداب' },
+      { key: 'national_id_front', aliases: ['certified_id'], label: 'صورة البطاقة العسكرية والشخصية' }
     ],
     rank_demotion: [
       { key: 'demotion_decision', label: 'نسخة من قرار التنزيل' },
@@ -824,28 +860,74 @@ const allAttachments = computed(() => {
     ]
   }
 
-  // إذا كان لها خريطة ثابتة، نستخدمها ونتأكد من علامة الصح للمرفوع منها فعلياً
+  // ── 1. استخراج مفاتيح المرفقات المرفوعة فعلياً من قاعدة البيانات ──
+  // نجمع كل قيمة ممكنة: document_type, label, name, key
+  const rawAttachments: any[] = props.form?.attachments || []
+  const uploadedKeys = new Set<string>()
+  for (const a of rawAttachments) {
+    if (!a) continue
+    // تأكد من وجود مرفق حقيقي (له id أو ملف)
+    const hasFile = typeof a === 'object' && (a.file || (a.id && String(a.id).length > 0))
+    if (!hasFile) continue
+    // أضف جميع القيم الممكنة
+    if (a.document_type) uploadedKeys.add(String(a.document_type).trim())
+    if (a.attachment_type) uploadedKeys.add(String(a.attachment_type).trim())
+    if (a.key) uploadedKeys.add(String(a.key).trim())
+    if (a.label) uploadedKeys.add(String(a.label).trim())
+    if (a.name) uploadedKeys.add(String(a.name).trim())
+  }
+
+  // ── 2. دالة مساعدة: هل المرفق موجود؟ تبحث بالمفتاح + الأسماء المستعارة + العنوان ──
+  function isAttUploaded(key: string, aliases?: string[], label?: string): boolean {
+    if (uploadedKeys.has(key)) return true
+    if (aliases) {
+      for (const alias of aliases) {
+        if (uploadedKeys.has(alias)) return true
+      }
+    }
+    if (label) {
+      if (uploadedKeys.has(label)) return true
+      // مطابقة جزئية للعناوين العربية (في حال اختلاف بسيط في الصياغة)
+      for (const uk of uploadedKeys) {
+        if (uk.includes(label) || label.includes(uk)) return true
+      }
+    }
+    return false
+  }
+
+  // ── 3. إذا كانت الاستمارة معرفة في FIXED_ATTACHMENTS، نستخدمها للعرض ──
+  // هذا يضمن الترتيب الصحيح وعرض كل المرفقات حتى غير المرفوعة
   if (ft && FIXED_ATTACHMENTS[ft]) {
-    // Only count as uploaded if it actually has a file or a valid database ID
-    const uploadedDocs = (props.form?.attachments || [])
-      .filter((a:any) => a.file || (a.id && String(a.id).length > 0))
-      .map((a:any) => a.document_type || a.key)
-      
     return FIXED_ATTACHMENTS[ft].map(att => ({
       ...att,
-      id: uploadedDocs.includes(att.key) ? att.key : null // To show '✔' if uploaded
+      id: isAttUploaded(att.key, att.aliases, att.label) ? att.key : null
     }))
   }
 
-  // Fallback للفورمات القديمة
-  if (props.form?.attachments && props.form.attachments.length > 0) return props.form.attachments;
-  if (props.form?.required_attachments && props.form.required_attachments.length > 0) return props.form.required_attachments;
-  
+  // ── 4. Fallback: إذا كانت الاستمارة مخصصة، استخدم required_attachments من الباك إند ──
+  const reqAtts: any[] = props.form?.required_attachments || []
+  if (reqAtts.length > 0) {
+    return reqAtts.map((reqAtt: any) => {
+      let key = ''
+      let label = ''
+      if (typeof reqAtt === 'string') {
+        key = reqAtt; label = reqAtt
+      } else if (Array.isArray(reqAtt)) {
+        key = reqAtt[0] || ''; label = reqAtt[1] || key
+      } else if (reqAtt && typeof reqAtt === 'object') {
+        key = reqAtt.key || reqAtt.doc_type || reqAtt.document_type || ''
+        label = reqAtt.label || reqAtt.name || key
+      }
+      return { key, label, id: isAttUploaded(key, undefined, label) ? (key || 'checked') : null }
+    })
+  }
+
+  // ── 5. آخر ملجأ: الاستمارات القديمة جداً ──
   return [
     { label: 'نسخة من البطاقة العسكرية/الشخصية معمدة' },
     { label: 'الطلب الشخصي' },
     { label: 'مذكرة التغطية' }
-  ];
+  ]
 })
 
 function translateAttachment(att: any) {

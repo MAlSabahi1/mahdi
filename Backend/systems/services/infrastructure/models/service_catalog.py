@@ -75,7 +75,7 @@ class ServiceCatalog(TimeStampedModel):
         help_text=_('يحدد التبويب الذي تظهر فيه الخدمة في دليل الخدمات'),
     )
     
-    # الإجراء التنفيذي بعد الاعتماد النهائي
+    # إعدادات التنفيذ والقواعد
     execution_action = models.CharField(
         max_length=30,
         choices=EXECUTION_ACTION_CHOICES,
@@ -89,6 +89,13 @@ class ServiceCatalog(TimeStampedModel):
         blank=True,
         verbose_name=_('إعدادات التنفيذ'),
         help_text=_('إعدادات متغيرة تعتمد على نوع الإجراء (مثلاً: الحالة المستهدفة، مدة القيد الأمن)')
+    )
+    
+    disabled_engine_rules = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name=_('قواعد المحرك الموقوفة'),
+        help_text=_('قائمة بمعرفات القواعد (Rule IDs) التي تم إيقافها لهذه الخدمة')
     )
     
     # إعدادات

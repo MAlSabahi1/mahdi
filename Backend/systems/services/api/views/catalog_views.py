@@ -39,6 +39,59 @@ class ServiceCatalogViewSet(viewsets.ModelViewSet):
         serializer = ServicePrerequisiteSerializer(prerequisites, many=True)
         return Response(serializer.data)
 
+    @decorators.action(detail=True, methods=['get'])
+    def engine_rules(self, request, pk=None):
+        """جلب قواعد محرك الخدمات المبرمجة بالخلفية"""
+        service = self.get_object()
+        
+        # Load dispatcher and mappings
+        import systems.services.service_rules
+        from systems.services.service_rules.core import ServiceRulesDispatcher
+        
+        SERVICE_RULES_MAP = {
+            'martyr': 'MARTYR_FORM',
+            'seconded': 'SECONDED_FORM',
+        }
+        
+        engine_code = SERVICE_RULES_MAP.get(service.form_type, service.code)
+        rules = ServiceRulesDispatcher.get_rules(engine_code)
+        
+        rules_data = []
+        disabled_rules = service.disabled_engine_rules or []
+        for r in rules:
+            rules_data.append({
+                'id': r.rule_id,
+                'name': getattr(r, 'name', r.rule_id),
+                'description': getattr(r, 'description', ''),
+                'is_active': r.rule_id not in disabled_rules
+            })
+            
+        return Response(rules_data)
+
+    @decorators.action(detail=True, methods=['post'])
+    def toggle_engine_rule(self, request, pk=None):
+        """تفعيل أو إيقاف قاعدة محرك مركزية للخدمة"""
+        service = self.get_object()
+        rule_id = request.data.get('rule_id')
+        is_active = request.data.get('is_active')
+        
+        if not rule_id:
+            return Response({'error': 'rule_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        disabled_rules = list(service.disabled_engine_rules or [])
+        
+        if is_active:
+            if rule_id in disabled_rules:
+                disabled_rules.remove(rule_id)
+        else:
+            if rule_id not in disabled_rules:
+                disabled_rules.append(rule_id)
+                
+        service.disabled_engine_rules = disabled_rules
+        service.save(update_fields=['disabled_engine_rules'])
+        
+        return Response({'success': True, 'disabled_rules': disabled_rules})
+
 
 class PrerequisitesValidationViewSet(viewsets.ViewSet):
     """

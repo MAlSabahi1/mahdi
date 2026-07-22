@@ -91,11 +91,11 @@ const reportDefinitions: Record<string, { title: string, subtitle: string, hideU
     hideUnit: true,
     dynamicCols: [
       { key: 'order_source', label: 'مصدر الامر' },
-      { key: 'escort_name', label: 'اسم الشخصية' },
-      { key: 'escort_position', label: 'منصب الشخصية' },
+      { key: 'dignitary_name', label: 'اسم الشخصية' },
+      { key: 'dignitary_position', label: 'منصب الشخصية' },
       { label: 'مدة التفريغ', children: [
-        { key: 'duration_from', label: 'من' },
-        { key: 'duration_to', label: 'إلى' }
+        { key: 'start_date', label: 'من' },
+        { key: 'end_date', label: 'إلى' }
       ]}
     ]
   },
@@ -105,11 +105,11 @@ const reportDefinitions: Record<string, { title: string, subtitle: string, hideU
     hideUnit: true,
     dynamicCols: [
       { key: 'order_source', label: 'مصدر الامر' },
-      { key: 'delegate_to', label: 'جهة الانتداب' },
-      { key: 'delegate_purpose', label: 'الغرض من الانتداب' },
+      { key: 'secondment_place', label: 'جهة الانتداب' },
+      { key: 'reason', label: 'الغرض من الانتداب' },
       { label: 'مدة الانتداب', children: [
-        { key: 'duration_from', label: 'من' },
-        { key: 'duration_to', label: 'إلى' }
+        { key: 'start_date', label: 'من' },
+        { key: 'end_date', label: 'إلى' }
       ]}
     ]
   },
@@ -119,11 +119,11 @@ const reportDefinitions: Record<string, { title: string, subtitle: string, hideU
     hideUnit: true,
     dynamicCols: [
       { key: 'study_type', label: 'نوع الدراسة' },
-      { key: 'study_location', label: 'جهة الدراسة' },
-      { key: 'order_number', label: 'رقم قرار الايفاد' },
+      { key: 'institution', label: 'جهة الدراسة' },
+      { key: 'order_source', label: 'رقم قرار الايفاد' },
       { label: 'مدة الدراسة', children: [
-        { key: 'duration_from', label: 'من' },
-        { key: 'duration_to', label: 'إلى' }
+        { key: 'start_date', label: 'من' },
+        { key: 'end_date', label: 'إلى' }
       ]}
     ]
   },
@@ -135,6 +135,7 @@ const reportDefinitions: Record<string, { title: string, subtitle: string, hideU
       { key: 'case_type', label: 'نوع القضية' },
       { key: 'arrest_date', label: 'تاريخ التوقيف' },
       { key: 'verdict_type', label: 'نوع الحكم' },
+      { key: 'ruling_date', label: 'تاريخ الحكم' },
       { label: 'مدة الحكم', children: [
         { key: 'duration_from', label: 'من' },
         { key: 'duration_to', label: 'إلى' }
@@ -145,11 +146,11 @@ const reportDefinitions: Record<string, { title: string, subtitle: string, hideU
     title: 'كشف بالقوة غير العاملة مؤقتاً إجازات',
     subtitle: 'قوة غير عاملة مؤقتاً',
     dynamicCols: [
-      { key: 'vacation_type', label: 'نوع الاجازة' },
+      { key: 'leave_type', label: 'نوع الاجازة' },
       { key: 'order_source', label: 'مصدر الامر' },
       { label: 'مدة الاجازة', children: [
-        { key: 'duration_from', label: 'من' },
-        { key: 'duration_to', label: 'إلى' }
+        { key: 'start_date', label: 'من' },
+        { key: 'end_date', label: 'إلى' }
       ]}
     ]
   },

@@ -196,7 +196,7 @@
                   </div>
                   <div>
                     <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400" :class="{'text-error-600': headerValidationErrors.id_issue_date}">تاريخ إصدار البطاقة</label>
-                    <input type="date" v-model="localHeaderData.id_issue_date" class="block w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-900 shadow-theme-xs focus:border-brand-500 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:border-brand-500" :class="{'border-error-500 focus:border-error-500': headerValidationErrors.id_issue_date}" />
+                    <flat-pickr v-model="localHeaderData.id_issue_date" :config="flatpickrConfig" class="block w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-900 shadow-theme-xs focus:border-brand-500 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:border-brand-500" :class="{'border-error-500 focus:border-error-500': headerValidationErrors.id_issue_date}" />
                     <p v-if="headerValidationErrors.id_issue_date" class="mt-1 text-xs text-error-500">{{ headerValidationErrors.id_issue_date }}</p>
                   </div>
                   <div>
@@ -340,7 +340,7 @@
                   </div>
                 </div>
 
-                <div v-show="field.key !== 'new_military_number' || formData.settlement_type === 'personnel_to_officer'" 
+                <div v-show="(field.key !== 'new_military_number' || formData.settlement_type === 'personnel_to_officer') && field.type !== 'hidden'" 
                      class="space-y-1.5">
                   <label class="text-xs font-bold text-gray-700 dark:text-gray-300">
                     {{ field.label }} <span v-if="field.required || (field.key === 'new_military_number' && formData.settlement_type === 'personnel_to_officer')" class="text-red-500">*</span>
@@ -441,6 +441,22 @@
                     {{ formData[field.key] }}
                   </div>
                 </div>
+                <div v-else-if="field.type === 'date_range'" class="md:col-span-2 space-y-4 p-4 rounded-xl border border-gray-100 bg-gray-50/30 dark:border-gray-800 dark:bg-gray-800/10 mt-2 mb-2">
+                  <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    {{ field.label }} <span v-if="field.required" class="text-red-500">*</span>
+                  </h4>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">من تاريخ</label>
+                      <flat-pickr v-model="formData['duration_from']" :config="flatpickrConfig" class="block w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-900 shadow-theme-xs focus:border-brand-500 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:border-brand-500" />
+                    </div>
+                    <div>
+                      <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">إلى تاريخ</label>
+                      <flat-pickr v-model="formData['duration_to']" :config="flatpickrConfig" class="block w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-900 shadow-theme-xs focus:border-brand-500 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:border-brand-500" />
+                    </div>
+                  </div>
+                </div>
                 <div v-else-if="field.type === 'duration_picker'" class="flex gap-3 mt-1">
                   <!-- سنوات -->
                   <div class="flex-1 flex flex-col relative">
@@ -470,16 +486,32 @@
                   </div>
                 </div>
                 <div v-else>
-                  <input :type="field.key === 'age' ? 'number' : field.type" v-model="formData[field.key]" 
-                          :readonly="field.key === 'old_value' || field.disabled || field.key === 'age'"
-                          :min="field.type === 'date' ? '1900-01-01' : undefined"
-                          :max="field.type === 'date' && !['end_date','due_date'].includes(field.key) ? new Date().toISOString().split('T')[0] : undefined"
-                          :maxlength="field.key === 'new_military_number' ? 7 : (field.key === 'new_value' && (formData.correction_type === 'national_id_correction' || formData.field_name === 'national_id') ? 11 : undefined)"
-                          @change="field.type === 'date' ? validateDateField(field, $event) : undefined"
-                          :placeholder="field.key === 'age' ? 'يُحسب تلقائياً من تاريخ الميلاد' : ''"
-                          :class="['w-full bg-gray-50 dark:bg-gray-800 border rounded-xl px-4 py-2.5 text-sm focus:ring-2 outline-none transition-shadow', field.type === 'date' ? 'text-left' : '', (field.key === 'old_value' || field.disabled || field.key === 'age') ? 'opacity-70 cursor-not-allowed font-bold text-gray-600 bg-gray-100 dark:bg-gray-800/50' : '', formDataErrors[field.key] ? 'border-error-500 focus:ring-error-500' : 'border-gray-200 dark:border-gray-700 focus:ring-brand-500']"
-                          :dir="field.type === 'date' ? 'ltr' : 'rtl'" />
+                  <template v-if="field.type === 'date'">
+                    <div class="relative">
+                      <flat-pickr v-model="formData[field.key]"
+                                :config="flatpickrConfig"
+                                :readonly="field.key === 'old_value' || field.disabled"
+                                class="w-full bg-gray-50 dark:bg-gray-800 border rounded-xl px-4 py-2.5 text-sm focus:ring-2 outline-none transition-shadow text-left cursor-pointer"
+                                :class="[(field.key === 'old_value' || field.disabled) ? 'opacity-70 cursor-not-allowed font-bold text-gray-600 bg-gray-100 dark:bg-gray-800/50' : '', formDataErrors[field.key] ? 'border-error-500 focus:ring-error-500' : 'border-gray-200 dark:border-gray-700 focus:ring-brand-500']"
+                                dir="ltr" />
+                      <span class="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                      </span>
+                    </div>
+                  </template>
+                  <template v-else>
+                    <input :type="field.key === 'age' ? 'number' : field.type" v-model="formData[field.key]" 
+                            :readonly="field.key === 'old_value' || field.disabled || field.key === 'age'"
+                            :maxlength="field.key === 'new_military_number' ? 7 : (field.key === 'new_value' && (formData.correction_type === 'national_id_correction' || formData.field_name === 'national_id') ? 11 : undefined)"
+                            :placeholder="field.key === 'age' ? 'يُحسب تلقائياً من تاريخ الميلاد' : ''"
+                            :class="['w-full bg-gray-50 dark:bg-gray-800 border rounded-xl px-4 py-2.5 text-sm focus:ring-2 outline-none transition-shadow', (field.key === 'old_value' || field.disabled || field.key === 'age') ? 'opacity-70 cursor-not-allowed font-bold text-gray-600 bg-gray-100 dark:bg-gray-800/50' : '', formDataErrors[field.key] ? 'border-error-500 focus:ring-error-500' : 'border-gray-200 dark:border-gray-700 focus:ring-brand-500']"
+                            dir="rtl" />
+                  </template>
                   <p v-if="formDataErrors[field.key]" class="text-[10px] text-error-600 font-bold mt-1.5 flex items-center gap-1"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> {{ formDataErrors[field.key] }}</p>
+                  <p v-else-if="formDataInfo[field.key]" class="text-[10px] text-blue-600 font-bold mt-1.5 flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    {{ formDataInfo[field.key] }}
+                  </p>
                 </div>
                 <p v-if="field.key === 'new_military_number'" class="mt-1 text-xs text-brand-600 dark:text-brand-400 flex items-center gap-1">
                   <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -573,6 +605,9 @@ import { useRoute, useRouter } from 'vue-router'
 import Swal from 'sweetalert2'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
+import flatPickr from 'vue-flatpickr-component'
+import 'flatpickr/dist/flatpickr.css'
+import { Arabic } from 'flatpickr/dist/l10n/ar.js'
 import { useServicesStore } from '@/stores/services'
 import { usePersonnelStore } from '@/stores/personnel'
 import { useCorrectionStore } from '@/stores/correction'
@@ -600,6 +635,15 @@ const error = ref('')
 
 const step = ref(1)
 const stepLabels = ['تحديد الأفراد', 'تعبئة البيانات', 'المرفقات والتقديم']
+
+const flatpickrConfig = {
+  dateFormat: 'Y-m-d',
+  locale: Arabic,
+  altInput: true,
+  altFormat: 'Y-m-d',
+  disableMobile: true,
+  allowInput: true,
+}
 
 // Step 1 State
 const searchQuery = ref('')
@@ -761,6 +805,7 @@ watch([() => localHeaderData.id_issue_date, () => selectedPersonnelList.value[0]
 // Step 2 & 3 State
 const formData = ref<any>({})
 const formDataErrors = reactive<Record<string, string>>({})
+const formDataInfo = reactive<Record<string, string>>({})
 
 watch(() => formData.value.birth_date, (newVal) => {
   if (newVal && schema.value?.sections?.some((s:any) => s.fields?.some((f:any) => f.key === 'age'))) {
@@ -788,44 +833,165 @@ watch(() => formData.value, (newVal) => {
   for (const f of allFields) {
     if (f.type === 'date') {
       const val = newVal[f.key]
-      if (val) {
-        // تاريخ تم ادخاله وهو صالح من ناحية المتصفح
-        if (!allowedFuture.includes(f.key) && val > today) {
-          formDataErrors[f.key] = `تاريخ غير صالح: لا يمكن أن يكون في المستقبل`
-        } else {
-          formDataErrors[f.key] = ''
-        }
+      validateDateField(f, val)
+    }
+  }
+
+  // --- الحساب التلقائي لمدة الدراسة ---
+  if (type === 'study_leave') {
+    if (newVal.start_date && newVal.end_date) {
+      const sDate = new Date(newVal.start_date)
+      const eDate = new Date(newVal.end_date)
+      if (!isNaN(sDate.getTime()) && !isNaN(eDate.getTime()) && eDate > sDate) {
+        const diffTime = Math.abs(eDate.getTime() - sDate.getTime())
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        
+        const y = Math.floor(diffDays / 365.25)
+        const m = Math.floor((diffDays % 365.25) / 30)
+        const d = Math.floor((diffDays % 365.25) % 30)
+        
+        const parts = []
+        if (y > 0) parts.push(`${y} سنة`)
+        if (m > 0) parts.push(`${m} شهر`)
+        if (d > 0) parts.push(`${d} يوم`)
+        
+        newVal.duration = parts.length > 0 ? parts.join(' و ') : '0 يوم'
       } else {
-        // val فارغ — إما لم يُدخل أو المتصفح رفض التاريخ لأنه غير صالح
-        if (f.required) {
-          // لا نعرض الخطأ إلا إذا كانت قيمة الحقل في DOM غير فارغة
-          // سنكشف ذلك عبر data-raw-value attribute في onDateInput handler
-          // هنا نضع placeholder فقط إذا كان هناك خطأ مسجل مسبقاً
-          // (سيتم تعيين الخطأ من onDateInput)
-        } else {
-          formDataErrors[f.key] = ''
-        }
+        newVal.duration = ''
       }
     }
   }
+
 }, { deep: true })
 
-// يُستدعى عند @change على حقول التاريخ — يكشف التواريخ الغير صالحة التي رفضها المتصفح بصمت
-function validateDateField(field: any, event: Event) {
-  const input = event.target as HTMLInputElement
-  const rawValue = input.value  // ما يراه المتصفح كقيمة فعلية
-  const allowedFuture = ['end_date', 'due_date']
+// فتح التقويم عند النقر على الحقل
+function openDatePicker(event: Event) {
+  const target = event.target as any
+  if (target && typeof target.showPicker === 'function') {
+    try {
+      target.showPicker()
+    } catch (e) {
+      // Ignore if browser doesn't support or throws error
+    }
+  }
+}
+
+// يُستدعى للتحقق اللحظي من التواريخ (تم تحديثه ليدعم flatpickr)
+function validateDateField(field: any, val: string) {
+  const rawValue = val || ''
+  const allowedFuture = ['start_date', 'end_date', 'due_date']
   const today = new Date().toISOString().split('T')[0]
 
   if (!rawValue) {
-    // المتصفح أفرغ الحقل → التاريخ غير صالح (مثل 04/31 أو سنة 0009)
     if (field.required) {
-      formDataErrors[field.key] = 'تاريخ غير صالح — تحقق من اليوم والشهر والسنة'
+      formDataErrors[field.key] = 'تاريخ غير صالح أو الحقل فارغ'
+    } else {
+      formDataErrors[field.key] = ''
     }
   } else if (!allowedFuture.includes(field.key) && rawValue > today) {
     formDataErrors[field.key] = 'تاريخ غير صالح: لا يمكن أن يكون في المستقبل'
   } else {
-    formDataErrors[field.key] = ''
+    // ── الفحص اللحظي المتقدم للشهداء والمتوفين ──
+    if (['martyrdom_date', 'death_date'].includes(field.key)) {
+      const person = selectedPersonnelList.value[0];
+      if (person) {
+        const joinDateStr = person.join_date;
+        const birthDateStr = person.birth_date;
+        
+        if (birthDateStr) {
+          const mDate = new Date(rawValue);
+          const bDate = new Date(birthDateStr);
+          const ageInYears = (mDate.getTime() - bDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+          
+          if (ageInYears < 0) {
+            formDataErrors[field.key] = 'خطأ منطقي: التاريخ مستحيل (يسبق تاريخ ميلاد الفرد)';
+            return;
+          } else if (ageInYears < 18) {
+            formDataErrors[field.key] = `خطأ منطقي: العمر عند هذا التاريخ سيكون (${ageInYears.toFixed(1)} سنة) وهو أقل من الحد الأدنى المقبول (18)`;
+            return;
+          }
+        }
+
+        if (joinDateStr && rawValue < joinDateStr) {
+          formDataErrors[field.key] = `خطأ منطقي: التاريخ مستحيل (قبل تاريخ التجنيد: ${joinDateStr})`;
+          return;
+        }
+      }
+    }
+    
+    // ── الفحص اللحظي للانتداب ──
+    if (['start_date', 'end_date'].includes(field.key) && formData.value) {
+      if (field.key === 'start_date' && formData.value.end_date) {
+        if (rawValue >= formData.value.end_date) {
+          formDataErrors[field.key] = 'خطأ منطقي: تاريخ البدء يجب أن يسبق تاريخ الانتهاء'
+          return
+        }
+        formDataErrors['end_date'] = '' // Clear end_date error if any
+      }
+      
+      if (field.key === 'end_date' && formData.value.start_date) {
+        if (rawValue <= formData.value.start_date) {
+          formDataErrors[field.key] = 'خطأ منطقي: تاريخ الانتهاء يجب أن يكون بعد تاريخ البدء'
+          return
+        }
+        
+        // حساب المدة
+        const startD = new Date(formData.value.start_date)
+        const endD = new Date(rawValue)
+        const diffTime = Math.abs(endD.getTime() - startD.getTime())
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        const diffYears = (diffDays / 365.25).toFixed(1)
+        
+        // Just show info, backend enforces the max limit based on settings
+        let durationText = 'المدة المحسوبة'
+        let durationLimitText = 'المدة'
+        
+        if (type === 'study_leave') {
+          durationText = 'مدة الدراسة المحسوبة'
+          durationLimitText = 'الدراسة'
+        } else if (type === 'escort') {
+          durationText = 'مدة المرافقة المحسوبة'
+          durationLimitText = 'المرافقة'
+        } else if (type === 'seconded') {
+          durationText = 'مدة الانتداب المحسوبة'
+          durationLimitText = 'الانتداب'
+        }
+        
+        let maxAllowedYears = 4; // Default for secondment
+        const studyType = formData.value.study_type;
+        if (type === 'study_leave') {
+          if (studyType === 'بكالوريوس') maxAllowedYears = 6;
+          else if (studyType === 'ماجستير') maxAllowedYears = 3;
+          else if (studyType === 'دكتوراه') maxAllowedYears = 5;
+          else if (studyType === 'دبلوم' || studyType === 'دورة تخصصية') maxAllowedYears = 2;
+          else maxAllowedYears = 6;
+        }
+
+        // Beautiful text calculation
+        const y = Math.floor(diffDays / 365.25);
+        const m = Math.floor((diffDays % 365.25) / 30);
+        const d = Math.floor((diffDays % 365.25) % 30);
+        
+        const parts = [];
+        if (y > 0) parts.push(`${y} سنة`);
+        if (m > 0) parts.push(`${m} شهر`);
+        if (d > 0) parts.push(`${d} يوم`);
+        const beautifulDuration = parts.length > 0 ? parts.join(' و ') : '0 يوم';
+
+        if (diffDays > (maxAllowedYears * 365)) {
+          formDataInfo[field.key] = `تنبيه: مدة ${durationLimitText} المطلوبة (${beautifulDuration}) تتجاوز الحد الأقصى المسموح لـ ${studyType ? `درجة (${studyType})` : 'هذه الخدمة'} وهو (${maxAllowedYears} سنوات). قد يتم رفض الطلب.`
+        } else {
+          formDataInfo[field.key] = `${durationText}: ${beautifulDuration}`
+        }
+        formDataErrors[field.key] = '' // Clear error
+        formDataErrors['start_date'] = '' // Clear start_date error if any
+      }
+    }
+    
+    // إذا لم تكن هناك أخطاء متقدمة ولم يتم تحديد خطأ للانتداب
+    if (!['start_date', 'end_date'].includes(field.key)) {
+      formDataErrors[field.key] = ''
+    }
   }
 }
 
@@ -1099,6 +1265,7 @@ onMounted(async () => {
   }
 })
 
+
 // === Step 1 Logic ===
 async function searchPersonnel() {
   if (!searchQuery.value) return
@@ -1131,7 +1298,8 @@ async function addPersonnel(person: any) {
   
   // ── التحقق المنطقي المسبق (Pre-flight Validation) ──
   
-  // 1. منع إضافة شهيد وهو بالفعل شهيد في النظام
+  // [FE-001] منع أي معاملة لفرد في حالة خروج نهائي (شهيد، متوفى، متقاعد، مفصول)
+  // الشهيد والمتوفى لا يعودان للخدمة بأي شكل. لا توجد استثناءات.
   let statusStr = person.status_name || person.current_status_name || '';
   if (!statusStr && person.current_status) {
     if (typeof person.current_status === 'object') {
@@ -1140,19 +1308,55 @@ async function addPersonnel(person: any) {
       statusStr = person.current_status;
     }
   }
-  
   statusStr = String(statusStr || '');
-  
-  // 1. منع إضافة أي معاملة لشهيد أو متوفى (باستثناء عودة للخدمة أو التصحيح)
-  const isDeceased = statusStr.includes('شهيد') || statusStr.includes('شهد') || statusStr.includes('متوفى') || statusStr.includes('وفيات') || statusStr.includes('وفاة') || statusStr.includes('وفاه');
-  
-  if (isDeceased && type !== 'returned_to_service' && category !== 'correction') {
-    Swal.fire({
-      icon: 'error',
-      title: 'إجراء غير مسموح',
-      text: `هذا الفرد مسجل كـ (${statusStr || 'غير نشط'}) في النظام، ولا يمكن إنشاء أي معاملات جديدة له (باستثناء العودة للخدمة أو تصحيح البيانات).`
-    })
-    return
+
+  // التحقق من الحالة النهائية — الشهيد والمتوفى لا استثناء لهما أبداً
+  const terminalKeywords = [
+    'شهيد', 'شهد', 'متوفى', 'متوفي', 'وفيات', 'وفاة', 'وفاه',
+    'تقاعد', 'متقاعد', 'إنهاء المدة', 'مفصول', 'فصل', 'خروج نهائي'
+  ];
+  const isTerminal = terminalKeywords.some(kw => statusStr.includes(kw));
+  const isDeceasedOrMartyr = ['شهيد', 'شهد', 'متوفى', 'متوفي', 'وفيات', 'وفاة', 'وفاه'].some(kw => statusStr.includes(kw));
+
+  if (isTerminal) {
+    // الشهيد والمتوفى: لا يُقبل منهم أي طلب مطلقاً إلا التصحيح
+    // المتقاعد والمفصول: يُقبل منهم تصحيح أو إعادة للخدمة فقط
+    if (category !== 'correction' && type !== 'return_to_service') {
+      const isMartyred = statusStr.includes('شهيد') || statusStr.includes('شهد');
+      Swal.fire({
+        icon: 'error',
+        title: 'إجراء غير مسموح به',
+        html: `
+          <div class="text-right space-y-3 p-2">
+            <div class="flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-xl">
+              <span class="text-2xl mt-0.5">${isMartyred ? '🕊️' : '🛑'}</span>
+              <div>
+                <p class="font-bold text-red-800 mb-1">
+                  الفرد: <span class="font-black">${person.full_name}</span>
+                </p>
+                <p class="text-sm text-red-700">
+                  مسجّل في النظام بحالة: <b class="bg-red-100 px-2 py-0.5 rounded font-bold">${statusStr}</b>
+                </p>
+              </div>
+            </div>
+            <p class="text-sm text-gray-700 leading-relaxed">
+              ${isMartyred
+                ? 'الشهيد <b>لا يمكن تقديم أي خدمة أو معاملة له</b> بعد تسجيل استشهاده في النظام. هذا القيد نهائي وغير قابل للتجاوز.'
+                : isDeceasedOrMartyr
+                  ? 'المتوفى <b>لا يمكن تقديم أي خدمة أو معاملة له</b> بعد تسجيل وفاته في النظام.'
+                  : 'الفرد ذو حالة الخروج النهائي (تقاعد/فصل/إنهاء مدة) <b>لا يمكن تقديم خدمات أو معاملات جديدة له</b> باستثناء إعادة الخدمة أو التصحيح.'
+              }
+            </p>
+            <p class="text-xs text-gray-500 bg-gray-50 p-2 rounded-lg border">
+              إذا كانت هناك حاجة لتصحيح بيانات أرشيفية، الرجاء استخدام طلبات التصحيح.
+            </p>
+          </div>
+        `,
+        confirmButtonText: 'فهمت',
+        confirmButtonColor: '#dc2626',
+      })
+      return
+    }
   }
 
   // 1.5 منع إعادة خدمة لمن هو في الخدمة بالفعل، أو تحديد سبب الإعادة آلياً
@@ -1183,10 +1387,173 @@ async function addPersonnel(person: any) {
     }
   }
 
+  // 1.8 التحقق الاستباقي الخاص باستمارة "إنهاء مدة"
+  if (type === 'end_of_service') {
+    const joinDateStr = person.join_date;
+    const birthDateStr = person.birth_date;
+    
+    if (joinDateStr) {
+      const jDate = new Date(joinDateStr);
+      const todayDate = new Date();
+      
+      let serviceYears = todayDate.getFullYear() - jDate.getFullYear();
+      let serviceMonths = todayDate.getMonth() - jDate.getMonth();
+      if (todayDate.getMonth() < jDate.getMonth() || (todayDate.getMonth() === jDate.getMonth() && todayDate.getDate() < jDate.getDate())) {
+        serviceYears--;
+        serviceMonths += 12;
+      }
+      
+      if (serviceYears < 20) {
+        Swal.fire({
+          icon: 'error',
+          title: 'لم يكمل شرط الخدمة',
+          html: `
+            <div class="text-right p-2">
+              <p class="mb-2 text-gray-800">الخدمة الفعلية للفرد هي <b>(${serviceYears} سنوات و ${serviceMonths} أشهر)</b> فقط.</p>
+              <p class="text-sm text-gray-500">الحد الأدنى لإنهاء المدة هو <b>20 سنة خدمة فعلية</b>.</p>
+            </div>
+          `,
+          confirmButtonText: 'فهمت',
+          confirmButtonColor: '#dc2626'
+        });
+        return;
+      }
+      
+      if (birthDateStr) {
+        const bDate = new Date(birthDateStr);
+        let ageAtJoin = jDate.getFullYear() - bDate.getFullYear();
+        if (jDate.getMonth() < bDate.getMonth() || (jDate.getMonth() === bDate.getMonth() && jDate.getDate() < bDate.getDate())) {
+          ageAtJoin--;
+        }
+        
+        if (ageAtJoin < 15) {
+          Swal.fire({
+            icon: 'error',
+            title: 'عمر التجنيد غير منطقي',
+            text: `تاريخ الالتحاق المسجل في الأرشيف غير منطقي. عمر الفرد عند الالتحاق كان (${ageAtJoin}) سنة. يجب أن يكون 15 سنة على الأقل.`
+          });
+          return;
+        }
+      }
+    }
+  }
+
+  // 1.9 التحقق الاستباقي الخاص باستمارة "مفرغ للدراسة" و "مرافق / معيات"
+  if (type === 'study_leave' || type === 'escort') {
+    const isActive = statusStr.includes('في الخدمة') || statusStr.includes('عامل') || statusStr.includes('ميدان');
+    if (!isActive) {
+      Swal.fire({
+        icon: 'error',
+        title: 'غير مصرح بالخدمة',
+        text: `الفرد المختار حالته الحالية (${statusStr}). هذه الخدمة مسموحة فقط للأفراد العاملين على رأس العمل.`
+      });
+      return;
+    }
+  }
+
+  // 1.10 التحقق الاستباقي الخاص باستمارة "بلوغ السن القانوني"
+  if (type === 'retirement_age') {
+    const joinDateStr = person.join_date;
+    const birthDateStr = person.birth_date;
+    let hasReachedRetirement = false;
+
+    if (joinDateStr) {
+      const jDate = new Date(joinDateStr);
+      const todayDate = new Date();
+      let serviceYears = todayDate.getFullYear() - jDate.getFullYear();
+      if (todayDate.getMonth() < jDate.getMonth() || (todayDate.getMonth() === jDate.getMonth() && todayDate.getDate() < jDate.getDate())) {
+        serviceYears--;
+      }
+      if (serviceYears >= 35) {
+        hasReachedRetirement = true;
+      }
+    }
+
+    if (!hasReachedRetirement && birthDateStr) {
+      const bDate = new Date(birthDateStr);
+      const todayDate = new Date();
+      let currentAge = todayDate.getFullYear() - bDate.getFullYear();
+      if (todayDate.getMonth() < bDate.getMonth() || (todayDate.getMonth() === bDate.getMonth() && todayDate.getDate() < bDate.getDate())) {
+        currentAge--;
+      }
+      if (currentAge >= 60) {
+        hasReachedRetirement = true;
+      }
+    }
+
+    if (joinDateStr && birthDateStr && !hasReachedRetirement) {
+      Swal.fire({
+        icon: 'error',
+        title: 'لم يبلغ السن القانوني',
+        html: `
+          <div class="text-right p-2">
+            <p class="mb-2 text-gray-800">الفرد لم يستوفِ شروط التقاعد القانونية المبكرة أو العمرية.</p>
+            <p class="text-sm text-gray-500">يجب أن يكمل <b>35 سنة خدمة</b> أو يبلغ <b>60 عاماً</b> من العمر لتمرير الاستمارة.</p>
+          </div>
+        `,
+        confirmButtonText: 'فهمت',
+        confirmButtonColor: '#dc2626'
+      });
+      return;
+    }
+  }
+
+  // 1.11 التحقق العام من جودة البيانات
+  if (category !== 'correction' && person.data_quality_score !== undefined && person.data_quality_score < 50) {
+    Swal.fire({
+      icon: 'error',
+      title: 'جودة البيانات متدنية',
+      html: `
+        <div class="text-right p-2">
+          <p class="mb-2 text-gray-800">جودة بيانات الفرد منخفضة جداً <b>(${person.data_quality_score}%)</b>.</p>
+          <p class="text-sm text-gray-500">لا يمكن تقديم الخدمات الرسمية إلا بنسبة جودة <b>50%</b> فما فوق. الرجاء استكمال الملف عبر طلبات التصحيح أولاً.</p>
+        </div>
+      `,
+      confirmButtonText: 'فهمت',
+      confirmButtonColor: '#dc2626'
+    });
+    return;
+  }
+
   // 2. التحقق من الباك إند إذا كانت هناك معاملة معلقة لأي نوع
   if (category === 'form' || category === 'rank_settlement') {
+    // [FE-002] التحقق من أن الفرد لا يمتلك الحالة المستهدفة بالفعل
+    if (category === 'form' && schema.value?.target_status) {
+      const targetStatus = schema.value.target_status;
+      const currentStatus = statusStr;
+      const normalize = (str: string) => (str || '').replace(/(^|\s)ال/g, '$1').trim();
+      const normTarget = normalize(targetStatus);
+      const normCurrent = normalize(currentStatus);
+      
+      const targetWords = normTarget.split(/\s+/).filter(w => w.length >= 3);
+      const currentWords = normCurrent.split(/\s+/).filter(w => w.length >= 3);
+      
+      let isSameStatus = false;
+      if (normTarget === normCurrent) isSameStatus = true;
+      else {
+        for (const w of targetWords) if (normCurrent.includes(w)) isSameStatus = true;
+        for (const w of currentWords) if (normTarget.includes(w)) isSameStatus = true;
+      }
+      
+      if (isSameStatus) {
+        Swal.fire({
+          icon: 'error',
+          title: 'حالة مكررة',
+          html: `
+            <div class="text-right p-2">
+              <p class="mb-2 text-gray-800">الفرد المختار يمتلك هذه الحالة <b>(${currentStatus})</b> مسبقاً في النظام.</p>
+              <p class="text-sm text-gray-500">لا يمكنك تقديم استمارة لنفس الحالة التي هو عليها الآن. يتم تقديم الاستمارات لتغيير الحالة فقط.</p>
+            </div>
+          `,
+          confirmButtonText: 'فهمت',
+          confirmButtonColor: '#dc2626'
+        })
+        return
+      }
+    }
+
     try {
-      const checkRes = await api.get('/service-cycle/forms/check_pending/', { params: { personnel_id: person.id } })
+      const checkRes = await api.get('/service-cycle/forms/check_pending/', { params: { personnel_id: person.military_number } })
       if (checkRes.data?.has_pending) {
         const pendingId = checkRes.data.pending_id
         const pendingType = checkRes.data.form_type
@@ -1288,7 +1655,7 @@ async function goToStep2() {
     const person = selectedPersonnelList.value[0]
     schema.value.sections.forEach((section: any) => {
       section.fields?.forEach((field: any) => {
-        if (field.source === 'personnel_master') {
+        if (field.source === 'personnel_master' || ['birth_date', 'join_date'].includes(field.key)) {
           formData.value[field.key] = person[field.key] || ''
         }
       })
@@ -1302,13 +1669,34 @@ async function goToStep2() {
 async function validateAndGoToStep3() {
   const allFields = schema.value.sections?.flatMap((s: any) => s.fields || []) || []
 
-  // 1. تحقق من أخطاء التحقق الفورية
+  // 1. تحقق من بيانات الأساسية للفرد (الميلاد، الإقامة، البطاقة)
+  if (!isHeaderDataComplete.value) {
+    Swal.fire({
+      icon: 'error',
+      title: 'بيانات ناقصة',
+      text: 'لا يمكن الانتقال للمرفقات. يرجى استكمال "بيانات الميلاد والإقامة الحالية" أولاً.'
+    })
+    return
+  }
+
+  // 2. تحقق من أخطاء التحقق الفورية للتواريخ
   const dateErrors = allFields.filter((f: any) => f.type === 'date' && formDataErrors[f.key])
   if (dateErrors.length > 0) {
     Swal.fire({
       icon: 'error',
       title: 'تاريخ غير صالح',
       html: dateErrors.map((f: any) => `<b>${f.label}</b>: ${formDataErrors[f.key]}`).join('<br>')
+    })
+    return
+  }
+
+  // 3. تحقق من الأخطاء المنطقية في التواريخ (مثل تاريخ الاستشهاد يسبق التجنيد)
+  const logicalErrors = allFields.filter((f: any) => formDataErrors[f.key] && formDataErrors[f.key].includes('خطأ'))
+  if (logicalErrors.length > 0) {
+    Swal.fire({
+      icon: 'error',
+      title: 'يوجد خطأ منطقي في البيانات',
+      html: logicalErrors.map((f: any) => `<b>${f.label}</b>: ${formDataErrors[f.key]}`).join('<br>')
     })
     return
   }
@@ -1320,7 +1708,9 @@ async function validateAndGoToStep3() {
         return formData.value.settlement_type === 'personnel_to_officer' && !formData.value[f.key]
       }
       if (f.type === 'date' && f.required && !formData.value[f.key]) {
-        formDataErrors[f.key] = 'تاريخ غير صالح — تحقق من اليوم والشهر والسنة'
+        if (!formDataErrors[f.key]) {
+          formDataErrors[f.key] = 'تاريخ غير صالح أو الحقل فارغ'
+        }
         return true
       }
       return f.required && !formData.value[f.key]
@@ -1345,7 +1735,49 @@ async function validateAndGoToStep3() {
     }
   }
 
-  // 3. التحقق من الترقية
+  // 3. التحقق الخاص باستمارة "إنهاء مدة"
+  if (type === 'end_of_service') {
+    const joinDateStr = formData.value.join_date;
+    const birthDateStr = formData.value.birth_date;
+    
+    if (joinDateStr && birthDateStr) {
+      const jDate = new Date(joinDateStr);
+      const bDate = new Date(birthDateStr);
+      const todayDate = new Date();
+      
+      let ageAtJoin = jDate.getFullYear() - bDate.getFullYear();
+      if (jDate.getMonth() < bDate.getMonth() || (jDate.getMonth() === bDate.getMonth() && jDate.getDate() < bDate.getDate())) {
+        ageAtJoin--;
+      }
+      
+      if (ageAtJoin < 15) {
+        Swal.fire({
+          icon: 'error',
+          title: 'عمر التجنيد غير منطقي',
+          text: `عمر الفرد عند الالتحاق كان (${ageAtJoin}) سنة. يجب أن يكون 15 سنة على الأقل.`
+        });
+        return;
+      }
+      
+      let serviceYears = todayDate.getFullYear() - jDate.getFullYear();
+      let serviceMonths = todayDate.getMonth() - jDate.getMonth();
+      if (todayDate.getMonth() < jDate.getMonth() || (todayDate.getMonth() === jDate.getMonth() && todayDate.getDate() < jDate.getDate())) {
+        serviceYears--;
+        serviceMonths += 12;
+      }
+      
+      if (serviceYears < 20) {
+        Swal.fire({
+          icon: 'error',
+          title: 'لم يكمل شرط الخدمة',
+          html: `الخدمة الفعلية للفرد هي <b>(${serviceYears} سنوات)</b> فقط.<br>الحد الأدنى لإنهاء المدة هو <b>20 سنة خدمة فعلية</b>.`
+        });
+        return;
+      }
+    }
+  }
+
+  // 4. التحقق من الترقية
   if (formData.value.settlement_type === 'personnel_to_officer' && formData.value.new_military_number) {
     const milNum = formData.value.new_military_number
     if (!milNum.startsWith('60') || milNum.length !== 7 || isNaN(Number(milNum))) {
@@ -1440,10 +1872,20 @@ async function submitBulk() {
   const missingDocs = requiredDocs.filter((a:any) => !uploadedFiles.value[a.doc_type])
   
   if (missingDocs.length > 0) {
+    const docsHtml = missingDocs.map((a:any) => `<li class="flex items-center gap-2 text-red-700 text-sm font-medium"><span class="text-red-500">📎</span> ${a.label}</li>`).join('')
     Swal.fire({
       icon: 'error',
       title: 'مرفقات ناقصة',
-      text: `الرجاء إرفاق المستندات الإلزامية: ${missingDocs.map((a:any) => a.label).join('، ')}`
+      html: `
+        <div class="text-right p-3 bg-red-50 rounded-xl border border-red-100">
+          <p class="text-red-800 font-bold mb-3">الرجاء إرفاق المستندات الإلزامية التالية قبل تقديم الطلب:</p>
+          <ul class="space-y-2 mb-2">
+            ${docsHtml}
+          </ul>
+        </div>
+      `,
+      confirmButtonText: 'حسناً',
+      confirmButtonColor: '#dc2626'
     })
     return
   }
@@ -1603,8 +2045,74 @@ async function submitBulk() {
       successCount++
     } catch (err: any) {
       console.error('Submission error for', person.military_number, err)
-      let msg = err.response?.data?.error || err.response?.data?.detail
-      if (!msg && err.response?.data && typeof err.response.data === 'object') {
+      const respData = err.response?.data
+
+      // ── عرض أخطاء محرك قواعد الخدمات (Service Rules Engine) ──
+      if (respData?.validation_errors && Array.isArray(respData.validation_errors) && respData.validation_errors.length > 0) {
+        const errorsHtml = respData.validation_errors.map((e: any) => {
+          const msg = typeof e === 'string' ? e : (e.message || '');
+          const fieldTag = (typeof e === 'object' && e.field) ? `<span class="text-xs font-bold text-red-400 block mb-0.5">[${e.code || e.field}]</span>` : '';
+          return `
+          <div class="flex items-start gap-2 p-2 bg-red-50 border border-red-100 rounded-lg mb-2 text-right">
+            <span class="text-red-500 mt-0.5 shrink-0">✗</span>
+            <div>
+              ${fieldTag}
+              <p class="text-sm text-red-800 font-medium whitespace-pre-wrap leading-relaxed">${msg}</p>
+            </div>
+          </div>
+          `
+        }).join('')
+        const warningsHtml = (respData.warnings || []).map((w: any) => `
+          <div class="flex items-start gap-2 p-2 bg-amber-50 border border-amber-100 rounded-lg mb-2 text-right">
+            <span class="text-amber-500 mt-0.5 shrink-0">⚠</span>
+            <p class="text-sm text-amber-800">${w.message}</p>
+          </div>
+        `).join('')
+
+        await Swal.fire({
+          icon: 'error',
+          title: respData.error || 'تعذّر تقديم الطلب',
+          html: `
+            <div class="text-right space-y-1 max-h-80 overflow-y-auto pr-1">
+              <p class="text-xs text-gray-500 mb-3">الفرد: <b>${person.full_name}</b> — ${respData.validation_errors.length} خطأ يمنع التقديم:</p>
+              ${errorsHtml}
+              ${warningsHtml ? '<div class="mt-3 text-xs font-bold text-amber-600">تحذيرات:</div>' + warningsHtml : ''}
+            </div>
+          `,
+          confirmButtonText: 'مراجعة البيانات',
+          confirmButtonColor: '#dc2626',
+          width: '600px',
+        })
+        isSubmitting.value = false
+        return  // وقف العملية بالكامل لأن المحرك رفض الطلب
+      }
+
+      // ── رسائل الحالة النهائية (403 Forbidden) من الـ Backend ──
+      if (err.response?.status === 403 && respData?.detail) {
+        await Swal.fire({
+          icon: 'error',
+          title: respData.error || 'إجراء غير مسموح',
+          html: `
+            <div class="text-right p-2">
+              <div class="flex items-center gap-3 p-3 bg-red-50 border border-red-200 rounded-xl mb-3">
+                <span class="text-2xl">🚫</span>
+                <div>
+                  <p class="text-sm font-bold text-red-800">${respData.status_name || 'حالة خروج نهائي'}</p>
+                </div>
+              </div>
+              <p class="text-sm text-gray-700 leading-relaxed">${respData.detail}</p>
+            </div>
+          `,
+          confirmButtonText: 'فهمت',
+          confirmButtonColor: '#dc2626',
+        })
+        isSubmitting.value = false
+        return
+      }
+
+      // ── رسائل الخطأ العامة ──
+      let msg = respData?.error || respData?.detail
+      if (!msg && respData && typeof respData === 'object') {
         try {
           const extractErrors = (obj: any): string[] => {
             const errors: string[] = []
@@ -1615,9 +2123,9 @@ async function submitBulk() {
             }
             return errors
           }
-          msg = extractErrors(err.response.data).join('<br/>') || JSON.stringify(err.response.data)
+          msg = extractErrors(respData).join('<br/>') || JSON.stringify(respData)
         } catch(e) {
-          msg = 'الرجاء التحقق من صحة البيانات المدخلة (مثل المدة أو الحقول الإلزامية)'
+          msg = 'الرجاء التحقق من صحة البيانات المدخلة'
         }
       }
       errorMessage += `<div class="mb-1"><b>${person.full_name}:</b> ${msg || 'خطأ غير معروف'}</div>`

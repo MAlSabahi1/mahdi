@@ -331,7 +331,7 @@ _FORMS = {
                       options=('دبلوم', 'بكالوريوس', 'ماجستير', 'دكتوراه', 'دورة تخصصية')),
             FormField('institution', 'جهة الدراسة', 'text'),
             FormField('order_source', 'مصدر الأمر / رقم قرار الإيفاد', 'text'),
-            FormField('duration', 'مدة الدراسة', 'text'),
+            FormField('duration', 'مدة الدراسة (تلقائي)', 'text', disabled=True),
             FormField('start_date', 'تاريخ البدء', 'date'),
             FormField('end_date', 'تاريخ الانتهاء', 'date'),
         ),
@@ -350,7 +350,7 @@ _FORMS = {
         description='الدليل: ص 42 — نموذج 7',
         fields=(
             FormField('category', 'الفئة', 'text', required=True, disabled=True, default='المنتدبين'),
-            FormField('destination', 'جهة الانتداب', 'text'),
+            FormField('secondment_place', 'جهة الانتداب', 'text'),
             FormField('reason', 'سبب الانتداب', 'textarea'),
             FormField('order_source', 'مصدر الأمر', 'text'),
             FormField('start_date', 'تاريخ البدء', 'date'),

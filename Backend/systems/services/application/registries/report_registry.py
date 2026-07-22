@@ -205,7 +205,7 @@ _REPORTS = {
         sub_section='أ - غير العاملة مؤقتاً',
         base_filter={'current_status__name': 'منتدبين لدى جهات'},
         columns=_BASE + (
-            ReportColumn('destination', 'جهة الانتداب', 'form_data.destination'),
+            ReportColumn('secondment_place', 'جهة الانتداب', 'form_data.secondment_place'),
             ReportColumn('order_source', 'مصدر الأمر', 'form_data.order_source'),
             ReportColumn('reason', 'الغرض من الانتداب', 'form_data.reason'),
             ReportColumn('start_date', 'مدة الانتداب من', 'form_data.start_date'),

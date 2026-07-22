@@ -26,20 +26,20 @@ export const useServicesStore = defineStore('services', () => {
     rejected: 0,
     by_severity: { low: 0, medium: 0, high: 0 }
   })
-  
+
   const rejectionsRecords = ref<any[]>([])
   const reconciliationTasks = ref<any[]>([])
   const complianceRecords = ref<any[]>([])
   const reportTemplates = ref<any[]>([])
-  
+
   // Status Change Forms State
   const forms = ref<any[]>([])
   const formSchemas = ref<any>({})
   const currentSchema = ref<any>(null)
-  
+
   const loading = ref(false)
   const error = ref<string | null>(null)
-  
+
   const totalCount = ref(0)
   const totalPages = ref(1)
   const currentPage = ref(1)
@@ -61,13 +61,13 @@ export const useServicesStore = defineStore('services', () => {
     try {
       const queryParams = new URLSearchParams()
       queryParams.append('page', page.toString())
-      
+
       if (params.status) queryParams.append('status', params.status)
       if (params.severity) queryParams.append('severity', params.severity)
       if (params.search) queryParams.append('search', params.search)
-      
+
       const response = await api.get(`/service-cycle/staging/?${queryParams.toString()}`)
-      
+
       stagingRecords.value = response.data.results
       totalCount.value = response.data.count
       totalPages.value = response.data.total_pages || Math.ceil(response.data.count / 20)
@@ -134,7 +134,7 @@ export const useServicesStore = defineStore('services', () => {
         params: { directorate_id: directorateId, month, mode: 'multi' },
         responseType: 'blob' // Important for file download
       })
-      
+
       // Handle file download
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
@@ -152,7 +152,7 @@ export const useServicesStore = defineStore('services', () => {
       document.body.appendChild(link)
       link.click()
       link.parentNode?.removeChild(link)
-      
+
       return true
     } catch (err: any) {
       error.value = 'فشل عملية التصدير'
@@ -174,7 +174,7 @@ export const useServicesStore = defineStore('services', () => {
         params,
         responseType: 'blob'
       })
-      
+
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
       link.href = url
@@ -190,7 +190,7 @@ export const useServicesStore = defineStore('services', () => {
       document.body.appendChild(link)
       link.click()
       link.parentNode?.removeChild(link)
-      
+
       return true
     } catch (err: any) {
       error.value = 'فشل عملية تصدير الـ PDF'
@@ -206,12 +206,12 @@ export const useServicesStore = defineStore('services', () => {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      
+
       // Extract export_id and service_month from filename if possible
       // Expected format: كشف_اسم المديرية_YYYY-MM_export-id-uuid.xlsx
       const fileNameStr = file.name
       const uuidMatch = fileNameStr.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/)
-      
+
       if (uuidMatch) {
         formData.append('export_id', uuidMatch[0])
       } else {
@@ -219,13 +219,13 @@ export const useServicesStore = defineStore('services', () => {
         // The backend should ideally handle this better, but we provide it just in case.
         formData.append('export_id', '00000000-0000-0000-0000-000000000000')
       }
-      
+
       // Match YYYY-MM
       const monthMatch = fileNameStr.match(/\d{4}-\d{2}/)
       if (monthMatch) {
         formData.append('service_month', monthMatch[0])
       }
-      
+
       const response = await api.post('/service-cycle/import/upload/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
@@ -235,13 +235,13 @@ export const useServicesStore = defineStore('services', () => {
     } catch (err: any) {
       let errStr = 'فشل عملية الاستيراد'
       const errData = err.response?.data?.error || err.response?.data
-      
+
       if (errData) {
         let obj = errData
         if (typeof obj === 'string') {
-          try { obj = JSON.parse(obj) } catch (e) {}
+          try { obj = JSON.parse(obj) } catch (e) { }
         }
-        
+
         if (typeof obj === 'object' && obj !== null) {
           if (obj.detail && typeof obj.detail === 'object' && !Array.isArray(obj.detail)) {
             const msgs = Object.values(obj.detail).flat()
@@ -257,7 +257,7 @@ export const useServicesStore = defineStore('services', () => {
           errStr = errData
         }
       }
-      
+
       error.value = errStr
       throw err
     } finally {
@@ -281,13 +281,13 @@ export const useServicesStore = defineStore('services', () => {
     try {
       const queryParams = new URLSearchParams()
       queryParams.append('page', page.toString())
-      
+
       if (params.central_department) queryParams.append('central_department', params.central_department)
       if (params.service_month) queryParams.append('service_month', params.service_month)
       if (params.security_admin) queryParams.append('security_admin', params.security_admin)
-      
+
       const response = await api.get(`/service-cycle/rejections/?${queryParams.toString()}`)
-      
+
       rejectionsRecords.value = response.data.results || response.data
       totalCount.value = response.data.count || rejectionsRecords.value.length
       totalPages.value = response.data.total_pages || Math.ceil(totalCount.value / 20)
@@ -308,7 +308,7 @@ export const useServicesStore = defineStore('services', () => {
         params: { directorate_id: directorateId, month },
         responseType: 'blob'
       })
-      
+
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
       link.href = url
@@ -316,7 +316,7 @@ export const useServicesStore = defineStore('services', () => {
       document.body.appendChild(link)
       link.click()
       link.parentNode?.removeChild(link)
-      
+
       return true
     } catch (err: any) {
       error.value = 'فشل تصدير تقرير المرفوضات'
@@ -350,7 +350,7 @@ export const useServicesStore = defineStore('services', () => {
       formData.append('name', name)
       formData.append('task_type', taskType)
       formData.append('key_field', keyField)
-      
+
       const response = await api.post('/service-cycle/reconciliation/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
@@ -427,17 +427,17 @@ export const useServicesStore = defineStore('services', () => {
         format,
         filters
       })
-      
+
       // The API returns the download URL or file path. 
       // If it's a direct file response or path:
       if (response.data && response.data.data && response.data.data.file_path) {
         // We can just download it using the download endpoint
         const fileName = response.data.data.file_path.split(/[\\/]/).pop()
-        
+
         const fileResponse = await api.get(`/service-cycle/reports/download/${fileName}`, {
           responseType: 'blob'
         })
-        
+
         const url = window.URL.createObjectURL(new Blob([fileResponse.data]))
         const link = document.createElement('a')
         link.href = url
@@ -510,7 +510,7 @@ export const useServicesStore = defineStore('services', () => {
       if (params.personnel) queryParams.append('personnel', params.personnel)
       if (params.approval_type) queryParams.append('approval_type', params.approval_type)
       if (params.page) queryParams.append('page', params.page.toString())
-      
+
       const response = await api.get(`/service-cycle/forms/?${queryParams.toString()}`)
       forms.value = response.data.results || response.data
       totalCount.value = response.data.count || forms.value.length
@@ -608,7 +608,7 @@ export const useServicesStore = defineStore('services', () => {
   }
 
   // --- Extended Service Cycle (Timeline, Notes, Return, Checklist, Catalog) ---
-  
+
   async function fetchFormTimeline(id: number | string) {
     try {
       const response = await api.get(`/service-cycle/form-actions/${id}/timeline/`)
@@ -729,7 +729,7 @@ export const useServicesStore = defineStore('services', () => {
     fetchReportTemplates,
     generateReport,
     closeMonth,
-    
+
     // Status Change Forms
     forms,
     formSchemas,
@@ -743,7 +743,7 @@ export const useServicesStore = defineStore('services', () => {
     rejectForm,
     fetchFormById,
     markFormPrinted,
-    
+
     // Extended Actions
     fetchFormTimeline,
     fetchFormNotes,
@@ -751,7 +751,7 @@ export const useServicesStore = defineStore('services', () => {
     returnForm,
     fetchFormChecklist,
     toggleChecklistItem,
-    
+
     // Catalog
     catalogServices,
     fetchServiceCatalog,

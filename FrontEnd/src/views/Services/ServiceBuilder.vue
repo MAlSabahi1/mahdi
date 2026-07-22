@@ -693,9 +693,44 @@
         </div>
         
         <div class="flex-1 overflow-y-auto p-6 bg-gray-50/30 dark:bg-gray-900/30 space-y-4">
+          
+          <!-- Engine Rules Banner -->
+          <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-2">
+            <h4 class="text-sm font-bold text-blue-900 dark:text-blue-300 flex items-center gap-2 mb-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+              محرك القواعد المتقدم (Service Rules Engine)
+            </h4>
+            <p class="text-xs text-blue-700 dark:text-blue-400 leading-relaxed mb-3">
+              تعمل هذه الخدمة تحت مظلة <b>محرك القواعد المركزي</b> في الخادم (Backend). الشروط المضافة أدناه هي شروط واجهة مساعدة (UI) للمستخدم فقط. 
+              أما القواعد المركزية التالية فهي قواعد صارمة (Hardcoded)، ولكن <b>تم منحك صلاحية تفعيلها أو إيقافها استثنائياً</b> لهذه الخدمة:
+            </p>
+            
+            <div v-if="engineRules.length > 0" class="space-y-2 mt-3">
+              <div v-for="rule in engineRules" :key="rule.id" class="flex items-start justify-between gap-2 bg-white/60 dark:bg-gray-900/50 p-2 rounded-lg border border-blue-100 dark:border-blue-800/50">
+                <div class="flex gap-2">
+                  <ShieldCheck class="w-4 h-4 shrink-0 mt-0.5" :class="rule.is_active ? 'text-blue-500' : 'text-gray-400'" />
+                  <div>
+                    <p class="text-xs font-bold flex gap-2" :class="rule.is_active ? 'text-blue-900 dark:text-blue-300' : 'text-gray-500 dark:text-gray-400 line-through'">
+                      {{ rule.name }}
+                      <span class="font-mono text-[9px] px-1 rounded" :class="rule.is_active ? 'text-blue-400 bg-blue-100 dark:bg-blue-800/50' : 'text-gray-400 bg-gray-100 dark:bg-gray-800/50'">{{ rule.id }}</span>
+                    </p>
+                    <p class="text-[10px] mt-0.5" :class="rule.is_active ? 'text-blue-700 dark:text-blue-400' : 'text-gray-400'">{{ rule.description || 'قاعدة نظام أساسية.' }}</p>
+                  </div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer ml-2 mt-1">
+                  <input type="checkbox" :checked="rule.is_active" @change="toggleEngineRule(rule)" class="sr-only peer">
+                  <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-500"></div>
+                </label>
+              </div>
+            </div>
+            <div v-else class="text-xs text-blue-600 dark:text-blue-500 bg-white/60 dark:bg-gray-900/50 p-2 rounded-lg italic">
+              هذه الخدمة لا تستخدم محرك القواعد المركزي حالياً وتعتمد فقط على الشروط المعرفة في الواجهة أدناه.
+            </div>
+          </div>
+
           <div v-if="prerequisites.length === 0" class="text-center py-10 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
             <ShieldAlert class="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p class="text-gray-500 text-sm">لم يتم إضافة أي شروط لهذه الخدمة بعد.</p>
+            <p class="text-gray-500 text-sm">لم يتم إضافة أي شروط واجهة مساعدة لهذه الخدمة.</p>
           </div>
           
           <div v-for="(prereq, index) in prerequisites" :key="index" class="p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 relative group shadow-sm">
@@ -828,6 +863,7 @@ import api from '@/lib/api'
 const loading = ref(true)
 const saving = ref(false)
 const services = ref<any[]>([])
+const engineRules = ref<any[]>([])
 const availableStages = ref<any[]>([])
 const statuses = ref<any[]>([])
 
@@ -1354,11 +1390,51 @@ async function openPrereqsModal(svc: any) {
   try {
     const pRes = await api.get(`/service-cycle/prerequisites/?service_id=${svc.id}`)
     prerequisites.value = (pRes.data.results || pRes.data).sort((a: any, b: any) => a.order - b.order)
+    
+    // Fetch Engine Rules for this specific service
+    engineRules.value = []
+    try {
+      const eRes = await api.get(`/service-cycle/catalog/${svc.id}/engine_rules/`)
+      engineRules.value = eRes.data || []
+    } catch (e) {
+      console.warn("Could not fetch engine rules", e)
+    }
+
     modals.value.prereqs = true
   } catch (err) {
     console.error(err)
   } finally {
     loading.value = false
+  }
+}
+
+// تبديل حالة قاعدة محرك
+async function toggleEngineRule(rule: any) {
+  const previousState = rule.is_active;
+  rule.is_active = !previousState; // Optimistic UI update
+
+  try {
+    const res = await api.post(`/service-cycle/catalog/${activeService.value.id}/toggle_engine_rule/`, {
+      rule_id: rule.id,
+      is_active: rule.is_active
+    });
+    
+    if (res.data.success) {
+      // Show small toast for feedback
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        icon: rule.is_active ? 'success' : 'warning',
+        title: rule.is_active ? 'تم تفعيل القاعدة' : 'تم إيقاف القاعدة',
+        text: `تم ${rule.is_active ? 'تفعيل' : 'إيقاف'} "${rule.name}" بنجاح.`
+      });
+    }
+  } catch (error) {
+    console.error("Failed to toggle rule:", error);
+    rule.is_active = previousState; // Revert on failure
+    Swal.fire('خطأ', 'تعذر تغيير حالة القاعدة، تأكد من اتصالك بالخادم.', 'error');
   }
 }
 

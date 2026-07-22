@@ -11,6 +11,7 @@ class SystemSettingViewSet(viewsets.ModelViewSet):
     serializer_class = SystemSettingSerializer
     # In production, require admin permissions
     permission_classes = [permissions.AllowAny]
+    pagination_class = None
     
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['category', 'is_active']

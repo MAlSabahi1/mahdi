@@ -816,9 +816,8 @@ class SuggestedCorrectionViewSet(BaseModelViewSet):
             return Response({'success': False, 'error': 'الطلب ليس في حالة الانتظار'}, status=status.HTTP_400_BAD_REQUEST)
         
         # ── فرض طباعة الاستمارة قبل الاعتماد ──
-        if getattr(correction, 'is_printed', None) is False:
-             return Response({'success': False, 'error': 'يجب طباعة الاستمارة أولاً وتوقيعها ورقياً قبل الاعتماد النهائي.'}, status=status.HTTP_400_BAD_REQUEST)
-        
+        # تم إزالة شرط is_printed للسماح برفع المرفق مباشرة كدليل على الطباعة
+
         personnel = correction.personnel
         if personnel:
             from systems.personnel.services import PersonnelService
